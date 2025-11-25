@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 23% 98%;
+  --foreground: 228 14% 16%;
+  --primary: 340 89% 66%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 96% 72%;
+  --secondary-foreground: 0 0% 15%;
+  --accent: 45 100% 64%;
+  --accent-foreground: 0 0% 15%;
+  --muted: 214 32% 92%;
+  --muted-foreground: 227 13% 40%;
+  --border: 216 13% 85%;
+  --input: 216 13% 85%;
+  --ring: 340 89% 66%;
+  --pop: 267 83% 74%;
+  --radius: 1rem;
+  --font-sans: var(--font-noto);
+  --font-heading: var(--font-inter);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 228 14% 8%;
+    --foreground: 220 22% 94%;
+    --primary: 340 84% 63%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 86% 72%;
+    --secondary-foreground: 0 0% 10%;
+    --accent: 45 100% 64%;
+    --accent-foreground: 0 0% 10%;
+    --muted: 217 14% 25%;
+    --muted-foreground: 210 40% 92%;
+    --border: 222 16% 28%;
+    --input: 222 16% 28%;
+    --ring: 340 84% 63%;
+    --pop: 267 85% 78%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans), "Noto Sans JP", system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading), "Inter", "Noto Sans JP", sans-serif;
+  }
+}
