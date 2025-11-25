@@ -12,6 +12,7 @@ build/
 .env
 .env.local
 .env.*
+!.env.example
 web/.env*
 
 # logs
