@@ -1,10 +1,19 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { loadSession } from "@/lib/diagnosis/session";
+import { DiagnosisSession, loadSession } from "@/lib/diagnosis/session";
 
-const MyPage = async () => {
-  const session = loadSession();
+const MyPage = () => {
+  const [session, setSession] = useState<DiagnosisSession | null>(() => loadSession());
+
+  useEffect(() => {
+    const handleStorage = () => setSession(loadSession());
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   return (
     <div className="container py-10">

@@ -1,13 +1,12 @@
 "use client";
 
 import { notFound, useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { QuestionCard } from "@/components/diagnosis/question-card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { getQuestionsByType } from "@/data/questions";
-import { runMatching } from "@/lib/matching/engine";
+import { DiagnosisQuestion } from "@/types/diagnosis";
 import { clearSession, saveSession } from "@/lib/diagnosis/session";
 import { useDiagnosisStore } from "@/store/diagnosis-store";
 
@@ -16,13 +15,10 @@ const DiagnosisPage = () => {
   const router = useRouter();
   const diagnosisType = params.type === "full" ? "full" : params.type === "light" ? "light" : null;
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [questions, setQuestions] = useState<DiagnosisQuestion[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const questions = useMemo(() => {
-    if (!diagnosisType) return [];
-    return getQuestionsByType(diagnosisType);
-  }, [diagnosisType]);
 
   const {
     answers,
@@ -31,6 +27,29 @@ const DiagnosisPage = () => {
     loadFromStorage,
     answerQuestion,
   } = useDiagnosisStore();
+
+  useEffect(() => {
+    if (!diagnosisType) return;
+    const fetchQuestions = async () => {
+      setQuestionsLoading(true);
+      try {
+        const response = await fetch(`/api/questions/${diagnosisType}`);
+        if (!response.ok) {
+          throw new Error("failed to fetch questions");
+        }
+        const json = await response.json();
+        setQuestions(json.questions as DiagnosisQuestion[]);
+        setCurrentIndex(0);
+      } catch (fetchError) {
+        console.error(fetchError);
+        setQuestions([]);
+        setError("質問取得に失敗しました。時間を置いて再度お試しください。");
+      } finally {
+        setQuestionsLoading(false);
+      }
+    };
+    fetchQuestions();
+  }, [diagnosisType]);
 
   useEffect(() => {
     if (!diagnosisType) return;
@@ -82,8 +101,18 @@ const DiagnosisPage = () => {
         answers,
       } as const;
       saveSession(payload);
-      const results = runMatching(payload);
-      sessionStorage.setItem("latestMatching", JSON.stringify(results));
+      const response = await fetch("/api/diagnosis/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error("failed to submit diagnosis");
+      }
+      const data = await response.json();
+      sessionStorage.setItem("latestMatching", JSON.stringify(data.results));
       router.push("/result");
     } catch (err) {
       setError("診断結果の生成に失敗しました。時間を置いて再実行してください。");
@@ -108,7 +137,19 @@ const DiagnosisPage = () => {
           <Progress value={progress} className="mt-3" />
         </div>
 
-        {currentQuestion && (
+        {questionsLoading && (
+          <div className="mt-8 rounded-3xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
+            質問を読み込んでいます...
+          </div>
+        )}
+
+        {!questionsLoading && !currentQuestion && (
+          <div className="mt-8 rounded-3xl border border-dashed border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+            質問データを取得できませんでした。時間を置いて再度お試しください。
+          </div>
+        )}
+
+        {currentQuestion && !questionsLoading && (
           <div className="mt-8">
             <QuestionCard
               question={currentQuestion}
@@ -121,15 +162,21 @@ const DiagnosisPage = () => {
         {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
         <div className="mt-6 flex items-center justify-between">
-          <Button variant="outline" onClick={handlePrev} disabled={currentIndex === 0}>
+          <Button
+            variant="outline"
+            onClick={handlePrev}
+            disabled={currentIndex === 0 || questionsLoading}
+          >
             前へ
           </Button>
           {currentIndex === questions.length - 1 ? (
-            <Button onClick={handleSubmit} disabled={submitting}>
+            <Button onClick={handleSubmit} disabled={submitting || questionsLoading || !currentQuestion}>
               {submitting ? "AIが結果を生成中..." : "結果を見る"}
             </Button>
           ) : (
-            <Button onClick={handleNext}>次へ</Button>
+            <Button onClick={handleNext} disabled={questionsLoading || !currentQuestion}>
+              次へ
+            </Button>
           )}
         </div>
         <div className="mt-4 text-right">
