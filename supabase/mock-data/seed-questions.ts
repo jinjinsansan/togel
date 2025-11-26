@@ -1,11 +1,38 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { createClient } from "@supabase/supabase-js";
 
-import { env } from "../../web/src/lib/env";
 import { questions } from "../../web/src/data/questions";
 
-const supabase = createClient(env.supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY ?? "", {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+const loadEnv = () => {
+  const envPath = resolve(process.cwd(), ".env.local");
+  if (!existsSync(envPath)) return;
+  const content = readFileSync(envPath, "utf8");
+  content.split(/\r?\n/).forEach((line) => {
+    if (!line || line.startsWith("#")) return;
+    const [key, ...rest] = line.split("=");
+    if (!key) return;
+    const value = rest.join("=").trim();
+    if (key && value && !process.env[key]) {
+      process.env[key] = value;
+    }
+  });
+};
+
+loadEnv();
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Supabase環境変数が設定されていません");
+}
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }
+);
 
 const seed = async () => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {

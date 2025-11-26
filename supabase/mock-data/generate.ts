@@ -1,5 +1,25 @@
+import { readFileSync, existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { fakerJA as faker } from "@faker-js/faker";
 import { createClient } from "@supabase/supabase-js";
+
+const loadEnv = () => {
+  const envPath = resolve(process.cwd(), ".env.local");
+  if (!existsSync(envPath)) return;
+  const content = readFileSync(envPath, "utf8");
+  content.split(/\r?\n/).forEach((line) => {
+    if (!line || line.startsWith("#")) return;
+    const [key, ...rest] = line.split("=");
+    if (!key) return;
+    const value = rest.join("=").trim();
+    if (key && value && !process.env[key]) {
+      process.env[key] = value;
+    }
+  });
+};
+
+loadEnv();
 
 const requiredEnv = ["SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"] as const;
 
