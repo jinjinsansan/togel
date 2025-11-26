@@ -1,18 +1,7 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
-const notoSans = Noto_Sans_JP({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-noto",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-inter",
-});
+import { SiteHeader } from "@/components/layout/site-header";
 
 export const metadata: Metadata = {
   title: "Matching診断 | 性格診断マッチングサービス",
@@ -27,10 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body
-        className={`${notoSans.variable} ${inter.variable} min-h-screen bg-background text-foreground antialiased`}
-      >
-        {children}
+      <body className="min-h-screen bg-background text-foreground antialiased">
+        <SiteHeader />
+        <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       </body>
     </html>
   );

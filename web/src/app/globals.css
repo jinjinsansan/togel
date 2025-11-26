@@ -18,8 +18,8 @@
   --ring: 340 89% 66%;
   --pop: 267 83% 74%;
   --radius: 1rem;
-  --font-sans: var(--font-noto);
-  --font-heading: var(--font-inter);
+  --font-sans: "Noto Sans JP", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Inter", "Noto Sans JP", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,8 +48,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-sans), "Noto Sans JP", system-ui, -apple-system,
-      BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font-sans);
   }
 
   h1,
@@ -58,6 +57,6 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-heading), "Inter", "Noto Sans JP", sans-serif;
+    font-family: var(--font-heading);
   }
 }
