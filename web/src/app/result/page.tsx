@@ -209,26 +209,6 @@ const ResultPage = () => {
                     </ul>
                   </div>
                 )}
-                <div className="rounded-2xl bg-muted/40 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground mb-3">5つの特性スコア</p>
-                  <div className="grid gap-3 text-sm">
-                    {Object.entries(result.bigFiveScores.user).map(([trait, score]) => {
-                      const profileScore = result.bigFiveScores.profile[trait as keyof BigFiveScores];
-                      return (
-                        <div key={trait} className="flex items-center justify-between">
-                          <span className="text-muted-foreground">{traitLabels[trait as keyof BigFiveScores]}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">あなた</span>
-                            <span className="font-semibold text-foreground w-8 text-right">{score.toFixed(1)}</span>
-                            <span className="text-xs text-muted-foreground mx-1">/</span>
-                            <span className="text-xs text-muted-foreground">相手</span>
-                            <span className="font-semibold text-foreground w-8 text-right">{profileScore.toFixed(1)}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
                 <div className="rounded-2xl bg-muted/40 p-4 text-sm">
                   <p className="font-semibold text-foreground">インサイト</p>
                   {result.insights.strengths.length > 0 && (
@@ -269,12 +249,9 @@ const ResultPage = () => {
               </details>
 
               {/* アクションボタン */}
-              <div className="mt-4 flex gap-3">
-                <Button asChild className="flex-1">
-                  <Link href={`/profile/${result.profile.id}`}>プロフィール詳細</Link>
-                </Button>
-                <Button asChild variant="outline" className="flex-1">
-                  <Link href="#">いいね</Link>
+              <div className="mt-4">
+                <Button asChild className="w-full" size="lg">
+                  <Link href={`/profile/${result.profile.id}`}>プロフィールを見る</Link>
                 </Button>
               </div>
             </div>

@@ -682,71 +682,192 @@ function generateCatchphrase(
   userScores: BigFiveScores,
   profileScores: BigFiveScores,
   score: number,
+  profile: MatchingProfile,
 ): string {
-  const avgExtraversion = (userScores.extraversion + profileScores.extraversion) / 2;
-  const avgOpenness = (userScores.openness + profileScores.openness) / 2;
+  const catchphrases: string[] = [];
   
-  if (score >= 80) {
-    if (avgExtraversion >= 3.5) {
-      return "一緒にいて自然体でいられる、エネルギッシュな関係";
-    }
-    return "静かに深く理解し合える、心地よい関係";
-  } else if (score >= 70) {
-    if (avgOpenness >= 3.8) {
-      return "新しいアイデアや体験を一緒に楽しめる相性";
-    }
-    return "お互いのペースを尊重しながら成長できる関係";
-  } else if (score >= 60) {
-    if (Math.abs(userScores.extraversion - profileScores.extraversion) >= 1.5) {
-      return "違う個性が刺激になる、バランスの取れたペア";
-    }
-    return "違いを楽しみながら学び合える組み合わせ";
+  // プロフィール情報を活用
+  if (profile.hobbies) {
+    catchphrases.push(`${profile.hobbies}を一緒に楽しめそうな相性`);
   }
-  return "新しい視点をもたらしてくれる、ユニークな相性";
+  
+  // 外向性による分類
+  const extraversionDiff = Math.abs(userScores.extraversion - profileScores.extraversion);
+  if (extraversionDiff < 0.8) {
+    if (userScores.extraversion >= 3.5) {
+      catchphrases.push("エネルギッシュに盛り上がれる関係");
+    } else {
+      catchphrases.push("落ち着いた時間を共有できる関係");
+    }
+  } else {
+    catchphrases.push("静と動のバランスが取れたペア");
+  }
+  
+  // 開放性による分類
+  if (userScores.openness >= 3.5 && profileScores.openness >= 3.5) {
+    catchphrases.push("新しい体験を一緒に冒険できる相性");
+  } else if (userScores.openness < 3.0 && profileScores.openness < 3.0) {
+    catchphrases.push("安定した日常を大切にできる関係");
+  }
+  
+  // 誠実性による分類
+  if (userScores.conscientiousness >= 4.0 && profileScores.conscientiousness >= 4.0) {
+    catchphrases.push("しっかり計画を立てて進める相性");
+  } else if (Math.abs(userScores.conscientiousness - profileScores.conscientiousness) >= 1.5) {
+    catchphrases.push("柔軟さと計画性を補い合える関係");
+  }
+
+  // 協調性
+  if (userScores.agreeableness >= 4.0 && profileScores.agreeableness >= 4.0) {
+    catchphrases.push("思いやりを大切にし合える優しい関係");
+  }
+
+  // ランダムに選択（毎回違う印象）
+  if (catchphrases.length > 0) {
+    const index = Math.floor(Math.random() * catchphrases.length);
+    return catchphrases[index];
+  }
+  
+  return `${profile.values}という価値観でつながる相性`;
 }
 
 function generateDateIdea(
   userScores: BigFiveScores,
   profileScores: BigFiveScores,
+  profile: MatchingProfile,
 ): string {
-  const avgExtraversion = (userScores.extraversion + profileScores.extraversion) / 2;
-  const avgOpenness = (userScores.openness + profileScores.openness) / 2;
-  const avgConscientiousness = (userScores.conscientiousness + profileScores.conscientiousness) / 2;
-
-  if (avgExtraversion >= 3.8 && avgOpenness >= 3.8) {
-    return "アートイベントや音楽ライブで一緒に新しい体験を";
-  } else if (avgExtraversion >= 3.5) {
-    return "賑やかなカフェやバーでおしゃべりを楽しむ";
-  } else if (avgOpenness >= 3.8) {
-    return "美術館や展覧会でゆっくり作品を鑑賞";
-  } else if (avgConscientiousness >= 3.8) {
-    return "落ち着いたカフェで計画的にじっくり話す";
-  } else {
-    return "静かな公園を散歩しながらリラックスして会話";
+  const ideas: string[] = [];
+  
+  // プロフィールの趣味から提案
+  if (profile.hobbies) {
+    const hobby = profile.hobbies;
+    if (hobby.includes("カフェ") || hobby.includes("コーヒー")) {
+      ideas.push("お互いのお気に入りカフェを紹介し合う");
+    }
+    if (hobby.includes("映画") || hobby.includes("シネマ")) {
+      ideas.push("気になっている映画を観た後に感想を語り合う");
+    }
+    if (hobby.includes("アウトドア") || hobby.includes("キャンプ") || hobby.includes("登山")) {
+      ideas.push("自然の中を散策しながらゆっくり会話する");
+    }
+    if (hobby.includes("アート") || hobby.includes("美術") || hobby.includes("ギャラリー")) {
+      ideas.push("展覧会やギャラリー巡りで感性を共有");
+    }
+    if (hobby.includes("読書") || hobby.includes("本")) {
+      ideas.push("おすすめの本を持ち寄ってブックカフェで語る");
+    }
+    if (hobby.includes("料理") || hobby.includes("グルメ")) {
+      ideas.push("お互いの好きな料理を食べに行く");
+    }
+    if (hobby.includes("音楽") || hobby.includes("ライブ")) {
+      ideas.push("好きなアーティストや音楽の話で盛り上がる");
+    }
+    if (hobby.includes("写真")) {
+      ideas.push("カメラを持って街を歩きながら撮影を楽しむ");
+    }
   }
+
+  // 好きなものから提案
+  if (profile.favoriteThings && ideas.length < 2) {
+    const fav = profile.favoriteThings;
+    if (fav.includes("コーヒー") || fav.includes("カフェ")) {
+      ideas.push("コーヒーの美味しいお店でゆっくり話す");
+    }
+    if (fav.includes("ビール") || fav.includes("お酒") || fav.includes("ワイン")) {
+      ideas.push("カジュアルなバルで飲みながら本音トーク");
+    }
+    if (fav.includes("自然") || fav.includes("植物") || fav.includes("花")) {
+      ideas.push("植物園や公園を散策しながらリラックス");
+    }
+  }
+  
+  // 性格スコアからの提案（フォールバック）
+  if (ideas.length === 0) {
+    const avgExtraversion = (userScores.extraversion + profileScores.extraversion) / 2;
+    const avgOpenness = (userScores.openness + profileScores.openness) / 2;
+    
+    if (avgExtraversion >= 3.8) {
+      ideas.push("賑やかな場所で一緒にエネルギーを共有");
+    } else if (avgOpenness >= 3.8) {
+      ideas.push("二人とも初めての場所や体験を試してみる");
+    } else {
+      ideas.push("落ち着いた空間でじっくり対話を楽しむ");
+    }
+  }
+
+  return ideas[Math.floor(Math.random() * ideas.length)];
 }
 
 function generateCommonalities(
   userScores: BigFiveScores,
   profileScores: BigFiveScores,
+  profile: MatchingProfile,
+  userType: PersonalityTypeDefinition,
 ): string[] {
   const commonalities: string[] = [];
+  
+  // 特性の類似度から具体的な共通点を生成
   const traitDiffs = TRAITS.map((trait) => ({
     trait,
     label: TRAIT_LABELS[trait],
+    user: userScores[trait],
+    profile: profileScores[trait],
     diff: Math.abs(userScores[trait] - profileScores[trait]),
   }));
 
-  const similar = traitDiffs.filter((item) => item.diff <= 0.7).slice(0, 2);
-  similar.forEach((item) => {
-    commonalities.push(`${item.label}が近く、ペースを合わせやすい`);
+  traitDiffs.sort((a, b) => a.diff - b.diff);
+  const mostSimilar = traitDiffs.slice(0, 2);
+
+  mostSimilar.forEach((item) => {
+    if (item.diff <= 0.8) {
+      if (item.trait === "extraversion") {
+        if (item.user >= 3.5) {
+          commonalities.push("どちらも人との交流でエネルギーを得るタイプ");
+        } else {
+          commonalities.push("どちらも一人の時間を大切にするタイプ");
+        }
+      } else if (item.trait === "openness") {
+        if (item.user >= 3.5) {
+          commonalities.push("新しいことに興味を持つ好奇心旺盛な点が共通");
+        } else {
+          commonalities.push("慣れ親しんだものを大切にする安定志向");
+        }
+      } else if (item.trait === "conscientiousness") {
+        if (item.user >= 3.8) {
+          commonalities.push("計画的に物事を進める几帳面さが似ている");
+        } else {
+          commonalities.push("柔軟に状況対応できる自由な感覚が近い");
+        }
+      } else if (item.trait === "agreeableness") {
+        if (item.user >= 3.8) {
+          commonalities.push("相手を思いやる優しさや協調性が共通");
+        }
+      } else if (item.trait === "neuroticism") {
+        if (item.user >= 3.5 && item.profile >= 3.5) {
+          commonalities.push("繊細で細かいことに気づける感受性が似ている");
+        } else if (item.user < 3.0 && item.profile < 3.0) {
+          commonalities.push("おおらかでストレスに強いメンタルが共通");
+        }
+      }
+    }
   });
 
-  if (commonalities.length === 0) {
-    commonalities.push("お互いの違いから新しい発見が得られる関係");
+  // プロフィール情報からの共通点
+  if (profile.interests && profile.interests.length > 0) {
+    commonalities.push(`${profile.interests[0]}への関心が会話のきっかけに`);
   }
 
-  return commonalities;
+  if (commonalities.length === 0) {
+    // 補完関係を強調
+    const maxDiff = traitDiffs[traitDiffs.length - 1];
+    if (maxDiff.trait === "extraversion") {
+      commonalities.push("外向性の違いが互いの視野を広げる");
+    } else {
+      commonalities.push("異なる強みで補い合える関係");
+    }
+  }
+
+  return commonalities.slice(0, 3);
 }
 
 function generateConversationStarters(
@@ -823,9 +944,9 @@ export const generateMatchingResults = async (
     const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
     const personalizedInsights = generatePersonalizedInsights(userType, profileType, compatibility);
     const highlights = generateMatchHighlights(userType, profileType, compatibility, userScores, profileScores);
-    const catchphrase = generateCatchphrase(userType, profileType, userScores, profileScores, compatibility.totalCompatibility);
-    const dateIdea = generateDateIdea(userScores, profileScores);
-    const commonalities = generateCommonalities(userScores, profileScores);
+    const catchphrase = generateCatchphrase(userType, profileType, userScores, profileScores, compatibility.totalCompatibility, profile);
+    const dateIdea = generateDateIdea(userScores, profileScores, profile);
+    const commonalities = generateCommonalities(userScores, profileScores, profile, userType);
     const conversationStarters = generateConversationStarters(userScores, profileScores, profile);
 
     return {
