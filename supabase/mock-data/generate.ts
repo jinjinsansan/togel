@@ -25,7 +25,7 @@ const avatarSets = {
     "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=80",
     "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80",
     "https://images.unsplash.com/photo-1445633814773-c3ac65bdb48c?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1456916374081-9c945ccbbcab?auto=format&fit=crop&w=400&q=80",
   ],
   neutral: [
     "https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=400&q=80",
@@ -35,9 +35,24 @@ const avatarSets = {
     "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=400&q=80",
     "https://images.unsplash.com/photo-1470123808288-1e59739ba8f2?auto=format&fit=crop&w=400&q=80",
     "https://images.unsplash.com/photo-1469470379115-8b3e6690e708?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1469470379115-8b3e6690e708?auto=format&fit=crop&w=400&q=80",
   ],
 };
+
+const petAvatars = [
+  "https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1508675801627-066ac4346a60?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1507149833265-60c372daea22?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=400&q=80",
+];
+
+const sceneryAvatars = [
+  "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1470124560017-8d01bee1f5df?auto=format&fit=crop&w=400&q=80",
+];
 
 const nicknames = {
   male: ["レン", "ソウタ", "ユウト", "カイ", "リク", "ショウ", "ハル", "コウ", "ユウマ", "アオイ", "ダイチ", "タイガ", "シュン", "アユム", "ユウタ", "レント", "ツバサ", "ヒロト", "ミナト", "タクト"],
@@ -46,7 +61,17 @@ const nicknames = {
 
 const fullTimeJobs = ["プロダクトマネージャー", "UI/UXデザイナー", "データアナリスト", "マーケター", "編集者", "プランナー", "スタイリスト", "エンジニア", "コンサルタント", "管理栄養士", "教師", "映像クリエイター", "カフェ経営", "ライター", "イベントプロデューサー", "プロジェクトコーディネーター", "メディアディレクター", "HRスペシャリスト", "コミュニティマネージャー", "リサーチャー", "地方創生プランナー", "データサイエンティスト"];
 const freelanceJobs = ["フリーランスデザイナー", "プロボノマーケター", "合同会社の共同創業メンバー", "業務委託エンジニア", "フリー編集者", "コミュニティの発起人", "セラピスト見習い", "スタートアップ顧問"];
-const transitionStatuses = ["現在は次の挑戦に向けて準備中", "育休・学び直し期間", "地方移住を計画中", "転職活動中", "旅しながら複数案件に関わり中", "家族のサポート期間", "大学院で研究に集中"];
+const transitionStatuses = [
+  "現在は次の挑戦に向けて準備中",
+  "育休・学び直し期間",
+  "地方移住を計画中",
+  "転職活動中",
+  "旅しながら複数案件に関わり中",
+  "家族のサポート期間",
+  "大学院で研究に集中",
+  "いまはフルタイムで働いていない",
+  "ライフイベントに合わせてゆるく働き方を調整中",
+];
 const hybridStyles = ["週3リモート勤務", "午前は会社員 / 午後はカフェ手伝い", "複業クリエイター", "スタートアップと地域プロジェクトの二足のわらじ", "合同会社経営 & メディア発信", "平日は会社員 / 週末はイベント主催"];
 
 const bios = [
@@ -73,7 +98,7 @@ const randomPick = <T,>(items: T[]): T => items[Math.floor(Math.random() * items
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 const pickAvatar = (gender: Gender) => {
-  const pools = [...avatarSets[gender], ...avatarSets.neutral];
+  const pools = [...avatarSets[gender], ...avatarSets.neutral, ...petAvatars, ...sceneryAvatars];
   return pools[Math.floor(Math.random() * pools.length)];
 };
 

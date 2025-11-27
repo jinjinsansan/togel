@@ -68,6 +68,14 @@ const TRAIT_NARRATIVES: Record<TraitKey, { high: string; low: string }> = {
   },
 };
 
+const TRAIT_LABELS: Record<TraitKey, string> = {
+  openness: "アイデア感度",
+  conscientiousness: "計画遂行力",
+  extraversion: "交流エネルギー",
+  agreeableness: "共感スタイル",
+  neuroticism: "ストレス耐性",
+};
+
 const parseInterestsFromText = (text?: string | null): string[] => {
   if (!text) return ["ライフスタイル"];
   const tokens = text
@@ -234,7 +242,7 @@ function calculate24TypeCompatibility(
 
   return {
     ...details,
-    compatibilityReason: generate24TypeCompatibilityReason(userType, profileType, details),
+    compatibilityReason: generate24TypeCompatibilityReason(userType, profileType, details, userScores, profileScores),
   };
 }
 
@@ -350,10 +358,50 @@ function hasValueConflict(type1: PersonalityTypeDefinition, type2: PersonalityTy
   return (isTraditional(type1.id) && isInnovative(type2.id)) || (isInnovative(type1.id) && isTraditional(type2.id));
 }
 
+const formatScore = (value: number) => Number(value.toFixed(1)).toString();
+
+function buildTraitAlignmentSentence(userScores: BigFiveScores, profileScores: BigFiveScores) {
+  const traitDiffs = TRAITS.map((trait) => ({
+    trait,
+    label: TRAIT_LABELS[trait],
+    user: userScores[trait],
+    profile: profileScores[trait],
+    diff: Math.abs(userScores[trait] - profileScores[trait]),
+  }));
+
+  const aligned = traitDiffs
+    .filter((item) => item.diff <= 0.5)
+    .sort((a, b) => a.diff - b.diff)[0];
+
+  const complementary = traitDiffs
+    .filter((item) => item.diff >= 1.3)
+    .sort((a, b) => b.diff - a.diff)[0];
+
+  const parts: string[] = [];
+  if (aligned) {
+    parts.push(
+      `${aligned.label}がほぼ同じ感覚（あなた${formatScore(aligned.user)} / 相手${formatScore(aligned.profile)}）で、初対面でもペースを合わせやすいです。`,
+    );
+  }
+  if (complementary) {
+    parts.push(
+      `${complementary.label}はあなた${formatScore(complementary.user)} vs 相手${formatScore(complementary.profile)}と差があり、役割分担が自然に決まりやすいギャップです。`,
+    );
+  }
+
+  if (parts.length === 0) {
+    return "特性のバランスが全体的に近く、安定した相性です。";
+  }
+
+  return parts.join(" ");
+}
+
 function generate24TypeCompatibilityReason(
   userType: PersonalityTypeDefinition,
   profileType: PersonalityTypeDefinition,
   details: CompatibilityDetails,
+  userScores: BigFiveScores,
+  profileScores: BigFiveScores,
 ): string {
   const userLabel = getTogelLabel(userType.id);
   const profileLabel = getTogelLabel(profileType.id);
@@ -369,6 +417,8 @@ function generate24TypeCompatibilityReason(
   } else {
     reason = `${userLabel}のあなたと${profileLabel}はチャレンジングな相性（${score}点）`;
   }
+
+  reason += ` ${buildTraitAlignmentSentence(userScores, profileScores)}`;
 
   if (commonValues.length >= 2) {
     reason += `。お互いの${commonValues.join("と")}を大切にする価値観が共通しており、深い理解関係が築けそう。`;
@@ -397,9 +447,18 @@ function generateMatchHighlights(
   userType: PersonalityTypeDefinition,
   profileType: PersonalityTypeDefinition,
   details: CompatibilityDetails,
+  userScores: BigFiveScores,
+  profileScores: BigFiveScores,
 ): string[] {
   const highlights: string[] = [];
   const commonValues = getCommonValues(userType, profileType);
+  const traitDiffs = TRAITS.map((trait) => ({
+    trait,
+    label: TRAIT_LABELS[trait],
+    user: userScores[trait],
+    profile: profileScores[trait],
+    diff: Math.abs(userScores[trait] - profileScores[trait]),
+  }));
 
   if (details.personality >= 70) {
     highlights.push(`性格バランス：${userType.dominantTraits[0]}と${profileType.dominantTraits[0]}が同じ方向を向いています。`);
@@ -419,7 +478,26 @@ function generateMatchHighlights(
     highlights.push(`会話スタイル：${userType.characteristics.communication}と${profileType.characteristics.communication}で互いのペースを学び合う関係。`);
   }
 
-  return highlights.slice(0, 3);
+  const alignedTraits = traitDiffs
+    .filter((item) => item.diff <= 0.6)
+    .sort((a, b) => a.diff - b.diff)
+    .slice(0, 2);
+
+  alignedTraits.forEach((item) => {
+    highlights.push(`${item.label}：あなた${formatScore(item.user)} / 相手${formatScore(item.profile)}で同じ景色を見ています。`);
+  });
+
+  const complementary = traitDiffs
+    .filter((item) => item.diff >= 1.4)
+    .sort((a, b) => b.diff - a.diff)[0];
+
+  if (complementary) {
+    highlights.push(`${complementary.label}：あなた${formatScore(complementary.user)} vs 相手${formatScore(complementary.profile)}で補完し合える立ち位置。`);
+  }
+
+  highlights.push(`スコア内訳：性格${details.personality} / 価値観${details.valueAlignment} / コミュニケーション${details.communication}`);
+
+  return highlights.slice(0, 5);
 }
 
 function generatePersonalizedInsights(
@@ -504,7 +582,7 @@ export const generateMatchingResults = async (
     const profileType = determinePersonalityType(profileScores);
     const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
     const personalizedInsights = generatePersonalizedInsights(userType, profileType, compatibility);
-    const highlights = generateMatchHighlights(userType, profileType, compatibility);
+    const highlights = generateMatchHighlights(userType, profileType, compatibility, userScores, profileScores);
 
     return {
       ranking: 0,
