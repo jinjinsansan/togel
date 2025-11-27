@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { generateMatchingResults, generateDiagnosisResult } from "@/lib/matching/engine";
+import { getTogelLabel } from "@/lib/personality";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -75,15 +76,15 @@ export const POST = async (request: Request) => {
     
     // ビッグファイブ診断結果を生成
     const diagnosisResult = generateDiagnosisResult(parsed.data);
+    const animalType = getTogelLabel(diagnosisResult.personalityType.id);
 
     const { data: insertResult, error: insertError } = await supabase
       .from("diagnosis_results")
       .insert({
         user_id: guestUserId,
         diagnosis_type: parsed.data.diagnosisType,
+        animal_type: animalType,
         answers: parsed.data.answers,
-        big_five_scores: diagnosisResult.bigFiveScores,
-        personality_type_id: diagnosisResult.personalityType.id, // 24タイプID
       })
       .select("id")
       .single();
