@@ -110,23 +110,95 @@ const ResultPage = () => {
           {results.map((result) => (
             <div
               key={result.profile.id}
-              className="flex flex-col rounded-3xl border border-border bg-white/90 p-6 shadow-card lg:flex-row"
+              className="flex flex-col rounded-3xl border border-border bg-white/90 p-6 shadow-card hover:shadow-lg transition-shadow"
             >
-              <div className="flex flex-1 flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-bold text-primary">#{result.ranking}</span>
-                    <div>
-                      <p className="text-sm text-muted-foreground">マッチングスコア</p>
-                      <p className="text-2xl font-semibold">{result.compatibility.total}%</p>
+              {/* ヘッダー部分 */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative h-20 w-20">
+                    <Image
+                      src={result.profile.avatarUrl}
+                      alt={result.profile.nickname}
+                      fill
+                      sizes="80px"
+                      className="rounded-full border-2 border-primary/20 object-cover"
+                      onError={(e: SyntheticEvent<HTMLImageElement>) => {
+                        const target = e.currentTarget;
+                        if (!target.src.includes("dicebear.com")) {
+                          target.src = buildFallbackAvatar(result.profile.id, result.profile.gender);
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-2xl font-bold text-primary">#{result.ranking}</span>
+                      <span className="text-xl font-semibold">{result.profile.nickname}</span>
+                      <span className="text-sm text-muted-foreground">{result.profile.age}歳</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
+                        {getTogelLabel(result.personalityTypes.profile.id)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{result.profile.job}</span>
                     </div>
                   </div>
-                  <div className="rounded-full bg-primary/10 px-4 py-1 text-xs font-semibold text-primary">
-                    {getTogelLabel(result.personalityTypes.profile.id)}
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-primary">{result.compatibility.total}%</p>
+                  <p className="text-xs text-muted-foreground">マッチ度</p>
+                </div>
+              </div>
+
+              {/* キャッチコピー */}
+              <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
+                <p className="text-base font-medium text-foreground leading-relaxed">
+                  {result.catchphrase}
+                </p>
+              </div>
+
+              {/* アイコン付き情報 */}
+              <div className="grid gap-3 mb-4">
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/40">
+                  <span className="text-2xl">🎯</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">初デート提案</p>
+                    <p className="text-sm text-foreground">{result.dateIdea}</p>
                   </div>
                 </div>
-                <p className="text-lg font-semibold">{result.profile.nickname} さん ({result.profile.age}歳)</p>
-                <p className="text-sm text-muted-foreground">{result.summary}</p>
+
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/40">
+                  <span className="text-2xl">💡</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">共通点</p>
+                    <ul className="text-sm text-foreground space-y-1">
+                      {result.commonalities.map((item) => (
+                        <li key={item}>・{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/40">
+                  <span className="text-2xl">💬</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">会話のきっかけ</p>
+                    <ul className="text-sm text-foreground space-y-1">
+                      {result.conversationStarters.map((starter) => (
+                        <li key={starter}>・{starter}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 既存の詳細情報（折りたたみ可能に） */}
+              <details className="group">
+                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors list-none flex items-center justify-between p-2">
+                  <span>詳細な相性分析を見る</span>
+                  <span className="group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <div className="mt-3 space-y-3 pt-3 border-t border-border">
                 {result.highlights.length > 0 && (
                   <div className="mt-2 rounded-2xl bg-muted/40 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Match Points</p>
@@ -193,32 +265,17 @@ const ResultPage = () => {
                     </div>
                   )}
                 </div>
-                <Button asChild variant="secondary" className="w-fit">
-                  <Link href={`/profile/${result.profile.id}`}>プロフィールを見る</Link>
+                </div>
+              </details>
+
+              {/* アクションボタン */}
+              <div className="mt-4 flex gap-3">
+                <Button asChild className="flex-1">
+                  <Link href={`/profile/${result.profile.id}`}>プロフィール詳細</Link>
                 </Button>
-              </div>
-              <div className="mt-6 flex flex-col items-center gap-4 lg:mt-0 lg:w-64">
-                <div className="relative h-32 w-32">
-                  <Image
-                    src={result.profile.avatarUrl}
-                    alt={result.profile.nickname}
-                    fill
-                    sizes="128px"
-                    className="rounded-full border border-border object-cover"
-                    onError={(e: SyntheticEvent<HTMLImageElement>) => {
-                      const target = e.currentTarget;
-                      if (!target.src.includes("dicebear.com")) {
-                        target.src = buildFallbackAvatar(result.profile.id, result.profile.gender);
-                      }
-                    }}
-                  />
-                </div>
-                <div className="text-center text-sm text-muted-foreground">
-                  <p>{result.profile.job}</p>
-                  <p>{result.profile.city}</p>
-                  <p className="text-primary">あなた: {getTogelLabel(result.personalityTypes.user.id)}</p>
-                  <p>相手: {getTogelLabel(result.personalityTypes.profile.id)}</p>
-                </div>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="#">いいね</Link>
+                </Button>
               </div>
             </div>
           ))}

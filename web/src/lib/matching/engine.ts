@@ -676,6 +676,106 @@ function generatePersonalizedInsights(
   return insights;
 }
 
+function generateCatchphrase(
+  userType: PersonalityTypeDefinition,
+  profileType: PersonalityTypeDefinition,
+  userScores: BigFiveScores,
+  profileScores: BigFiveScores,
+  score: number,
+): string {
+  const avgExtraversion = (userScores.extraversion + profileScores.extraversion) / 2;
+  const avgOpenness = (userScores.openness + profileScores.openness) / 2;
+  
+  if (score >= 80) {
+    if (avgExtraversion >= 3.5) {
+      return "一緒にいて自然体でいられる、エネルギッシュな関係";
+    }
+    return "静かに深く理解し合える、心地よい関係";
+  } else if (score >= 70) {
+    if (avgOpenness >= 3.8) {
+      return "新しいアイデアや体験を一緒に楽しめる相性";
+    }
+    return "お互いのペースを尊重しながら成長できる関係";
+  } else if (score >= 60) {
+    if (Math.abs(userScores.extraversion - profileScores.extraversion) >= 1.5) {
+      return "違う個性が刺激になる、バランスの取れたペア";
+    }
+    return "違いを楽しみながら学び合える組み合わせ";
+  }
+  return "新しい視点をもたらしてくれる、ユニークな相性";
+}
+
+function generateDateIdea(
+  userScores: BigFiveScores,
+  profileScores: BigFiveScores,
+): string {
+  const avgExtraversion = (userScores.extraversion + profileScores.extraversion) / 2;
+  const avgOpenness = (userScores.openness + profileScores.openness) / 2;
+  const avgConscientiousness = (userScores.conscientiousness + profileScores.conscientiousness) / 2;
+
+  if (avgExtraversion >= 3.8 && avgOpenness >= 3.8) {
+    return "アートイベントや音楽ライブで一緒に新しい体験を";
+  } else if (avgExtraversion >= 3.5) {
+    return "賑やかなカフェやバーでおしゃべりを楽しむ";
+  } else if (avgOpenness >= 3.8) {
+    return "美術館や展覧会でゆっくり作品を鑑賞";
+  } else if (avgConscientiousness >= 3.8) {
+    return "落ち着いたカフェで計画的にじっくり話す";
+  } else {
+    return "静かな公園を散歩しながらリラックスして会話";
+  }
+}
+
+function generateCommonalities(
+  userScores: BigFiveScores,
+  profileScores: BigFiveScores,
+): string[] {
+  const commonalities: string[] = [];
+  const traitDiffs = TRAITS.map((trait) => ({
+    trait,
+    label: TRAIT_LABELS[trait],
+    diff: Math.abs(userScores[trait] - profileScores[trait]),
+  }));
+
+  const similar = traitDiffs.filter((item) => item.diff <= 0.7).slice(0, 2);
+  similar.forEach((item) => {
+    commonalities.push(`${item.label}が近く、ペースを合わせやすい`);
+  });
+
+  if (commonalities.length === 0) {
+    commonalities.push("お互いの違いから新しい発見が得られる関係");
+  }
+
+  return commonalities;
+}
+
+function generateConversationStarters(
+  userScores: BigFiveScores,
+  profileScores: BigFiveScores,
+  profile: MatchingProfile,
+): string[] {
+  const starters: string[] = [];
+  
+  if (userScores.openness >= 3.5 && profileScores.openness >= 3.5) {
+    starters.push(`「${profile.hobbies}」について、最近ハマっていることは？`);
+  }
+  
+  if (profile.favoriteThings) {
+    starters.push(`「${profile.favoriteThings}」の魅力について教えて`);
+  }
+  
+  if (profile.interests && profile.interests.length > 0) {
+    starters.push(`「${profile.interests[0]}」に興味を持ったきっかけは？`);
+  }
+
+  if (starters.length === 0) {
+    starters.push("休日はどんな風に過ごすことが多い？");
+    starters.push("最近気になっていることは？");
+  }
+
+  return starters.slice(0, 3);
+}
+
 function buildPersonalityNarrative(
   scores: BigFiveScores,
   personalityType: PersonalityTypeDefinition,
@@ -723,6 +823,10 @@ export const generateMatchingResults = async (
     const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
     const personalizedInsights = generatePersonalizedInsights(userType, profileType, compatibility);
     const highlights = generateMatchHighlights(userType, profileType, compatibility, userScores, profileScores);
+    const catchphrase = generateCatchphrase(userType, profileType, userScores, profileScores, compatibility.totalCompatibility);
+    const dateIdea = generateDateIdea(userScores, profileScores);
+    const commonalities = generateCommonalities(userScores, profileScores);
+    const conversationStarters = generateConversationStarters(userScores, profileScores, profile);
 
     return {
       ranking: 0,
@@ -746,6 +850,10 @@ export const generateMatchingResults = async (
         profile: profileScores,
       },
       insights: personalizedInsights,
+      catchphrase,
+      dateIdea,
+      commonalities,
+      conversationStarters,
     } satisfies MatchingResult;
   });
 

@@ -128,36 +128,11 @@ export const snapshotPersonalityType = (type: PersonalityTypeDefinition): Person
 export const getTogelLabel = (typeId: string): string => {
   const index = getTypeIndex(typeId);
   if (index === -1) {
-    return "Togel?型";
+    return "TOGEL 00型";
   }
-  const circledNumbers = [
-    "①",
-    "②",
-    "③",
-    "④",
-    "⑤",
-    "⑥",
-    "⑦",
-    "⑧",
-    "⑨",
-    "⑩",
-    "⑪",
-    "⑫",
-    "⑬",
-    "⑭",
-    "⑮",
-    "⑯",
-    "⑰",
-    "⑱",
-    "⑲",
-    "⑳",
-    "㉑",
-    "㉒",
-    "㉓",
-    "㉔",
-  ];
-  const label = circledNumbers[index] ?? `${index + 1}`;
-  return `Togel${label}型`;
+  const typeNumber = index + 1;
+  const paddedNumber = String(typeNumber).padStart(2, "0");
+  return `TOGEL ${paddedNumber}型`;
 };
 
 export const getTogelDescription = (typeId: string): string => {

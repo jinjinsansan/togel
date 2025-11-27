@@ -112,4 +112,8 @@ export type MatchingResult = {
     profile: BigFiveScores;
   };
   insights: PersonalizedInsights;
+  catchphrase: string;
+  dateIdea: string;
+  commonalities: string[];
+  conversationStarters: string[];
 };
