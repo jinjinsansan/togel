@@ -148,29 +148,45 @@ type UserRow = {
   special_skills: string;
 };
 
+const isValidHttpsUrl = (candidate: string): boolean => {
+  try {
+    const parsed = new URL(candidate);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 const normalizeAvatarUrl = (url?: string | null): string | null => {
   if (!url) return null;
   const trimmed = url.trim();
-  if (trimmed.length === 0) return null;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.length === 0 || trimmed === "null" || trimmed === "undefined") return null;
+  if (isValidHttpsUrl(trimmed)) return trimmed;
   const baseUrl = env.supabaseUrl?.replace(/\/$/, "");
   if (!baseUrl) return null;
   const normalizedPath = trimmed.replace(/^\/+/, "");
-  if (normalizedPath.startsWith("storage/v1")) {
-    return `${baseUrl}/${normalizedPath}`;
-  }
-  return `${baseUrl}/storage/v1/object/public/${normalizedPath}`;
+  const candidate = normalizedPath.startsWith("storage/v1")
+    ? `${baseUrl}/${normalizedPath}`
+    : `${baseUrl}/storage/v1/object/public/${normalizedPath}`;
+  return isValidHttpsUrl(candidate) ? candidate : null;
+};
+
+const buildDicebearAvatar = (seed: string, gender: Gender): string => {
+  const palette = gender === "male" ? "blue" : "pink";
+  const encodedSeed = encodeURIComponent(seed);
+  return `https://api.dicebear.com/8.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=ffdfbf,bee3db&scale=90&accessoriesProbability=40&hairColor=4a312c,2f1b0f&skinColor=f2d3b1,eac9a1&shapeColor=${palette}`;
 };
 
 const mapUserRowToProfile = (row: UserRow, index: number): MatchingProfile => {
   const age = row.age ?? 29;
   const avatarCandidate = normalizeAvatarUrl(row.avatar_url);
+  const fallbackAvatar = buildDicebearAvatar(`${row.id}-${index}`, row.gender);
   return {
     id: row.id,
     nickname: row.nickname,
     age: age < 18 ? 18 : age,
     gender: row.gender,
-    avatarUrl: avatarCandidate ?? pickFallbackAvatar(row.gender, index),
+    avatarUrl: avatarCandidate ?? pickFallbackAvatar(row.gender, index) ?? fallbackAvatar,
     bio: row.bio,
     job: row.job,
     favoriteThings: row.favorite_things,
@@ -204,6 +220,18 @@ const loadRealProfiles = async (gender: Gender): Promise<MatchingProfile[]> => {
     console.error("Unexpected error loading real profiles", error);
     return [];
   }
+};
+
+const ensureProfileAvatar = (profile: MatchingProfile, index: number): MatchingProfile => {
+  const trimmed = profile.avatarUrl?.trim();
+  if (trimmed && isValidHttpsUrl(trimmed)) {
+    return { ...profile, avatarUrl: trimmed };
+  }
+  const fallback = buildDicebearAvatar(`${profile.id}-${index}`, profile.gender);
+  return {
+    ...profile,
+    avatarUrl: fallback,
+  };
 };
 
 function calculateBigFiveScores(answers: Answer[]): BigFiveScores {
@@ -616,7 +644,8 @@ export const generateMatchingResults = async (
   const mockQuota = Math.max(MAX_MOCK_PROFILES_PER_GENDER - realProfiles.length, 0);
   const trimmedMockProfiles = filteredMockProfiles.slice(0, mockQuota);
   const candidateProfiles = [...realProfiles, ...trimmedMockProfiles];
-  const pool = candidateProfiles.length > 0 ? candidateProfiles : filteredMockProfiles;
+  const basePool = candidateProfiles.length > 0 ? candidateProfiles : filteredMockProfiles;
+  const pool = basePool.map((profile, index) => ensureProfileAvatar(profile, index));
 
   const computed = pool.map((profile) => {
     const profileScores = estimateProfileScores(profile);
