@@ -1,10 +1,19 @@
+"use client";
+
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { SyntheticEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { mockProfiles } from "@/data/mock-profiles";
 import { determinePersonalityType, estimateProfileScores, getTogelLabel } from "@/lib/personality";
 import { BigFiveScores } from "@/types/diagnosis";
+
+const buildFallbackAvatar = (seed: string, gender: "male" | "female"): string => {
+  const palette = gender === "male" ? "blue" : "pink";
+  const encodedSeed = encodeURIComponent(seed);
+  return `https://api.dicebear.com/8.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=ffdfbf,bee3db&scale=90&accessoriesProbability=40&hairColor=4a312c,2f1b0f&skinColor=f2d3b1,eac9a1&shapeColor=${palette}`;
+};
 
 const traitLabels: Record<keyof BigFiveScores, string> = {
   openness: "アイデア感度",
@@ -49,6 +58,12 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                 fill
                 sizes="128px"
                 className="rounded-full border border-border object-cover"
+                onError={(e: SyntheticEvent<HTMLImageElement>) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes("dicebear.com")) {
+                    target.src = buildFallbackAvatar(profile.id, profile.gender);
+                  }
+                }}
               />
             </div>
             <div>

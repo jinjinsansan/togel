@@ -2,11 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, SyntheticEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { getTogelLabel } from "@/lib/personality";
 import { BigFiveScores, MatchingResult, PersonalityTypeDefinition } from "@/types/diagnosis";
+
+const buildFallbackAvatar = (seed: string, gender: "male" | "female"): string => {
+  const palette = gender === "male" ? "blue" : "pink";
+  const encodedSeed = encodeURIComponent(seed);
+  return `https://api.dicebear.com/8.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=ffdfbf,bee3db&scale=90&accessoriesProbability=40&hairColor=4a312c,2f1b0f&skinColor=f2d3b1,eac9a1&shapeColor=${palette}`;
+};
 
 type LatestDiagnosis = {
   bigFiveScores: BigFiveScores;
@@ -196,6 +202,12 @@ const ResultPage = () => {
                     fill
                     sizes="128px"
                     className="rounded-full border border-border object-cover"
+                    onError={(e: SyntheticEvent<HTMLImageElement>) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes("dicebear.com")) {
+                        target.src = buildFallbackAvatar(result.profile.id, result.profile.gender);
+                      }
+                    }}
                   />
                 </div>
                 <div className="text-center text-sm text-muted-foreground">
