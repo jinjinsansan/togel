@@ -477,14 +477,23 @@ function generate24TypeCompatibilityReason(
   const commonValues = getCommonValues(userType, profileType);
   const score = details.totalCompatibility;
   let reason = "";
-  if (score >= 85) {
-    reason = `${userLabel}のあなたと${profileLabel}の組み合わせは非常に高いシナジー（${score}点）！`;
-  } else if (score >= 70) {
-    reason = `${userLabel}のあなたと${profileLabel}は相性バランスが良好（${score}点）`;
-  } else if (score >= 55) {
-    reason = `${userLabel}のあなたと${profileLabel}は伸びしろのある相性（${score}点）`;
+  
+  if (score >= 90) {
+    reason = `${userLabel}のあなたと${profileLabel}の組み合わせは極めて理想的（${score}点）！`;
+  } else if (score >= 82) {
+    reason = `${userLabel}のあなたと${profileLabel}は非常に高いシナジー（${score}点）`;
+  } else if (score >= 75) {
+    reason = `${userLabel}のあなたと${profileLabel}はバランスの取れた良好な相性（${score}点）`;
+  } else if (score >= 68) {
+    reason = `${userLabel}のあなたと${profileLabel}は互いに高め合える関係性（${score}点）`;
+  } else if (score >= 61) {
+    reason = `${userLabel}のあなたと${profileLabel}は成長し合える可能性を持つ相性（${score}点）`;
+  } else if (score >= 54) {
+    reason = `${userLabel}のあなたと${profileLabel}は刺激的な違いがある組み合わせ（${score}点）`;
+  } else if (score >= 47) {
+    reason = `${userLabel}のあなたと${profileLabel}は異なる視点で補い合う関係（${score}点）`;
   } else {
-    reason = `${userLabel}のあなたと${profileLabel}はチャレンジングな相性（${score}点）`;
+    reason = `${userLabel}のあなたと${profileLabel}は個性的な対比が際立つペア（${score}点）`;
   }
 
   reason += ` ${buildTraitAlignmentSentence(userScores, profileScores)}`;
