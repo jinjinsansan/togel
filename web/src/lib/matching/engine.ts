@@ -3,6 +3,7 @@ import {
   Answer,
   BigFiveScores,
   DiagnosisPayload,
+  MatchingProfile,
   MatchingResult,
   PersonalityTypeDefinition,
 } from "@/types/diagnosis";
@@ -12,10 +13,29 @@ import {
   getTogelLabel,
   snapshotPersonalityType,
 } from "@/lib/personality";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+type Gender = "male" | "female";
 
 type TraitKey = keyof BigFiveScores;
 
 const TRAITS: TraitKey[] = ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"];
+
+const MAX_MOCK_PROFILES_PER_GENDER = 150;
+const fallbackAvatars: Record<Gender, string[]> = {
+  male: [
+    "https://images.unsplash.com/photo-1504595403659-9088ce801e29?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+  ],
+  female: [
+    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1525130413817-d45c1d127c42?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=80",
+  ],
+};
 
 const traitKeyMap: Record<string, TraitKey> = {
   o: "openness",
@@ -46,6 +66,95 @@ const TRAIT_NARRATIVES: Record<TraitKey, { high: string; low: string }> = {
     high: "繊細な感受性があるため、相手の心の動きをいち早く察知できます。",
     low: "ストレス耐性が高く、プレッシャー下でも落ち着いた判断ができます。",
   },
+};
+
+const parseInterestsFromText = (text?: string | null): string[] => {
+  if (!text) return ["ライフスタイル"];
+  const tokens = text
+    .split(/[、,\/・\s]+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0);
+  if (tokens.length === 0) return ["ライフスタイル"];
+  return tokens.slice(0, 3);
+};
+
+const deriveValuesFromFavorite = (favorite?: string | null, bio?: string | null): string => {
+  const text = `${favorite ?? ""}${bio ?? ""}`;
+  if (text.includes("自然") || text.includes("アウトドア")) return "自然体";
+  if (text.includes("キャリア") || text.includes("スタートアップ")) return "挑戦";
+  if (text.includes("暮らし") || text.includes("余白")) return "余白のある暮らし";
+  if (text.includes("アート") || text.includes("写真")) return "創造性";
+  return "自分らしさ";
+};
+
+const deriveCommunicationStyle = (bio?: string | null): string => {
+  if (!bio) return "ナチュラル";
+  if (bio.includes("計画") || bio.includes("整理")) return "ロジカル";
+  if (bio.includes("会話") || bio.includes("対話")) return "ナチュラル";
+  if (bio.includes("柔らか")) return "柔らかめ";
+  return "穏やか";
+};
+
+const pickFallbackAvatar = (gender: Gender, index: number) => {
+  const list = fallbackAvatars[gender];
+  if (list.length === 0) return "https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=400&q=80";
+  return list[index % list.length];
+};
+
+type UserRow = {
+  id: string;
+  nickname: string;
+  gender: Gender;
+  age: number | null;
+  avatar_url: string | null;
+  bio: string;
+  job: string;
+  favorite_things: string;
+  hobbies: string;
+  special_skills: string;
+};
+
+const mapUserRowToProfile = (row: UserRow, index: number): MatchingProfile => {
+  const age = row.age ?? 29;
+  return {
+    id: row.id,
+    nickname: row.nickname,
+    age: age < 18 ? 18 : age,
+    gender: row.gender,
+    avatarUrl: row.avatar_url ?? pickFallbackAvatar(row.gender, index),
+    bio: row.bio,
+    job: row.job,
+    favoriteThings: row.favorite_things,
+    hobbies: row.hobbies,
+    specialSkills: row.special_skills,
+    values: deriveValuesFromFavorite(row.favorite_things, row.bio),
+    communication: deriveCommunicationStyle(row.bio),
+    interests: parseInterestsFromText(row.hobbies),
+    city: "オンライン",
+  } satisfies MatchingProfile;
+};
+
+const loadRealProfiles = async (gender: Gender): Promise<MatchingProfile[]> => {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, nickname, gender, age, avatar_url, bio, job, favorite_things, hobbies, special_skills")
+      .eq("gender", gender)
+      .eq("is_mock_data", false)
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    if (error || !data) {
+      console.error("Failed to load real profiles", error);
+      return [];
+    }
+
+    return data.map((row, index) => mapUserRowToProfile(row as UserRow, index));
+  } catch (error) {
+    console.error("Unexpected error loading real profiles", error);
+    return [];
+  }
 };
 
 function calculateBigFiveScores(answers: Answer[]): BigFiveScores {
@@ -330,9 +439,16 @@ export const generateMatchingResults = async (
   const userType = determinePersonalityType(userScores);
 
   const oppositeGender = payload.userGender === "male" ? "female" : "male";
-  const filteredProfiles = mockProfiles.filter((profile) => profile.gender === oppositeGender);
+  const realProfiles = await loadRealProfiles(oppositeGender);
+  const filteredMockProfiles = mockProfiles
+    .filter((profile) => profile.gender === oppositeGender)
+    .slice(0, MAX_MOCK_PROFILES_PER_GENDER);
+  const mockQuota = Math.max(MAX_MOCK_PROFILES_PER_GENDER - realProfiles.length, 0);
+  const trimmedMockProfiles = filteredMockProfiles.slice(0, mockQuota);
+  const candidateProfiles = [...realProfiles, ...trimmedMockProfiles];
+  const pool = candidateProfiles.length > 0 ? candidateProfiles : filteredMockProfiles;
 
-  const computed = filteredProfiles.map((profile) => {
+  const computed = pool.map((profile) => {
     const profileScores = estimateProfileScores(profile);
     const profileType = determinePersonalityType(profileScores);
     const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
