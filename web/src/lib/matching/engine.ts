@@ -239,14 +239,29 @@ const loadRealProfiles = async (gender: Gender): Promise<MatchingProfile[]> => {
 
 const ensureProfileAvatar = (profile: MatchingProfile, index: number): MatchingProfile => {
   const trimmed = profile.avatarUrl?.trim();
-  if (trimmed && isValidHttpsUrl(trimmed)) {
+  
+  // 有効なHTTPS URLがある場合
+  if (trimmed && trimmed.length > 0 && trimmed !== "null" && trimmed !== "undefined" && isValidHttpsUrl(trimmed)) {
     return { ...profile, avatarUrl: trimmed };
   }
+  
+  // フォールバック：Dicebearアバターを生成
   const fallback = buildDicebearAvatar(`${profile.id}-${index}`, profile.gender);
   return {
     ...profile,
     avatarUrl: fallback,
   };
+};
+
+// プロフィールに有効な画像があるかチェック
+const hasValidAvatar = (profile: MatchingProfile): boolean => {
+  const trimmed = profile.avatarUrl?.trim();
+  if (!trimmed || trimmed.length === 0 || trimmed === "null" || trimmed === "undefined") {
+    // DiceBearで生成できるので有効とみなす
+    return true;
+  }
+  // URLがある場合は有効性をチェック
+  return isValidHttpsUrl(trimmed);
 };
 
 function calculateBigFiveScores(answers: Answer[]): BigFiveScores {
@@ -924,6 +939,7 @@ export const generateMatchingResults = async (
   const realProfiles = await loadRealProfiles(oppositeGender);
   const filteredMockProfiles = mockProfiles
     .filter((profile) => profile.gender === oppositeGender)
+    .filter((profile) => hasValidAvatar(profile)) // 画像が有効なもののみ
     .slice(0, MAX_MOCK_PROFILES_PER_GENDER);
   const mockQuota = Math.max(MAX_MOCK_PROFILES_PER_GENDER - realProfiles.length, 0);
   const trimmedMockProfiles = filteredMockProfiles.slice(0, mockQuota);
@@ -1020,6 +1036,7 @@ export const generateMismatchingResults = async (
   const realProfiles = await loadRealProfiles(oppositeGender);
   const filteredMockProfiles = mockProfiles
     .filter((profile) => profile.gender === oppositeGender)
+    .filter((profile) => hasValidAvatar(profile)) // 画像が有効なもののみ
     .slice(0, MAX_MOCK_PROFILES_PER_GENDER);
   const mockQuota = Math.max(MAX_MOCK_PROFILES_PER_GENDER - realProfiles.length, 0);
   const trimmedMockProfiles = filteredMockProfiles.slice(0, mockQuota);
