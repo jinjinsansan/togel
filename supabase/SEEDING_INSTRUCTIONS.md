@@ -1,92 +1,89 @@
-# データシード手順書
+# データ管理について
 
-WSL環境でのNode.js実行が困難なため、Supabase SQL Editorを使って直接データを投入します。
+このプロジェクトでは、開発中に必要なデータを**コードで管理**しています。
 
-## 手順
+## コード管理されているデータ
 
-### 1. Supabaseダッシュボードにアクセス
+### 1. 質問データ
+**場所**: `web/src/data/questions.ts`
 
-https://supabase.com/dashboard にログインして、プロジェクトを開く
+- Light版 10問 + Full版 30問
+- 質問内容を変更したい場合はこのファイルを編集
+- Git commit してデプロイすれば自動反映
 
-### 2. SQL Editorを開く
+### 2. モックユーザーデータ
+**場所**: `web/src/data/mock-profiles.ts`
 
-左サイドバーから **SQL Editor** をクリック
+- 男性10名 + 女性10名の固定プロフィール
+- マッチング表示のテスト用
+- プロフィール内容を変更したい場合はこのファイルを編集
 
-### 3. 質問データを投入
+## Supabaseについて
 
-1. `New query` をクリック
-2. `supabase/seed-questions.sql` の内容をコピー&ペースト
-3. `Run` または `Ctrl+Enter` で実行
-4. 成功メッセージ: `Success. No rows returned`
-5. 確認: 左サイドバーの **Table Editor** → `questions` テーブルで40行確認
+**開発中はSupabaseへのデータ投入は不要です。**
 
-### 4. モックユーザーを投入
+- `questions` テーブル → 使用していません（コードから取得）
+- `users` テーブル → 本番環境でLINEログイン後の実ユーザーが保存されます
 
-1. SQL Editorで `New query` をクリック
-2. `supabase/seed-mock-users.sql` の内容をコピー&ペースト
-3. `Run` で実行
-4. 成功メッセージ: `Success. No rows returned`
-5. 確認: **Table Editor** → `users` テーブルで20行確認
+## 動作確認
 
-### 5. 動作確認
-
-ローカル環境で開発サーバーを起動して診断フローをテスト：
+開発サーバーを起動して診断フローをテスト：
 
 ```bash
 cd web
 pnpm dev
 ```
 
-ブラウザで http://localhost:3000 にアクセスして以下を確認：
-- トップページが表示される
+ブラウザで http://localhost:3000 にアクセス：
 - 「診断をはじめる」→ 「サクッと10問」を選択
-- 質問が表示される（Supabaseから取得）
-- 全問回答後、マッチング結果が表示される
+- 質問が表示される（`questions.ts` から）
+- 全問回答後、マッチング結果が表示される（`mock-profiles.ts` から）
 
-## トラブルシューティング
+## データの変更方法
 
-### RLS Policy エラーが出る場合
+### 質問を変更したい場合
 
-SQL Editorで以下を実行してRLSを一時的に無効化（開発中のみ）：
+`web/src/data/questions.ts` を編集：
 
-```sql
-ALTER TABLE questions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+```typescript
+{
+  id: "q1",
+  diagnosisType: "light",
+  number: 1,
+  text: "質問文を変更",  // ここを編集
+  scale: "likert",
+  options: likertOptions,
+  trait: "sociability",
+}
 ```
 
-本番環境では必ずRLSを有効にしてください。
+### モックユーザーを変更したい場合
 
-### データが反映されない場合
+`web/src/data/mock-profiles.ts` を編集：
 
-キャッシュをクリア：
-```sql
--- 既存データを削除して再投入
-DELETE FROM questions;
-DELETE FROM users WHERE line_id LIKE 'mock-%';
+```typescript
+{
+  id: "mock-male-001",
+  nickname: "名前を変更",  // ここを編集
+  age: 30,
+  bio: "プロフィールを変更",  // ここを編集
+  // ...
+}
 ```
 
-その後、再度 `seed-questions.sql` と `seed-mock-users.sql` を実行。
+### 変更を反映
 
-## 本番環境への適用
-
-Vercel環境でも同じデータが必要な場合：
-1. Supabase Productionプロジェクトで同じSQL実行
-2. または、Vercel環境変数が同じSupabaseを指していれば自動的に反映される
-
-## モックユーザーの追加
-
-`seed-mock-users.sql` には20名のみ含まれています。
-200名に増やす場合は以下の形式で追加してください：
-
-```sql
-('mock-male-011', '名前', 'https://api.dicebear.com/7.x/avataaars/svg?seed=unique-seed', 'ステータスメッセージ', 'male', '1990-01-01', '職業', '400-600', '東京都', 'energetic_tiger', true),
+```bash
+git add .
+git commit -m "update questions/profiles"
+git push
 ```
 
-animal_zodiac_typeの種類：
-- energetic_tiger, calm_elephant, adventurous_lion, analytical_owl
-- creative_dolphin, gentle_panda, playful_monkey, wise_fox
-- brave_wolf, imaginative_peacock, gentle_cat, energetic_rabbit
-- creative_butterfly, adventurous_bird, analytical_dolphin, nurturing_deer
-- wise_owl, stylish_flamingo, calm_koala, compassionate_swan
+Vercelが自動でデプロイして反映されます。
 
-など、自由に設定可能です。
+## 本番環境について
+
+本番リリース後は：
+- **質問データ**: コード管理のまま（変更はデプロイで反映）
+- **ユーザーデータ**: LINEログインした実ユーザーがSupabaseに保存される
+- **モックデータ**: 開発・テスト用として残る
