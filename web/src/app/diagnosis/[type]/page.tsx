@@ -122,7 +122,12 @@ const DiagnosisPage = () => {
         throw new Error("failed to submit diagnosis");
       }
       const data = await response.json();
-      sessionStorage.setItem("latestMatching", JSON.stringify(data.results));
+      if (data.results) {
+        sessionStorage.setItem("latestMatching", JSON.stringify(data.results));
+      }
+      if (data.diagnosis) {
+        sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
+      }
       router.push("/result");
     } catch (err) {
       setError("診断結果の生成に失敗しました。時間を置いて再実行してください。");

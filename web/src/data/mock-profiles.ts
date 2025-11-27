@@ -16,7 +16,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "率直",
     interests: ["技術", "アウトドア", "カフェ"],
     city: "東京都",
-    animalType: "狼-太陽",
   },
   {
     id: "mock-male-002",
@@ -33,7 +32,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "穏やか",
     interests: ["アート", "カフェ", "音楽"],
     city: "神奈川県",
-    animalType: "こじか-月",
   },
   {
     id: "mock-male-003",
@@ -50,7 +48,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "ユーモア",
     interests: ["アウトドア", "スポーツ", "BBQ"],
     city: "千葉県",
-    animalType: "ライオン-地球",
   },
   {
     id: "mock-male-004",
@@ -67,7 +64,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "論理的",
     interests: ["ビジネス", "読書", "投資"],
     city: "東京都",
-    animalType: "黒ひょう-月",
   },
   {
     id: "mock-male-005",
@@ -84,7 +80,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "フレンドリー",
     interests: ["旅行", "音楽", "映画"],
     city: "大阪府",
-    animalType: "ペガサス-地球",
   },
   {
     id: "mock-male-006",
@@ -101,7 +96,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "包容力",
     interests: ["マネジメント", "ゴルフ", "ビジネス書"],
     city: "埼玉県",
-    animalType: "ゾウ-月",
   },
   {
     id: "mock-male-007",
@@ -118,7 +112,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "熱い",
     interests: ["スポーツ", "居酒屋", "サッカー"],
     city: "愛知県",
-    animalType: "虎-太陽",
   },
   {
     id: "mock-male-008",
@@ -135,7 +128,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "落ち着き",
     interests: ["哲学", "美術", "歴史"],
     city: "京都府",
-    animalType: "たぬき-新月",
   },
   {
     id: "mock-male-009",
@@ -152,7 +144,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "爽やか",
     interests: ["登山", "スポーツ", "自然"],
     city: "北海道",
-    animalType: "チーター-満月",
   },
   {
     id: "mock-male-010",
@@ -169,7 +160,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "感覚的",
     interests: ["アート", "音楽", "創作"],
     city: "福岡県",
-    animalType: "猿-新月",
   },
   {
     id: "mock-female-001",
@@ -186,7 +176,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "優しい",
     interests: ["カフェ", "スイーツ", "デザイン"],
     city: "東京都",
-    animalType: "こじか-月",
   },
   {
     id: "mock-female-002",
@@ -203,7 +192,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "穏やか",
     interests: ["ヨガ", "健康", "自然"],
     city: "神奈川県",
-    animalType: "ひつじ-地球",
   },
   {
     id: "mock-female-003",
@@ -220,7 +208,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "知的",
     interests: ["アート", "音楽", "文化"],
     city: "大阪府",
-    animalType: "ペガサス-地球",
   },
   {
     id: "mock-female-004",
@@ -237,7 +224,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "明るい",
     interests: ["旅行", "写真", "文化"],
     city: "京都府",
-    animalType: "チーター-満月",
   },
   {
     id: "mock-female-005",
@@ -254,7 +240,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "論理的",
     interests: ["データ", "学習", "技術"],
     city: "東京都",
-    animalType: "黒ひょう-月",
   },
   {
     id: "mock-female-006",
@@ -271,7 +256,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "温かい",
     interests: ["料理", "健康", "家事"],
     city: "千葉県",
-    animalType: "ひつじ-地球",
   },
   {
     id: "mock-female-007",
@@ -288,7 +272,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "繊細",
     interests: ["読書", "映画", "文学"],
     city: "神奈川県",
-    animalType: "たぬき-新月",
   },
   {
     id: "mock-female-008",
@@ -305,7 +288,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "華やか",
     interests: ["ファッション", "コスメ", "美容"],
     city: "東京都",
-    animalType: "ライオン-地球",
   },
   {
     id: "mock-female-009",
@@ -322,7 +304,6 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "誠実",
     interests: ["自然", "環境", "SDGs"],
     city: "長野県",
-    animalType: "ゾウ-月",
   },
   {
     id: "mock-female-010",
@@ -339,6 +320,5 @@ export const mockProfiles: MatchingProfile[] = [
     communication: "優しい",
     interests: ["社会貢献", "音楽", "コミュニティ"],
     city: "沖縄県",
-    animalType: "子守熊-満月",
   },
 ];

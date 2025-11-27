@@ -13,14 +13,14 @@ import { Button } from "@/components/ui/button";
 const badges = [
   "ライト版10問",
   "しっかり版30問",
-  "動物占いロジック",
+  "AI根拠付き診断",
 ];
 
 const features = [
   {
     title: "AIマッチング根拠",
     description:
-      "Claude API があなたと相手の回答をもとに、感情・価値観・コミュニケーション観点で根拠を生成。",
+      "Claude API が回答データを多角的に解析し、感情・価値観・コミュニケーション観点で根拠を生成。",
     icon: Sparkles,
   },
   {
@@ -32,7 +32,7 @@ const features = [
   {
     title: "相性スコアとランキング",
     description:
-      "動物占い60タイプ×相性マトリクスでスコア化。常に上位5名をリアルタイム表示。",
+      "Togel専用アルゴリズムの相性マトリクスでスコア化。常に上位5名をリアルタイム表示。",
     icon: LineChart,
   },
 ];
@@ -54,7 +54,7 @@ const steps = [
 
 const stats = [
   { label: "診断完了まで", value: "約3分" },
-  { label: "対応タイプ数", value: "60タイプ" },
+  { label: "タイプ指標", value: "Togel分類" },
   { label: "モックユーザー", value: "2,000名" },
 ];
 
@@ -90,7 +90,7 @@ export default function Home() {
                 相手に出会う。
               </h1>
               <p className="text-lg text-muted-foreground md:text-xl">
-                LINEログインから約3分。独自の動物占いロジックとAI分析で、あなたと相性の良い異性5名を厳選してカード形式でお届けします。
+                LINEログインから約3分。独自開発のTogelアルゴリズムで、あなたと相性の良い異性5名を厳選してカード形式でお届けします。
               </p>
             </div>
             <div className="flex flex-wrap gap-4">

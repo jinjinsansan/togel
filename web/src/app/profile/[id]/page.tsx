@@ -3,6 +3,16 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { mockProfiles } from "@/data/mock-profiles";
+import { determinePersonalityType, estimateProfileScores, getTogelLabel } from "@/lib/personality";
+import { BigFiveScores } from "@/types/diagnosis";
+
+const traitLabels: Record<keyof BigFiveScores, string> = {
+  openness: "アイデア感度",
+  conscientiousness: "計画遂行力",
+  extraversion: "交流エネルギー",
+  agreeableness: "共感スタイル",
+  neuroticism: "ストレス耐性",
+};
 
 type Params = {
   id: string;
@@ -13,6 +23,10 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   if (!profile) {
     notFound();
   }
+
+  const profileScores = estimateProfileScores(profile);
+  const personalityType = determinePersonalityType(profileScores);
+  const togelLabel = getTogelLabel(personalityType.id);
 
   const infoItems = [
     { label: "自己紹介", value: profile.bio },
@@ -38,7 +52,6 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
               />
             </div>
             <div>
-              <p className="text-sm font-semibold text-muted-foreground">{profile.animalType}</p>
               <h1 className="mt-1 text-3xl font-heading">
                 {profile.nickname} さん ({profile.age}歳)
               </h1>
@@ -47,6 +60,27 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             <Button variant="secondary" className="rounded-full px-6">
               マッチング希望を送る
             </Button>
+          </div>
+          <div className="mt-6 rounded-2xl bg-muted/40 p-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">推定タイプ</p>
+            <h2 className="mt-2 font-heading text-2xl">{togelLabel}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{togelLabel}の特徴：{personalityType.description}</p>
+            <div className="mt-4 grid gap-2 md:grid-cols-3">
+              {(Object.keys(profileScores) as Array<keyof BigFiveScores>).map((trait) => (
+                <div key={trait} className="rounded-xl bg-white/70 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>{traitLabels[trait]}</span>
+                    <span className="font-semibold text-foreground">{profileScores[trait].toFixed(1)}</span>
+                  </div>
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${(profileScores[trait] / 5) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="mt-8 space-y-4">
             {infoItems.map((item) => (

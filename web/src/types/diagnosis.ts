@@ -15,7 +15,7 @@ export type DiagnosisQuestion = {
   helper?: string;
   scale: ChoiceScale;
   options: QuestionOption[];
-  trait: "sociability" | "decision" | "emotion" | "planning" | "leadership" | "communication";
+  trait: "openness" | "conscientiousness" | "extraversion" | "agreeableness" | "neuroticism";
 };
 
 export type Answer = {
@@ -27,6 +27,40 @@ export type DiagnosisPayload = {
   diagnosisType: DiagnosisType;
   userGender: "male" | "female";
   answers: Answer[];
+};
+
+export type PersonalityTypeDefinition = {
+  id: string;
+  typeName: string;
+  description: string;
+  dominantTraits: string[];
+  characteristics: {
+    strengths: string[];
+    growthAreas: string[];
+    communication: string;
+    workStyle: string;
+    relationships: string;
+  };
+  compatibleTypes: string[];
+};
+
+// ビッグファイブ特性スコア
+export type BigFiveScores = {
+  openness: number;
+  conscientiousness: number;
+  extraversion: number;
+  agreeableness: number;
+  neuroticism: number;
+};
+
+// 診断結果（ビッグファイブ特化）
+export type DiagnosisResult = {
+  id: string;
+  nickname: string;
+  gender: "male" | "female";
+  bigFiveScores: BigFiveScores;
+  personalityType: PersonalityTypeDefinition;
+  createdAt: string;
 };
 
 export type MatchingProfile = {
@@ -44,7 +78,20 @@ export type MatchingProfile = {
   communication: string;
   interests: string[];
   city: string;
-  animalType: string;
+};
+
+export type CompatibilityBreakdown = {
+  personality: number;
+  valueAlignment: number;
+  communication: number;
+  total: number;
+};
+
+export type PersonalizedInsights = {
+  strengths: string[];
+  growthAreas: string[];
+  relationshipStyle: string;
+  challenges: string[];
 };
 
 export type MatchingResult = {
@@ -52,9 +99,11 @@ export type MatchingResult = {
   score: number;
   profile: MatchingProfile;
   summary: string;
-  compatibility: {
-    personality: string;
-    valueAlignment: string;
-    communication: string;
+  compatibility: CompatibilityBreakdown;
+  compatibilityReason: string;
+  personalityTypes: {
+    user: PersonalityTypeDefinition;
+    profile: PersonalityTypeDefinition;
   };
+  insights: PersonalizedInsights;
 };

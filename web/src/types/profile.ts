@@ -19,7 +19,6 @@ export type PublicProfile = {
     x?: string;
     instagram?: string;
   };
-  animalType: string;
   prankMode?: boolean;
 };
 

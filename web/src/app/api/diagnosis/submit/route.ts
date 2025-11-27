@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateMatchingResults } from "@/lib/matching/engine";
+import { generateMatchingResults, generateDiagnosisResult } from "@/lib/matching/engine";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -62,29 +62,6 @@ const ensureGuestUser = async (
   return inserted.id;
 };
 
-const determineAnimalType = (answers: { value: number }[]) => {
-  const baseAnimals = [
-    "こじか",
-    "ひつじ",
-    "狼",
-    "猿",
-    "チーター",
-    "黒ひょう",
-    "ライオン",
-    "虎",
-    "たぬき",
-    "子守熊",
-    "ゾウ",
-    "ペガサス",
-  ];
-  const variations = ["月", "地球", "太陽", "新月", "満月"];
-  const avg = answers.reduce((sum, item) => sum + item.value, 0) / answers.length;
-  const normalized = Math.max(0, Math.min(59, Math.round(((avg - 1) / 4) * 59)));
-  const animal = baseAnimals[normalized % baseAnimals.length];
-  const variation = variations[Math.floor(normalized / baseAnimals.length) % variations.length];
-  return `${animal}-${variation}`;
-};
-
 export const POST = async (request: Request) => {
   const json = await request.json();
   const parsed = schema.safeParse(json);
@@ -95,14 +72,18 @@ export const POST = async (request: Request) => {
 
   try {
     const guestUserId = await ensureGuestUser(supabase, parsed.data.userGender);
-    const animalType = determineAnimalType(parsed.data.answers);
+    
+    // ビッグファイブ診断結果を生成
+    const diagnosisResult = generateDiagnosisResult(parsed.data);
+
     const { data: insertResult, error: insertError } = await supabase
       .from("diagnosis_results")
       .insert({
         user_id: guestUserId,
         diagnosis_type: parsed.data.diagnosisType,
-        animal_type: animalType,
         answers: parsed.data.answers,
+        big_five_scores: diagnosisResult.bigFiveScores,
+        personality_type_id: diagnosisResult.personalityType.id, // 24タイプID
       })
       .select("id")
       .single();
@@ -123,7 +104,10 @@ export const POST = async (request: Request) => {
       console.warn("Failed to cache matching results", cacheError);
     }
 
-    return NextResponse.json({ results });
+    return NextResponse.json({
+      results,
+      diagnosis: diagnosisResult,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ message: "diagnosis failed" }, { status: 500 });
