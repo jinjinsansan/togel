@@ -539,7 +539,13 @@ function generateMatchHighlights(
   }));
 
   if (details.personality >= 70) {
-    highlights.push(`性格バランス：${userType.dominantTraits[0]}と${profileType.dominantTraits[0]}が同じ方向を向いています。`);
+    const userTrait = userType.dominantTraits[0];
+    const profileTrait = profileType.dominantTraits[0];
+    if (userTrait === profileTrait) {
+      highlights.push(`性格バランス：お互いに${userTrait}を大切にする共通点があります。`);
+    } else {
+      highlights.push(`性格バランス：${userTrait}と${profileTrait}が調和する良い組み合わせ。`);
+    }
   } else if (details.personality <= 55) {
     highlights.push(`性格コンビ：${userType.dominantTraits[0]}が${profileType.dominantTraits[0]}を補完する凸凹ペア。`);
   }
@@ -551,9 +557,21 @@ function generateMatchHighlights(
   }
 
   if (details.communication >= 65) {
-    highlights.push(`会話テンポ：${userType.characteristics.communication} × ${profileType.characteristics.communication}でストレス少なく話せます。`);
+    const userComm = userType.characteristics.communication;
+    const profileComm = profileType.characteristics.communication;
+    if (userComm === profileComm) {
+      highlights.push(`会話スタイル：お互いに${userComm}スタイルで意思疎通しやすい関係。`);
+    } else {
+      highlights.push(`会話テンポ：${userComm} × ${profileComm}でストレス少なく話せます。`);
+    }
   } else {
-    highlights.push(`会話スタイル：${userType.characteristics.communication}と${profileType.characteristics.communication}で互いのペースを学び合う関係。`);
+    const userComm = userType.characteristics.communication;
+    const profileComm = profileType.characteristics.communication;
+    if (userComm === profileComm) {
+      highlights.push(`会話スタイル：同じ${userComm}アプローチで安心感のある対話が期待できます。`);
+    } else {
+      highlights.push(`会話スタイル：${userComm}と${profileComm}、異なるペースを学び合う関係。`);
+    }
   }
 
   const alignedTraits = traitDiffs
@@ -561,8 +579,16 @@ function generateMatchHighlights(
     .sort((a, b) => a.diff - b.diff)
     .slice(0, 2);
 
-  alignedTraits.forEach((item) => {
-    highlights.push(`${item.label}：あなた${formatScore(item.user)} / 相手${formatScore(item.profile)}で同じ景色を見ています。`);
+  const alignmentPhrases = [
+    "近い感覚で理解し合えます",
+    "似た価値観を共有しています",
+    "同じ目線で物事を見ています",
+    "共通の土台があります",
+  ];
+
+  alignedTraits.forEach((item, index) => {
+    const phrase = alignmentPhrases[index % alignmentPhrases.length];
+    highlights.push(`${item.label}：あなた${formatScore(item.user)} / 相手${formatScore(item.profile)}と${phrase}。`);
   });
 
   const complementary = traitDiffs
