@@ -6,7 +6,8 @@ type Gender = "male" | "female";
 const TARGET_COUNT = 150;
 const OUTPUT_PATH = path.resolve(__dirname, "../../web/src/data/mock-profiles.ts");
 
-const petAvatars = [
+const avatarPool = [
+  // ペット
   "https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=400&q=80",
@@ -16,9 +17,13 @@ const petAvatars = [
   "https://images.unsplash.com/photo-1548681528-6a5c45b66b42?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1415369629372-26f2fe60c467?auto=format&fit=crop&w=400&q=80",
-];
-
-const sceneryAvatars = [
+  "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1560807707-8cc77767d783?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1560743173-567a3b5658b1?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1416184008836-5486f3e2cf58?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1571988840298-3b5301d5109b?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1548366565-6bbab241282d?auto=format&fit=crop&w=400&q=80",
+  // 風景
   "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=80",
@@ -26,6 +31,14 @@ const sceneryAvatars = [
   "https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=400&q=80",
+  "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&w=400&q=80",
 ];
 
 const nicknames = {
@@ -71,19 +84,8 @@ const cities = ["東京都", "神奈川県", "千葉県", "埼玉県", "大阪�
 const randomPick = <T,>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-const buildDicebearAvatar = (seed: string, gender: Gender): string => {
-  const palette = gender === "male" ? "blue" : "pink";
-  const encodedSeed = encodeURIComponent(seed);
-  return `https://api.dicebear.com/8.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=ffdfbf,bee3db&scale=90&accessoriesProbability=40&hairColor=4a312c,2f1b0f&skinColor=f2d3b1,eac9a1&shapeColor=${palette}`;
-};
-
-const pickAvatar = (gender: Gender, index: number) => {
-  const useDicebear = Math.random() < 0.5;
-  if (useDicebear) {
-    return buildDicebearAvatar(`${gender}-${index}-${Date.now()}`, gender);
-  }
-  const pools = [...petAvatars, ...sceneryAvatars];
-  return pools[Math.floor(Math.random() * pools.length)];
+const pickAvatar = () => {
+  return avatarPool[Math.floor(Math.random() * avatarPool.length)];
 };
 
 const buildJobLabel = () => {
@@ -111,7 +113,7 @@ const buildProfile = (gender: Gender, index: number) => {
     nickname,
     age: randomInt(24, 39),
     gender,
-    avatarUrl: pickAvatar(gender, index),
+    avatarUrl: pickAvatar(),
     bio: randomPick(bios),
     job: buildJobLabel(),
     favoriteThings: randomPick(favoriteThings),
