@@ -60,6 +60,7 @@ export type DiagnosisResult = {
   gender: "male" | "female";
   bigFiveScores: BigFiveScores;
   personalityType: PersonalityTypeDefinition;
+  narrative?: string;
   createdAt: string;
 };
 
