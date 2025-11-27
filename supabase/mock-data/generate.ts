@@ -16,7 +16,6 @@ const petAvatars = [
   "https://images.unsplash.com/photo-1548681528-6a5c45b66b42?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1415369629372-26f2fe60c467?auto=format&fit=crop&w=400&q=80",
-  "https://images.unsplash.com/photo-1591768575957-a19ae2bed4f3?auto=format&fit=crop&w=400&q=80",
 ];
 
 const sceneryAvatars = [
