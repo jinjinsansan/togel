@@ -95,6 +95,30 @@ export type PersonalizedInsights = {
   challenges: string[];
 };
 
+export type ProfilePersonalityNarrative = {
+  personalityTraits: string[];
+  values: string[];
+  communicationStyle: string;
+};
+
+export type MatchingReasonDetail = {
+  title: string;
+  userTrait: string;
+  profileTrait: string;
+  why: string;
+};
+
+export type RelationshipPreview = {
+  goodPoints: string[];
+  warnings: string[];
+};
+
+export type FirstDateSuggestion = {
+  recommendations: string[];
+  conversationTopics: string[];
+  ngActions: string[];
+};
+
 export type MatchingResult = {
   ranking: number;
   score: number;
@@ -116,4 +140,8 @@ export type MatchingResult = {
   dateIdea: string;
   commonalities: string[];
   conversationStarters: string[];
+  profileNarrative?: ProfilePersonalityNarrative;
+  matchingReasons?: MatchingReasonDetail[];
+  relationshipPreview?: RelationshipPreview;
+  firstDateSuggestion?: FirstDateSuggestion;
 };

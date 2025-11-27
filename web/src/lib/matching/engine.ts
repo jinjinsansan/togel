@@ -13,6 +13,13 @@ import {
   getTogelLabel,
   snapshotPersonalityType,
 } from "@/lib/personality";
+import { generatePersonalityNarrative } from "@/lib/personality/narrative";
+import {
+  generateProfilePersonality,
+  generateMatchingReason,
+  generateRelationshipPreview,
+  generateFirstDate,
+} from "@/lib/personality/matching-narrative";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 
@@ -897,29 +904,7 @@ function generateConversationStarters(
   return starters.slice(0, 3);
 }
 
-function buildPersonalityNarrative(
-  scores: BigFiveScores,
-  personalityType: PersonalityTypeDefinition,
-): string {
-  const label = getTogelLabel(personalityType.id);
-  const fragments: string[] = [];
 
-  TRAITS.forEach((trait) => {
-    const score = scores[trait];
-    if (score >= 4.2) {
-      fragments.push(TRAIT_NARRATIVES[trait].high);
-    } else if (score <= 2.3) {
-      fragments.push(TRAIT_NARRATIVES[trait].low);
-    }
-  });
-
-  if (fragments.length === 0) {
-    fragments.push("バランスよく特性が整っており、状況に合わせた対応が得意です。");
-  }
-
-  const summary = fragments.slice(0, 3).join(" ");
-  return `${label}のあなたは${personalityType.description} ${summary}`;
-}
 
 export const generateMatchingResults = async (
   payload: DiagnosisPayload,
@@ -949,6 +934,11 @@ export const generateMatchingResults = async (
     const commonalities = generateCommonalities(userScores, profileScores, profile, userType);
     const conversationStarters = generateConversationStarters(userScores, profileScores, profile);
 
+    const profileNarrative = generateProfilePersonality(profile, profileScores, profileType);
+    const matchingReasonData = generateMatchingReason(userScores, profileScores, userType, profileType, profile);
+    const relationshipPreview = generateRelationshipPreview(userScores, profileScores, profile);
+    const firstDateSuggestion = generateFirstDate(userScores, profileScores, profile);
+
     return {
       ranking: 0,
       score: compatibility.totalCompatibility,
@@ -975,6 +965,10 @@ export const generateMatchingResults = async (
       dateIdea,
       commonalities,
       conversationStarters,
+      profileNarrative,
+      matchingReasons: matchingReasonData.reasons,
+      relationshipPreview,
+      firstDateSuggestion,
     } satisfies MatchingResult;
   });
 
@@ -989,13 +983,21 @@ export const generateMatchingResults = async (
 
 export const generateDiagnosisResult = (
   payload: DiagnosisPayload,
-): { bigFiveScores: BigFiveScores; personalityType: PersonalityTypeDefinition; narrative: string } => {
+): {
+  bigFiveScores: BigFiveScores;
+  personalityType: PersonalityTypeDefinition;
+  narrative: string;
+  detailedNarrative: ReturnType<typeof generatePersonalityNarrative>;
+} => {
   const scores = calculateBigFiveScores(payload.answers);
   const type = determinePersonalityType(scores);
-  const narrative = buildPersonalityNarrative(scores, type);
+  const detailedNarrative = generatePersonalityNarrative(scores, type);
+  const label = getTogelLabel(type.id);
+  const simplifiedNarrative = `${label}のあなたは${type.description}`;
   return {
     bigFiveScores: scores,
     personalityType: snapshotPersonalityType(type),
-    narrative,
+    narrative: simplifiedNarrative,
+    detailedNarrative,
   };
 };
