@@ -11,6 +11,7 @@ import { BigFiveScores, MatchingResult, PersonalityTypeDefinition } from "@/type
 type LatestDiagnosis = {
   bigFiveScores: BigFiveScores;
   personalityType: PersonalityTypeDefinition;
+  narrative: string;
 };
 
 const traitLabels: Record<keyof BigFiveScores, string> = {
@@ -69,11 +70,14 @@ const ResultPage = () => {
           <div className="mt-10 rounded-3xl border border-primary/20 bg-primary/5 p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">あなたのタイプ</p>
             <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="font-heading text-2xl">{getTogelLabel(diagnosis.personalityType.id)}</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {getTogelLabel(diagnosis.personalityType.id)}の特徴：{diagnosis.personalityType.description}
-                </p>
+              <div className="space-y-3">
+                <div>
+                  <h2 className="font-heading text-2xl">{getTogelLabel(diagnosis.personalityType.id)}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {diagnosis.personalityType.description}
+                  </p>
+                </div>
+                <p className="text-base leading-relaxed text-foreground">{diagnosis.narrative}</p>
               </div>
               <div className="grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
                 {TRAITS.map((trait) => (

@@ -2,33 +2,6 @@ import { BigFiveScores, MatchingProfile, PersonalityTypeDefinition } from "@/typ
 
 import { personalityTypes } from "./definitions";
 
-const ROMAN_NUMERALS = [
-  "I",
-  "II",
-  "III",
-  "IV",
-  "V",
-  "VI",
-  "VII",
-  "VIII",
-  "IX",
-  "X",
-  "XI",
-  "XII",
-  "XIII",
-  "XIV",
-  "XV",
-  "XVI",
-  "XVII",
-  "XVIII",
-  "XIX",
-  "XX",
-  "XXI",
-  "XXII",
-  "XXIII",
-  "XXIV",
-];
-
 const getTypeIndex = (id: string) => personalityTypes.findIndex((type) => type.id === id);
 
 const getPersonalityTypeById = (id: string): PersonalityTypeDefinition => {
@@ -155,9 +128,9 @@ export const snapshotPersonalityType = (type: PersonalityTypeDefinition): Person
 export const getTogelLabel = (typeId: string): string => {
   const index = getTypeIndex(typeId);
   if (index === -1) {
-    return "Togel未知型";
+    return "Togel?型";
   }
-  return `Togel${ROMAN_NUMERALS[index]}型`;
+  return `Togel${index + 1}型`;
 };
 
 export const getTogelDescription = (typeId: string): string => {

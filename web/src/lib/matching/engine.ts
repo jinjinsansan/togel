@@ -25,6 +25,29 @@ const traitKeyMap: Record<string, TraitKey> = {
   n: "neuroticism",
 };
 
+const TRAIT_NARRATIVES: Record<TraitKey, { high: string; low: string }> = {
+  openness: {
+    high: "アイデア感度が高く、新しい刺激から学びと楽しさを見出します。",
+    low: "慣れ親しんだ型を大切にし、安定した環境で実力を発揮します。",
+  },
+  conscientiousness: {
+    high: "計画遂行力が抜群で、約束や目標を着実に形にします。",
+    low: "柔らかな進行が得意で、状況に合わせて手法を切り替えられます。",
+  },
+  extraversion: {
+    high: "交流エネルギーが豊かで、人との対話から大きな活力を得ます。",
+    low: "一対一でじっくり向き合う静かなコミュニケーションを好みます。",
+  },
+  agreeableness: {
+    high: "共感スタイルが豊かで、周囲に安心感と温かさを届けます。",
+    low: "是々非々の姿勢で率直に意見を伝え、物事を前に進めます。",
+  },
+  neuroticism: {
+    high: "繊細な感受性があるため、相手の心の動きをいち早く察知できます。",
+    low: "ストレス耐性が高く、プレッシャー下でも落ち着いた判断ができます。",
+  },
+};
+
 function calculateBigFiveScores(answers: Answer[]): BigFiveScores {
   const totals: Record<TraitKey, { sum: number; count: number }> = {
     openness: { sum: 0, count: 0 },
@@ -276,6 +299,30 @@ function generatePersonalizedInsights(
   return insights;
 }
 
+function buildPersonalityNarrative(
+  scores: BigFiveScores,
+  personalityType: PersonalityTypeDefinition,
+): string {
+  const label = getTogelLabel(personalityType.id);
+  const fragments: string[] = [];
+
+  TRAITS.forEach((trait) => {
+    const score = scores[trait];
+    if (score >= 4.2) {
+      fragments.push(TRAIT_NARRATIVES[trait].high);
+    } else if (score <= 2.3) {
+      fragments.push(TRAIT_NARRATIVES[trait].low);
+    }
+  });
+
+  if (fragments.length === 0) {
+    fragments.push("バランスよく特性が整っており、状況に合わせた対応が得意です。");
+  }
+
+  const summary = fragments.slice(0, 3).join(" ");
+  return `${label}のあなたは${personalityType.description} ${summary}`;
+}
+
 export const generateMatchingResults = async (
   payload: DiagnosisPayload,
 ): Promise<MatchingResult[]> => {
@@ -322,11 +369,13 @@ export const generateMatchingResults = async (
 
 export const generateDiagnosisResult = (
   payload: DiagnosisPayload,
-): { bigFiveScores: BigFiveScores; personalityType: PersonalityTypeDefinition } => {
+): { bigFiveScores: BigFiveScores; personalityType: PersonalityTypeDefinition; narrative: string } => {
   const scores = calculateBigFiveScores(payload.answers);
   const type = determinePersonalityType(scores);
+  const narrative = buildPersonalityNarrative(scores, type);
   return {
     bigFiveScores: scores,
     personalityType: snapshotPersonalityType(type),
+    narrative,
   };
 };
