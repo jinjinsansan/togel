@@ -14,6 +14,7 @@ import {
   snapshotPersonalityType,
 } from "@/lib/personality";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { env } from "@/lib/env";
 
 type Gender = "male" | "female";
 
@@ -150,7 +151,15 @@ type UserRow = {
 const normalizeAvatarUrl = (url?: string | null): string | null => {
   if (!url) return null;
   const trimmed = url.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  if (trimmed.length === 0) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const baseUrl = env.supabaseUrl?.replace(/\/$/, "");
+  if (!baseUrl) return null;
+  const normalizedPath = trimmed.replace(/^\/+/, "");
+  if (normalizedPath.startsWith("storage/v1")) {
+    return `${baseUrl}/${normalizedPath}`;
+  }
+  return `${baseUrl}/storage/v1/object/public/${normalizedPath}`;
 };
 
 const mapUserRowToProfile = (row: UserRow, index: number): MatchingProfile => {
