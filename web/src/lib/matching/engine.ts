@@ -193,6 +193,13 @@ function getTraitFromQuestionId(questionId: string): TraitKey | null {
   return key ?? null;
 }
 
+type CompatibilityDetails = {
+  personality: number;
+  valueAlignment: number;
+  communication: number;
+  totalCompatibility: number;
+};
+
 function calculate24TypeCompatibility(
   userType: PersonalityTypeDefinition,
   userScores: BigFiveScores,
@@ -218,12 +225,16 @@ function calculate24TypeCompatibility(
     traitCompatibility * 0.35 + complementScore * 0.2 + valueScore * 0.25 + commScore * 0.2 + typeAffinityBonus + overlapBonus,
   );
 
-  return {
+  const details: CompatibilityDetails = {
     personality: Math.round(traitCompatibility),
     valueAlignment: Math.round(valueScore),
     communication: Math.round(commScore),
     totalCompatibility: Math.round(totalScore),
-    compatibilityReason: generate24TypeCompatibilityReason(userType, profileType, Math.round(totalScore)),
+  };
+
+  return {
+    ...details,
+    compatibilityReason: generate24TypeCompatibilityReason(userType, profileType, details),
   };
 }
 
@@ -342,11 +353,12 @@ function hasValueConflict(type1: PersonalityTypeDefinition, type2: PersonalityTy
 function generate24TypeCompatibilityReason(
   userType: PersonalityTypeDefinition,
   profileType: PersonalityTypeDefinition,
-  score: number,
+  details: CompatibilityDetails,
 ): string {
   const userLabel = getTogelLabel(userType.id);
   const profileLabel = getTogelLabel(profileType.id);
   const commonValues = getCommonValues(userType, profileType);
+  const score = details.totalCompatibility;
   let reason = "";
   if (score >= 85) {
     reason = `${userLabel}のあなたと${profileLabel}の組み合わせは非常に高いシナジー（${score}点）！`;
@@ -364,11 +376,50 @@ function generate24TypeCompatibilityReason(
     reason += `。${commonValues[0]}という価値観を共有しており、良い出会いになる可能性が高い。`;
   }
 
+  if (details.personality >= 75) {
+    reason += ` 性格面では${userType.dominantTraits[0]}と${profileType.dominantTraits[0]}が共鳴し、自然体でいられる組み合わせです。`;
+  } else if (details.personality <= 55) {
+    reason += ` 性格面では${userType.dominantTraits[0]}が${profileType.dominantTraits[0]}を補う構図で、新鮮な刺激を与え合えます。`;
+  }
+
+  if (details.communication >= 70) {
+    reason += ` 会話テンポも近く、${userType.characteristics.communication}と${profileType.characteristics.communication}がストレスなく噛み合いそうです。`;
+  }
+
   if (userType.compatibleTypes.includes(profileType.id)) {
     reason += " AIが推奨する好相性ペアに含まれており、互いの個性が新鮮な刺激を与え合う予感。";
   }
 
   return reason.trim();
+}
+
+function generateMatchHighlights(
+  userType: PersonalityTypeDefinition,
+  profileType: PersonalityTypeDefinition,
+  details: CompatibilityDetails,
+): string[] {
+  const highlights: string[] = [];
+  const commonValues = getCommonValues(userType, profileType);
+
+  if (details.personality >= 70) {
+    highlights.push(`性格バランス：${userType.dominantTraits[0]}と${profileType.dominantTraits[0]}が同じ方向を向いています。`);
+  } else if (details.personality <= 55) {
+    highlights.push(`性格コンビ：${userType.dominantTraits[0]}が${profileType.dominantTraits[0]}を補完する凸凹ペア。`);
+  }
+
+  if (details.valueAlignment >= 65 && commonValues.length > 0) {
+    highlights.push(`価値観：${commonValues.join("・")}を大切にする点が一致。`);
+  } else if (details.valueAlignment < 55) {
+    highlights.push(`価値観の刺激：視野の広さや選択基準が違うため、新しい発見が得られそう。`);
+  }
+
+  if (details.communication >= 65) {
+    highlights.push(`会話テンポ：${userType.characteristics.communication} × ${profileType.characteristics.communication}でストレス少なく話せます。`);
+  } else {
+    highlights.push(`会話スタイル：${userType.characteristics.communication}と${profileType.characteristics.communication}で互いのペースを学び合う関係。`);
+  }
+
+  return highlights.slice(0, 3);
 }
 
 function generatePersonalizedInsights(
@@ -453,12 +504,14 @@ export const generateMatchingResults = async (
     const profileType = determinePersonalityType(profileScores);
     const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
     const personalizedInsights = generatePersonalizedInsights(userType, profileType, compatibility);
+    const highlights = generateMatchHighlights(userType, profileType, compatibility);
 
     return {
       ranking: 0,
       score: compatibility.totalCompatibility,
       profile,
       summary: compatibility.compatibilityReason,
+      highlights,
       compatibility: {
         personality: compatibility.personality,
         valueAlignment: compatibility.valueAlignment,

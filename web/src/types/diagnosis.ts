@@ -100,6 +100,7 @@ export type MatchingResult = {
   score: number;
   profile: MatchingProfile;
   summary: string;
+  highlights: string[];
   compatibility: CompatibilityBreakdown;
   compatibilityReason: string;
   personalityTypes: {

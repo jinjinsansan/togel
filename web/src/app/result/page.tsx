@@ -121,6 +121,16 @@ const ResultPage = () => {
                 </div>
                 <p className="text-lg font-semibold">{result.profile.nickname} さん ({result.profile.age}歳)</p>
                 <p className="text-sm text-muted-foreground">{result.summary}</p>
+                {result.highlights.length > 0 && (
+                  <div className="mt-2 rounded-2xl bg-muted/40 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Match Points</p>
+                    <ul className="mt-1 space-y-1 text-sm text-foreground">
+                      {result.highlights.map((highlight) => (
+                        <li key={highlight}>・{highlight}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <div className="grid gap-2 md:grid-cols-3">
                   {[
                     { label: "性格", value: result.compatibility.personality },
