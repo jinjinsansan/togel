@@ -599,8 +599,6 @@ function generateMatchHighlights(
     highlights.push(`${complementary.label}：あなた${formatScore(complementary.user)} vs 相手${formatScore(complementary.profile)}で補完し合える立ち位置。`);
   }
 
-  highlights.push(`スコア内訳：性格${details.personality} / 価値観${details.valueAlignment} / コミュニケーション${details.communication}`);
-
   return highlights.slice(0, 5);
 }
 
@@ -609,8 +607,6 @@ function generatePersonalizedInsights(
   profileType: PersonalityTypeDefinition,
   compatibility: ReturnType<typeof calculate24TypeCompatibility>,
 ) {
-  const userLabel = getTogelLabel(userType.id);
-  const profileLabel = getTogelLabel(profileType.id);
   const insights = {
     strengths: [] as string[],
     growthAreas: [] as string[],
@@ -618,24 +614,63 @@ function generatePersonalizedInsights(
     challenges: [] as string[],
   };
 
-  if (compatibility.totalCompatibility >= 85) {
-    insights.strengths.push(`${userLabel}の強みである${userType.characteristics.strengths[0]}と${profileLabel}の${profileType.characteristics.strengths[0]}がシンクロ`);
-    insights.relationshipStyle = `互いの${userType.characteristics.relationships}と${profileType.characteristics.relationships}が補完し合う理想ペア`;
-  } else if (compatibility.totalCompatibility >= 70) {
-    insights.strengths.push(`${userType.characteristics.strengths[1]}と${profileType.characteristics.strengths[1]}がポジティブに作用`);
-    insights.growthAreas.push(`${userType.characteristics.growthAreas[0]}と${profileType.characteristics.growthAreas[0]}を支え合える関係`);
-    insights.relationshipStyle = `${userType.characteristics.relationships}と${profileType.characteristics.relationships}のバランスを探る関係`;
+  const score = compatibility.totalCompatibility;
+
+  // Strength
+  if (score >= 85) {
+    insights.strengths.push("お互いの個性を自然に認め合える信頼関係が築けます");
+    insights.strengths.push("価値観の共通点が多く、長期的なパートナーシップが期待できます");
+  } else if (score >= 70) {
+    insights.strengths.push("違いを楽しみながら、互いを高め合える関係性");
+    insights.strengths.push("コミュニケーションの相性が良く、ストレスの少ない対話ができます");
+  } else if (score >= 55) {
+    insights.strengths.push("異なる視点を持つことで、視野が広がる刺激的な関係");
+    insights.strengths.push("お互いの得意分野で補い合える可能性があります");
   } else {
-    insights.growthAreas.push(`${userType.characteristics.growthAreas[0]}と${profileType.characteristics.growthAreas[0]}の違いをどう橋渡しするかが鍵`);
-    insights.relationshipStyle = `互いの${userType.characteristics.workStyle}と${profileType.characteristics.workStyle}を尊重し合う関係`;
+    insights.strengths.push("対照的な個性だからこそ学べることが多い組み合わせ");
   }
 
-  if (compatibility.totalCompatibility < 60) {
-    insights.challenges.push(`${userLabel}と${profileLabel}の違いが刺激になる一方で調整も必要`);
+  // Growth
+  if (score >= 85) {
+    insights.growthAreas.push("定期的にお互いの目標や価値観を確認し合う時間を持つこと");
+    insights.growthAreas.push("居心地の良さに甘えず、新しいチャレンジを一緒に楽しむ姿勢");
+  } else if (score >= 70) {
+    insights.growthAreas.push("相手のペースや考え方の違いを「面白い」と捉える余裕を持つこと");
+    insights.growthAreas.push("意見が分かれた時こそ、じっくり話し合う時間を大切に");
+  } else if (score >= 55) {
+    insights.growthAreas.push("違和感を感じた時は早めに率直に伝え合う習慣づくり");
+    insights.growthAreas.push("お互いの「当たり前」が違うことを前提に、丁寧な説明を心がける");
+  } else {
+    insights.growthAreas.push("価値観の違いを受け入れる柔軟性と、譲れない部分を明確にすること");
+    insights.growthAreas.push("無理に合わせようとせず、適度な距離感を保つことも大切");
   }
 
-  if (insights.relationshipStyle === "") {
-    insights.relationshipStyle = `${userType.characteristics.relationships}と${profileType.characteristics.relationships}を行き来する落ち着いた関係`;
+  // Relationship Style
+  if (score >= 85) {
+    insights.relationshipStyle = "自然体でいられる、安心感と信頼で結ばれた関係";
+  } else if (score >= 70) {
+    insights.relationshipStyle = "お互いの違いを楽しみながら成長し合える関係";
+  } else if (score >= 55) {
+    insights.relationshipStyle = "刺激と学びを与え合う、ダイナミックな関係";
+  } else {
+    insights.relationshipStyle = "個性を尊重し合いながら、新しい発見を楽しむ関係";
+  }
+
+  // Challenge
+  if (score < 70) {
+    if (compatibility.personality < 60) {
+      insights.challenges.push("性格の違いから誤解が生じやすいため、こまめな確認が必要");
+    }
+    if (compatibility.valueAlignment < 55) {
+      insights.challenges.push("大事にしたい価値観が異なるため、妥協点を見つける努力が求められます");
+    }
+    if (compatibility.communication < 60) {
+      insights.challenges.push("コミュニケーションスタイルの違いに注意。「伝わっている」前提を避けましょう");
+    }
+  }
+
+  if (insights.challenges.length === 0 && score < 85) {
+    insights.challenges.push("相性が良いからこそ、慢心せずお互いへの配慮を忘れずに");
   }
 
   return insights;
@@ -705,6 +740,10 @@ export const generateMatchingResults = async (
       personalityTypes: {
         user: snapshotPersonalityType(userType),
         profile: snapshotPersonalityType(profileType),
+      },
+      bigFiveScores: {
+        user: userScores,
+        profile: profileScores,
       },
       insights: personalizedInsights,
     } satisfies MatchingResult;

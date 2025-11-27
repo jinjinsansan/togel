@@ -137,22 +137,25 @@ const ResultPage = () => {
                     </ul>
                   </div>
                 )}
-                <div className="grid gap-2 md:grid-cols-3">
-                  {[
-                    { label: "性格", value: result.compatibility.personality },
-                    { label: "価値観", value: result.compatibility.valueAlignment },
-                    { label: "コミュニケーション", value: result.compatibility.communication },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-2xl bg-muted/60 p-4">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{item.label}</span>
-                        <span>{item.value}点</span>
-                      </div>
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${item.value}%` }} />
-                      </div>
-                    </div>
-                  ))}
+                <div className="rounded-2xl bg-muted/40 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground mb-3">5つの特性スコア</p>
+                  <div className="grid gap-3 text-sm">
+                    {Object.entries(result.bigFiveScores.user).map(([trait, score]) => {
+                      const profileScore = result.bigFiveScores.profile[trait as keyof BigFiveScores];
+                      return (
+                        <div key={trait} className="flex items-center justify-between">
+                          <span className="text-muted-foreground">{traitLabels[trait as keyof BigFiveScores]}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">あなた</span>
+                            <span className="font-semibold text-foreground w-8 text-right">{score.toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground mx-1">/</span>
+                            <span className="text-xs text-muted-foreground">相手</span>
+                            <span className="font-semibold text-foreground w-8 text-right">{profileScore.toFixed(1)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="rounded-2xl bg-muted/40 p-4 text-sm">
                   <p className="font-semibold text-foreground">インサイト</p>

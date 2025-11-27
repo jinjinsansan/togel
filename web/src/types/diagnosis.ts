@@ -107,5 +107,9 @@ export type MatchingResult = {
     user: PersonalityTypeDefinition;
     profile: PersonalityTypeDefinition;
   };
+  bigFiveScores: {
+    user: BigFiveScores;
+    profile: BigFiveScores;
+  };
   insights: PersonalizedInsights;
 };
