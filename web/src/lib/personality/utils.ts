@@ -89,36 +89,86 @@ export const determinePersonalityType = (scores: BigFiveScores): PersonalityType
   return getPersonalityTypeById("contemplative-sage");
 };
 
+// プロフィールIDからシードベースの疑似ランダムスコアを生成
+// 同じIDなら常に同じスコアだが、ID間では大きくバラける
+function generateSeededScore(seed: string, trait: string): number {
+  // シードとトレイト名を組み合わせてハッシュ生成
+  let hash = 0;
+  const combined = seed + trait;
+  for (let i = 0; i < combined.length; i++) {
+    hash = (hash << 5) - hash + combined.charCodeAt(i);
+    hash = hash & hash;
+  }
+  
+  // 0〜1の範囲に正規化
+  const normalized = Math.abs(hash % 10000) / 10000;
+  
+  // 1.0〜5.0の範囲に変換（極端な値も含む）
+  // 正規分布ではなく均等分布にして、極端な値も出やすくする
+  return 1.0 + normalized * 4.0;
+}
+
 export const estimateProfileScores = (profile: MatchingProfile): BigFiveScores => {
-  const scores: BigFiveScores = {
-    openness: 3,
-    conscientiousness: 3,
-    extraversion: 3,
-    agreeableness: 3,
-    neuroticism: 3,
+  // IDベースでランダムだが一貫性のあるスコアを生成
+  const baseScores: BigFiveScores = {
+    openness: generateSeededScore(profile.id, "openness"),
+    conscientiousness: generateSeededScore(profile.id, "conscientiousness"),
+    extraversion: generateSeededScore(profile.id, "extraversion"),
+    agreeableness: generateSeededScore(profile.id, "agreeableness"),
+    neuroticism: generateSeededScore(profile.id, "neuroticism"),
   };
 
+  // プロフィール情報から微調整（±0.3程度）
+  const adjustments: BigFiveScores = { ...baseScores };
+
+  // 趣味から開放性を調整
   if (profile.hobbies?.includes("アート") || profile.hobbies?.includes("音楽") || profile.hobbies?.includes("旅行")) {
-    scores.openness += 1;
+    adjustments.openness += 0.3;
   }
-  if (profile.job?.includes("経営") || profile.job?.includes("エンジニア") || profile.specialSkills?.includes("計画")) {
-    scores.conscientiousness += 1;
-  }
-  if (profile.interests?.includes("スポーツ") || profile.interests?.includes("パーティー") || profile.communication?.includes("積極的")) {
-    scores.extraversion += 1;
-  }
-  if (profile.bio?.includes("優しい") || profile.bio?.includes("助ける") || profile.values?.includes("思いやり")) {
-    scores.agreeableness += 1;
-  }
-  if (profile.specialSkills?.includes("ストレス管理") || profile.communication?.includes("穏やか")) {
-    scores.neuroticism -= 1;
+  if (profile.hobbies?.includes("読書") || profile.hobbies?.includes("ゲーム")) {
+    adjustments.openness -= 0.2;
   }
 
-  (Object.keys(scores) as Array<keyof BigFiveScores>).forEach((trait) => {
-    scores[trait] = Math.max(1, Math.min(5, scores[trait]));
+  // 仕事から誠実性を調整
+  if (profile.job?.includes("経営") || profile.job?.includes("エンジニア") || profile.specialSkills?.includes("計画")) {
+    adjustments.conscientiousness += 0.3;
+  }
+  if (profile.job?.includes("アーティスト") || profile.job?.includes("フリーランス")) {
+    adjustments.conscientiousness -= 0.2;
+  }
+
+  // 趣味や性格から外向性を調整
+  if (profile.interests?.includes("スポーツ") || profile.interests?.includes("パーティー") || profile.communication?.includes("積極的")) {
+    adjustments.extraversion += 0.3;
+  }
+  if (profile.hobbies?.includes("読書") || profile.hobbies?.includes("映画鑑賞") || profile.communication?.includes("穏やか")) {
+    adjustments.extraversion -= 0.2;
+  }
+
+  // bioから協調性を調整
+  if (profile.bio?.includes("優しい") || profile.bio?.includes("助ける") || profile.values?.includes("思いやり")) {
+    adjustments.agreeableness += 0.3;
+  }
+  if (profile.bio?.includes("率直") || profile.bio?.includes("はっきり")) {
+    adjustments.agreeableness -= 0.2;
+  }
+
+  // ストレス管理から神経症傾向を調整
+  if (profile.specialSkills?.includes("ストレス管理") || profile.communication?.includes("穏やか") || profile.hobbies?.includes("ヨガ") || profile.hobbies?.includes("瞑想")) {
+    adjustments.neuroticism -= 0.3;
+  }
+  if (profile.bio?.includes("心配") || profile.bio?.includes("不安")) {
+    adjustments.neuroticism += 0.3;
+  }
+
+  // 最終的に0.5〜5.0の範囲に収める（極端な値も許容）
+  (Object.keys(adjustments) as Array<keyof BigFiveScores>).forEach((trait) => {
+    adjustments[trait] = Math.max(0.5, Math.min(5.0, adjustments[trait]));
+    // 小数点第1位まで
+    adjustments[trait] = Math.round(adjustments[trait] * 10) / 10;
   });
 
-  return scores;
+  return adjustments;
 };
 
 export const snapshotPersonalityType = (type: PersonalityTypeDefinition): PersonalityTypeDefinition => {
