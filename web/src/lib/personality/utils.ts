@@ -130,7 +130,34 @@ export const getTogelLabel = (typeId: string): string => {
   if (index === -1) {
     return "Togel?型";
   }
-  return `Togel${index + 1}型`;
+  const circledNumbers = [
+    "①",
+    "②",
+    "③",
+    "④",
+    "⑤",
+    "⑥",
+    "⑦",
+    "⑧",
+    "⑨",
+    "⑩",
+    "⑪",
+    "⑫",
+    "⑬",
+    "⑭",
+    "⑮",
+    "⑯",
+    "⑰",
+    "⑱",
+    "⑲",
+    "⑳",
+    "㉑",
+    "㉒",
+    "㉓",
+    "㉔",
+  ];
+  const label = circledNumbers[index] ?? `${index + 1}`;
+  return `Togel${label}型`;
 };
 
 export const getTogelDescription = (typeId: string): string => {
