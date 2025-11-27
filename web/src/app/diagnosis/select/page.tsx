@@ -1,6 +1,9 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { useDiagnosisStore } from "@/store/diagnosis-store";
 
 const plans = [
   {
@@ -20,6 +23,14 @@ const plans = [
 ];
 
 const DiagnosisSelectPage = () => {
+  const router = useRouter();
+  const { setDiagnosisType } = useDiagnosisStore();
+
+  const handleSelectPlan = (type: "light" | "full") => {
+    setDiagnosisType(type);
+    router.push("/diagnosis/select/gender");
+  };
+
   return (
     <div className="container py-12">
       <div className="mx-auto max-w-3xl text-center">
@@ -53,8 +64,8 @@ const DiagnosisSelectPage = () => {
                 </li>
               ))}
             </ul>
-            <Button asChild className="mt-6">
-              <Link href={`/diagnosis/${plan.type}`}>この診断で進む</Link>
+            <Button onClick={() => handleSelectPlan(plan.type as "light" | "full")} className="mt-6">
+              この診断で進む
             </Button>
           </div>
         ))}

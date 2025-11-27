@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
   diagnosisType: z.enum(["light", "full"]),
+  userGender: z.enum(["male", "female"]),
   answers: z
     .array(
       z.object({
@@ -16,9 +17,12 @@ const schema = z.object({
     .min(1),
 });
 
-const guestLineId = "guest-local-user";
-
-const ensureGuestUser = async (supabase: ReturnType<typeof createSupabaseAdminClient>) => {
+const ensureGuestUser = async (
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  gender: "male" | "female"
+) => {
+  const guestLineId = `guest-${gender}`;
+  
   const { data, error } = await supabase
     .from("users")
     .select("id")
@@ -37,10 +41,10 @@ const ensureGuestUser = async (supabase: ReturnType<typeof createSupabaseAdminCl
     .from("users")
     .insert({
       line_user_id: guestLineId,
-      gender: "female",
-      nickname: "ゲストユーザー",
+      gender,
+      nickname: gender === "male" ? "ゲストユーザー（男性）" : "ゲストユーザー（女性）",
       birth_date: "1995-01-01",
-      avatar_url: "https://api.dicebear.com/8.x/identicon/svg?seed=guest",
+      avatar_url: `https://api.dicebear.com/8.x/identicon/svg?seed=guest-${gender}`,
       bio: "LINEログイン前のゲストユーザーです。",
       job: "非公開",
       favorite_things: "価値観の共有",
@@ -90,7 +94,7 @@ export const POST = async (request: Request) => {
   const supabase = createSupabaseAdminClient();
 
   try {
-    const guestUserId = await ensureGuestUser(supabase);
+    const guestUserId = await ensureGuestUser(supabase, parsed.data.userGender);
     const animalType = determineAnimalType(parsed.data.answers);
     const { data: insertResult, error: insertError } = await supabase
       .from("diagnosis_results")

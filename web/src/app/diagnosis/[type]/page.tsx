@@ -23,6 +23,7 @@ const DiagnosisPage = () => {
   const {
     answers,
     progress,
+    userGender,
     setDiagnosisType,
     loadFromStorage,
     answerQuestion,
@@ -30,6 +31,10 @@ const DiagnosisPage = () => {
 
   useEffect(() => {
     if (!diagnosisType) return;
+    if (!userGender) {
+      router.push("/diagnosis/select/gender");
+      return;
+    }
     const fetchQuestions = async () => {
       setQuestionsLoading(true);
       try {
@@ -49,7 +54,7 @@ const DiagnosisPage = () => {
       }
     };
     fetchQuestions();
-  }, [diagnosisType]);
+  }, [diagnosisType, userGender, router]);
 
   useEffect(() => {
     if (!diagnosisType) return;
@@ -93,11 +98,16 @@ const DiagnosisPage = () => {
       setError("未回答の質問があります");
       return;
     }
+    if (!userGender) {
+      setError("性別が選択されていません");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       const payload = {
         diagnosisType,
+        userGender,
         answers,
       } as const;
       saveSession(payload);

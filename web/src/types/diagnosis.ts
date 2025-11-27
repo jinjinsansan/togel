@@ -25,6 +25,7 @@ export type Answer = {
 
 export type DiagnosisPayload = {
   diagnosisType: DiagnosisType;
+  userGender: "male" | "female";
   answers: Answer[];
 };
 

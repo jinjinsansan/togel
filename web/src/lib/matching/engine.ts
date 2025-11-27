@@ -39,5 +39,9 @@ export const generateMatchingResults = async (
   payload: DiagnosisPayload
 ): Promise<MatchingResult[]> => {
   const baseScore = scoreAnswers(payload.answers);
-  return mapProfiles(mockProfiles, baseScore);
+  
+  const oppositeGender = payload.userGender === "male" ? "female" : "male";
+  const filteredProfiles = mockProfiles.filter((profile) => profile.gender === oppositeGender);
+  
+  return mapProfiles(filteredProfiles, baseScore);
 };
