@@ -80,6 +80,14 @@ const ResultPage = () => {
           <p className="mt-3 text-muted-foreground">
             あなたの回答データから相性の良い5名を抽出しました
           </p>
+          <div className="mt-4">
+            <Button asChild variant="outline" size="sm" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
+              <Link href="/result/mismatch">
+                <span className="text-lg">💀</span>
+                ミスマッチランキングも見る
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* あなたのタイプセクション - 新デザイン */}

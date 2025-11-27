@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateMatchingResults, generateDiagnosisResult } from "@/lib/matching/engine";
+import { generateMatchingResults, generateMismatchingResults, generateDiagnosisResult } from "@/lib/matching/engine";
 import { getTogelLabel } from "@/lib/personality";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -94,6 +94,7 @@ export const POST = async (request: Request) => {
     }
 
     const results = await generateMatchingResults(parsed.data);
+    const mismatchResults = await generateMismatchingResults(parsed.data);
 
     const { error: cacheError } = await supabase.from("matching_cache").insert({
       user_id: guestUserId,
@@ -107,6 +108,7 @@ export const POST = async (request: Request) => {
 
     return NextResponse.json({
       results,
+      mismatchResults,
       diagnosis: diagnosisResult,
     });
   } catch (error) {

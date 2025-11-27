@@ -5,6 +5,7 @@ import {
   DiagnosisPayload,
   MatchingProfile,
   MatchingResult,
+  MismatchResult,
   PersonalityTypeDefinition,
 } from "@/types/diagnosis";
 import {
@@ -20,6 +21,13 @@ import {
   generateRelationshipPreview,
   generateFirstDate,
 } from "@/lib/personality/matching-narrative";
+import {
+  generateMismatchProfilePersonality,
+  generateMismatchReason,
+  generateDisasterScenario,
+  generateMismatchCatchphrase,
+  generateAbsolutelyNotToDo,
+} from "@/lib/personality/mismatch-narrative";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 
@@ -1000,4 +1008,62 @@ export const generateDiagnosisResult = (
     narrative: simplifiedNarrative,
     detailedNarrative,
   };
+};
+
+export const generateMismatchingResults = async (
+  payload: DiagnosisPayload,
+): Promise<MismatchResult[]> => {
+  const userScores = calculateBigFiveScores(payload.answers);
+  const userType = determinePersonalityType(userScores);
+
+  const oppositeGender = payload.userGender === "male" ? "female" : "male";
+  const realProfiles = await loadRealProfiles(oppositeGender);
+  const filteredMockProfiles = mockProfiles
+    .filter((profile) => profile.gender === oppositeGender)
+    .slice(0, MAX_MOCK_PROFILES_PER_GENDER);
+  const mockQuota = Math.max(MAX_MOCK_PROFILES_PER_GENDER - realProfiles.length, 0);
+  const trimmedMockProfiles = filteredMockProfiles.slice(0, mockQuota);
+  const candidateProfiles = [...realProfiles, ...trimmedMockProfiles];
+  const basePool = candidateProfiles.length > 0 ? candidateProfiles : filteredMockProfiles;
+  const pool = basePool.map((profile, index) => ensureProfileAvatar(profile, index));
+
+  const computed = pool.map((profile) => {
+    const profileScores = estimateProfileScores(profile);
+    const profileType = determinePersonalityType(profileScores);
+    const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
+
+    const mismatchScore = 100 - compatibility.totalCompatibility;
+    const profileNarrative = generateMismatchProfilePersonality(profile, profileScores, profileType);
+    const mismatchReasonData = generateMismatchReason(userScores, profileScores, userType, profileType, profile, mismatchScore);
+    const disasterScenario = generateDisasterScenario(userScores, profileScores, profile);
+    const catchphrase = generateMismatchCatchphrase(userScores, profileScores, mismatchScore);
+    const absolutelyNotToDo = generateAbsolutelyNotToDo(userScores, profileScores);
+
+    return {
+      ranking: 0,
+      score: mismatchScore,
+      profile,
+      personalityTypes: {
+        user: snapshotPersonalityType(userType),
+        profile: snapshotPersonalityType(profileType),
+      },
+      bigFiveScores: {
+        user: userScores,
+        profile: profileScores,
+      },
+      catchphrase,
+      profileNarrative,
+      mismatchReasons: mismatchReasonData.reasons,
+      disasterScenario,
+      absolutelyNotToDo,
+    } satisfies MismatchResult;
+  });
+
+  return computed
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5)
+    .map((item, index) => ({
+      ...item,
+      ranking: index + 1,
+    }));
 };

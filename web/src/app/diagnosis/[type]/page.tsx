@@ -125,6 +125,9 @@ const DiagnosisPage = () => {
       if (data.results) {
         sessionStorage.setItem("latestMatching", JSON.stringify(data.results));
       }
+      if (data.mismatchResults) {
+        sessionStorage.setItem("latestMismatch", JSON.stringify(data.mismatchResults));
+      }
       if (data.diagnosis) {
         sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
       }

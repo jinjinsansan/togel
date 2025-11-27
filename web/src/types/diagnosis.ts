@@ -145,3 +145,40 @@ export type MatchingResult = {
   relationshipPreview?: RelationshipPreview;
   firstDateSuggestion?: FirstDateSuggestion;
 };
+
+export type MismatchProfileNarrative = {
+  dangerousTraits: string[];
+  incompatibleValues: string[];
+  communicationNightmare: string;
+};
+
+export type MismatchReasonDetail = {
+  title: string;
+  userTrait: string;
+  profileTrait: string;
+  disaster: string;
+};
+
+export type DisasterScenario = {
+  horrorScenarios: string[];
+  warnings: string[];
+};
+
+export type MismatchResult = {
+  ranking: number;
+  score: number;
+  profile: MatchingProfile;
+  personalityTypes: {
+    user: PersonalityTypeDefinition;
+    profile: PersonalityTypeDefinition;
+  };
+  bigFiveScores: {
+    user: BigFiveScores;
+    profile: BigFiveScores;
+  };
+  catchphrase: string;
+  profileNarrative: MismatchProfileNarrative;
+  mismatchReasons: MismatchReasonDetail[];
+  disasterScenario: DisasterScenario;
+  absolutelyNotToDo: string[];
+};
