@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFF5F7]">
+    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFD1DC]">
       {/* 1. Video Background */}
       <video
         autoPlay
@@ -18,8 +18,9 @@ export default function Home() {
       {/* 2. Pink Overlay (Multiply) - Removed for white background */}
       {/* <div className="pointer-events-none absolute inset-0 z-0 bg-primary mix-blend-multiply" /> */}
 
-      {/* 3. Content Mask Layer (White Background + Screen Blend) */}
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#FFF5F7] mix-blend-screen">
+      {/* 3. Content Mask Layer (Pink Background + Screen Blend) */}
+      {/* Using mix-blend-screen with a color on top of video creates the "cutout" text effect */}
+      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#FFD1DC] mix-blend-screen">
         <div className="container flex flex-col items-center gap-12 py-24 text-center">
           {/* Title Block (VISIBLE) */}
           <div className="flex flex-col items-center">
@@ -43,11 +44,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 4. Foreground Content Layer (Normal Blend) - Stays White */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
+      {/* 4. Foreground Content Layer (Normal Blend) - Stays Pink */}
+      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none mix-blend-normal">
         <div className="container flex flex-col items-center gap-12 py-24 text-center">
           {/* Title Block (VISIBLE with Stroke) */}
           <div className="flex flex-col items-center">
+            {/* Text is transparent to show video through from underlying layers, but stroke is visible */}
             <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-transparent [-webkit-text-stroke:1px_#E91E63]">
               Togel
             </h1>
