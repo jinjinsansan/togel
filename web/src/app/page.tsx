@@ -16,7 +16,7 @@ export default function Home() {
       </video>
 
       {/* 2. Pink Overlay (Multiply) - Turns white background to pink */}
-      <div className="pointer-events-none absolute inset-0 z-20 bg-primary mix-blend-multiply" />
+      <div className="pointer-events-none absolute inset-0 z-0 bg-primary mix-blend-multiply" />
 
       {/* 3. Content Mask Layer (White Background + Screen Blend) */}
       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white mix-blend-screen">
@@ -58,13 +58,13 @@ export default function Home() {
           
           {/* Description & Button (VISIBLE) */}
           <div className="flex flex-col items-center gap-8 pointer-events-auto">
-             <p className="text-lg md:text-xl text-white font-medium drop-shadow-md tracking-wide">
+             <p className="text-lg md:text-xl text-[#E91E63] font-medium tracking-wide">
               あなたの本音と相性が一瞬でわかる、<br className="md:hidden" />24タイプ性格診断。
             </p>
 
             <Button
               size="lg"
-              className="h-16 rounded-full bg-white px-12 text-xl font-bold text-[#E91E63] hover:bg-white/90 shadow-xl transition-all hover:scale-105"
+              className="h-16 rounded-full bg-[#E91E63] px-12 text-xl font-bold text-white hover:bg-[#d81b60] shadow-xl transition-all hover:scale-105"
               asChild
             >
               <Link href="/diagnosis/select">LINEで始める</Link>
