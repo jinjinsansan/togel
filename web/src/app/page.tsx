@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-primary">
+    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-white">
       {/* 1. Video Background */}
       <video
         autoPlay
@@ -15,8 +15,8 @@ export default function Home() {
         <source src="/hero-movie.mp4" type="video/mp4" />
       </video>
 
-      {/* 2. Pink Overlay (Multiply) - Turns white background to pink */}
-      <div className="pointer-events-none absolute inset-0 z-0 bg-primary mix-blend-multiply" />
+      {/* 2. Pink Overlay (Multiply) - Removed for white background */}
+      {/* <div className="pointer-events-none absolute inset-0 z-0 bg-primary mix-blend-multiply" /> */}
 
       {/* 3. Content Mask Layer (White Background + Screen Blend) */}
       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white mix-blend-screen">
