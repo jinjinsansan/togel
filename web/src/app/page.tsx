@@ -46,12 +46,12 @@ export default function Home() {
       {/* 4. Foreground Content Layer (Normal Blend) - Stays White */}
       <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none">
         <div className="container flex flex-col items-center gap-12 py-24 text-center">
-          {/* Title Block SPACER (INVISIBLE) - Keeps layout identical to background */}
-          <div className="flex flex-col items-center opacity-0">
-            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter">
+          {/* Title Block (VISIBLE with Stroke) */}
+          <div className="flex flex-col items-center">
+            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-transparent [-webkit-text-stroke:2px_#E91E63] md:[-webkit-text-stroke:5px_#E91E63]">
               Togel
             </h1>
-            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest">
+            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-transparent [-webkit-text-stroke:1px_#E91E63]">
               トゥゲル
             </p>
           </div>
