@@ -146,7 +146,7 @@ export const SiteHeader = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-[15000] bg-white backdrop-blur">
+      <header className="sticky top-0 z-[15000] bg-white backdrop-blur border-b border-[#E91E63]/10">
         <div className={`container flex h-16 items-center justify-between transition-opacity ${isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <Link href="/" className="font-heading text-xl font-semibold text-[#E91E63]">
             Togel
