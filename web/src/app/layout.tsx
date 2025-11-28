@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
 import { SiteHeader } from "@/components/layout/site-header";
+
+const notoSansJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-noto-sans-jp",
+});
 
 export const metadata: Metadata = {
   title: "Togel診断 | 性格診断マッチングサービス",
@@ -16,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className={`min-h-screen bg-background text-foreground antialiased ${notoSansJP.className} ${notoSansJP.variable}`}>
         <SiteHeader />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       </body>

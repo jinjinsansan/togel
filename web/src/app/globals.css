@@ -5,8 +5,9 @@
 :root {
   --background: 220 23% 98%;
   --foreground: 228 14% 16%;
-  --primary: 340 89% 66%;
-  --primary-foreground: 0 0% 100%;
+  /* --primary: 340 89% 66%; Previous strong pink */
+  --primary: 340 100% 88%; /* Light pink */
+  --primary-foreground: 340 89% 40%; /* Darker pink for contrast on light bg if needed */
   --secondary: 210 96% 72%;
   --secondary-foreground: 0 0% 15%;
   --accent: 45 100% 64%;
@@ -18,8 +19,8 @@
   --ring: 340 89% 66%;
   --pop: 267 83% 74%;
   --radius: 1rem;
-  --font-sans: "Noto Sans JP", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
-  --font-heading: "Inter", "Noto Sans JP", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-noto-sans-jp), "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-heading: var(--font-noto-sans-jp), "Inter", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,6 +52,11 @@
     font-family: var(--font-sans);
   }
 
+  body[data-menu-open="true"] {
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+
   h1,
   h2,
   h3,
@@ -59,4 +65,27 @@
   h6 {
     font-family: var(--font-heading);
   }
+}
+
+.mobile-nav-overlay {
+  isolation: isolate;
+  mix-blend-mode: normal !important;
+  background-color: #FFFFFF !important;
+  opacity: 1 !important;
+}
+
+.mobile-nav-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: #FFFFFF;
+  z-index: 0;
+}
+
+.mobile-nav-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: #FFFFFF;
+  z-index: 1;
 }
