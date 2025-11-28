@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-white">
+    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFF5F7]">
       {/* 1. Video Background */}
       <video
         autoPlay
@@ -19,7 +19,7 @@ export default function Home() {
       {/* <div className="pointer-events-none absolute inset-0 z-0 bg-primary mix-blend-multiply" /> */}
 
       {/* 3. Content Mask Layer (White Background + Screen Blend) */}
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white mix-blend-screen">
+      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#FFF5F7] mix-blend-screen">
         <div className="container flex flex-col items-center gap-12 py-24 text-center">
           {/* Title Block (VISIBLE) */}
           <div className="flex flex-col items-center">
