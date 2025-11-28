@@ -12,7 +12,7 @@ export default function Home() {
         playsInline
         className="absolute inset-0 h-full w-full object-cover"
       >
-        <source src="/hero-movie.mp4" type="video/mp4" />
+        <source src="/hero-movie-v2.mp4" type="video/mp4" />
       </video>
 
       {/* 2. Pink Overlay (Multiply) - Removed for white background */}
