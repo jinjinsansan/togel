@@ -4,7 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
 
 export const metadata: Metadata = {
-  title: "Matching診断 | 性格診断マッチングサービス",
+  title: "Togel診断 | 性格診断マッチングサービス",
   description:
     "性格診断から相性の良い異性5名を紹介するカジュアルなマッチングサービス",
 };

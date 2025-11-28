@@ -199,7 +199,7 @@ function generateLoveTendency(scores: BigFiveScores, typeId: string): string[] {
 }
 
 // 求める相手の条件
-function generateIdealPartner(scores: BigFiveScores, typeId: string): string[] {
+function generateIdealPartner(scores: BigFiveScores): string[] {
   const ideals: string[] = [];
   const eIntensity = getIntensity(scores.extraversion);
   const oIntensity = getIntensity(scores.openness);
@@ -233,7 +233,7 @@ function generateIdealPartner(scores: BigFiveScores, typeId: string): string[] {
 }
 
 // 要注意ポイント
-function generateWarnings(scores: BigFiveScores, typeId: string): string[] {
+function generateWarnings(scores: BigFiveScores): string[] {
   const warnings: string[] = [];
   const eIntensity = getIntensity(scores.extraversion);
   const oIntensity = getIntensity(scores.openness);
@@ -309,8 +309,8 @@ export function generatePersonalityNarrative(
       selectVariation(neuroticismTexts[nIntensity], typeId + "n"),
     ],
     loveTendency: generateLoveTendency(scores, typeId),
-    idealPartner: generateIdealPartner(scores, typeId),
-    warnings: generateWarnings(scores, typeId),
+    idealPartner: generateIdealPartner(scores),
+    warnings: generateWarnings(scores),
     strengths: personalityType.characteristics.strengths,
   };
 }

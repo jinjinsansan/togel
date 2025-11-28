@@ -84,29 +84,6 @@ const traitKeyMap: Record<string, TraitKey> = {
   n: "neuroticism",
 };
 
-const TRAIT_NARRATIVES: Record<TraitKey, { high: string; low: string }> = {
-  openness: {
-    high: "アイデア感度が高く、新しい刺激から学びと楽しさを見出します。",
-    low: "慣れ親しんだ型を大切にし、安定した環境で実力を発揮します。",
-  },
-  conscientiousness: {
-    high: "計画遂行力が抜群で、約束や目標を着実に形にします。",
-    low: "柔らかな進行が得意で、状況に合わせて手法を切り替えられます。",
-  },
-  extraversion: {
-    high: "交流エネルギーが豊かで、人との対話から大きな活力を得ます。",
-    low: "一対一でじっくり向き合う静かなコミュニケーションを好みます。",
-  },
-  agreeableness: {
-    high: "共感スタイルが豊かで、周囲に安心感と温かさを届けます。",
-    low: "是々非々の姿勢で率直に意見を伝え、物事を前に進めます。",
-  },
-  neuroticism: {
-    high: "繊細な感受性があるため、相手の心の動きをいち早く察知できます。",
-    low: "ストレス耐性が高く、プレッシャー下でも落ち着いた判断ができます。",
-  },
-};
-
 const TRAIT_LABELS: Record<TraitKey, string> = {
   openness: "アイデア感度",
   conscientiousness: "計画遂行力",
@@ -832,7 +809,6 @@ function generateCommonalities(
   userScores: BigFiveScores,
   profileScores: BigFiveScores,
   profile: MatchingProfile,
-  userType: PersonalityTypeDefinition,
 ): string[] {
   const commonalities: string[] = [];
   
@@ -955,11 +931,11 @@ export const generateMatchingResults = async (
     const highlights = generateMatchHighlights(userType, profileType, compatibility, userScores, profileScores);
     const catchphrase = generateCatchphrase(userType, profileType, userScores, profileScores, compatibility.totalCompatibility, profile);
     const dateIdea = generateDateIdea(userScores, profileScores, profile);
-    const commonalities = generateCommonalities(userScores, profileScores, profile, userType);
+    const commonalities = generateCommonalities(userScores, profileScores, profile);
     const conversationStarters = generateConversationStarters(userScores, profileScores, profile);
 
-    const profileNarrative = generateProfilePersonality(profile, profileScores, profileType);
-    const matchingReasonData = generateMatchingReason(userScores, profileScores, userType, profileType, profile);
+    const profileNarrative = generateProfilePersonality(profile, profileScores);
+    const matchingReasonData = generateMatchingReason(userScores, profileScores);
     const relationshipPreview = generateRelationshipPreview(userScores, profileScores, profile);
     const firstDateSuggestion = generateFirstDate(userScores, profileScores, profile);
 
@@ -1050,11 +1026,11 @@ export const generateMismatchingResults = async (
     const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
 
     const mismatchScore = 100 - compatibility.totalCompatibility;
-    const profileNarrative = generateMismatchProfilePersonality(profile, profileScores, profileType);
-    const mismatchReasonData = generateMismatchReason(userScores, profileScores, userType, profileType, profile, mismatchScore);
-    const disasterScenario = generateDisasterScenario(userScores, profileScores, profile);
+    const profileNarrative = generateMismatchProfilePersonality(profile, profileScores);
+    const mismatchReasonData = generateMismatchReason(userScores, profileScores, userType, profileType, mismatchScore);
+    const disasterScenario = generateDisasterScenario(userScores, profileScores);
     const catchphrase = generateMismatchCatchphrase(userScores, profileScores, mismatchScore);
-    const absolutelyNotToDo = generateAbsolutelyNotToDo(userScores, profileScores);
+    const absolutelyNotToDo = generateAbsolutelyNotToDo();
 
     return {
       ranking: 0,

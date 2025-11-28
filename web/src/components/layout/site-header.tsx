@@ -16,7 +16,7 @@ export const SiteHeader = () => {
     <header className="sticky top-0 z-30 border-b border-border/60 bg-white/80 backdrop-blur">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="font-heading text-xl font-semibold text-primary">
-          Matching診断
+          Togel診断
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
           {navItems.map((item) => (

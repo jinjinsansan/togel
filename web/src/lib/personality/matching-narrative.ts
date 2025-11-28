@@ -1,5 +1,4 @@
-import { BigFiveScores, MatchingProfile, PersonalityTypeDefinition } from "@/types/diagnosis";
-import { getTogelLabel } from "./utils";
+import { BigFiveScores, MatchingProfile } from "@/types/diagnosis";
 
 type TraitIntensity = "very-low" | "low" | "medium" | "high" | "very-high";
 
@@ -15,7 +14,6 @@ function getIntensity(score: number): TraitIntensity {
 export function generateProfilePersonality(
   profile: MatchingProfile,
   profileScores: BigFiveScores,
-  profileType: PersonalityTypeDefinition,
 ): {
   personalityTraits: string[];
   values: string[];
@@ -117,9 +115,6 @@ export function generateProfilePersonality(
 export function generateMatchingReason(
   userScores: BigFiveScores,
   profileScores: BigFiveScores,
-  userType: PersonalityTypeDefinition,
-  profileType: PersonalityTypeDefinition,
-  profile: MatchingProfile,
 ): {
   reasons: Array<{ title: string; userTrait: string; profileTrait: string; why: string }>;
 } {
@@ -248,8 +243,6 @@ export function generateRelationshipPreview(
   const warnings: string[] = [];
 
   const eDiff = Math.abs(userScores.extraversion - profileScores.extraversion);
-  const cDiff = Math.abs(userScores.conscientiousness - profileScores.conscientiousness);
-
   // 良いところ
   if (eDiff >= 1.3) {
     good.push("毎日LINEしなくても平気。お互い自分の時間を尊重できる");

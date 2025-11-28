@@ -11,21 +11,10 @@ function getIntensity(score: number): TraitIntensity {
   return "very-low";
 }
 
-function selectVariation<T>(items: T[], seed: string): T {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash << 5) - hash + seed.charCodeAt(i);
-    hash = hash & hash;
-  }
-  const index = Math.abs(hash) % items.length;
-  return items[index];
-}
-
 // 相手の「ヤバい」特徴を生成
 export function generateMismatchProfilePersonality(
   profile: MatchingProfile,
   profileScores: BigFiveScores,
-  profileType: PersonalityTypeDefinition,
 ): {
   dangerousTraits: string[];
   incompatibleValues: string[];
@@ -115,7 +104,6 @@ export function generateMismatchReason(
   profileScores: BigFiveScores,
   userType: PersonalityTypeDefinition,
   profileType: PersonalityTypeDefinition,
-  profile: MatchingProfile,
   mismatchScore: number,
 ): {
   reasons: Array<{ title: string; userTrait: string; profileTrait: string; disaster: string }>;
@@ -269,7 +257,6 @@ export function generateMismatchReason(
 export function generateDisasterScenario(
   userScores: BigFiveScores,
   profileScores: BigFiveScores,
-  profile: MatchingProfile,
 ): {
   horrorScenarios: string[];
   warnings: string[];
@@ -340,10 +327,7 @@ export function generateMismatchCatchphrase(
 }
 
 // 絶対にやってはいけないこと
-export function generateAbsolutelyNotToDo(
-  userScores: BigFiveScores,
-  profileScores: BigFiveScores,
-): string[] {
+export function generateAbsolutelyNotToDo(): string[] {
   const nots: string[] = [];
 
   nots.push("付き合わない。これが最善策");
