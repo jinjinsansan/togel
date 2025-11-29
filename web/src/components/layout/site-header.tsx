@@ -5,6 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 
+import { useSession } from "@supabase/auth-helpers-react";
+import { LoginButton } from "@/components/auth/login-button";
+
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -17,6 +20,7 @@ const navItems = [
 ];
 
 export const SiteHeader = () => {
+  const session = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const firstNavLinkRef = useRef<HTMLAnchorElement | null>(null);
   const isBrowser = typeof document !== "undefined";
@@ -129,17 +133,23 @@ export const SiteHeader = () => {
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   
                   <div className="px-2">
-                    <Button
-                      className="h-14 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-lg font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
-                      asChild
-                    >
-                      <Link href="/diagnosis/select" onClick={closeMenu}>
-                        今すぐ診断する
-                      </Link>
-                    </Button>
-                    <p className="mt-3 text-center text-xs text-white/40">
-                      会員登録なしで診断できます
-                    </p>
+                    {!session ? (
+                      <LoginButton />
+                    ) : (
+                      <Button
+                        className="h-14 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-lg font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
+                        asChild
+                      >
+                        <Link href="/mypage" onClick={closeMenu}>
+                          マイページへ
+                        </Link>
+                      </Button>
+                    )}
+                    {!session && (
+                      <p className="mt-3 text-center text-xs text-white/40">
+                        ログインして診断結果を保存
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -167,14 +177,20 @@ export const SiteHeader = () => {
           </nav>
 
           <div className="flex items-center gap-2">
-            {/* Desktop Button */}
-            <Button
-              variant="outline"
-              asChild
-              className="hidden border-[#E91E63] text-[#E91E63] transition-colors hover:bg-[#E91E63] hover:text-white md:flex"
-            >
-              <Link href="/diagnosis/select">診断をはじめる</Link>
-            </Button>
+            {/* Desktop Auth Button */}
+            <div className="hidden md:block">
+              {!session ? (
+                <LoginButton />
+              ) : (
+                <Button
+                  variant="outline"
+                  asChild
+                  className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
+                >
+                  <Link href="/mypage">マイページ</Link>
+                </Button>
+              )}
+            </div>
 
             {/* Mobile Hamburger Button */}
             <button
