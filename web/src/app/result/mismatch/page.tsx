@@ -296,6 +296,15 @@ const MismatchResultPage = () => {
                     <span className="font-bold text-red-400">AI判定：</span> この組み合わせは避けるべき。時間の無駄。
                   </p>
                 </div>
+
+                {/* アクションボタン */}
+                <div className="mt-6">
+                  <Button asChild className="w-full" size="lg" variant="outline">
+                    <Link href={`/profile/${result.profile.id}`}>
+                      プロフィール詳細を見る（自己責任） →
+                    </Link>
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
