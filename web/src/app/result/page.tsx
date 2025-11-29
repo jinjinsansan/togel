@@ -72,12 +72,12 @@ const ResultPage = () => {
   });
 
   return (
-    <div className="container py-10">
+    <div className="w-full md:container py-6 md:py-10">
       <div className="mx-auto max-w-5xl">
-        <div className="text-center">
+        <div className="text-center px-4 md:px-0">
           <p className="text-sm font-semibold text-primary">STEP 2</p>
-          <h1 className="mt-2 font-heading text-4xl">マッチング結果</h1>
-          <p className="mt-3 text-muted-foreground">
+          <h1 className="mt-2 font-heading text-3xl md:text-4xl">マッチング結果</h1>
+          <p className="mt-3 text-sm md:text-base text-muted-foreground">
             あなたの回答データから相性の良い5名を抽出しました
           </p>
           <div className="mt-4">
@@ -92,15 +92,15 @@ const ResultPage = () => {
 
         {/* あなたのタイプセクション - 新デザイン */}
         {diagnosis?.detailedNarrative && (
-          <div className="mt-10 rounded-3xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-white to-secondary/5 p-8 shadow-lg">
+          <div className="mt-6 md:mt-10 rounded-none md:rounded-3xl border-0 md:border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-white to-secondary/5 p-5 md:p-8 shadow-none md:shadow-lg">
             <div className="border-b border-primary/20 pb-4">
               <p className="text-xs font-bold uppercase tracking-[0.4em] text-primary">📊 あなたの性格診断結果</p>
-              <h2 className="mt-2 font-heading text-3xl">{diagnosis.detailedNarrative.title}</h2>
-              <p className="mt-1 text-lg font-medium text-foreground">{diagnosis.detailedNarrative.subtitle}</p>
+              <h2 className="mt-2 font-heading text-2xl md:text-3xl">{diagnosis.detailedNarrative.title}</h2>
+              <p className="mt-1 text-base md:text-lg font-medium text-foreground">{diagnosis.detailedNarrative.subtitle}</p>
             </div>
 
             {/* 🎯 あなたってこんな人 */}
-            <div className="mt-6 rounded-2xl bg-white/70 p-6">
+            <div className="mt-6 rounded-2xl bg-white/70 p-5 md:p-6">
               <h3 className="flex items-center gap-2 text-lg font-bold">
                 <span className="text-2xl">🎯</span>
                 あなたってこんな人
@@ -202,7 +202,7 @@ const ResultPage = () => {
         )}
 
         {/* マッチング結果 - 新デザイン */}
-        <div className="mt-10 space-y-8">
+        <div className="mt-0 md:mt-10 space-y-0 md:space-y-8">
           {results.length === 0 && (
             <div className="rounded-3xl border border-dashed border-border px-6 py-12 text-center">
               <p className="text-muted-foreground">まだ診断結果がありません。まずは診断を実施しましょう。</p>
@@ -215,7 +215,7 @@ const ResultPage = () => {
           {results.map((result) => (
             <div
               key={result.profile.id}
-              className="rounded-3xl border-2 border-border bg-white/95 p-6 shadow-lg hover:shadow-xl transition-shadow"
+              className="rounded-none md:rounded-3xl border-b-8 md:border-2 border-muted/20 md:border-border bg-white/95 px-5 py-8 md:p-6 shadow-none md:shadow-lg hover:shadow-xl transition-shadow"
             >
               {/* ヘッダー */}
               <div className="flex items-start justify-between pb-4 border-b border-border">
@@ -408,6 +408,21 @@ const ResultPage = () => {
             </div>
           ))}
         </div>
+
+        {/* 下部ミスマッチ結果リンク */}
+        {results.length > 0 && (
+          <div className="mt-12 text-center">
+            <p className="mb-4 text-muted-foreground">
+              相性の悪い相手も知っておくと、失敗を避けられるかも...？
+            </p>
+            <Button asChild variant="outline" size="lg" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
+              <Link href="/result/mismatch">
+                <span className="text-lg">💀</span>
+                ミスマッチランキングも見る
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
