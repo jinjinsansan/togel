@@ -32,43 +32,75 @@ const DiagnosisSelectPage = () => {
   };
 
   return (
-    <div className="container py-12">
-      <div className="mx-auto max-w-3xl text-center">
-        <p className="text-sm font-semibold text-primary">STEP 1</p>
-        <h1 className="mt-3 font-heading text-4xl">診断タイプを選択</h1>
-        <p className="mt-4 text-muted-foreground">
-          ライト版は最短で結果を知りたい方、しっかり版は本格的に相性を分析したい方向けです。どちらも途中保存に対応しています。
-        </p>
-      </div>
-      <div className="mt-12 grid gap-6 md:grid-cols-2">
-        {plans.map((plan) => (
-          <div
-            key={plan.type}
-            className="flex flex-col rounded-3xl border border-border bg-white/90 p-6 shadow-card"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-                {plan.time}
-              </p>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                {plan.type === "light" ? "カジュアル" : "精密"}
-              </span>
-            </div>
-            <h2 className="mt-4 font-heading text-2xl">{plan.title}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
-            <ul className="mt-4 space-y-2 text-sm text-foreground">
-              {plan.features.map((feature) => (
-                <li key={feature} className="flex items-center gap-2">
-                  <span className="text-primary">●</span>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-            <Button onClick={() => handleSelectPlan(plan.type as "light" | "full")} className="mt-6">
-              この診断で進む
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
+      <div className="container px-4 md:px-6">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="inline-flex items-center justify-center rounded-full bg-[#E91E63]/10 px-4 py-1.5 mb-6">
+            <span className="text-sm font-bold text-[#E91E63] tracking-widest">STEP 1</span>
           </div>
-        ))}
+          <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900 mb-4">
+            診断タイプを選択
+          </h1>
+          <p className="text-slate-600 leading-relaxed max-w-xl mx-auto">
+            時間がない方はライト版、正確な結果が欲しい方はしっかり版をお選びください。
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+          {plans.map((plan) => (
+            <div
+              key={plan.type}
+              className="group relative flex flex-col rounded-[2rem] border-2 border-white bg-white/80 backdrop-blur-sm p-8 shadow-xl shadow-slate-200/50 transition-all hover:scale-[1.02] hover:shadow-2xl hover:border-pink-100"
+            >
+              <div className="absolute top-0 left-0 h-full w-full rounded-[2rem] bg-gradient-to-br from-white/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none" />
+              
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 text-slate-500">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-xs font-bold tracking-wider">{plan.time}</span>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  plan.type === "light" 
+                    ? "bg-blue-50 text-blue-600 border-blue-100" 
+                    : "bg-pink-50 text-pink-600 border-pink-100"
+                }`}>
+                  {plan.type === "light" ? "カジュアル" : "精密分析"}
+                </span>
+              </div>
+
+              <h2 className="font-heading text-2xl font-black text-slate-900 mb-3">{plan.title}</h2>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">{plan.description}</p>
+              
+              <div className="mt-auto space-y-4">
+                <ul className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button 
+                  onClick={() => handleSelectPlan(plan.type as "light" | "full")} 
+                  className={`w-full h-12 rounded-xl text-base font-bold shadow-lg transition-all hover:shadow-xl ${
+                    plan.type === "light"
+                      ? "bg-slate-900 hover:bg-slate-800 text-white"
+                      : "bg-gradient-to-r from-[#E91E63] to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white border-0"
+                  }`}
+                >
+                  {plan.type === "light" ? "ライト版で始める" : "しっかり版で始める"}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

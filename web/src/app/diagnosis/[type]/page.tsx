@@ -143,64 +143,121 @@ const DiagnosisPage = () => {
   const currentValue = answers.find((answer) => answer.questionId === currentQuestion?.id)?.value;
 
   return (
-    <div className="container py-10">
-      <div className="mx-auto max-w-3xl">
-        <div className="rounded-2xl border border-border bg-white/80 p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-muted-foreground">
-              {diagnosisType === "light" ? "ライト版" : "しっかり版"}
-            </span>
-            <span className="text-xs text-muted-foreground">{progress}% 完了</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
+      <div className="container px-4 md:px-6">
+        <div className="mx-auto max-w-2xl">
+          
+          {/* Progress Header */}
+          <div className="mb-8 rounded-[2rem] border-2 border-white bg-white/80 backdrop-blur-sm p-6 shadow-lg shadow-slate-200/50">
+            <div className="flex items-center justify-between text-sm mb-4">
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  diagnosisType === "light" 
+                    ? "bg-blue-50 text-blue-600 border-blue-100" 
+                    : "bg-pink-50 text-pink-600 border-pink-100"
+                }`}>
+                  {diagnosisType === "light" ? "LIGHT MODE" : "FULL MODE"}
+                </span>
+                <span className="font-bold text-slate-400">
+                  Q.{currentIndex + 1} <span className="text-xs font-normal text-slate-300">/ {questions.length}</span>
+                </span>
+              </div>
+              <span className="text-xs font-bold text-slate-400">{progress}% COMPLETE</span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+              <div 
+                className="h-full bg-gradient-to-r from-[#E91E63] to-pink-500 transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-          <Progress value={progress} className="mt-3" />
-        </div>
 
-        {questionsLoading && (
-          <div className="mt-8 rounded-3xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
-            質問を読み込んでいます...
-          </div>
-        )}
-
-        {!questionsLoading && !currentQuestion && (
-          <div className="mt-8 rounded-3xl border border-dashed border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
-            質問データを取得できませんでした。時間を置いて再度お試しください。
-          </div>
-        )}
-
-        {currentQuestion && !questionsLoading && (
-          <div className="mt-8">
-            <QuestionCard
-              question={currentQuestion}
-              currentValue={currentValue}
-              onSelect={handleSelect}
-            />
-          </div>
-        )}
-
-        {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
-
-        <div className="mt-6 flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={handlePrev}
-            disabled={currentIndex === 0 || questionsLoading}
-          >
-            前へ
-          </Button>
-          {currentIndex === questions.length - 1 ? (
-            <Button onClick={handleSubmit} disabled={submitting || questionsLoading || !currentQuestion}>
-              {submitting ? "AIが結果を生成中..." : "結果を見る"}
-            </Button>
-          ) : (
-            <Button onClick={handleNext} disabled={questionsLoading || !currentQuestion}>
-              次へ
-            </Button>
+          {questionsLoading && (
+            <div className="mt-8 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/50 p-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-pink-500 mb-4"></div>
+              <p className="text-sm font-bold text-slate-400">質問データを読み込んでいます...</p>
+            </div>
           )}
-        </div>
-        <div className="mt-4 text-right">
-          <Button variant="ghost" size="sm" onClick={() => clearSession()}>
-            保存データをリセット
-          </Button>
+
+          {!questionsLoading && !currentQuestion && (
+            <div className="mt-8 rounded-[2.5rem] border-2 border-dashed border-red-200 bg-red-50/50 p-8 text-center">
+              <p className="text-sm font-bold text-red-500">データの取得に失敗しました</p>
+              <Button onClick={() => window.location.reload()} variant="link" className="text-red-600 mt-2">
+                再読み込みする
+              </Button>
+            </div>
+          )}
+
+          {currentQuestion && !questionsLoading && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <QuestionCard
+                question={currentQuestion}
+                currentValue={currentValue}
+                onSelect={handleSelect}
+              />
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-center animate-in fade-in zoom-in duration-300">
+              <p className="text-sm font-bold text-red-500 flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {error}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-10 flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={handlePrev}
+              disabled={currentIndex === 0 || questionsLoading}
+              className="flex-1 h-14 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            >
+              ← 前へ
+            </Button>
+            
+            {currentIndex === questions.length - 1 ? (
+              <Button 
+                size="lg"
+                onClick={handleSubmit} 
+                disabled={submitting || questionsLoading || !currentQuestion}
+                className="flex-[2] h-14 rounded-xl bg-gradient-to-r from-[#E91E63] to-pink-600 text-lg font-bold text-white shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 hover:scale-[1.02] transition-all"
+              >
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    AI分析中...
+                  </span>
+                ) : (
+                  "診断結果を見る →"
+                )}
+              </Button>
+            ) : (
+              <Button 
+                size="lg"
+                onClick={handleNext} 
+                disabled={questionsLoading || !currentQuestion}
+                className="flex-[2] h-14 rounded-xl bg-slate-900 text-lg font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800 hover:shadow-xl hover:scale-[1.02] transition-all"
+              >
+                次へ →
+              </Button>
+            )}
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Button 
+              variant="link" 
+              size="sm" 
+              onClick={() => clearSession()}
+              className="text-slate-300 hover:text-slate-500 text-xs"
+            >
+              保存データをリセットして最初から
+            </Button>
+          </div>
         </div>
       </div>
     </div>
