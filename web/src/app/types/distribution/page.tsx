@@ -15,33 +15,25 @@ const DistributionPage = async () => {
   return (
     <div className="min-h-screen bg-white pb-20 text-slate-900">
       {/* Header Section */}
-      <div className="relative border-b border-slate-100 bg-white py-12 md:py-20">
+      <div className="relative border-b border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
         <div className="container relative z-10">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-1.5 text-sm font-bold text-slate-600 mb-6">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E91E63] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E91E63]"></span>
-              </span>
-              LIVE UPDATING
-            </div>
-            
-            <h1 className="font-heading text-4xl md:text-6xl font-black tracking-tight text-slate-900 mb-6">
-              Togel分布マップ
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-2">TOGEL DISTRIBUTION</p>
+            <h1 className="font-heading text-3xl md:text-5xl font-black text-slate-900 mb-4">
+              Togel<span className="text-[#E91E63]">生息</span>マップ
             </h1>
-            <p className="text-lg font-medium text-slate-500 leading-relaxed mb-8">
-              全24タイプの生息状況をリアルタイムで公開。<br />
-              あなたのタイプは多数派？それとも少数派？
+            <p className="text-slate-600 leading-relaxed mb-8">
+              全24タイプの生息状況を<span className="font-bold text-black">リアルタイム</span>で公開。<br />
+              あなたのタイプは<span className="font-bold text-[#E91E63]">多数派</span>？それとも<span className="font-bold text-blue-600">絶滅危惧種</span>？
             </p>
 
-            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                <Users className="h-6 w-6 text-slate-600" />
+            <div className="inline-flex items-center gap-3 rounded-full bg-white px-6 py-2 shadow-sm border border-slate-200">
+              <div className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E91E63] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#E91E63]"></span>
               </div>
-              <div className="px-4 text-left">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL USERS</p>
-                <p className="text-2xl font-black text-slate-900 font-mono">{total.toLocaleString()}</p>
-              </div>
+              <span className="text-sm font-bold text-slate-500 tracking-widest">TOTAL USERS</span>
+              <span className="text-2xl font-black text-slate-900 font-mono ml-1">{total.toLocaleString()}</span>
             </div>
           </div>
         </div>
