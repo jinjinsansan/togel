@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -13,8 +14,9 @@ export function HeroOptionA() {
 
       <div className="z-10 flex flex-col items-center space-y-8 text-center px-4">
         {/* Provocative Badge */}
-        <div className="inline-block rounded-none border border-red-600 bg-red-950/30 px-3 py-1 text-xs font-mono text-red-500 tracking-widest uppercase">
-          ⚠️ Warning: Brutal Honesty Inside
+        <div className="inline-flex items-center gap-2 rounded-none border border-red-600 bg-red-950/30 px-3 py-1 text-xs font-mono text-red-500 tracking-widest uppercase">
+          <AlertTriangle className="h-3 w-3" />
+          Warning: Brutal Honesty Inside
         </div>
 
         {/* Glitchy Giant Text */}

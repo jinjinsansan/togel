@@ -1,5 +1,17 @@
 "use client";
 
+import { 
+  AlertOctagon, 
+  AlertTriangle, 
+  Ban, 
+  BarChart3, 
+  ChevronDown, 
+  Flame, 
+  MessageCircle, 
+  Siren, 
+  Skull, 
+  X 
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, SyntheticEvent } from "react";
@@ -77,7 +89,10 @@ const MismatchResultPage = () => {
         <div className="mx-auto max-w-5xl">
           {/* ヘッダー */}
           <div className="text-center mb-8">
-            <p className="text-sm font-semibold text-red-400">⚠️ DANGER ZONE</p>
+            <p className="text-sm font-semibold text-red-400 flex items-center justify-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              DANGER ZONE
+            </p>
             <h1 className="mt-2 font-heading text-4xl text-white">ミスマッチランキング</h1>
             <p className="mt-3 text-gray-300">
               AIが選んだ、あなたと絶対に合わない5名。付き合ったら地獄確定。
@@ -93,14 +108,20 @@ const MismatchResultPage = () => {
           {diagnosis?.detailedNarrative && (
             <div className="mb-10 rounded-3xl border-2 border-gray-700 bg-gray-800/90 p-6 shadow-xl">
               <div className="border-b border-gray-700 pb-3">
-                <p className="text-xs font-bold uppercase tracking-[0.4em] text-gray-400">📊 あなたの性格診断結果</p>
+                <p className="text-xs font-bold uppercase tracking-[0.4em] text-gray-400 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  あなたの性格診断結果
+                </p>
                 <h2 className="mt-2 font-heading text-2xl text-white">{diagnosis.detailedNarrative.title}</h2>
                 <p className="mt-1 text-base font-medium text-gray-300">{diagnosis.detailedNarrative.subtitle}</p>
               </div>
               <details className="group mt-4">
                 <summary className="cursor-pointer text-sm font-semibold text-gray-400 hover:text-gray-300 transition-colors list-none flex items-center justify-between">
-                  <span>詳細を見る</span>
-                  <span className="group-open:rotate-180 transition-transform">▼</span>
+                  <span className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" />
+                    詳細を見る
+                  </span>
+                  <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
                 </summary>
                 <div className="mt-3 grid gap-2 md:grid-cols-2">
                   {TRAITS.map((trait) => (
@@ -147,8 +168,8 @@ const MismatchResultPage = () => {
                           }
                         }}
                       />
-                      <div className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-black text-sm">
-                        💀
+                      <div className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-black text-sm shadow-lg">
+                        <Skull className="h-5 w-5" />
                       </div>
                     </div>
                     <div>
@@ -174,7 +195,7 @@ const MismatchResultPage = () => {
                 {/* キャッチフレーズ */}
                 <div className="mt-4 p-4 rounded-2xl bg-red-950/50 border-2 border-red-900/50">
                   <p className="text-base font-bold text-red-400 text-center flex items-center justify-center gap-2">
-                    <span className="text-2xl">⚠️</span>
+                    <AlertTriangle className="h-6 w-6" />
                     {result.catchphrase}
                   </p>
                 </div>
@@ -183,13 +204,13 @@ const MismatchResultPage = () => {
                 {result.profileNarrative && (
                   <div className="mt-4 rounded-2xl bg-gray-700/30 border border-gray-600 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-white">
-                      <span className="text-2xl">💀</span>
+                      <Skull className="h-6 w-6 text-red-500" />
                       {result.profile.nickname}のヤバい特徴
                     </h4>
                     <ul className="space-y-2 text-sm text-gray-300">
                       {result.profileNarrative.dangerousTraits.map((trait, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <span className="text-red-500 mt-0.5">⚠️</span>
+                          <AlertOctagon className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                           <span>{trait}</span>
                         </li>
                       ))}
@@ -197,10 +218,16 @@ const MismatchResultPage = () => {
                     
                     {result.profileNarrative.incompatibleValues.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-gray-600">
-                        <p className="text-xs font-semibold text-gray-400 mb-2">🚫 あなたとは真逆の価値観</p>
+                        <p className="text-xs font-semibold text-gray-400 mb-2 flex items-center gap-2">
+                          <Ban className="h-3 w-3" />
+                          あなたとは真逆の価値観
+                        </p>
                         <ul className="space-y-1 text-sm text-gray-300">
                           {result.profileNarrative.incompatibleValues.map((value, idx) => (
-                            <li key={idx}>✗ {value}</li>
+                            <li key={idx} className="flex items-center gap-2">
+                              <X className="h-3 w-3 text-red-500" />
+                              {value}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -208,7 +235,10 @@ const MismatchResultPage = () => {
 
                     {result.profileNarrative.communicationNightmare && (
                       <div className="mt-3">
-                        <p className="text-xs font-semibold text-gray-400">💬 コミュニケーションの悪夢</p>
+                        <p className="text-xs font-semibold text-gray-400 flex items-center gap-2">
+                          <MessageCircle className="h-3 w-3" />
+                          コミュニケーションの悪夢
+                        </p>
                         <p className="mt-1 text-sm text-red-400">{result.profileNarrative.communicationNightmare}</p>
                       </div>
                     )}
@@ -219,7 +249,7 @@ const MismatchResultPage = () => {
                 {result.mismatchReasons && result.mismatchReasons.length > 0 && (
                   <div className="mt-4 rounded-2xl bg-red-950/30 border border-red-900/50 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-4 text-white">
-                      <span className="text-2xl">🚨</span>
+                      <Siren className="h-6 w-6 text-red-500" />
                       なぜあなたとミスマッチ？
                     </h4>
                     <div className="space-y-4">
@@ -231,7 +261,10 @@ const MismatchResultPage = () => {
                             <p>{reason.profileTrait}</p>
                           </div>
                           <div className="mt-3 pl-4 border-l-4 border-red-600">
-                            <p className="text-sm font-bold text-red-500 mb-1">💥 起こる大惨事</p>
+                            <p className="text-sm font-bold text-red-500 mb-1 flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4" />
+                              起こる大惨事
+                            </p>
                             <p className="text-sm text-gray-200 leading-relaxed">{reason.disaster}</p>
                           </div>
                         </div>
@@ -244,13 +277,16 @@ const MismatchResultPage = () => {
                 {result.disasterScenario && (
                   <div className="mt-4 rounded-2xl bg-orange-950/30 border border-orange-900/50 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-white">
-                      <span className="text-2xl">🔥</span>
+                      <Flame className="h-6 w-6 text-orange-500" />
                       付き合ったら起こる地獄のシナリオ
                     </h4>
                     
                     {result.disasterScenario.horrorScenarios.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-orange-400 mb-2">💀 最悪の未来</p>
+                        <p className="text-xs font-semibold text-orange-400 mb-2 flex items-center gap-2">
+                          <Skull className="h-3 w-3" />
+                          最悪の未来
+                        </p>
                         <ul className="space-y-1 text-sm text-gray-300">
                           {result.disasterScenario.horrorScenarios.map((scenario, idx) => (
                             <li key={idx}>• {scenario}</li>
@@ -261,10 +297,16 @@ const MismatchResultPage = () => {
 
                     {result.disasterScenario.warnings.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-orange-900/50">
-                        <p className="text-xs font-semibold text-red-500 mb-2">⚠️ 深刻な警告</p>
+                        <p className="text-xs font-semibold text-red-500 mb-2 flex items-center gap-2">
+                          <AlertTriangle className="h-3 w-3" />
+                          深刻な警告
+                        </p>
                         <ul className="space-y-1 text-sm text-gray-300">
                           {result.disasterScenario.warnings.map((warning, idx) => (
-                            <li key={idx} className="text-red-400">⚠️ {warning}</li>
+                            <li key={idx} className="text-red-400 flex items-center gap-2">
+                              <AlertOctagon className="h-3 w-3 shrink-0" />
+                              {warning}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -276,13 +318,13 @@ const MismatchResultPage = () => {
                 {result.absolutelyNotToDo && result.absolutelyNotToDo.length > 0 && (
                   <div className="mt-4 rounded-2xl bg-red-950/50 border-2 border-red-900 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-white">
-                      <span className="text-2xl">🚫</span>
+                      <Ban className="h-6 w-6 text-red-500" />
                       絶対にやってはいけないこと
                     </h4>
                     <ul className="space-y-2 text-sm">
                       {result.absolutelyNotToDo.map((item, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <span className="text-red-500 text-xl">✗</span>
+                          <X className="text-red-500 h-5 w-5 shrink-0" />
                           <span className="text-gray-200 font-medium">{item}</span>
                         </li>
                       ))}

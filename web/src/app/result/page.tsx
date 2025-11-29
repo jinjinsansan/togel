@@ -1,5 +1,21 @@
 "use client";
 
+import { 
+  AlertTriangle, 
+  Ban, 
+  BarChart3, 
+  Bot, 
+  CheckCircle2, 
+  ChevronDown, 
+  HeartHandshake, 
+  Lightbulb, 
+  MessageCircle, 
+  Skull, 
+  Sparkles, 
+  Target, 
+  User, 
+  Zap 
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, SyntheticEvent } from "react";
@@ -83,7 +99,7 @@ const ResultPage = () => {
           <div className="mt-4">
             <Button asChild variant="outline" size="sm" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
               <Link href="/result/mismatch">
-                <span className="text-lg">💀</span>
+                <Skull className="h-5 w-5" />
                 ミスマッチランキングも見る
               </Link>
             </Button>
@@ -101,14 +117,17 @@ const ResultPage = () => {
 
             {/* 🎯 あなたってこんな人 */}
             <div className="mt-6 rounded-2xl bg-white/70 p-6">
-              <h3 className="flex items-center gap-2 text-lg font-bold">
-                <span className="text-2xl">🎯</span>
+              <h3 className="flex items-center gap-2 text-lg font-bold text-primary">
+                <Target className="h-6 w-6" />
                 あなたってこんな人
               </h3>
               
               <div className="mt-4 space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground">💡 考え方のクセ</p>
+                  <p className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4" />
+                    考え方のクセ
+                  </p>
                   <ul className="mt-2 space-y-1 text-base">
                     {diagnosis.detailedNarrative.thinkingStyle.map((text, idx) => (
                       <li key={idx}>• {text}</li>
@@ -117,7 +136,10 @@ const ResultPage = () => {
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold text-muted-foreground">💬 コミュニケーションスタイル</p>
+                  <p className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    コミュニケーションスタイル
+                  </p>
                   <ul className="mt-2 space-y-1 text-base">
                     {diagnosis.detailedNarrative.communicationStyle.map((text, idx) => (
                       <li key={idx}>• {text}</li>
@@ -130,13 +152,16 @@ const ResultPage = () => {
             {/* ⚡ 得意技 */}
             {diagnosis.detailedNarrative.strengths.length > 0 && (
               <div className="mt-4 rounded-2xl bg-green-50 p-6">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
-                  <span className="text-2xl">⚡</span>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-green-700">
+                  <Zap className="h-6 w-6" />
                   あなたの得意技
                 </h3>
-                <ul className="mt-3 space-y-1 text-base">
+                <ul className="mt-3 space-y-1 text-base text-green-800">
                   {diagnosis.detailedNarrative.strengths.map((strength, idx) => (
-                    <li key={idx}>✓ {strength}</li>
+                    <li key={idx} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
+                      <span>{strength}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -145,13 +170,13 @@ const ResultPage = () => {
             {/* ⚠️ 要注意ポイント */}
             {diagnosis.detailedNarrative.warnings.length > 0 && (
               <div className="mt-4 rounded-2xl bg-orange-50 p-6">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
-                  <span className="text-2xl">⚠️</span>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-orange-700">
+                  <AlertTriangle className="h-6 w-6" />
                   あなたの要注意ポイント
                 </h3>
-                <ul className="mt-3 space-y-1 text-base">
+                <ul className="mt-3 space-y-1 text-base text-orange-800">
                   {diagnosis.detailedNarrative.warnings.map((warning, idx) => (
-                    <li key={idx}>{warning}</li>
+                    <li key={idx}>• {warning}</li>
                   ))}
                 </ul>
               </div>
@@ -160,11 +185,11 @@ const ResultPage = () => {
             {/* 💑 恋愛になるとこうなる */}
             {diagnosis.detailedNarrative.loveTendency.length > 0 && (
               <div className="mt-4 rounded-2xl bg-pink-50 p-6">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
-                  <span className="text-2xl">💑</span>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-pink-700">
+                  <HeartHandshake className="h-6 w-6" />
                   恋愛になるとこうなる
                 </h3>
-                <ul className="mt-3 space-y-1 text-base">
+                <ul className="mt-3 space-y-1 text-base text-pink-800">
                   {diagnosis.detailedNarrative.loveTendency.map((text, idx) => (
                     <li key={idx}>• {text}</li>
                   ))}
@@ -172,8 +197,11 @@ const ResultPage = () => {
 
                 {diagnosis.detailedNarrative.idealPartner.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm font-semibold text-muted-foreground">💕 求めてるのはこんな相手</p>
-                    <ul className="mt-2 space-y-1 text-base">
+                    <p className="text-sm font-semibold text-pink-600/80 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      求めてるのはこんな相手
+                    </p>
+                    <ul className="mt-2 space-y-1 text-base text-pink-800">
                       {diagnosis.detailedNarrative.idealPartner.map((text, idx) => (
                         <li key={idx}>→ {text}</li>
                       ))}
@@ -186,8 +214,11 @@ const ResultPage = () => {
             {/* Big Five スコア表示 */}
             <details className="group mt-4">
               <summary className="cursor-pointer rounded-2xl bg-muted/40 px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted/60 transition-colors list-none flex items-center justify-between">
-                <span>詳細スコアを見る</span>
-                <span className="group-open:rotate-180 transition-transform">▼</span>
+                <span className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  詳細スコアを見る
+                </span>
+                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
               </summary>
               <div className="mt-3 grid gap-2 md:grid-cols-2">
                 {TRAITS.map((trait) => (
@@ -265,11 +296,11 @@ const ResultPage = () => {
               {/* 👤 この人ってこんな人 */}
               {result.profileNarrative && (
                 <div className="mt-4 rounded-2xl bg-blue-50 p-5">
-                  <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
-                    <span className="text-2xl">👤</span>
+                  <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-blue-700">
+                    <User className="h-6 w-6" />
                     {result.profile.nickname}ってこんな人
                   </h4>
-                  <ul className="space-y-2 text-sm">
+                  <ul className="space-y-2 text-sm text-blue-800">
                     {result.profileNarrative.personalityTraits.map((trait, idx) => (
                       <li key={idx}>• {trait}</li>
                     ))}
@@ -277,8 +308,11 @@ const ResultPage = () => {
                   
                   {result.profileNarrative.values.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-blue-200">
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">こういう価値観</p>
-                      <ul className="space-y-1 text-sm">
+                      <p className="text-xs font-semibold text-blue-600/80 mb-2 flex items-center gap-2">
+                        <CheckCircle2 className="h-3 w-3" />
+                        こういう価値観
+                      </p>
+                      <ul className="space-y-1 text-sm text-blue-800">
                         {result.profileNarrative.values.map((value, idx) => (
                           <li key={idx}>✓ {value}</li>
                         ))}
@@ -288,8 +322,11 @@ const ResultPage = () => {
 
                   {result.profileNarrative.communicationStyle && (
                     <div className="mt-3">
-                      <p className="text-xs font-semibold text-muted-foreground">💬 話し方</p>
-                      <p className="mt-1 text-sm">{result.profileNarrative.communicationStyle}</p>
+                      <p className="text-xs font-semibold text-blue-600/80 flex items-center gap-2">
+                        <MessageCircle className="h-3 w-3" />
+                        話し方
+                      </p>
+                      <p className="mt-1 text-sm text-blue-800">{result.profileNarrative.communicationStyle}</p>
                     </div>
                   )}
                 </div>
@@ -298,20 +335,23 @@ const ResultPage = () => {
               {/* 🤖 なぜあなたとマッチ？ */}
               {result.matchingReasons && result.matchingReasons.length > 0 && (
                 <div className="mt-4 rounded-2xl bg-purple-50 p-5">
-                  <h4 className="flex items-center gap-2 text-lg font-bold mb-4">
-                    <span className="text-2xl">🤖</span>
+                  <h4 className="flex items-center gap-2 text-lg font-bold mb-4 text-purple-700">
+                    <Bot className="h-6 w-6" />
                     なぜあなたとマッチ？
                   </h4>
                   <div className="space-y-4">
                     {result.matchingReasons.map((reason, idx) => (
                       <div key={idx} className="rounded-xl bg-white/70 p-4">
-                        <p className="font-bold text-base mb-2">{idx + 1}. {reason.title}</p>
+                        <p className="font-bold text-base mb-2 text-purple-900">{idx + 1}. {reason.title}</p>
                         <div className="space-y-1 text-sm text-muted-foreground">
                           <p>{reason.userTrait}</p>
                           <p>{reason.profileTrait}</p>
                         </div>
                         <div className="mt-2 pl-4 border-l-4 border-primary/30">
-                          <p className="text-sm font-medium">💡 なぜ相性がいい？</p>
+                          <p className="text-sm font-medium flex items-center gap-2 text-purple-700">
+                            <Lightbulb className="h-3 w-3" />
+                            なぜ相性がいい？
+                          </p>
                           <p className="mt-1 text-sm text-foreground">{reason.why}</p>
                         </div>
                       </div>
@@ -323,15 +363,18 @@ const ResultPage = () => {
               {/* 💭 付き合ったらこんな感じ */}
               {result.relationshipPreview && (
                 <div className="mt-4 rounded-2xl bg-green-50 p-5">
-                  <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
-                    <span className="text-2xl">💭</span>
+                  <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-green-700">
+                    <HeartHandshake className="h-6 w-6" />
                     付き合ったらこんな感じ
                   </h4>
                   
                   {result.relationshipPreview.goodPoints.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-green-700 mb-2">✅ 良いところ</p>
-                      <ul className="space-y-1 text-sm">
+                      <p className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-2">
+                        <CheckCircle2 className="h-3 w-3" />
+                        良いところ
+                      </p>
+                      <ul className="space-y-1 text-sm text-green-800">
                         {result.relationshipPreview.goodPoints.map((point, idx) => (
                           <li key={idx}>• {point}</li>
                         ))}
@@ -341,10 +384,13 @@ const ResultPage = () => {
 
                   {result.relationshipPreview.warnings.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-green-200">
-                      <p className="text-xs font-semibold text-orange-700 mb-2">⚠️ 気をつけること</p>
-                      <ul className="space-y-1 text-sm">
+                      <p className="text-xs font-semibold text-orange-700 mb-2 flex items-center gap-2">
+                        <AlertTriangle className="h-3 w-3" />
+                        気をつけること
+                      </p>
+                      <ul className="space-y-1 text-sm text-orange-800">
                         {result.relationshipPreview.warnings.map((warning, idx) => (
-                          <li key={idx}>⚠️ {warning}</li>
+                          <li key={idx}>• {warning}</li>
                         ))}
                       </ul>
                     </div>
@@ -355,17 +401,20 @@ const ResultPage = () => {
               {/* 💡 最初のデートはこれで */}
               {result.firstDateSuggestion && (
                 <details className="group mt-4">
-                  <summary className="cursor-pointer rounded-2xl bg-yellow-50 px-5 py-4 font-semibold hover:bg-yellow-100 transition-colors list-none flex items-center justify-between">
+                  <summary className="cursor-pointer rounded-2xl bg-yellow-50 px-5 py-4 font-semibold hover:bg-yellow-100 transition-colors list-none flex items-center justify-between text-yellow-900">
                     <span className="flex items-center gap-2">
-                      <span className="text-2xl">💡</span>
+                      <Sparkles className="h-5 w-5 text-yellow-600" />
                       最初のデート、どうする？
                     </span>
-                    <span className="group-open:rotate-180 transition-transform">▼</span>
+                    <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 text-yellow-600" />
                   </summary>
                   <div className="mt-3 space-y-3">
                     {result.firstDateSuggestion.recommendations.length > 0 && (
                       <div className="rounded-xl bg-white/70 p-4">
-                        <p className="text-sm font-bold text-muted-foreground mb-2">【おすすめ】</p>
+                        <p className="text-sm font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                          <Lightbulb className="h-4 w-4" />
+                          【おすすめ】
+                        </p>
                         {result.firstDateSuggestion.recommendations.map((rec, idx) => (
                           <p key={idx} className="text-sm">{rec}</p>
                         ))}
@@ -374,7 +423,10 @@ const ResultPage = () => {
 
                     {result.firstDateSuggestion.conversationTopics.length > 0 && (
                       <div className="rounded-xl bg-white/70 p-4">
-                        <p className="text-sm font-bold text-muted-foreground mb-2">💬 会話ネタ</p>
+                        <p className="text-sm font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                          <MessageCircle className="h-4 w-4" />
+                          会話ネタ
+                        </p>
                         <ul className="space-y-1 text-sm">
                           {result.firstDateSuggestion.conversationTopics.map((topic, idx) => (
                             <li key={idx}>• {topic}</li>
@@ -385,10 +437,13 @@ const ResultPage = () => {
 
                     {result.firstDateSuggestion.ngActions.length > 0 && (
                       <div className="rounded-xl bg-red-50 p-4">
-                        <p className="text-sm font-bold text-red-700 mb-2">🚫 絶対NG行動</p>
-                        <ul className="space-y-1 text-sm">
+                        <p className="text-sm font-bold text-red-700 mb-2 flex items-center gap-2">
+                          <Ban className="h-4 w-4" />
+                          絶対NG行動
+                        </p>
+                        <ul className="space-y-1 text-sm text-red-800">
                           {result.firstDateSuggestion.ngActions.map((ng, idx) => (
-                            <li key={idx}>✗ {ng}</li>
+                            <li key={idx}>• {ng}</li>
                           ))}
                         </ul>
                       </div>

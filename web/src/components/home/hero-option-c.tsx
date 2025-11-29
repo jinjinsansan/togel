@@ -1,5 +1,6 @@
 "use client";
 
+import { Puzzle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -107,10 +108,10 @@ export function HeroOptionC() {
 
            {/* Floating badges */}
            <div className="absolute -top-10 right-10 bg-white p-3 rounded-xl shadow-lg animate-float" style={{animationDelay: "1.5s"}}>
-              <span className="text-2xl">🧩</span>
+              <Puzzle className="h-6 w-6 text-rose-500" />
            </div>
            <div className="absolute bottom-10 left-10 bg-white p-3 rounded-xl shadow-lg animate-float" style={{animationDelay: "2s"}}>
-              <span className="text-2xl">✨</span>
+              <Sparkles className="h-6 w-6 text-sky-500" />
            </div>
         </div>
 
