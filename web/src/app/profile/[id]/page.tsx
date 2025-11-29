@@ -24,6 +24,14 @@ const traitLabels: Record<keyof BigFiveScores, string> = {
   neuroticism: "ストレス耐性",
 };
 
+const TRAITS: (keyof BigFiveScores)[] = [
+  "openness",
+  "conscientiousness",
+  "extraversion",
+  "agreeableness",
+  "neuroticism",
+];
+
 type Params = {
   id: string;
 };
@@ -44,11 +52,26 @@ type DbProfile = {
   diagnosis_type_id?: string;
 };
 
+type DiagnosisDetails = {
+  bigFiveScores: BigFiveScores;
+  detailedNarrative: {
+    title: string;
+    subtitle: string;
+    thinkingStyle: string[];
+    communicationStyle: string[];
+    loveTendency: string[];
+    idealPartner: string[];
+    warnings: string[];
+    strengths: string[];
+  };
+};
+
 const ProfileDetailPage = ({ params }: { params: Params }) => {
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
+  const [diagnosisDetails, setDiagnosisDetails] = useState<DiagnosisDetails | null>(null);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -76,7 +99,23 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
       setLoading(false);
     };
 
+    const fetchDiagnosisDetails = async () => {
+      try {
+        const res = await fetch(`/api/profile/${params.id}/diagnosis`);
+        if (!res.ok) {
+          // 診断データがない場合は何もしない
+          return;
+        }
+        const data = await res.json();
+        setDiagnosisDetails(data);
+      } catch (err) {
+        console.error("Error fetching diagnosis details:", err);
+        // エラーでもプロフィールは表示
+      }
+    };
+
     fetchProfile();
+    fetchDiagnosisDetails();
   }, [params.id, supabase]);
 
   if (loading) {
@@ -109,6 +148,10 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   // 診断結果の表示ロジック（推定ロジックは廃止）
   const diagnosisTypeId = profile.diagnosis_type_id;
   const togelLabel = diagnosisTypeId ? getTogelLabel(diagnosisTypeId) : "未診断";
+  
+  // 一人称の設定（自分なら「私」、他人ならニックネーム）
+  const isOwner = viewerId === profile.id;
+  const subjectName = isOwner ? "私" : profile.full_name;
 
   const infoItems = [
     { label: "好きなこと", value: profile.details?.favoriteThings || "未設定", icon: <Heart className="h-4 w-4" /> },
@@ -216,7 +259,6 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                         診断済み
                       </p>
                     </div>
-                    {/* スコア詳細はDB保存していないため非表示 */}
                   </>
                 ) : (
                   <div className="py-8">
@@ -231,6 +273,96 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                 )}
               </div>
             </div>
+
+            {/* 診断詳細情報 */}
+            {diagnosisDetails && (
+              <div className="mb-10 space-y-6">
+                {/* 🎯 こんな人 */}
+                <div className="rounded-2xl bg-white/70 p-6 border border-slate-200">
+                  <h3 className="flex items-center gap-2 text-lg font-bold mb-4">
+                    <span className="text-2xl">🎯</span>
+                    {subjectName}ってこんな人
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-muted-foreground mb-2">💡 考え方のクセ</p>
+                      <ul className="space-y-1 text-base">
+                        {diagnosisDetails.detailedNarrative.thinkingStyle.map((text, idx) => (
+                          <li key={idx}>• {text}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-muted-foreground mb-2">💬 コミュニケーションスタイル</p>
+                      <ul className="space-y-1 text-base">
+                        {diagnosisDetails.detailedNarrative.communicationStyle.map((text, idx) => (
+                          <li key={idx}>• {text}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ⚡ 得意技 */}
+                {diagnosisDetails.detailedNarrative.strengths.length > 0 && (
+                  <div className="rounded-2xl bg-green-50 p-6 border border-green-200">
+                    <h3 className="flex items-center gap-2 text-lg font-bold mb-3">
+                      <span className="text-2xl">⚡</span>
+                      {subjectName}の得意技
+                    </h3>
+                    <ul className="space-y-1 text-base">
+                      {diagnosisDetails.detailedNarrative.strengths.map((strength, idx) => (
+                        <li key={idx}>✓ {strength}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 💑 恋愛になるとこうなる */}
+                {diagnosisDetails.detailedNarrative.loveTendency.length > 0 && (
+                  <div className="rounded-2xl bg-pink-50 p-6 border border-pink-200">
+                    <h3 className="flex items-center gap-2 text-lg font-bold mb-3">
+                      <span className="text-2xl">💑</span>
+                      恋愛になるとこうなる
+                    </h3>
+                    <ul className="space-y-1 text-base mb-4">
+                      {diagnosisDetails.detailedNarrative.loveTendency.map((text, idx) => (
+                        <li key={idx}>• {text}</li>
+                      ))}
+                    </ul>
+
+                    {diagnosisDetails.detailedNarrative.idealPartner.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-pink-200">
+                        <p className="text-sm font-semibold text-muted-foreground mb-2">💕 求めてるのはこんな相手</p>
+                        <ul className="space-y-1 text-base">
+                          {diagnosisDetails.detailedNarrative.idealPartner.map((text, idx) => (
+                            <li key={idx}>→ {text}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 詳細スコア */}
+                <details className="group">
+                  <summary className="cursor-pointer rounded-2xl bg-slate-100 px-6 py-4 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors list-none flex items-center justify-between">
+                    <span>📊 詳細スコアを見る</span>
+                    <span className="group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    {TRAITS.map((trait) => (
+                      <div key={trait} className="flex items-center justify-between rounded-xl bg-white px-4 py-3 border border-slate-200">
+                        <span className="text-sm font-medium">{traitLabels[trait]}</span>
+                        <span className="text-lg font-bold text-[#E91E63]">{diagnosisDetails.bigFiveScores[trait].toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </div>
+            )}
 
             {/* Detailed Info */}
             <div className="space-y-8">
