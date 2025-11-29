@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { User } from "@supabase/supabase-js";
 
-import { useUser } from "@supabase/auth-helpers-react";
 import { LoginButton } from "@/components/auth/login-button";
-
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -20,10 +20,27 @@ const navItems = [
 ];
 
 export const SiteHeader = () => {
-  const user = useUser();
+  const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const firstNavLinkRef = useRef<HTMLAnchorElement | null>(null);
   const isBrowser = typeof document !== "undefined";
+  const supabase = createClientComponentClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   useEffect(() => {
     if (!isBrowser) return;
