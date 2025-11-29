@@ -79,50 +79,68 @@ export const SiteHeader = () => {
     isBrowser && isOpen
       ? createPortal(
           <div
-            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-zinc-950/95 backdrop-blur-xl md:hidden"
+            className="mobile-nav-overlay fixed inset-0 top-0 z-[14000] md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="ナビゲーションメニュー"
-            onClick={closeMenu}
-            style={{ top: '64px' }}
           >
-            <div
-              className="relative z-10 flex h-full flex-col pb-12 pt-8"
-              onClick={(event) => event.stopPropagation()}
-            >
-              {/* Nav Content */}
-              <div className="flex flex-1 flex-col overflow-y-auto px-6">
+            {/* 背景オーバーレイ */}
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+              onClick={closeMenu}
+            />
+
+            {/* メニュー本体 */}
+            <div className="absolute top-16 right-0 bottom-0 w-[85vw] max-w-sm bg-white/80 backdrop-blur-xl border-l border-white/20 shadow-2xl animate-slide-in-right flex flex-col">
+              {/* 装飾的な背景グラデーション */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-[20%] -right-[20%] w-[150%] h-[50%] bg-gradient-to-b from-[#E91E63]/10 to-transparent blur-3xl rounded-full" />
+                <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#E91E63]/5 to-transparent" />
+              </div>
+
+              <div className="relative z-10 flex flex-col h-full px-6 pt-8 pb-10">
                 <nav
                   id="mobile-nav-panel"
-                  className="flex flex-col items-start justify-center gap-8 pl-4"
+                  className="flex flex-col gap-2"
                 >
+                  <p className="text-xs font-bold text-muted-foreground/50 tracking-widest mb-4 px-4">MENU</p>
                   {navItems.map((item, index) => (
                     <Link
                       key={item.href}
                       href={item.href}
                       ref={index === 0 ? firstNavLinkRef : undefined}
-                      className="group flex items-baseline gap-4 w-full border-b border-white/10 pb-4 transition-all hover:pl-2"
+                      className="group relative flex items-center py-4 px-4 rounded-xl hover:bg-white/50 transition-all active:scale-[0.98]"
                       onClick={closeMenu}
+                      style={{
+                        animation: `fade-in-up 0.5s ease-out ${index * 0.05}s backwards`
+                      }}
                     >
-                      <span className="font-heading text-4xl font-bold tracking-tighter text-white transition-colors group-hover:text-[#E91E63]">
-                        {item.en}
-                      </span>
-                      <span className="text-sm font-bold text-gray-500 group-hover:text-white/80 transition-colors mt-auto pb-1">
+                      <span className="text-lg font-bold text-slate-800 group-hover:text-[#E91E63] transition-colors">
                         {item.label}
+                      </span>
+                      <span className="ml-auto text-slate-300 group-hover:text-[#E91E63]/30 group-hover:translate-x-1 transition-all">
+                        →
                       </span>
                     </Link>
                   ))}
                 </nav>
 
-                <div className="mt-auto flex flex-col gap-4 pt-12 pb-8 px-4">
-                  <Button
-                    className="h-16 w-full rounded-full bg-white text-xl font-black text-black shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)] hover:bg-gray-200 hover:scale-105 transition-all"
-                    asChild
-                  >
-                    <Link href="/diagnosis/select" onClick={closeMenu}>
-                      診断をはじめる
-                    </Link>
-                  </Button>
+                <div className="mt-auto space-y-6">
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+                  
+                  <div className="px-2">
+                    <Button
+                      className="h-14 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-lg font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
+                      asChild
+                    >
+                      <Link href="/diagnosis/select" onClick={closeMenu}>
+                        今すぐ診断する
+                      </Link>
+                    </Button>
+                    <p className="mt-3 text-center text-xs text-slate-400">
+                      会員登録なしで診断できます
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
