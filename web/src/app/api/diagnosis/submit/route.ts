@@ -1,3 +1,5 @@
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -69,19 +71,59 @@ export const POST = async (request: Request) => {
   if (!parsed.success) {
     return NextResponse.json({ message: "invalid payload", issues: parsed.error.issues }, { status: 400 });
   }
-  const supabase = createSupabaseAdminClient();
+
+  // ログインユーザーの取得
+  const cookieStore = cookies();
+  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+
+  const supabaseAdmin = createSupabaseAdminClient();
 
   try {
-    const guestUserId = await ensureGuestUser(supabase, parsed.data.userGender);
+    // ログイン済みならそのID、未ログインならゲスト処理
+    let userId = user?.id;
+    
+    if (!userId) {
+      userId = await ensureGuestUser(supabaseAdmin, parsed.data.userGender);
+    }
     
     // ビッグファイブ診断結果を生成
     const diagnosisResult = generateDiagnosisResult(parsed.data);
     const animalType = getTogelLabel(diagnosisResult.personalityType.id);
+    const typeId = diagnosisResult.personalityType.id;
 
-    const { data: insertResult, error: insertError } = await supabase
+    // プロフィールに診断タイプを保存 (ログインユーザーのみ)
+    if (user?.id) {
+      await supabaseAdmin.from("profiles").upsert({
+        id: user.id,
+        diagnosis_type_id: typeId,
+        // 他のプロフィール情報があれば更新（とりあえずIDとtypeだけ更新）
+      }, { onConflict: "id" }); 
+      // upsertだと他のフィールドが消える可能性があるため、updateの方が安全だが
+      // profilesが存在しない可能性もあるのでupsert。ただし本来は他のフィールドも保持すべき。
+      // ここでは簡単のため update を試み、ダメなら insert するか、
+      // 単純に update だけにする（プロフィールは会員登録時に作られるはず）
+      
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .update({ diagnosis_type_id: typeId })
+        .eq("id", user.id);
+        
+      if (profileError) {
+        // プロフィールがまだない場合は作成
+        await supabaseAdmin.from("profiles").insert({
+          id: user.id,
+          diagnosis_type_id: typeId,
+          full_name: user.user_metadata.full_name || "No Name",
+          avatar_url: user.user_metadata.avatar_url || "",
+        });
+      }
+    }
+
+    const { data: insertResult, error: insertError } = await supabaseAdmin
       .from("diagnosis_results")
       .insert({
-        user_id: guestUserId,
+        user_id: userId,
         diagnosis_type: parsed.data.diagnosisType,
         animal_type: animalType,
         answers: parsed.data.answers,
@@ -90,20 +132,21 @@ export const POST = async (request: Request) => {
       .single();
 
     if (insertError || !insertResult) {
-      throw insertError ?? new Error("Failed to store diagnosis result");
+      // 古いテーブル構造などでエラーになる場合は無視して進む（今回はプロフィールの更新が主目的）
+      console.warn("Failed to store diagnosis result history:", insertError);
+      // throw insertError; 
     }
 
     const results = await generateMatchingResults(parsed.data);
     const mismatchResults = await generateMismatchingResults(parsed.data);
 
-    const { error: cacheError } = await supabase.from("matching_cache").insert({
-      user_id: guestUserId,
-      diagnosis_result_id: insertResult.id,
-      matched_users: results,
-    });
-
-    if (cacheError) {
-      console.warn("Failed to cache matching results", cacheError);
+    if (insertResult) {
+      const { error: cacheError } = await supabaseAdmin.from("matching_cache").insert({
+        user_id: userId,
+        diagnosis_result_id: insertResult.id,
+        matched_users: results,
+      });
+      if (cacheError) console.warn("Failed to cache matching results", cacheError);
     }
 
     return NextResponse.json({

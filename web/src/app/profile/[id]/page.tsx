@@ -41,6 +41,7 @@ type DbProfile = {
   is_public: boolean;
   details: any;
   social_links: any;
+  diagnosis_type_id?: string;
 };
 
 const ProfileDetailPage = ({ params }: { params: Params }) => {
@@ -105,11 +106,9 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
     );
   }
 
-  // TODO: Estimate scores from real data (e.g. diagnosis history)
-  // For now, generate pseudo-scores based on ID hash to be consistent
-  const profileScores = estimateProfileScores({ ...profile } as any);
-  const personalityType = determinePersonalityType(profileScores);
-  const togelLabel = getTogelLabel(personalityType.id);
+  // 診断結果の表示ロジック（推定ロジックは廃止）
+  const diagnosisTypeId = profile.diagnosis_type_id;
+  const togelLabel = diagnosisTypeId ? getTogelLabel(diagnosisTypeId) : "未診断";
 
   const infoItems = [
     { label: "好きなこと", value: profile.details?.favoriteThings || "未設定", icon: <Heart className="h-4 w-4" /> },
@@ -208,33 +207,28 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E91E63] to-purple-600"></div>
               <div className="relative z-10 text-center">
                 <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-3">DIAGNOSIS RESULT</p>
-                <h2 className="font-heading text-4xl font-black text-slate-900 mb-2 tracking-tight">{togelLabel}</h2>
-                <div className="inline-block px-4 py-1 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
-                  <p className="text-sm font-bold text-[#E91E63]">
-                    {personalityType.catchphrase || "このタイプの特徴"}
-                  </p>
-                </div>
                 
-                <p className="text-base font-medium text-slate-600 mb-8 max-w-lg mx-auto leading-relaxed">
-                  {personalityType.description}
-                </p>
-
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {(Object.keys(profileScores) as Array<keyof BigFiveScores>).map((trait) => (
-                    <div key={trait} className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100 text-left">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-slate-400">{traitLabels[trait]}</span>
-                        <span className="text-sm font-black text-slate-900">{profileScores[trait].toFixed(1)}</span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className="h-full rounded-full bg-[#E91E63]"
-                          style={{ width: `${(profileScores[trait] / 5) * 100}%` }}
-                        />
-                      </div>
+                {diagnosisTypeId ? (
+                  <>
+                    <h2 className="font-heading text-4xl font-black text-slate-900 mb-2 tracking-tight">{togelLabel}</h2>
+                    <div className="inline-block px-4 py-1 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
+                      <p className="text-sm font-bold text-[#E91E63]">
+                        診断済み
+                      </p>
                     </div>
-                  ))}
-                </div>
+                    {/* スコア詳細はDB保存していないため非表示 */}
+                  </>
+                ) : (
+                  <div className="py-8">
+                    <h2 className="font-heading text-2xl font-bold text-slate-400 mb-4">未診断</h2>
+                    <p className="text-sm text-slate-500 mb-6">このユーザーはまだ診断を受けていません。</p>
+                    {viewerId === profile.id && (
+                      <Button asChild className="bg-[#E91E63] hover:bg-[#D81B60] text-white rounded-full px-8">
+                        <a href="/diagnosis/select">今すぐ診断する</a>
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
