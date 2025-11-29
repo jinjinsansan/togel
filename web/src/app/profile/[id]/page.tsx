@@ -39,7 +39,6 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   const togelLabel = getTogelLabel(personalityType.id);
 
   const infoItems = [
-    { label: "自己紹介", value: profile.bio, icon: <User className="h-4 w-4" /> },
     { label: "好きなこと", value: profile.favoriteThings, icon: <Heart className="h-4 w-4" /> },
     { label: "趣味", value: profile.hobbies, icon: <Briefcase className="h-4 w-4" /> },
     { label: "特技", value: profile.specialSkills },
@@ -115,10 +114,17 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
 
             {/* Personality Type */}
             <div className="rounded-[2rem] bg-gradient-to-br from-slate-50 to-slate-100 p-8 border border-slate-200 mb-10 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E91E63] to-purple-600"></div>
               <div className="relative z-10 text-center">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-2">ESTIMATED TYPE</p>
-                <h2 className="font-heading text-3xl font-black text-slate-900 mb-3">{togelLabel}</h2>
-                <p className="text-sm font-medium text-slate-600 mb-8 max-w-lg mx-auto">
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-3">DIAGNOSIS RESULT</p>
+                <h2 className="font-heading text-4xl font-black text-slate-900 mb-2 tracking-tight">{togelLabel}</h2>
+                <div className="inline-block px-4 py-1 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
+                  <p className="text-sm font-bold text-[#E91E63]">
+                    {personalityType.catchphrase || "このタイプの特徴"}
+                  </p>
+                </div>
+                
+                <p className="text-base font-medium text-slate-600 mb-8 max-w-lg mx-auto leading-relaxed">
                   {personalityType.description}
                 </p>
 
@@ -142,8 +148,21 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             </div>
 
             {/* Detailed Info */}
-            <div className="space-y-6">
-              <h3 className="font-heading text-xl font-bold text-slate-900 border-b border-slate-100 pb-4">基本プロフィール</h3>
+            <div className="space-y-8">
+              {/* Bio Card */}
+              <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm relative">
+                <div className="absolute top-6 left-6 text-slate-200">
+                  <User className="h-8 w-8" />
+                </div>
+                <div className="relative z-10 text-center">
+                   <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">SELF INTRODUCTION</h3>
+                   <p className="text-lg text-slate-700 leading-loose whitespace-pre-wrap font-medium">
+                     {profile.bio || "自己紹介はまだありません。"}
+                   </p>
+                </div>
+              </div>
+
+              <h3 className="font-heading text-xl font-bold text-slate-900 border-b border-slate-100 pb-4 px-2">基本プロフィール</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 {infoItems.map((item, index) => (
                   <div key={index} className="rounded-2xl border border-slate-100 bg-white p-5 transition-colors hover:border-slate-200">
