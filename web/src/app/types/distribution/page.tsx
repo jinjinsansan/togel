@@ -63,19 +63,21 @@ const DistributionPage = async () => {
 
                 <div className="flex flex-col md:flex-row items-center gap-6 p-6 pt-8 md:p-8 md:pl-20">
                   {/* Emoji & Label */}
-                  <div className="flex items-center gap-4 min-w-[240px]">
+                  <div className="flex items-center gap-4 min-w-[100px]">
                     <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-4xl shadow-inner">
                       {item.emoji}
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{item.id.toUpperCase().replace(/-/g, ' ')}</p>
-                      <h3 className="text-xl font-black text-slate-900">{item.label}</h3>
                     </div>
                   </div>
 
                   {/* Catchphrase & Tags */}
                   <div className="flex-1 w-full text-center md:text-left">
-                    <p className="text-base font-bold text-slate-600 mb-3">
+                    <h3 className="text-xl font-black text-slate-900 mb-1">
+                      {item.label}
+                    </h3>
+                    <p className="text-base font-bold text-[#E91E63] mb-3">
                       {item.catchphrase}
                     </p>
                     <div className="flex flex-wrap justify-center md:justify-start gap-2">
