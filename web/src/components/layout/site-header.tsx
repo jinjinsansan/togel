@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -90,54 +90,59 @@ export const SiteHeader = () => {
             <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
             <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
             <div
-              className="relative z-10 flex h-full flex-col overflow-y-auto bg-white px-6 pb-12 pt-20"
+              className="relative z-10 flex h-full flex-col bg-white"
               onClick={(event) => event.stopPropagation()}
               style={{ backgroundColor: '#FFFFFF' }}
             >
-              <div className="flex items-center justify-between">
+              {/* Overlay Header - Matches Main Header Layout */}
+              <div className="container flex h-16 items-center justify-between border-b border-[#E91E63]/10">
                 <Link
                   href="/"
-                  className="font-heading text-2xl font-semibold text-[#E91E63]"
+                  className="font-heading text-xl font-semibold text-[#E91E63]"
                   onClick={closeMenu}
                 >
                   Togel
                 </Link>
                 <button
                   type="button"
-                  className="inline-flex flex-col items-center justify-center rounded-full border border-[#E91E63]/30 px-4 py-2 text-[#E91E63] shadow-sm"
+                  className="flex items-center justify-center rounded-full border border-[#E91E63]/30 p-2 text-[#E91E63]"
                   onClick={closeMenu}
                   aria-label="メニューを閉じる"
                 >
-                  <Menu size={20} aria-hidden="true" />
-                  <span className="text-[0.65rem] font-semibold tracking-[0.2em]">CLOSE</span>
+                  <X size={24} aria-hidden="true" />
                 </button>
               </div>
 
-              <nav
-                id="mobile-nav-panel"
-                className="mt-12 flex flex-1 flex-col justify-center gap-8 text-center"
-              >
-                {navItems.map((item, index) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    ref={index === 0 ? firstNavLinkRef : undefined}
-                    className="text-2xl font-semibold tracking-wide text-[#E91E63]"
-                    onClick={closeMenu}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
+              {/* Nav Content */}
+              <div className="flex flex-1 flex-col overflow-y-auto px-6 pb-12 pt-12">
+                <nav
+                  id="mobile-nav-panel"
+                  className="flex flex-col items-center justify-center gap-8 text-center"
+                >
+                  {navItems.map((item, index) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      ref={index === 0 ? firstNavLinkRef : undefined}
+                      className="font-heading text-xl font-medium tracking-wide text-[#E91E63] transition-colors hover:text-[#d81b60]"
+                      onClick={closeMenu}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
 
-              <Button
-                className="mt-auto h-14 w-full rounded-full bg-[#E91E63] text-lg font-semibold text-white shadow-lg hover:bg-[#c2185b]"
-                asChild
-              >
-                <Link href="/diagnosis/select" onClick={closeMenu}>
-                  診断をはじめる
-                </Link>
-              </Button>
+                <div className="mt-auto flex flex-col gap-4 pt-12">
+                  <Button
+                    className="h-14 w-full rounded-full bg-[#E91E63] text-lg font-bold text-white shadow-lg hover:bg-[#c2185b]"
+                    asChild
+                  >
+                    <Link href="/diagnosis/select" onClick={closeMenu}>
+                      診断をはじめる
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>,
           document.body,
