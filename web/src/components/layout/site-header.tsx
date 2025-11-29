@@ -8,7 +8,6 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/about", label: "使い方", en: "How to Use" },
   { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
   { href: "/result", label: "マッチング", en: "Matching" },
   { href: "/types", label: "Togel一覧", en: "Types" },
@@ -80,7 +79,7 @@ export const SiteHeader = () => {
     isBrowser && isOpen
       ? createPortal(
           <div
-            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-white/60 backdrop-blur-lg md:hidden"
+            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-zinc-950/95 backdrop-blur-xl md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="ナビゲーションメニュー"
@@ -95,20 +94,20 @@ export const SiteHeader = () => {
               <div className="flex flex-1 flex-col overflow-y-auto px-6">
                 <nav
                   id="mobile-nav-panel"
-                  className="flex flex-col items-start justify-center gap-10 pl-8"
+                  className="flex flex-col items-start justify-center gap-8 pl-4"
                 >
                   {navItems.map((item, index) => (
                     <Link
                       key={item.href}
                       href={item.href}
                       ref={index === 0 ? firstNavLinkRef : undefined}
-                      className="group flex flex-col items-start"
+                      className="group flex items-baseline gap-4 w-full border-b border-white/10 pb-4 transition-all hover:pl-2"
                       onClick={closeMenu}
                     >
-                      <span className="font-heading text-3xl font-thin tracking-tight text-[#E91E63] transition-colors group-hover:text-[#d81b60]">
+                      <span className="font-heading text-4xl font-bold tracking-tighter text-white transition-colors group-hover:text-[#E91E63]">
                         {item.en}
                       </span>
-                      <span className="text-sm font-medium text-[#E91E63]/70 group-hover:text-[#d81b60]/80">
+                      <span className="text-sm font-bold text-gray-500 group-hover:text-white/80 transition-colors mt-auto pb-1">
                         {item.label}
                       </span>
                     </Link>
@@ -117,7 +116,7 @@ export const SiteHeader = () => {
 
                 <div className="mt-auto flex flex-col gap-4 pt-12 pb-8 px-4">
                   <Button
-                    className="h-14 w-full rounded-full bg-[#E91E63] text-lg font-bold text-white shadow-lg hover:bg-[#c2185b]"
+                    className="h-16 w-full rounded-full bg-white text-xl font-black text-black shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)] hover:bg-gray-200 hover:scale-105 transition-all"
                     asChild
                   >
                     <Link href="/diagnosis/select" onClick={closeMenu}>
