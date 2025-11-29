@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const videos = ["/hero-movie.mp4", "/hero-movie-v3.mp4"];
+  const videos = ["/hero-movie.mp4", "/hero-movie-v3.mp4", "/hero-movie-v4.mp4"];
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   useEffect(() => {
