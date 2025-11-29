@@ -14,6 +14,6 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // ログイン後はマイページ等の適切なページへリダイレクト
-  return NextResponse.redirect(new URL("/mypage", request.url));
+  // ログイン後は診断ページへリダイレクト
+  return NextResponse.redirect(new URL("/diagnosis/select", request.url));
 }

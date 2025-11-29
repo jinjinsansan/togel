@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { User } from "@supabase/supabase-js";
 
@@ -25,6 +26,14 @@ export const SiteHeader = () => {
   const firstNavLinkRef = useRef<HTMLAnchorElement | null>(null);
   const isBrowser = typeof document !== "undefined";
   const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push("/");
+    router.refresh();
+  };
 
   useEffect(() => {
     const getUser = async () => {
@@ -153,14 +162,26 @@ export const SiteHeader = () => {
                     {!user ? (
                       <LoginButton />
                     ) : (
-                      <Button
-                        className="h-14 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-lg font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
-                        asChild
-                      >
-                        <Link href="/mypage" onClick={closeMenu}>
-                          マイページへ
-                        </Link>
-                      </Button>
+                      <div className="flex flex-col gap-3">
+                        <Button
+                          className="h-14 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-lg font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
+                          asChild
+                        >
+                          <Link href="/mypage" onClick={closeMenu}>
+                            マイページへ
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-12 w-full rounded-xl border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => {
+                            handleLogout();
+                            closeMenu();
+                          }}
+                        >
+                          ログアウト
+                        </Button>
+                      </div>
                     )}
                     {!user && (
                       <p className="mt-3 text-center text-xs text-white/40">
@@ -195,17 +216,28 @@ export const SiteHeader = () => {
 
           <div className="flex items-center gap-2">
             {/* Desktop Auth Button */}
-            <div className="hidden md:block">
+            <div className="hidden md:flex items-center gap-2">
               {!user ? (
                 <LoginButton />
               ) : (
-                <Button
-                  variant="outline"
-                  asChild
-                  className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
-                >
-                  <Link href="/mypage">マイページ</Link>
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
+                  >
+                    <Link href="/mypage">マイページ</Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLogout}
+                    className="text-slate-500 hover:text-[#E91E63] hover:bg-red-50"
+                    aria-label="ログアウト"
+                  >
+                    <LogOut size={20} />
+                  </Button>
+                </>
               )}
             </div>
 

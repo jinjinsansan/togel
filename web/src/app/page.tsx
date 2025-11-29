@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -11,6 +12,8 @@ export default function Home() {
     "https://assets.to-gel.com/hero-movie-v4-optimized.mp4",
   ];
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,6 +22,32 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [videos.length]);
+
+  const handleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+        alert("ログインに失敗しました");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("エラーが発生しました");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -59,8 +88,8 @@ export default function Home() {
               あなたの本音と相性が一瞬でわかる<br />
               24タイプTogel型診断+AIマッチング
             </p>
-            <Button size="lg" className="h-16 px-12 text-xl">
-              LINEで始める
+            <Button size="lg" className="h-16 px-12 text-xl" onClick={handleLogin} disabled={isLoading}>
+              {isLoading ? "接続中..." : "Googleで始める"}
             </Button>
           </div>
         </div>
@@ -86,8 +115,8 @@ export default function Home() {
               あなたの本音と相性が一瞬でわかる<br />
               24タイプTogel型診断+AIマッチング
             </p>
-            <Button size="lg" className="h-16 rounded-full px-12 text-xl">
-              LINEで始める
+            <Button size="lg" className="h-16 rounded-full px-12 text-xl" onClick={handleLogin} disabled={isLoading}>
+              {isLoading ? "接続中..." : "Googleで始める"}
             </Button>
           </div>
         </div>
@@ -116,9 +145,10 @@ export default function Home() {
             <Button
               size="lg"
               className="h-16 rounded-full bg-white px-12 text-xl font-bold text-[#E91E63] hover:bg-white/90 shadow-xl transition-all hover:scale-105"
-              asChild
+              onClick={handleLogin}
+              disabled={isLoading}
             >
-              <Link href="/diagnosis/select">LINEで始める</Link>
+              {isLoading ? "接続中..." : "Googleで始める"}
             </Button>
           </div>
         </div>
