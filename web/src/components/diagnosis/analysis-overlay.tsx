@@ -21,6 +21,7 @@ type Props = {
 export const DiagnosisAnalysisOverlay = ({ onComplete }: Props) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [showLogo, setShowLogo] = useState(false);
 
   useEffect(() => {
     let startTime = Date.now();
@@ -48,20 +49,47 @@ export const DiagnosisAnalysisOverlay = ({ onComplete }: Props) => {
           startTime = Date.now();
           animationFrameId = requestAnimationFrame(animate);
         } else {
-          // 全ステップ完了
+          // 全ステップ完了 -> ロゴ表示へ
           setProgress(100);
-          setTimeout(onComplete, 500);
+          setTimeout(() => setShowLogo(true), 500);
         }
       }
     };
 
-    animationFrameId = requestAnimationFrame(animate);
+    if (!showLogo) {
+      animationFrameId = requestAnimationFrame(animate);
+    }
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [currentStepIndex, onComplete]);
+  }, [currentStepIndex, showLogo]);
+
+  // ロゴ表示後の遷移タイマー
+  useEffect(() => {
+    if (showLogo) {
+      const timer = setTimeout(() => {
+        onComplete();
+      }, 2000); // ロゴを2秒間表示
+      return () => clearTimeout(timer);
+    }
+  }, [showLogo, onComplete]);
+
+  if (showLogo) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black text-white animate-in fade-in duration-1000">
+        <div className="text-center">
+          <p className="mb-4 text-sm font-medium tracking-[0.3em] text-slate-400 animate-in slide-in-from-bottom-4 fade-in duration-1000 delay-300">
+            Presented by
+          </p>
+          <h1 className="font-heading text-6xl font-black tracking-tighter text-[#E91E63] animate-in zoom-in-50 fade-in duration-1000 delay-500 drop-shadow-[0_0_15px_rgba(233,30,99,0.5)]">
+            TOGEL
+          </h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 text-white">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 text-white transition-opacity duration-500">
       {/* 背景のパーティクル演出（簡易版） */}
       <div className="absolute inset-0 overflow-hidden opacity-20">
         <div className="absolute -top-20 -left-20 h-96 w-96 rounded-full bg-[#E91E63] blur-[100px] animate-pulse" />
