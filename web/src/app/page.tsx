@@ -155,9 +155,9 @@ export default function Home() {
               計算できる。
             </span>
           </h2>
-          <p className="mx-auto max-w-md text-lg text-gray-400 md:text-xl">
-            Togelは、あなたの「本性」を暴き出し、<br />
-            最高の相性と最悪の結末を予言する<br />
+          <p className="mx-auto max-w-md text-lg text-gray-400 md:text-xl leading-relaxed [text-wrap:balance]">
+            Togelは、あなたの「本性」を暴き出し、<br className="hidden md:block" />
+            最高の相性と最悪の結末を予言する<br className="hidden md:block" />
             AIマッチングサービスです。
           </p>
         </div>
@@ -181,9 +181,9 @@ export default function Home() {
                 まずは<br />
                 <span className="text-pink-500">診断</span>する。
               </h2>
-              <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
-                独自Togel型理論に基づいた本格的な性格診断。<br className="hidden md:inline" />
-                質問に答えるだけで、あなたの考え方のクセ、<br className="inline md:hidden" />恋愛傾向、隠れた本性が丸裸に。
+              <p className="text-lg md:text-xl text-gray-400 leading-relaxed [text-wrap:balance]">
+                独自Togel型理論に基づいた<br className="inline md:hidden" />本格的な性格診断。<br className="hidden md:inline" />
+                質問に答えるだけで、<br className="inline md:hidden" />あなたの考え方のクセ、恋愛傾向、<br className="inline md:hidden" />隠れた本性が丸裸に。
               </p>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-center gap-3">
@@ -217,9 +217,9 @@ export default function Home() {
                 <span className="text-purple-500">24タイプ</span><br />
                 に分類。
               </h2>
-              <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
+              <p className="text-lg md:text-xl text-gray-400 leading-relaxed [text-wrap:balance]">
                 診断結果から、あなたを<br className="inline md:hidden" />24種類の「TOGEL型」に分類。<br />
-                自分でも気づいていなかった強みや弱み、<br className="inline md:hidden" />相性の良いタイプが明確になります。
+                自分でも気づいていなかった<br className="inline md:hidden" />強みや弱み、相性の良いタイプが<br className="inline md:hidden" />明確になります。
               </p>
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function Home() {
                   <div className="text-3xl font-black text-pink-600">98%</div>
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold">運命の相手候補</h3>
-                <p className="text-xs md:text-sm text-gray-600 mt-2">
+                <p className="text-xs md:text-sm text-gray-600 mt-2 [text-wrap:balance]">
                   あなたのアクティブさと、相手の慎重さが完璧に補完し合う関係です。
                 </p>
                 <div className="mt-4 pt-4 border-t border-gray-200">
@@ -257,9 +257,9 @@ export default function Home() {
                 AIが<br />
                 <span className="text-blue-500">導き出す。</span>
               </h2>
-              <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
+              <p className="text-lg md:text-xl text-gray-400 leading-relaxed [text-wrap:balance]">
                 相性の良い異性5名をピックアップ。<br />
-                単なるスコアだけでなく、<br className="inline md:hidden" />「なぜ合うのか」「どんなデートをすべきか」まで<br className="inline md:hidden" />具体的に提案します。
+                単なるスコアだけでなく、<br className="inline md:hidden" />「なぜ合うのか」<br className="inline md:hidden" />「どんなデートをすべきか」まで<br className="inline md:hidden" />具体的に提案します。
               </p>
             </div>
           </div>
@@ -279,10 +279,10 @@ export default function Home() {
               <span className="text-red-600">地獄</span>を<br />
               回避せよ。
             </h2>
-            <p className="text-xl text-red-200/80 leading-relaxed">
-              このサイトの最大の特徴は「ミスマッチランキング」。<br />
-              あなたと絶対に合わない、付き合うと不幸になる相手も教えます。<br />
-              失敗しない恋愛のために、これも必ずチェックしてください。
+            <p className="text-xl text-red-200/80 leading-relaxed [text-wrap:balance]">
+              このサイトの最大の特徴は<br className="inline md:hidden" />「ミスマッチランキング」。<br />
+              あなたと絶対に合わない、<br className="inline md:hidden" />付き合うと不幸になる相手も教えます。<br />
+              失敗しない恋愛のために、<br className="inline md:hidden" />これも必ずチェックしてください。
             </p>
             <div className="pt-8">
               <div className="text-6xl md:text-8xl animate-bounce">💀</div>
