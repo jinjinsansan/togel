@@ -75,14 +75,18 @@ const ResultPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // データが既にあれば何もしない
-      if (results.length > 0 && diagnosis) return;
-
+      // ログイン済みユーザーの場合は常にAPIから最新データを取得
       setLoading(true);
       try {
         const res = await fetch("/api/diagnosis/latest");
         if (!res.ok) {
-          // 404や401の場合は何もしない（未診断表示になる）
+          // 404や401の場合、sessionStorageにフォールバック
+          if (results.length > 0 && diagnosis) {
+            // sessionStorageに既にデータがあればそれを使う
+            setLoading(false);
+            return;
+          }
+          // sessionStorageにもない場合は未診断として扱う
           return;
         }
         const data = await res.json();
@@ -99,13 +103,15 @@ const ResultPage = () => {
         }
       } catch (error) {
         console.error("Failed to fetch latest diagnosis", error);
+        // エラー時はsessionStorageのデータを使用（既に初期値として読み込まれている）
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 初回マウント時のみ実行（results/diagnosisは初期値として使用）
 
   if (loading) {
     return (
