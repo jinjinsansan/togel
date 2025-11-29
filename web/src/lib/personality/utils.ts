@@ -19,6 +19,8 @@ export const clonePersonalityType = (type: PersonalityTypeDefinition): Personali
     relationships: type.characteristics.relationships,
   },
   compatibleTypes: [...type.compatibleTypes],
+  badCompatibleTypes: [...type.badCompatibleTypes],
+  tags: [...type.tags],
 });
 
 export const determinePersonalityType = (scores: BigFiveScores): PersonalityTypeDefinition => {

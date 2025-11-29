@@ -33,6 +33,9 @@ export type PersonalityTypeDefinition = {
   id: string;
   typeName: string;
   description: string;
+  catchphrase: string;
+  emoji: string;
+  tags: string[];
   dominantTraits: string[];
   characteristics: {
     strengths: string[];
@@ -42,6 +45,7 @@ export type PersonalityTypeDefinition = {
     relationships: string;
   };
   compatibleTypes: string[];
+  badCompatibleTypes: string[];
 };
 
 // ビッグファイブ特性スコア
