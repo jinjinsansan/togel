@@ -301,12 +301,20 @@ function calculate24TypeCompatibility(
     const tokens = candidate.split(/[-_]/).filter(Boolean);
     return tokens.every((token) => profileType.id.includes(token));
   });
-  const typeAffinityBonus = preferredMatch ? 10 : 0;
+  const typeAffinityBonus = preferredMatch ? 40 : 0;
   const overlapBonus = hasTraitOverlap ? 4 : 0;
+
+  const badMatch = userType.badCompatibleTypes.some((candidate) => {
+    if (!candidate) return false;
+    if (candidate === profileType.id) return true;
+    const tokens = candidate.split(/[-_]/).filter(Boolean);
+    return tokens.every((token) => profileType.id.includes(token));
+  });
+  const badAffinityPenalty = badMatch ? 40 : 0;
 
   const totalScore = Math.min(
     100,
-    traitCompatibility * 0.35 + complementScore * 0.2 + valueScore * 0.25 + commScore * 0.2 + typeAffinityBonus + overlapBonus,
+    Math.max(0, traitCompatibility * 0.35 + complementScore * 0.2 + valueScore * 0.25 + commScore * 0.2 + typeAffinityBonus - badAffinityPenalty + overlapBonus),
   );
 
   const details: CompatibilityDetails = {

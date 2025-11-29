@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
   { href: "/result", label: "マッチング", en: "Matching" },
-  { href: "/types", label: "Togel一覧", en: "Types" },
+  { href: "/types", label: "型一覧", en: "Types" },
   { href: "/types/distribution", label: "Togel分布", en: "Distribution" },
   { href: "/mypage", label: "マイページ", en: "My Page" },
   { href: "/settings", label: "設定", en: "Settings" },
