@@ -4,6 +4,7 @@ import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { QuestionCard } from "@/components/diagnosis/question-card";
+import { DiagnosisAnalysisOverlay } from "@/components/diagnosis/analysis-overlay";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DiagnosisQuestion } from "@/types/diagnosis";
@@ -19,6 +20,7 @@ const DiagnosisPage = () => {
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const {
     answers,
@@ -104,6 +106,8 @@ const DiagnosisPage = () => {
     }
     setSubmitting(true);
     setError(null);
+    
+    // まずAPIリクエストを開始（裏側で実行）
     try {
       const payload = {
         diagnosisType,
@@ -131,16 +135,26 @@ const DiagnosisPage = () => {
       if (data.diagnosis) {
         sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
       }
-      router.push("/result");
+      
+      // API成功後、オーバーレイを表示して演出開始
+      setShowOverlay(true);
+      
     } catch (err) {
       setError("診断結果の生成に失敗しました。時間を置いて再実行してください。");
       console.error(err);
-    } finally {
       setSubmitting(false);
     }
   };
 
+  const handleOverlayComplete = () => {
+    router.push("/result");
+  };
+
   const currentValue = answers.find((answer) => answer.questionId === currentQuestion?.id)?.value;
+
+  if (showOverlay) {
+    return <DiagnosisAnalysisOverlay onComplete={handleOverlayComplete} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
