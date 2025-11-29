@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 
-import { useSession } from "@supabase/auth-helpers-react";
+import { useSessionContext } from "@supabase/auth-helpers-react";
 import { LoginButton } from "@/components/auth/login-button";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const navItems = [
 ];
 
 export const SiteHeader = () => {
-  const session = useSession();
+  const { session } = useSessionContext();
   const [isOpen, setIsOpen] = useState(false);
   const firstNavLinkRef = useRef<HTMLAnchorElement | null>(null);
   const isBrowser = typeof document !== "undefined";
