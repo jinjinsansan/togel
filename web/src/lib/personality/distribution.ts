@@ -3,7 +3,8 @@ import { personalityTypes, getTogelLabel } from ".";
 
 export type TogelDistributionItem = {
   id: string;
-  label: string;
+  label: string; // TOGEL XX型
+  typeName: string; // 創造的リーダー 等
   description: string;
   catchphrase: string;
   emoji: string;
@@ -37,6 +38,7 @@ export const loadTogelDistribution = async () => {
     return {
       id: type.id,
       label,
+      typeName: type.typeName,
       description: type.description,
       catchphrase: type.catchphrase,
       emoji: type.emoji,

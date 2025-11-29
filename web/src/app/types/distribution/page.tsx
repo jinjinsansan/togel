@@ -60,14 +60,14 @@ const DistributionPage = async () => {
                       {item.emoji}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{item.id.toUpperCase().replace(/-/g, ' ')}</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{item.label}</p>
                     </div>
                   </div>
 
                   {/* Catchphrase & Tags */}
                   <div className="flex-1 w-full text-center md:text-left">
                     <h3 className="text-xl font-black text-slate-900 mb-1">
-                      {item.label}
+                      {item.typeName}
                     </h3>
                     <p className="text-base font-bold text-[#E91E63] mb-3">
                       {item.catchphrase}
