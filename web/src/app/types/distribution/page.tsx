@@ -1,254 +1,151 @@
 import Link from "next/link";
-import { Trophy, Users, AlertTriangle, Crown, Sparkles, Activity } from "lucide-react";
+import { Users, ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { loadTogelDistribution, TogelDistributionItem } from "@/lib/personality/distribution";
+import { loadTogelDistribution } from "@/lib/personality/distribution";
 
 export const revalidate = 0;
-
-// レアリティ定義
-type Rarity = "SSR" | "SR" | "R" | "N";
-
-const getRarityInfo = (rankIndex: number, totalTypes: number) => {
-  // 少ない順（rankIndex: 0が最も少ない）
-  if (rankIndex < 3) {
-    return {
-      rank: "SSR",
-      label: "絶滅危惧種",
-      color: "from-yellow-300 via-amber-400 to-yellow-600",
-      bg: "bg-yellow-500/10",
-      border: "border-yellow-500/50",
-      shadow: "shadow-yellow-500/20",
-      icon: <Crown className="h-5 w-5 text-yellow-400" />,
-      desc: "遭遇率極低。出会えたら奇跡レベル。",
-    };
-  }
-  if (rankIndex < 8) {
-    return {
-      rank: "SR",
-      label: "選ばれし者",
-      color: "from-slate-300 via-slate-400 to-slate-500",
-      bg: "bg-slate-400/10",
-      border: "border-slate-400/50",
-      shadow: "shadow-slate-400/20",
-      icon: <Sparkles className="h-5 w-5 text-slate-300" />,
-      desc: "クラスに一人いるかいないか。",
-    };
-  }
-  if (rankIndex < 16) {
-    return {
-      rank: "R",
-      label: "安定の市民",
-      color: "from-emerald-400 to-emerald-600",
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/50",
-      shadow: "shadow-emerald-500/20",
-      icon: <Activity className="h-5 w-5 text-emerald-400" />,
-      desc: "個性はあるけど、割と見かける。",
-    };
-  }
-  return {
-    rank: "N",
-    label: "量産型",
-    color: "from-zinc-500 to-zinc-700",
-    bg: "bg-zinc-500/10",
-    border: "border-zinc-500/50",
-    shadow: "shadow-zinc-500/20",
-    icon: <Users className="h-5 w-5 text-zinc-400" />,
-    desc: "石を投げれば当たる。マジョリティの壁。",
-  };
-};
 
 const DistributionPage = async () => {
   const { total, distribution, legacy } = await loadTogelDistribution();
   
-  // 少ない順にソートしてランク付け（少ない＝レア）
-  const sortedByRarity = [...distribution].sort((a, b) => a.count - b.count);
-  
-  // 多い順（表示用）
+  // 多い順にソートして表示（ランキング形式）
   const sortedByCount = [...distribution].sort((a, b) => b.count - a.count);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pb-20">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden border-b border-white/10 bg-black/50 py-16">
-        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#E91E63]/20 blur-[100px] rounded-full pointer-events-none" />
-        
-        <div className="container relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#E91E63]/30 bg-[#E91E63]/10 px-4 py-1.5 text-sm font-medium text-[#E91E63] mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E91E63] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E91E63]"></span>
-            </span>
-            LIVE UPDATING
-          </div>
-          
-          <h1 className="font-heading text-4xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 mb-4">
-            Togel Ecosystem Map
-          </h1>
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-8">
-            あなたのタイプは「絶滅危惧種」か、それとも「量産型」か？
-            <br className="hidden md:block" />
-            リアルタイムで変動するTogel界の勢力図を観測せよ。
-          </p>
-          
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-            <div className="flex items-baseline gap-2 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur">
-              <span className="text-sm text-zinc-500 uppercase tracking-wider">Total Population</span>
-              <span className="text-4xl font-mono font-bold text-white">{total.toLocaleString()}</span>
-              <span className="text-sm text-zinc-500">Users</span>
+    <div className="min-h-screen bg-white pb-20 text-slate-900">
+      {/* Header Section */}
+      <div className="relative border-b border-slate-100 bg-white py-12 md:py-20">
+        <div className="container relative z-10">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-1.5 text-sm font-bold text-slate-600 mb-6">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E91E63] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E91E63]"></span>
+              </span>
+              LIVE UPDATING
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mt-12">
-        {/* Rarity Hierarchy */}
-        <div className="space-y-16">
-          {/* SSR Zone */}
-          <RaritySection 
-            items={sortedByRarity.slice(0, 3)} 
-            rarity="SSR" 
-            title="超激レア（絶滅危惧種）"
-            desc="遭遇率極低。見つけたら拝んでおこう。"
-          />
-
-          {/* SR Zone */}
-          <RaritySection 
-            items={sortedByRarity.slice(3, 8)} 
-            rarity="SR" 
-            title="レア（選ばれし者）"
-            desc="クラスに一人レベルのユニーク枠。"
-          />
-
-          {/* R Zone */}
-          <RaritySection 
-            items={sortedByRarity.slice(8, 16)} 
-            rarity="R" 
-            title="コモン（安定の市民）"
-            desc="そこそこ見かける。社会を回す中心層。"
-          />
-
-          {/* N Zone */}
-          <RaritySection 
-            items={sortedByRarity.slice(16)} 
-            rarity="N" 
-            title="ノーマル（量産型）"
-            desc="最大勢力。マジョリティの壁は厚い。"
-          />
-        </div>
-
-        {/* Action */}
-        <div className="mt-20 text-center">
-          <p className="text-zinc-400 mb-6">あなたも診断して、勢力図を更新しよう</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="w-full sm:w-auto h-14 px-8 text-lg rounded-full bg-gradient-to-r from-[#E91E63] to-[#C2185B] hover:shadow-lg hover:shadow-[#E91E63]/25 hover:scale-105 transition-all">
-              <Link href="/diagnosis/select">今すぐ診断する</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg rounded-full border-white/10 bg-white/5 hover:bg-white/10 hover:text-white">
-              <Link href="/types">24型一覧を見る</Link>
-            </Button>
-          </div>
-        </div>
-
-        {legacy.length > 0 && (
-          <div className="mt-20 pt-10 border-t border-white/5 text-center">
-            <p className="text-xs text-zinc-600 uppercase tracking-widest mb-4">LEGACY DATA</p>
-            <div className="inline-flex flex-wrap justify-center gap-2">
-              {legacy.map((item) => (
-                <span key={item.label} className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-500">
-                  {item.label}: {item.count}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const RaritySection = ({ items, rarity, title, desc }: { items: TogelDistributionItem[], rarity: Rarity, title: string, desc: string }) => {
-  // rarityに応じたスタイル
-  const styles = {
-    SSR: {
-      text: "text-yellow-400",
-      bg: "bg-yellow-400/10",
-      border: "border-yellow-400/20",
-      gradient: "from-yellow-600/20 to-transparent"
-    },
-    SR: {
-      text: "text-slate-300",
-      bg: "bg-slate-400/10",
-      border: "border-slate-400/20",
-      gradient: "from-slate-500/20 to-transparent"
-    },
-    R: {
-      text: "text-emerald-400",
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/20",
-      gradient: "from-emerald-600/20 to-transparent"
-    },
-    N: {
-      text: "text-zinc-400",
-      bg: "bg-zinc-500/10",
-      border: "border-zinc-500/20",
-      gradient: "from-zinc-600/20 to-transparent"
-    }
-  }[rarity];
-
-  return (
-    <div className="relative">
-      <div className="flex items-end gap-4 mb-6 px-4 md:px-0">
-        <h2 className={`text-3xl md:text-5xl font-black tracking-tighter ${styles.text}`}>
-          {rarity}
-        </h2>
-        <div className="pb-1 md:pb-2">
-          <p className="text-lg md:text-xl font-bold text-white">{title}</p>
-          <p className="text-sm text-zinc-500">{desc}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => (
-          <div 
-            key={item.id} 
-            className={`group relative overflow-hidden rounded-2xl border ${styles.border} bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors`}
-          >
-            {/* 背景グラデーション */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${styles.gradient} opacity-0 group-hover:opacity-100 transition-opacity`} />
             
-            <div className="relative p-5">
-              <div className="flex justify-between items-start mb-3">
-                <div className="text-4xl">{item.emoji}</div>
-                <div className="text-right">
-                  <p className={`text-2xl font-black font-mono ${styles.text}`}>{item.percentage}%</p>
-                  <p className="text-xs text-zinc-500">{item.count}人</p>
+            <h1 className="font-heading text-4xl md:text-6xl font-black tracking-tight text-slate-900 mb-6">
+              Togel分布マップ
+            </h1>
+            <p className="text-lg font-medium text-slate-500 leading-relaxed mb-8">
+              全24タイプの生息状況をリアルタイムで公開。<br />
+              あなたのタイプは多数派？それとも少数派？
+            </p>
+
+            <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+                <Users className="h-6 w-6 text-slate-600" />
+              </div>
+              <div className="px-4 text-left">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">TOTAL USERS</p>
+                <p className="text-2xl font-black text-slate-900 font-mono">{total.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mt-12 md:mt-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid gap-4">
+            {sortedByCount.map((item, index) => (
+              <div 
+                key={item.id}
+                className="group relative overflow-hidden rounded-3xl border-2 border-slate-100 bg-white p-1 transition-all hover:border-[#E91E63] hover:shadow-xl hover:-translate-y-1"
+              >
+                {/* 順位バッジ */}
+                <div className={`absolute left-0 top-0 flex h-12 w-12 items-center justify-center rounded-br-3xl text-lg font-black text-white
+                  ${index < 3 ? 'bg-[#E91E63]' : 'bg-slate-200 text-slate-500'}`}>
+                  {index + 1}
+                </div>
+
+                <div className="flex flex-col md:flex-row items-center gap-6 p-6 pt-8 md:p-8 md:pl-20">
+                  {/* Emoji & Label */}
+                  <div className="flex items-center gap-4 min-w-[240px]">
+                    <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-4xl shadow-inner">
+                      {item.emoji}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{item.id.toUpperCase().replace(/-/g, ' ')}</p>
+                      <h3 className="text-xl font-black text-slate-900">{item.label}</h3>
+                    </div>
+                  </div>
+
+                  {/* Catchphrase & Tags */}
+                  <div className="flex-1 w-full text-center md:text-left">
+                    <p className="text-base font-bold text-slate-600 mb-3">
+                      {item.catchphrase}
+                    </p>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                      {item.tags.map(tag => (
+                        <span key={tag} className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-500">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex items-end gap-2 text-right min-w-[120px]">
+                    <div className="flex-1">
+                      <div className="flex items-baseline justify-end gap-1">
+                        <span className="text-4xl font-black text-slate-900 font-mono">{item.percentage}</span>
+                        <span className="text-sm font-bold text-slate-400">%</span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-400">{item.count}人</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar Background */}
+                <div className="absolute bottom-0 left-0 h-1.5 bg-slate-100 w-full">
+                  <div 
+                    className={`h-full transition-all duration-1000 ${index < 3 ? 'bg-[#E91E63]' : 'bg-slate-300'}`}
+                    style={{ width: `${Math.min(item.percentage * 2, 100)}%` }}
+                  />
                 </div>
               </div>
-              
-              <h3 className="text-lg font-bold text-white mb-1 line-clamp-1">{item.label}</h3>
-              <p className="text-xs text-zinc-400 mb-3 line-clamp-1">{item.catchphrase}</p>
-              
-              <div className="flex flex-wrap gap-1.5">
-                {item.tags.slice(0, 2).map(tag => (
-                  <span key={tag} className="px-2 py-0.5 rounded-md bg-black/30 border border-white/5 text-[10px] text-zinc-400">
-                    {tag}
+            ))}
+          </div>
+
+          <div className="mt-20 text-center">
+            <div className="inline-flex flex-col items-center gap-6 rounded-3xl border-2 border-slate-100 bg-slate-50 p-10 md:p-16">
+              <h2 className="font-heading text-2xl md:text-4xl font-black text-slate-900">
+                あなたは何型？
+              </h2>
+              <p className="text-slate-500 font-medium">
+                たった3分の診断で、あなたのタイプと相性の良い相手が見つかります。
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <Button asChild size="lg" className="h-14 px-8 text-lg font-bold rounded-full bg-[#E91E63] hover:bg-[#D81B60] shadow-lg shadow-[#E91E63]/25 hover:scale-105 transition-all">
+                  <Link href="/diagnosis/select">
+                    今すぐ診断する <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="h-14 px-8 text-lg font-bold rounded-full border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-600">
+                  <Link href="/types">
+                    型一覧を見る
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {legacy.length > 0 && (
+            <div className="mt-20 border-t border-slate-100 pt-10 text-center">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">LEGACY DATA ARCHIVE</p>
+              <div className="inline-flex flex-wrap justify-center gap-2">
+                {legacy.map((item) => (
+                  <span key={item.label} className="px-3 py-1 rounded-md bg-slate-100 text-xs font-medium text-slate-500">
+                    {item.label}: {item.count}
                   </span>
                 ))}
               </div>
             </div>
-
-            {/* プログレスバー装飾 */}
-            <div className="absolute bottom-0 left-0 h-1 bg-zinc-800 w-full">
-              <div 
-                className={`h-full ${styles.bg.replace('/10', '')}`} 
-                style={{ width: `${Math.min(item.percentage * 2, 100)}%` }}
-              />
-            </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
     </div>
   );
