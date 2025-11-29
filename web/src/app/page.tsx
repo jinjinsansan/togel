@@ -32,7 +32,7 @@ export default function Home() {
           {/* Description & Button SPACER (INVISIBLE) - Keeps layout identical to foreground */}
           <div className="flex flex-col items-center gap-8 opacity-0">
              <p className="text-lg md:text-xl font-medium tracking-wide">
-              あなたの本音と相性が一瞬でわかる、<br className="md:hidden" />24タイプ性格診断。
+              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
             </p>
             <Button size="lg" className="h-16 px-12 text-xl">
               LINEで始める
@@ -59,7 +59,7 @@ export default function Home() {
           {/* Description & Button (VISIBLE) */}
           <div className="flex flex-col items-center gap-8 pointer-events-auto">
              <p className="text-lg md:text-xl text-[#E91E63] font-medium tracking-wide">
-              あなたの本音と相性が一瞬でわかる、<br className="md:hidden" />24タイプ性格診断。
+              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
             </p>
 
             <Button
