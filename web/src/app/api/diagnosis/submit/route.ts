@@ -33,11 +33,20 @@ const ensureUserRecord = async (
   if (params.authUserId) {
     const { data, error } = await supabase
       .from("users")
-      .select("id")
+      .select("id, auth_user_id")
       .eq("id", params.authUserId) // public.users.id と auth.users.id を一致させる運用を想定
       .maybeSingle();
 
-    if (data?.id) return data.id;
+    if (data?.id) {
+      // 既存レコードがあるが auth_user_id が null の場合は修正
+      if (!data.auth_user_id) {
+        await supabase
+          .from("users")
+          .update({ auth_user_id: params.authUserId })
+          .eq("id", params.authUserId);
+      }
+      return data.id;
+    }
 
     // レコードがない場合作成 (IDを明示的に指定)
     // 既に存在する場合のエラー(23505: unique_violation)を考慮して upsert にするか、
@@ -47,12 +56,18 @@ const ensureUserRecord = async (
         .from("users")
         .insert({
           id: params.authUserId, // 重要: auth.uid と同じIDにする
+          auth_user_id: params.authUserId, // RLSポリシーで必要！
           line_user_id: `auth-${params.authUserId}`, // 一意制約回避のためのダミー
           gender: params.gender,
           nickname: params.nickname || "No Name",
           birth_date: "2000-01-01", // ダミー
           avatar_url: params.avatarUrl || "",
           is_mock_data: false,
+          bio: "",
+          job: "未設定",
+          favorite_things: "",
+          hobbies: "",
+          special_skills: "",
         })
         .select("id")
         .single();

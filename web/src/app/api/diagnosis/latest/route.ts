@@ -17,11 +17,39 @@ export const GET = async (request: Request) => {
   const supabaseAdmin = createSupabaseAdminClient();
 
   try {
-    // 最新の診断結果を取得
+    // まず public.users から auth_user_id で検索して user.id を取得
+    let { data: userData, error: userError } = await supabaseAdmin
+      .from("users")
+      .select("id")
+      .eq("auth_user_id", session.user.id)
+      .maybeSingle();
+
+    if (userError || !userData) {
+      // auth_user_id で見つからない場合、id で直接検索（後方互換性）
+      const { data: fallbackUser } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      
+      if (!fallbackUser) {
+        return NextResponse.json({ message: "User not found" }, { status: 404 });
+      }
+      
+      // auth_user_id を修正
+      await supabaseAdmin
+        .from("users")
+        .update({ auth_user_id: session.user.id })
+        .eq("id", session.user.id);
+      
+      userData = fallbackUser;
+    }
+
+    // 最新の診断結果を取得（public.users.id を使用）
     const { data: latestDiagnosis, error } = await supabaseAdmin
       .from("diagnosis_results")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", userData.id)
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
