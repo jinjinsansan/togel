@@ -67,10 +67,10 @@ export default function Home() {
           {/* Title Block (VISIBLE with Stroke) */}
           <div className="flex flex-col items-center">
             {/* Text is transparent (destination-out) to show video through, stroke remains */}
-            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-black mix-blend-destination-out [-webkit-text-stroke:1px_#E91E63]">
+            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-black mix-blend-destination-out">
               Togel
             </h1>
-            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-black mix-blend-destination-out [-webkit-text-stroke:0.5px_#E91E63]">
+            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-black mix-blend-destination-out">
               トゥゲル
             </p>
           </div>
