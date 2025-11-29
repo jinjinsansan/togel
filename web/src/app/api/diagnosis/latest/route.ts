@@ -1,0 +1,69 @@
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { generateDiagnosisResult, generateMatchingResults, generateMismatchingResults } from "@/lib/matching/engine";
+
+export const GET = async (request: Request) => {
+  const cookieStore = cookies();
+  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const { data: { session } } = await supabaseAuth.auth.getSession();
+
+  if (!session) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const supabaseAdmin = createSupabaseAdminClient();
+
+  try {
+    // 最新の診断結果を取得
+    const { data: latestDiagnosis, error } = await supabaseAdmin
+      .from("diagnosis_results")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !latestDiagnosis) {
+      return NextResponse.json({ message: "No diagnosis found" }, { status: 404 });
+    }
+
+    // マッチング結果を再計算（またはキャッシュから取得）
+    // ここではエンジンのロジックを再利用して計算する（キャッシュ取得より確実）
+    // 必要なデータ形式に整形
+    const inputData = {
+      diagnosisType: latestDiagnosis.diagnosis_type as "light" | "full",
+      userGender: "male" as "male" | "female", // TODO: profilesから取得すべきだが、一旦male/femaleどちらでも動くロジックならOK。
+      // しかしマッチングには性別が必要。profilesから取る。
+      answers: latestDiagnosis.answers as any[],
+    };
+
+    // プロフィールから性別を取得
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("gender")
+      .eq("id", session.user.id)
+      .single();
+    
+    if (profile?.gender) {
+      inputData.userGender = profile.gender as "male" | "female";
+    }
+
+    // 結果生成
+    const diagnosisResult = generateDiagnosisResult(inputData);
+    const results = await generateMatchingResults(inputData);
+    const mismatchResults = await generateMismatchingResults(inputData);
+
+    return NextResponse.json({
+      results,
+      mismatchResults,
+      diagnosis: diagnosisResult,
+    });
+
+  } catch (error) {
+    console.error("Error fetching diagnosis:", error);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+  }
+};

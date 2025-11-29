@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, SyntheticEvent } from "react";
+import { useState, useEffect, SyntheticEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { getTogelLabel } from "@/lib/personality";
@@ -47,7 +47,7 @@ const TRAITS: (keyof BigFiveScores)[] = [
 ];
 
 const ResultPage = () => {
-  const [results] = useState<MatchingResult[]>(() => {
+  const [results, setResults] = useState<MatchingResult[]>(() => {
     if (typeof window === "undefined") return [];
     const raw = sessionStorage.getItem("latestMatching");
     if (!raw) return [];
@@ -59,7 +59,7 @@ const ResultPage = () => {
     }
   });
 
-  const [diagnosis] = useState<LatestDiagnosis | null>(() => {
+  const [diagnosis, setDiagnosis] = useState<LatestDiagnosis | null>(() => {
     if (typeof window === "undefined") return null;
     const raw = sessionStorage.getItem("latestDiagnosis");
     if (!raw) return null;
@@ -70,6 +70,50 @@ const ResultPage = () => {
       return null;
     }
   });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // データが既にあれば何もしない
+      if (results.length > 0 && diagnosis) return;
+
+      setLoading(true);
+      try {
+        const res = await fetch("/api/diagnosis/latest");
+        if (!res.ok) {
+          // 404や401の場合は何もしない（未診断表示になる）
+          return;
+        }
+        const data = await res.json();
+        
+        if (data.results && data.diagnosis) {
+          setResults(data.results);
+          setDiagnosis(data.diagnosis);
+          // セッションストレージにも保存
+          sessionStorage.setItem("latestMatching", JSON.stringify(data.results));
+          sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
+          if (data.mismatchResults) {
+            sessionStorage.setItem("latestMismatch", JSON.stringify(data.mismatchResults));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch latest diagnosis", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-[#E91E63]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full md:container py-6 md:py-10">
