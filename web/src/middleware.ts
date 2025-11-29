@@ -27,10 +27,10 @@ export async function middleware(req: NextRequest) {
   // Admin route protection (simple email check for now)
   if (req.nextUrl.pathname.startsWith("/admin")) {
     const userEmail = session?.user.email;
-    // Allow only specific email (Replace with your admin email)
-    const allowedAdminEmail = "lselfloveself@gmail.com"; 
+    // Allow only specific emails
+    const allowedAdminEmails = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
     
-    if (userEmail !== allowedAdminEmail) {
+    if (!userEmail || !allowedAdminEmails.includes(userEmail)) {
       return NextResponse.redirect(new URL("/", req.url));
     }
   }
