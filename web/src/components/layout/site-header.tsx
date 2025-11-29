@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 
-import { useSessionContext } from "@supabase/auth-helpers-react";
+import { useUser } from "@supabase/auth-helpers-react";
 import { LoginButton } from "@/components/auth/login-button";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const navItems = [
 ];
 
 export const SiteHeader = () => {
-  const { session } = useSessionContext();
+  const user = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const firstNavLinkRef = useRef<HTMLAnchorElement | null>(null);
   const isBrowser = typeof document !== "undefined";
@@ -133,7 +133,7 @@ export const SiteHeader = () => {
                   <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   
                   <div className="px-2">
-                    {!session ? (
+                    {!user ? (
                       <LoginButton />
                     ) : (
                       <Button
@@ -145,7 +145,7 @@ export const SiteHeader = () => {
                         </Link>
                       </Button>
                     )}
-                    {!session && (
+                    {!user && (
                       <p className="mt-3 text-center text-xs text-white/40">
                         ログインして診断結果を保存
                       </p>
@@ -179,7 +179,7 @@ export const SiteHeader = () => {
           <div className="flex items-center gap-2">
             {/* Desktop Auth Button */}
             <div className="hidden md:block">
-              {!session ? (
+              {!user ? (
                 <LoginButton />
               ) : (
                 <Button
