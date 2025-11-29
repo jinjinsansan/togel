@@ -5,6 +5,9 @@ export type TogelDistributionItem = {
   id: string;
   label: string;
   description: string;
+  catchphrase: string;
+  emoji: string;
+  tags: string[];
   count: number;
   percentage: number;
 };
@@ -35,6 +38,9 @@ export const loadTogelDistribution = async () => {
       id: type.id,
       label,
       description: type.description,
+      catchphrase: type.catchphrase,
+      emoji: type.emoji,
+      tags: type.tags,
       count,
       percentage,
     };
