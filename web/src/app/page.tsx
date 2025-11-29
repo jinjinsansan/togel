@@ -182,7 +182,7 @@ export default function Home() {
                 <span className="text-pink-500">診断</span>する。
               </h2>
               <p className="text-xl text-gray-400 leading-relaxed">
-                ビッグファイブ理論に基づいた本格的な性格診断。<br />
+                独自Togel型理論に基づいた本格的な性格診断。<br />
                 質問に答えるだけで、あなたの考え方のクセ、恋愛傾向、隠れた本性が丸裸に。
               </p>
               <ul className="space-y-3 text-gray-300">
