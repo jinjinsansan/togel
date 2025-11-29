@@ -41,8 +41,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 3. Foreground Content Layer (Lighten Blend) */}
-      {/* This handles the text cutout effect and stroke */}
+      {/* 3. Cutout Title Layer (Lighten Blend) */}
       <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none bg-[#FFD1DC] mix-blend-lighten">
         <div className="container flex flex-col items-center gap-12 py-24 text-center">
           {/* Title Block (VISIBLE with Stroke) */}
@@ -56,15 +55,40 @@ export default function Home() {
             </p>
           </div>
           
-          {/* Description & Button (VISIBLE) */}
-          <div className="flex flex-col items-center gap-8 pointer-events-auto">
+          {/* Description & Button SPACER (INVISIBLE) */}
+          <div className="flex flex-col items-center gap-8 opacity-0">
              <p className="text-lg md:text-xl text-[#E91E63] font-medium tracking-wide">
+              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
+            </p>
+            <Button size="lg" className="h-16 rounded-full px-12 text-xl">
+              LINEで始める
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Foreground Content Layer (Normal Blend) - For Description & Button */}
+      <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
+        <div className="container flex flex-col items-center gap-12 py-24 text-center">
+          {/* Title Block SPACER (INVISIBLE) */}
+          <div className="flex flex-col items-center opacity-0">
+            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter">
+              Togel
+            </h1>
+            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest">
+              トゥゲル
+            </p>
+          </div>
+
+          {/* Visible Description & Button */}
+          <div className="flex flex-col items-center gap-8 pointer-events-auto">
+             <p className="text-lg md:text-xl text-[#E91E63] font-bold tracking-wide drop-shadow-sm">
               あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
             </p>
 
             <Button
               size="lg"
-              className="h-16 rounded-full bg-[#E91E63] px-12 text-xl font-bold text-white hover:bg-[#d81b60] shadow-xl transition-all hover:scale-105"
+              className="h-16 rounded-full bg-white px-12 text-xl font-bold text-[#E91E63] hover:bg-white/90 shadow-xl transition-all hover:scale-105"
               asChild
             >
               <Link href="/diagnosis/select">LINEで始める</Link>
