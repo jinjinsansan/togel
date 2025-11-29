@@ -21,8 +21,9 @@ export default function Home() {
   }, [videos.length]);
 
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFD1DC]">
-      {/* 1. Video Background (Carousel) */}
+    <>
+      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFD1DC]">
+        {/* 1. Video Background (Carousel) */}
       {videos.map((src, index) => (
         <video
           key={src}
