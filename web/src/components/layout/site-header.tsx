@@ -79,42 +79,23 @@ export const SiteHeader = () => {
     isBrowser && isOpen
       ? createPortal(
           <div
-            className="mobile-nav-overlay fixed inset-0 z-[9999] bg-white md:hidden"
+            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-white md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="ナビゲーションメニュー"
             onClick={closeMenu}
-            style={{ backgroundColor: '#FFFFFF' }}
+            style={{ backgroundColor: '#FFFFFF', top: '64px' }}
           >
             <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
             <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
             <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
             <div
-              className="relative z-10 flex h-full flex-col bg-white"
+              className="relative z-10 flex h-full flex-col bg-white pb-12 pt-8"
               onClick={(event) => event.stopPropagation()}
               style={{ backgroundColor: '#FFFFFF' }}
             >
-              {/* Overlay Header - Matches Main Header Layout */}
-              <div className="container flex h-16 items-center justify-between border-b border-[#E91E63]/10">
-                <Link
-                  href="/"
-                  className="font-heading text-xl font-semibold text-[#E91E63]"
-                  onClick={closeMenu}
-                >
-                  Togel
-                </Link>
-                <button
-                  type="button"
-                  className="flex items-center justify-center rounded-full border border-[#E91E63]/30 p-2 text-[#E91E63]"
-                  onClick={closeMenu}
-                  aria-label="メニューを閉じる"
-                >
-                  <X size={24} aria-hidden="true" />
-                </button>
-              </div>
-
               {/* Nav Content */}
-              <div className="flex flex-1 flex-col overflow-y-auto px-6 pb-12 pt-12">
+              <div className="flex flex-1 flex-col overflow-y-auto px-6">
                 <nav
                   id="mobile-nav-panel"
                   className="flex flex-col items-center justify-center gap-8 text-center"
@@ -124,7 +105,7 @@ export const SiteHeader = () => {
                       key={item.href}
                       href={item.href}
                       ref={index === 0 ? firstNavLinkRef : undefined}
-                      className="font-heading text-xl font-medium tracking-wide text-[#E91E63] transition-colors hover:text-[#d81b60]"
+                      className="font-heading text-lg font-medium tracking-wide text-[#E91E63] transition-colors hover:text-[#d81b60] py-2"
                       onClick={closeMenu}
                     >
                       {item.label}
@@ -132,7 +113,7 @@ export const SiteHeader = () => {
                   ))}
                 </nav>
 
-                <div className="mt-auto flex flex-col gap-4 pt-12">
+                <div className="mt-auto flex flex-col gap-4 pt-12 pb-8">
                   <Button
                     className="h-14 w-full rounded-full bg-[#E91E63] text-lg font-bold text-white shadow-lg hover:bg-[#c2185b]"
                     asChild
@@ -152,8 +133,8 @@ export const SiteHeader = () => {
   return (
     <>
       <header className="sticky top-0 z-[15000] bg-white backdrop-blur border-b border-[#E91E63]/10">
-        <div className={`container flex h-16 items-center justify-between transition-opacity ${isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <Link href="/" className="font-heading text-xl font-semibold text-[#E91E63]">
+        <div className="container flex h-16 items-center justify-between">
+          <Link href="/" className="font-heading text-xl font-semibold text-[#E91E63]" onClick={closeMenu}>
             Togel
           </Link>
           
@@ -179,13 +160,17 @@ export const SiteHeader = () => {
             {/* Mobile Hamburger Button */}
             <button
               type="button"
-              className="flex items-center justify-center rounded-full border border-[#E91E63]/30 p-2 text-[#E91E63] md:hidden"
+              className="flex items-center justify-center rounded-full border border-[#E91E63]/30 p-2 text-[#E91E63] md:hidden transition-colors hover:bg-[#E91E63]/5"
               onClick={toggleMenu}
               aria-label={isOpen ? "メニューを閉じる" : "メニューを開く"}
               aria-expanded={isOpen}
               aria-controls="mobile-nav-panel"
             >
-              <Menu size={24} aria-hidden="true" />
+              {isOpen ? (
+                <X size={24} aria-hidden="true" />
+              ) : (
+                <Menu size={24} aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>
