@@ -50,8 +50,9 @@ export default function Home() {
 
           {/* Description & Button SPACER (INVISIBLE) - Keeps layout identical to foreground */}
           <div className="flex flex-col items-center gap-8 opacity-0">
-             <p className="text-lg md:text-xl font-medium tracking-wide">
-              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
+             <p className="text-lg md:text-2xl font-bold tracking-wide leading-relaxed">
+              あなたの本音と相性が一瞬でわかる<br />
+              24タイプTogel型診断+AIマッチング
             </p>
             <Button size="lg" className="h-16 px-12 text-xl">
               LINEで始める
@@ -76,8 +77,9 @@ export default function Home() {
           
           {/* Description & Button SPACER (INVISIBLE) */}
           <div className="flex flex-col items-center gap-8 opacity-0">
-             <p className="text-lg md:text-xl text-[#E91E63] font-medium tracking-wide">
-              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
+             <p className="text-lg md:text-2xl text-[#E91E63] font-medium tracking-wide">
+              あなたの本音と相性が一瞬でわかる<br />
+              24タイプTogel型診断+AIマッチング
             </p>
             <Button size="lg" className="h-16 rounded-full px-12 text-xl">
               LINEで始める
@@ -101,8 +103,9 @@ export default function Home() {
 
           {/* Visible Description & Button */}
           <div className="flex flex-col items-center gap-8 pointer-events-auto">
-             <p className="text-lg md:text-xl text-[#E91E63] font-bold tracking-wide drop-shadow-sm">
-              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
+             <p className="text-lg md:text-2xl text-[#E91E63] font-bold tracking-wide drop-shadow-sm leading-relaxed">
+              あなたの本音と相性が一瞬でわかる<br />
+              24タイプTogel型診断+AIマッチング
             </p>
 
             <Button
