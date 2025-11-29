@@ -104,7 +104,7 @@ export const SiteHeader = () => {
                       className="group flex flex-col items-start"
                       onClick={closeMenu}
                     >
-                      <span className="font-heading text-3xl font-bold tracking-tight text-[#E91E63] transition-colors group-hover:text-[#d81b60]">
+                      <span className="font-heading text-3xl font-thin tracking-tight text-[#E91E63] transition-colors group-hover:text-[#d81b60]">
                         {item.en}
                       </span>
                       <span className="text-sm font-medium text-[#E91E63]/70 group-hover:text-[#d81b60]/80">
