@@ -182,7 +182,7 @@ const DiagnosisPage = () => {
           {!questionsLoading && !currentQuestion && (
             <div className="mt-8 rounded-[2.5rem] border-2 border-dashed border-red-200 bg-red-50/50 p-8 text-center">
               <p className="text-sm font-bold text-red-500">データの取得に失敗しました</p>
-              <Button onClick={() => window.location.reload()} variant="link" className="text-red-600 mt-2">
+              <Button onClick={() => window.location.reload()} variant="ghost" className="text-red-600 mt-2 hover:text-red-700 hover:bg-red-100 underline">
                 再読み込みする
               </Button>
             </div>
@@ -250,10 +250,10 @@ const DiagnosisPage = () => {
           
           <div className="mt-8 text-center">
             <Button 
-              variant="link" 
+              variant="ghost" 
               size="sm" 
               onClick={() => clearSession()}
-              className="text-slate-300 hover:text-slate-500 text-xs"
+              className="text-slate-300 hover:text-slate-500 text-xs underline"
             >
               保存データをリセットして最初から
             </Button>
