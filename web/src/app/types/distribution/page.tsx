@@ -113,7 +113,7 @@ const DistributionPage = async () => {
                 たった3分の診断で、あなたのタイプと相性の良い相手が見つかります。
               </p>
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <Button asChild size="lg" className="h-14 px-8 text-lg font-bold rounded-full bg-[#E91E63] hover:bg-[#D81B60] shadow-lg shadow-[#E91E63]/25 hover:scale-105 transition-all">
+                <Button asChild size="lg" className="h-14 px-8 text-lg font-bold rounded-full bg-[#E91E63] text-white hover:bg-[#D81B60] shadow-lg shadow-[#E91E63]/25 hover:scale-105 transition-all">
                   <Link href="/diagnosis/select">
                     今すぐ診断する <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
