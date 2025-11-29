@@ -16,28 +16,31 @@ export default function Home() {
       </video>
 
       {/* 2. Pink Background Layer with Cutout Text */}
-      <div className="absolute inset-0 z-10 isolate">
-        {/* A. The Pink Background Itself */}
-        <div className="absolute inset-0 bg-[#FFD1DC]" />
+      {/* Using inline styles for isolation and blend mode to ensure they are applied correctly */}
+      <div 
+        className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#FFD1DC]"
+        style={{ isolation: 'isolate' }}
+      >
+        <div className="container flex flex-col items-center gap-12 py-24 text-center">
+          {/* Title Block - Cuts through the pink background */}
+          <div 
+            className="flex flex-col items-center"
+            style={{ mixBlendMode: 'destination-out' }}
+          >
+            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-black">
+              Togel
+            </h1>
+            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-black">
+              トゥゲル
+            </p>
+          </div>
 
-        {/* B. The Cutout Mask (Black Text -> Transparent Hole) */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center mix-blend-destination-out">
-          <div className="container flex flex-col items-center gap-12 py-24 text-center">
-            <div className="flex flex-col items-center">
-              <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-black">
-                Togel
-              </h1>
-              <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-black">
-                トゥゲル
-              </p>
-            </div>
-            {/* Spacer for description/button to keep layout alignment */}
-            <div className="flex flex-col items-center gap-8 opacity-0">
-              <p className="text-lg md:text-xl font-medium tracking-wide">
-                あなたの本音と相性が一瞬でわかる、<br className="md:hidden" />24タイプ性格診断。
-              </p>
-              <Button size="lg" className="h-16 px-12 text-xl">LINEで始める</Button>
-            </div>
+          {/* Spacer for description/button to keep layout alignment - Invisible */}
+          <div className="flex flex-col items-center gap-8 opacity-0">
+            <p className="text-lg md:text-xl font-medium tracking-wide">
+              あなたの本音と相性が一瞬でわかる、<br className="md:hidden" />24タイプ性格診断。
+            </p>
+            <Button size="lg" className="h-16 px-12 text-xl">LINEで始める</Button>
           </div>
         </div>
       </div>
