@@ -20,48 +20,71 @@ const schema = z.object({
     .min(1),
 });
 
-const ensureGuestUser = async (
+const ensureUserRecord = async (
   supabase: ReturnType<typeof createSupabaseAdminClient>,
-  gender: "male" | "female"
+  params: {
+    authUserId?: string; // ログインユーザーの場合のUUID
+    gender: "male" | "female";
+    nickname?: string;
+    avatarUrl?: string;
+  }
 ) => {
-  const guestLineId = `guest-${gender}`;
-  
+  // 1. ログインユーザーの場合: public.users にレコードがあるか確認、なければ作成
+  if (params.authUserId) {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", params.authUserId) // public.users.id と auth.users.id を一致させる運用を想定
+      .maybeSingle();
+
+    if (data?.id) return data.id;
+
+    // レコードがない場合作成 (IDを明示的に指定)
+    const { data: inserted, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        id: params.authUserId, // 重要: auth.uid と同じIDにする
+        line_user_id: `auth-${params.authUserId}`, // 一意制約回避のためのダミー
+        gender: params.gender,
+        nickname: params.nickname || "No Name",
+        birth_date: "2000-01-01", // ダミー
+        avatar_url: params.avatarUrl || "",
+        is_mock_data: false,
+      })
+      .select("id")
+      .single();
+      
+    if (insertError) {
+      console.error("Failed to create public user for auth user:", insertError);
+      throw insertError;
+    }
+    return inserted.id;
+  }
+
+  // 2. ゲストユーザーの場合 (既存ロジック)
+  const guestLineId = `guest-${params.gender}`;
   const { data, error } = await supabase
     .from("users")
     .select("id")
     .eq("line_user_id", guestLineId)
     .maybeSingle();
 
-  if (error) {
-    throw error;
-  }
-
-  if (data?.id) {
-    return data.id;
-  }
+  if (data?.id) return data.id;
 
   const { data: inserted, error: insertError } = await supabase
     .from("users")
     .insert({
       line_user_id: guestLineId,
-      gender,
-      nickname: gender === "male" ? "ゲストユーザー（男性）" : "ゲストユーザー（女性）",
+      gender: params.gender,
+      nickname: params.gender === "male" ? "ゲストユーザー（男性）" : "ゲストユーザー（女性）",
       birth_date: "1995-01-01",
-      avatar_url: `https://api.dicebear.com/8.x/identicon/svg?seed=guest-${gender}`,
-      bio: "LINEログイン前のゲストユーザーです。",
-      job: "非公開",
-      favorite_things: "価値観の共有",
-      hobbies: "映画鑑賞",
-      special_skills: "気遣い",
+      avatar_url: `https://api.dicebear.com/8.x/identicon/svg?seed=guest-${params.gender}`,
       is_mock_data: false,
     })
     .select("id")
     .single();
 
-  if (insertError || !inserted) {
-    throw insertError ?? new Error("Failed to create guest user");
-  }
-
+  if (insertError || !inserted) throw insertError;
   return inserted.id;
 };
 
@@ -81,10 +104,21 @@ export const POST = async (request: Request) => {
 
   try {
     // ログイン済みならそのID、未ログインならゲスト処理
-    let userId = user?.id;
+    let userId: string;
     
-    if (!userId) {
-      userId = await ensureGuestUser(supabaseAdmin, parsed.data.userGender);
+    if (user?.id) {
+      // ログインユーザー: public.users にレコードがあるか確認・作成
+      userId = await ensureUserRecord(supabaseAdmin, {
+        authUserId: user.id,
+        gender: parsed.data.userGender,
+        nickname: user.user_metadata.full_name,
+        avatarUrl: user.user_metadata.avatar_url,
+      });
+    } else {
+      // ゲストユーザー
+      userId = await ensureUserRecord(supabaseAdmin, {
+        gender: parsed.data.userGender,
+      });
     }
     
     // ビッグファイブ診断結果を生成
