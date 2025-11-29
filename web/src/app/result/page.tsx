@@ -411,7 +411,7 @@ const ResultPage = () => {
 
         {/* 下部ミスマッチ結果リンク */}
         {results.length > 0 && (
-          <div className="mt-12 text-center">
+          <div className="mt-12 text-center px-4">
             <p className="mb-4 text-muted-foreground">
               相性の悪い相手も知っておくと、失敗を避けられるかも...？
             </p>
