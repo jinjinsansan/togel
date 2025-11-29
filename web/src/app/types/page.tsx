@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Heart, Skull } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,24 @@ import { personalityTypes, ExtendedPersonalityTypeDefinition } from "@/lib/perso
 import { getTogelLabel } from "@/lib/personality";
 
 // 相性情報の表示用コンポーネント
-const CompatibilityItem = ({ typeId, label }: { typeId: string; label: string }) => {
+const CompatibilityItem = ({ 
+  typeId, 
+  label,
+  onSelect 
+}: { 
+  typeId: string; 
+  label: string;
+  onSelect: (id: string) => void;
+}) => {
   const type = personalityTypes.find((t) => t.id === typeId) as ExtendedPersonalityTypeDefinition | undefined;
   if (!type) return null;
 
   return (
-    <Link href={`#type-${typeId}`} className="block">
+    <Link 
+      href={`#type-${typeId}`} 
+      className="block"
+      onClick={() => onSelect(typeId)}
+    >
       <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-2 text-sm transition-colors hover:bg-muted">
         <span className="text-lg">{type.emoji}</span>
         <div className="flex flex-col">
@@ -28,6 +40,24 @@ const CompatibilityItem = ({ typeId, label }: { typeId: string; label: string })
 
 const TypeListPage = () => {
   const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // URLのハッシュから初期表示するタイプを判定
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#type-")) {
+      const id = hash.replace("#type-", "");
+      if (personalityTypes.some(t => t.id === id)) {
+        setOpenId(id);
+        // 少し遅延させてスクロール位置を微調整（アコーディオンが開く分を考慮）
+        setTimeout(() => {
+          const element = document.getElementById(`type-${id}`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      }
+    }
+  }, []);
 
   const toggleOpen = (id: string) => {
     setOpenId((prev) => (prev === id ? null : id));
@@ -132,7 +162,7 @@ const TypeListPage = () => {
                         </p>
                         <div className="grid gap-2">
                           {type.compatibleTypes.slice(0, 3).map((id) => (
-                            <CompatibilityItem key={id} typeId={id} label="最高" />
+                            <CompatibilityItem key={id} typeId={id} label="最高" onSelect={setOpenId} />
                           ))}
                         </div>
                       </div>
@@ -143,7 +173,7 @@ const TypeListPage = () => {
                         </p>
                         <div className="grid gap-2">
                           {type.badCompatibleTypes?.slice(0, 3).map((id) => (
-                            <CompatibilityItem key={id} typeId={id} label="最悪" />
+                            <CompatibilityItem key={id} typeId={id} label="最悪" onSelect={setOpenId} />
                           ))}
                         </div>
                       </div>

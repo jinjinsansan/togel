@@ -1,10 +1,10 @@
 import { PersonalityTypeDefinition } from "@/types/diagnosis";
 
 export interface ExtendedPersonalityTypeDefinition extends PersonalityTypeDefinition {
-  catchphrase: string; // キャッチコピー（例：パリピ界のカリスマ）
-  emoji: string; // 象徴する絵文字
-  badCompatibleTypes: string[]; // 相性が悪いタイプID
-  tags: string[]; // ハッシュタグ（#社交的 #マイペース）
+  catchphrase: string;
+  emoji: string;
+  badCompatibleTypes: string[];
+  tags: string[];
 }
 
 export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
@@ -23,8 +23,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "チームの先頭で旗を振る特攻隊長",
       relationships: "「ついてこい！」で引っ張る",
     },
-    compatibleTypes: ["analytical-thinker", "steady-supporter", "creative-specialist"],
-    badCompatibleTypes: ["methodical-thinker", "quiet-observer", "conscientious-guardian"],
+    compatibleTypes: ["social-innovator", "charismatic-enthusiast", "visionary-executor"],
+    badCompatibleTypes: ["reliable-organizer", "conscientious-guardian", "methodical-thinker"],
   },
   {
     id: "social-innovator",
@@ -41,7 +41,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "人を繋げて新しい価値を生む",
       relationships: "友達100人できるかな",
     },
-    compatibleTypes: ["thoughtful-analyst", "reliable-organizer", "empathetic-connector"],
+    compatibleTypes: ["creative-leader", "social-organizer", "active-communicator"],
     badCompatibleTypes: ["solvent-intellectual", "introverted-artist", "quiet-observer"],
   },
   {
@@ -59,7 +59,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "勢いで突破する",
       relationships: "熱狂的なファンを作る",
     },
-    compatibleTypes: ["calm-strategist", "detailed-planner", "loyal-supporter"],
+    compatibleTypes: ["creative-leader", "visionary-executor", "practical-leader"],
     badCompatibleTypes: ["quiet-observer", "philosophical-curator", "depth-explorer"],
   },
   {
@@ -77,8 +77,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "場所にとらわれない働き方",
       relationships: "束縛しない関係がベスト",
     },
-    compatibleTypes: ["cultural-scholar", "local-specialist", "global-thinker"],
-    badCompatibleTypes: ["conscientious-guardian", "reliable-organizer", "steady-specialist"],
+    compatibleTypes: ["social-innovator", "enthusiastic-networker", "relational-ambassador"],
+    badCompatibleTypes: ["steady-specialist", "reliable-organizer", "conscientious-guardian"],
   },
   {
     id: "visionary-executor",
@@ -95,8 +95,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "盤面を支配して勝利する",
       relationships: "共に高みを目指す同志",
     },
-    compatibleTypes: ["tactical-expert", "detail-oriented", "ground-realistic"],
-    badCompatibleTypes: ["poetic-dreamer", "spontaneous-artist", "chaotic-creator"],
+    compatibleTypes: ["creative-leader", "charismatic-enthusiast", "practical-leader"],
+    badCompatibleTypes: ["entertaining-creator", "poetic-dreamer", "contemplative-sage"],
   },
   {
     id: "entertaining-creator",
@@ -113,8 +113,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "遊び心を忘れない",
       relationships: "一緒にいて飽きない関係",
     },
-    compatibleTypes: ["quiet-observer", "structured-thinker", "sincere-listener"],
-    badCompatibleTypes: ["methodical-thinker", "serious-analyst", "strict-judge"],
+    compatibleTypes: ["social-innovator", "active-communicator", "enthusiastic-networker"],
+    badCompatibleTypes: ["solvent-intellectual", "conscientious-guardian", "methodical-thinker"],
   },
   {
     id: "introverted-artist",
@@ -131,7 +131,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "一人で没頭して生み出す",
       relationships: "魂で繋がる深い関係",
     },
-    compatibleTypes: ["gentle-mentor", "organized-collector", "quiet-scholar"],
+    compatibleTypes: ["philosophical-curator", "depth-explorer", "poetic-dreamer"],
     badCompatibleTypes: ["social-innovator", "charismatic-enthusiast", "active-communicator"],
   },
   {
@@ -149,8 +149,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "情報の編集と意味づけ",
       relationships: "知的な刺激を与え合う",
     },
-    compatibleTypes: ["practical-builder", "action-oriented", "dynamic-doer"],
-    badCompatibleTypes: ["charismatic-enthusiast", "impulsive-actor", "emotional-reactor"],
+    compatibleTypes: ["introverted-artist", "depth-explorer", "solvent-intellectual"],
+    badCompatibleTypes: ["charismatic-enthusiast", "entertaining-creator", "social-organizer"],
   },
   {
     id: "depth-explorer",
@@ -167,8 +167,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "根本原因の究明",
       relationships: "嘘のない真実の関係",
     },
-    compatibleTypes: ["surface-adaptator", "broad-connector", "flexible-adapter"],
-    badCompatibleTypes: ["charismatic-enthusiast", "social-organizer", "active-communicator"],
+    compatibleTypes: ["introverted-artist", "philosophical-curator", "contemplative-sage"],
+    badCompatibleTypes: ["entertaining-creator", "active-communicator", "enthusiastic-networker"],
   },
   {
     id: "poetic-dreamer",
@@ -185,8 +185,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "夢を形にする仕事",
       relationships: "おとぎ話のような恋",
     },
-    compatibleTypes: ["realistic-craftsman", "grounded-builder", "pragmatic-operator"],
-    badCompatibleTypes: ["visionary-executor", "strict-manager", "harsh-critic"],
+    compatibleTypes: ["introverted-artist", "depth-explorer", "contemplative-sage"],
+    badCompatibleTypes: ["visionary-executor", "practical-leader", "conscientious-guardian"],
   },
   {
     id: "solvent-intellectual",
@@ -203,8 +203,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "システム構築と最適化",
       relationships: "依存しない自立した関係",
     },
-    compatibleTypes: ["social-coach", "emotional-mentor", "relationship-builder"],
-    badCompatibleTypes: ["social-innovator", "emotional-reactor", "dramatic-actor"],
+    compatibleTypes: ["philosophical-curator", "contemplative-sage", "methodical-thinker"],
+    badCompatibleTypes: ["social-innovator", "entertaining-creator", "social-organizer"],
   },
   {
     id: "contemplative-sage",
@@ -221,8 +221,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "長期的な視点での判断",
       relationships: "安心感を与える存在",
     },
-    compatibleTypes: ["active-practitioner", "dynamic-learner", "practical-explorer"],
-    badCompatibleTypes: ["charismatic-enthusiast", "impulsive-actor", "hyper-active"],
+    compatibleTypes: ["philosophical-curator", "depth-explorer", "solvent-intellectual"],
+    badCompatibleTypes: ["charismatic-enthusiast", "active-communicator", "enthusiastic-networker"],
   },
   {
     id: "practical-leader",
@@ -239,8 +239,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "着実にタスクをこなす",
       relationships: "背中で語る信頼関係",
     },
-    compatibleTypes: ["innovative-advisor", "flexible-creator", "visionary-supporter"],
-    badCompatibleTypes: ["poetic-dreamer", "philosophical-curator", "abstract-thinker"],
+    compatibleTypes: ["visionary-executor", "steady-specialist", "reliable-organizer"],
+    badCompatibleTypes: ["exploratory-connector", "poetic-dreamer", "philosophical-curator"],
   },
   {
     id: "social-organizer",
@@ -257,8 +257,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "チームの潤滑油",
       relationships: "みんなのお母さん的存在",
     },
-    compatibleTypes: ["independent-creator", "decisive-thinker", "innovative-connector"],
-    badCompatibleTypes: ["depth-explorer", "unpredictable-artist", "selfish-actor"],
+    compatibleTypes: ["social-innovator", "community-builder", "relational-ambassador"],
+    badCompatibleTypes: ["depth-explorer", "solvent-intellectual", "dedicated-crafter"],
   },
   {
     id: "active-communicator",
@@ -275,8 +275,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "広報やプレゼン担当",
       relationships: "会話が絶えない楽しい関係",
     },
-    compatibleTypes: ["quiet-observer", "deep-thinker", "reflective-listener"],
-    badCompatibleTypes: ["introverted-artist", "solvent-intellectual", "silent-thinker"],
+    compatibleTypes: ["social-innovator", "entertaining-creator", "enthusiastic-networker"],
+    badCompatibleTypes: ["introverted-artist", "solvent-intellectual", "quiet-observer"],
   },
   {
     id: "community-builder",
@@ -293,8 +293,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "心理的安全性の確保",
       relationships: "家族のような温かい関係",
     },
-    compatibleTypes: ["individualist-creator", "solo-achiever", "independent-thinker"],
-    badCompatibleTypes: ["aggressive-competitor", "ruthless-winner", "lone-wolf"],
+    compatibleTypes: ["social-organizer", "relational-ambassador", "social-innovator"],
+    badCompatibleTypes: ["charismatic-enthusiast", "visionary-executor", "solvent-intellectual"],
   },
   {
     id: "enthusiastic-networker",
@@ -311,8 +311,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "新規開拓とマッチング",
       relationships: "刺激的でアクティブな関係",
     },
-    compatibleTypes: ["specialized-expert", "focused-individual", "dedicated-specialist"],
-    badCompatibleTypes: ["conservative-guardian", "static-observer", "risk-averse"],
+    compatibleTypes: ["social-innovator", "exploratory-connector", "active-communicator"],
+    badCompatibleTypes: ["steady-specialist", "reliable-organizer", "conscientious-guardian"],
   },
   {
     id: "relational-ambassador",
@@ -329,8 +329,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "利害調整と合意形成",
       relationships: "スマートで大人な関係",
     },
-    compatibleTypes: ["principle-advocate", "decisive-specialist", "idealist-creator"],
-    badCompatibleTypes: ["blunt-speaker", "radical-revolutionist", "inflexible-judge"],
+    compatibleTypes: ["social-organizer", "community-builder", "social-innovator"],
+    badCompatibleTypes: ["solvent-intellectual", "conscientious-guardian", "methodical-thinker"],
   },
   {
     id: "steady-specialist",
@@ -347,8 +347,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "着実な積み上げ",
       relationships: "裏切らない誠実な関係",
     },
-    compatibleTypes: ["versatile-generalist", "resourceful-innovator", "broad-minded-thinker"],
-    badCompatibleTypes: ["exploratory-connector", "risk-taker", "unpredictable-actor"],
+    compatibleTypes: ["reliable-organizer", "dedicated-crafter", "methodical-thinker"],
+    badCompatibleTypes: ["creative-leader", "exploratory-connector", "entertaining-creator"],
   },
   {
     id: "reliable-organizer",
@@ -365,8 +365,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "マニュアル化と運用",
       relationships: "予測可能で安心できる関係",
     },
-    compatibleTypes: ["chaotic-creator", "flexible-adapter", "spontaneous-artist"],
-    badCompatibleTypes: ["exploratory-connector", "free-spirit", "rule-breaker"],
+    compatibleTypes: ["steady-specialist", "conscientious-guardian", "practical-leader"],
+    badCompatibleTypes: ["creative-leader", "exploratory-connector", "poetic-dreamer"],
   },
   {
     id: "quiet-observer",
@@ -383,7 +383,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "データの監視と分析",
       relationships: "多くを語らずとも通じ合う",
     },
-    compatibleTypes: ["active-communicator", "expressive-performer", "dynamic-presenter"],
+    compatibleTypes: ["introverted-artist", "philosophical-curator", "solvent-intellectual"],
     badCompatibleTypes: ["creative-leader", "social-innovator", "charismatic-enthusiast"],
   },
   {
@@ -401,8 +401,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "ソロワークでの深掘り",
       relationships: "価値観を共有できる少数の人",
     },
-    compatibleTypes: ["curious-generalist", "interdisciplinary-thinker", "multi-talented-creator"],
-    badCompatibleTypes: ["social-organizer", "superficial-talker", "distracted-multitasker"],
+    compatibleTypes: ["steady-specialist", "methodical-thinker", "solvent-intellectual"],
+    badCompatibleTypes: ["social-organizer", "active-communicator", "social-innovator"],
   },
   {
     id: "conscientious-guardian",
@@ -419,8 +419,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "リスク管理とコンプラ遵守",
       relationships: "規律ある清廉な関係",
     },
-    compatibleTypes: ["rebellious-innovator", "flexible-rule-follower", "creative-dissenter"],
-    badCompatibleTypes: ["creative-leader", "exploratory-connector", "anarchist"],
+    compatibleTypes: ["steady-specialist", "reliable-organizer", "practical-leader"],
+    badCompatibleTypes: ["creative-leader", "exploratory-connector", "entertaining-creator"],
   },
   {
     id: "methodical-thinker",
@@ -437,8 +437,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
       workStyle: "設計図通りの構築",
       relationships: "お互いの役割が明確な関係",
     },
-    compatibleTypes: ["intuitive-creator", "creative-thinker", "chaotic-organizer"],
-    badCompatibleTypes: ["creative-leader", "entertaining-creator", "impulsive-artist"],
+    compatibleTypes: ["solvent-intellectual", "steady-specialist", "dedicated-crafter"],
+    badCompatibleTypes: ["creative-leader", "entertaining-creator", "poetic-dreamer"],
   },
 ];
-
