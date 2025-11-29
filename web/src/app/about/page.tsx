@@ -198,15 +198,11 @@ export default function AboutPage() {
           <h2 className="text-4xl font-black md:text-6xl">
             準備はいいですか？
           </h2>
-          <p className="text-xl text-gray-400">
-            あなたの本当の姿と、運命の相手を知る旅へ。
-          </p>
-          
           <div className="flex justify-center">
             <Button 
               asChild 
               size="lg" 
-              className="h-20 rounded-full bg-white px-12 text-2xl font-black text-black hover:bg-gray-200 hover:scale-105 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)]"
+              className="h-20 rounded-full bg-white px-12 text-2xl font-black text-[#E91E63] hover:bg-gray-200 hover:scale-105 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)]"
             >
               <Link href="/diagnosis/select">
                 今すぐ診断する
