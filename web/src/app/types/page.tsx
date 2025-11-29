@@ -30,7 +30,7 @@ const TypeListPage = () => {
   const [openId, setOpenId] = useState<string | null>(null);
 
   const toggleOpen = (id: string) => {
-    setOpenId(openId === id ? null : id);
+    setOpenId((prev) => (prev === id ? null : id));
   };
 
   return (
