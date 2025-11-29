@@ -1,6 +1,5 @@
 "use client";
 
-import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -36,8 +35,8 @@ const GenderSelectPage = () => {
           onClick={() => handleGenderSelect("male")}
           className="group flex flex-col items-center rounded-3xl border-2 border-border bg-white/90 p-8 shadow-card transition-all hover:border-primary hover:shadow-lg"
         >
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition-colors group-hover:bg-blue-200">
-            <User className="h-12 w-12" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-5xl transition-colors group-hover:bg-blue-200">
+            👨
           </div>
           <h2 className="mt-4 font-heading text-2xl">男性</h2>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -48,8 +47,8 @@ const GenderSelectPage = () => {
           onClick={() => handleGenderSelect("female")}
           className="group flex flex-col items-center rounded-3xl border-2 border-border bg-white/90 p-8 shadow-card transition-all hover:border-primary hover:shadow-lg"
         >
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-pink-100 text-pink-600 transition-colors group-hover:bg-pink-200">
-            <User className="h-12 w-12" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-pink-100 text-5xl transition-colors group-hover:bg-pink-200">
+            👩
           </div>
           <h2 className="mt-4 font-heading text-2xl">女性</h2>
           <p className="mt-2 text-sm text-muted-foreground">
