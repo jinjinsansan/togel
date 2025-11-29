@@ -79,7 +79,7 @@ export const SiteHeader = () => {
     isBrowser && isOpen
       ? createPortal(
           <div
-            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-white/90 backdrop-blur-md md:hidden"
+            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-white/85 backdrop-blur-md md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="ナビゲーションメニュー"

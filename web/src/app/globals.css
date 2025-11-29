@@ -69,23 +69,7 @@
 
 .mobile-nav-overlay {
   isolation: isolate;
-  mix-blend-mode: normal !important;
-  background-color: #FFFFFF !important;
-  opacity: 1 !important;
+  /* Removed !important background rules to allow backdrop-blur to work */
 }
 
-.mobile-nav-overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: #FFFFFF;
-  z-index: 0;
-}
-
-.mobile-nav-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: #FFFFFF;
-  z-index: 1;
-}
+/* Removed pseudo-elements that were forcing opaque white background */
