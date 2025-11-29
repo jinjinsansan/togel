@@ -38,26 +38,26 @@ export default function AboutPage() {
       </section>
 
       {/* Step 1: Diagnosis */}
-      <section className="relative py-24 md:py-32">
+      <section className="relative py-16 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="grid gap-12 md:grid-cols-2 md:items-center">
-            <div className="relative aspect-square w-full max-w-md mx-auto rounded-3xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 flex items-center justify-center shadow-2xl shadow-pink-900/20">
-              <div className="text-9xl animate-pulse">🧠</div>
-              <div className="absolute -top-4 -right-4 bg-pink-600 text-white px-6 py-2 text-xl font-bold rounded-full transform rotate-12">
+          <div className="grid gap-8 md:gap-12 md:grid-cols-2 md:items-center">
+            <div className="relative aspect-square w-full max-w-[300px] md:max-w-md mx-auto rounded-3xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 flex items-center justify-center shadow-2xl shadow-pink-900/20">
+              <div className="text-7xl md:text-9xl animate-pulse">🧠</div>
+              <div className="absolute -top-4 -right-4 bg-pink-600 text-white px-4 py-1 md:px-6 md:py-2 text-lg md:text-xl font-bold rounded-full transform rotate-12">
                 5分で完了
               </div>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6 text-center md:text-left flex flex-col items-center md:items-start">
               <div className="inline-block rounded-full bg-gray-900 px-4 py-1 text-sm font-bold text-gray-400 border border-gray-800">
                 STEP 01
               </div>
-              <h2 className="text-4xl font-black md:text-6xl">
+              <h2 className="text-3xl font-black md:text-6xl">
                 まずは<br />
                 <span className="text-pink-500">診断</span>する。
               </h2>
-              <p className="text-xl text-gray-400 leading-relaxed">
-                独自Togel型理論に基づいた本格的な性格診断。<br />
-                質問に答えるだけで、あなたの考え方のクセ、恋愛傾向、隠れた本性が丸裸に。
+              <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
+                独自Togel型理論に基づいた本格的な性格診断。<br className="hidden md:inline" />
+                質問に答えるだけで、あなたの考え方のクセ、<br className="inline md:hidden" />恋愛傾向、隠れた本性が丸裸に。
               </p>
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-center gap-3">
@@ -75,25 +75,25 @@ export default function AboutPage() {
       </section>
 
       {/* Step 2: Result */}
-      <section className="relative py-24 md:py-32 bg-gray-950/50">
+      <section className="relative py-16 md:py-32 bg-gray-950/50">
         <div className="container mx-auto px-4">
-          <div className="grid gap-12 md:grid-cols-2 md:items-center md:flex-row-reverse">
-            <div className="md:order-2 relative aspect-square w-full max-w-md mx-auto rounded-3xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 flex flex-col items-center justify-center shadow-2xl text-center">
-              <div className="text-8xl mb-4">🐯</div>
-              <div className="text-2xl font-bold text-white">TOGEL 05型</div>
-              <div className="text-pink-500 font-black text-4xl">情熱的リーダー</div>
+          <div className="grid gap-8 md:gap-12 md:grid-cols-2 md:items-center md:flex-row-reverse">
+            <div className="md:order-2 relative aspect-square w-full max-w-[300px] md:max-w-md mx-auto rounded-3xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 flex flex-col items-center justify-center shadow-2xl text-center">
+              <div className="text-7xl md:text-8xl mb-4">🐯</div>
+              <div className="text-xl md:text-2xl font-bold text-white">TOGEL 05型</div>
+              <div className="text-pink-500 font-black text-3xl md:text-4xl">情熱的リーダー</div>
             </div>
-            <div className="space-y-6 md:order-1">
+            <div className="space-y-4 md:space-y-6 md:order-1 text-center md:text-left flex flex-col items-center md:items-start">
               <div className="inline-block rounded-full bg-gray-900 px-4 py-1 text-sm font-bold text-gray-400 border border-gray-800">
                 STEP 02
               </div>
-              <h2 className="text-4xl font-black md:text-6xl">
+              <h2 className="text-3xl font-black md:text-6xl">
                 <span className="text-purple-500">24タイプ</span><br />
                 に分類。
               </h2>
-              <p className="text-xl text-gray-400 leading-relaxed">
-                診断結果から、あなたを24種類の「TOGEL型」に分類。<br />
-                自分でも気づいていなかった強みや弱み、相性の良いタイプが明確になります。
+              <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
+                診断結果から、あなたを<br className="inline md:hidden" />24種類の「TOGEL型」に分類。<br />
+                自分でも気づいていなかった強みや弱み、<br className="inline md:hidden" />相性の良いタイプが明確になります。
               </p>
             </div>
           </div>
@@ -101,10 +101,10 @@ export default function AboutPage() {
       </section>
 
       {/* Step 3: Matching */}
-      <section className="relative py-24 md:py-32">
+      <section className="relative py-16 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="grid gap-12 md:grid-cols-2 md:items-center">
-            <div className="relative w-full max-w-md mx-auto">
+          <div className="grid gap-8 md:gap-12 md:grid-cols-2 md:items-center">
+            <div className="relative w-full max-w-[300px] md:max-w-md mx-auto">
               {/* Card Stack Effect */}
               <div className="absolute top-0 left-0 w-full h-full bg-gray-800 rounded-3xl transform rotate-6 opacity-30"></div>
               <div className="absolute top-0 left-0 w-full h-full bg-gray-800 rounded-3xl transform -rotate-3 opacity-60"></div>
@@ -113,27 +113,27 @@ export default function AboutPage() {
                   <div className="text-4xl">👩</div>
                   <div className="text-3xl font-black text-pink-600">98%</div>
                 </div>
-                <h3 className="text-2xl font-bold">運命の相手候補</h3>
-                <p className="text-sm text-gray-600 mt-2">
+                <h3 className="text-xl md:text-2xl font-bold">運命の相手候補</h3>
+                <p className="text-xs md:text-sm text-gray-600 mt-2">
                   あなたのアクティブさと、相手の慎重さが完璧に補完し合う関係です。
                 </p>
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="text-xs font-bold text-gray-400 uppercase">ADVICE</div>
-                  <p className="font-bold mt-1">初デートは静かなカフェで☕️</p>
+                  <p className="font-bold mt-1 text-sm md:text-base">初デートは静かなカフェで☕️</p>
                 </div>
               </div>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6 text-center md:text-left flex flex-col items-center md:items-start">
               <div className="inline-block rounded-full bg-gray-900 px-4 py-1 text-sm font-bold text-gray-400 border border-gray-800">
                 STEP 03
               </div>
-              <h2 className="text-4xl font-black md:text-6xl">
+              <h2 className="text-3xl font-black md:text-6xl">
                 AIが<br />
                 <span className="text-blue-500">導き出す。</span>
               </h2>
-              <p className="text-xl text-gray-400 leading-relaxed">
+              <p className="text-lg md:text-xl text-gray-400 leading-relaxed">
                 相性の良い異性5名をピックアップ。<br />
-                単なるスコアだけでなく、「なぜ合うのか」「どんなデートをすべきか」まで具体的に提案します。
+                単なるスコアだけでなく、<br className="inline md:hidden" />「なぜ合うのか」「どんなデートをすべきか」まで<br className="inline md:hidden" />具体的に提案します。
               </p>
             </div>
           </div>
