@@ -126,19 +126,6 @@ const DistributionPage = async () => {
               </div>
             </div>
           </div>
-
-          {legacy.length > 0 && (
-            <div className="mt-20 border-t border-slate-100 pt-10 text-center">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">LEGACY DATA ARCHIVE</p>
-              <div className="inline-flex flex-wrap justify-center gap-2">
-                {legacy.map((item) => (
-                  <span key={item.label} className="px-3 py-1 rounded-md bg-slate-100 text-xs font-medium text-slate-500">
-                    {item.label}: {item.count}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
