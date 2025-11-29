@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion"; // アニメーション用（もし入っていなければCSSでやるが、Next.jsならframer-motion入れたい）
 
 // Framer Motionが入っていない可能性が高いので、一旦標準のCSS/Tailwindアニメーションと
 // スクロールスナップなどを活用した実装にします。
