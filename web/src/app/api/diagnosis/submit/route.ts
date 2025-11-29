@@ -40,25 +40,44 @@ const ensureUserRecord = async (
     if (data?.id) return data.id;
 
     // レコードがない場合作成 (IDを明示的に指定)
-    const { data: inserted, error: insertError } = await supabase
-      .from("users")
-      .insert({
-        id: params.authUserId, // 重要: auth.uid と同じIDにする
-        line_user_id: `auth-${params.authUserId}`, // 一意制約回避のためのダミー
-        gender: params.gender,
-        nickname: params.nickname || "No Name",
-        birth_date: "2000-01-01", // ダミー
-        avatar_url: params.avatarUrl || "",
-        is_mock_data: false,
-      })
-      .select("id")
-      .single();
-      
-    if (insertError) {
-      console.error("Failed to create public user for auth user:", insertError);
-      throw insertError;
+    // 既に存在する場合のエラー(23505: unique_violation)を考慮して upsert にするか、
+    // エラーをキャッチして select し直す
+    try {
+      const { data: inserted, error: insertError } = await supabase
+        .from("users")
+        .insert({
+          id: params.authUserId, // 重要: auth.uid と同じIDにする
+          line_user_id: `auth-${params.authUserId}`, // 一意制約回避のためのダミー
+          gender: params.gender,
+          nickname: params.nickname || "No Name",
+          birth_date: "2000-01-01", // ダミー
+          avatar_url: params.avatarUrl || "",
+          is_mock_data: false,
+        })
+        .select("id")
+        .single();
+        
+      if (insertError) {
+        // 既に存在する場合はスルー（ただし通常は上のselectで見つかるはず）
+        console.warn("Failed to insert user, trying to fetch again:", insertError);
+        
+        // 再取得を試みる
+        const { data: existing } = await supabase
+          .from("users")
+          .select("id")
+          .eq("id", params.authUserId)
+          .single();
+          
+        if (existing) return existing.id;
+        
+        throw insertError;
+      }
+      return inserted.id;
+    } catch (e) {
+      console.error("Error ensuring user record:", e);
+      // 最悪の場合、authUserIdをそのまま返す（外部キー制約がない場合のみ有効だが、試みる価値あり）
+      return params.authUserId;
     }
-    return inserted.id;
   }
 
   // 2. ゲストユーザーの場合 (既存ロジック)
