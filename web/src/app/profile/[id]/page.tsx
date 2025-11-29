@@ -107,7 +107,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
 
   // TODO: Estimate scores from real data (e.g. diagnosis history)
   // For now, generate pseudo-scores based on ID hash to be consistent
-  const profileScores = estimateProfileScores({ id: profile.id, ...profile } as any);
+  const profileScores = estimateProfileScores({ ...profile } as any);
   const personalityType = determinePersonalityType(profileScores);
   const togelLabel = getTogelLabel(personalityType.id);
 
