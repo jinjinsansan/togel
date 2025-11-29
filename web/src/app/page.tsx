@@ -3,27 +3,26 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFD1DC]">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* 1. Video Background */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover z-0"
       >
         <source src="/hero-movie-v2.mp4" type="video/mp4" />
       </video>
 
-      {/* 2. Pink Overlay (Multiply) - Removed for white background */}
-      {/* <div className="pointer-events-none absolute inset-0 z-0 bg-primary mix-blend-multiply" /> */}
-
-      {/* 3. Content Mask Layer (Pink Background + Screen Blend) */}
-      {/* Using mix-blend-screen with a color on top of video creates the "cutout" text effect */}
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#FFD1DC] mix-blend-screen">
+      {/* 2. Pink Background Layer with Cutout Text */}
+      {/* isolate creates a stacking context. The background color is at the bottom of this context. */}
+      {/* mix-blend-destination-out on the text cuts a hole through this background. */}
+      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center isolate bg-[#FFD1DC]">
         <div className="container flex flex-col items-center gap-12 py-24 text-center">
-          {/* Title Block (VISIBLE) */}
-          <div className="flex flex-col items-center">
+          
+          {/* Title Block - Cuts through the pink background */}
+          <div className="flex flex-col items-center mix-blend-destination-out">
             <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-black">
               Togel
             </h1>
@@ -32,34 +31,8 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Description & Button SPACER (INVISIBLE) - Keeps layout identical to foreground */}
-          <div className="flex flex-col items-center gap-8 opacity-0">
-             <p className="text-lg md:text-xl font-medium tracking-wide">
-              あなたの本音と相性が一瞬でわかる、<br className="md:hidden" />24タイプ性格診断。
-            </p>
-            <Button size="lg" className="h-16 px-12 text-xl">
-              LINEで始める
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Foreground Content Layer (Normal Blend) - Stays Pink */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none mix-blend-normal">
-        <div className="container flex flex-col items-center gap-12 py-24 text-center">
-          {/* Title Block (VISIBLE with Stroke) */}
-          <div className="flex flex-col items-center">
-            {/* Text is transparent to show video through from underlying layers, but stroke is visible */}
-            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-transparent [-webkit-text-stroke:1px_#E91E63]">
-              Togel
-            </h1>
-            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-transparent [-webkit-text-stroke:0.5px_#E91E63]">
-              トゥゲル
-            </p>
-          </div>
-          
-          {/* Description & Button (VISIBLE) */}
-          <div className="flex flex-col items-center gap-8 pointer-events-auto">
+          {/* Description & Button - Normal rendering on top of pink background */}
+          <div className="flex flex-col items-center gap-8">
              <p className="text-lg md:text-xl text-[#E91E63] font-medium tracking-wide">
               あなたの本音と相性が一瞬でわかる、<br className="md:hidden" />24タイプ性格診断。
             </p>
