@@ -91,11 +91,11 @@ export const SiteHeader = () => {
             />
 
             {/* メニュー本体 */}
-            <div className="absolute top-16 right-0 bottom-0 w-[85vw] max-w-sm bg-white/80 backdrop-blur-xl border-l border-white/20 shadow-2xl animate-slide-in-right flex flex-col">
+            <div className="absolute top-16 right-0 bottom-0 w-[85vw] max-w-sm bg-zinc-950/90 backdrop-blur-xl border-l border-white/10 shadow-2xl animate-slide-in-right flex flex-col">
               {/* 装飾的な背景グラデーション */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[20%] -right-[20%] w-[150%] h-[50%] bg-gradient-to-b from-[#E91E63]/10 to-transparent blur-3xl rounded-full" />
-                <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#E91E63]/5 to-transparent" />
+                <div className="absolute -top-[20%] -right-[20%] w-[150%] h-[50%] bg-gradient-to-b from-[#E91E63]/20 to-transparent blur-3xl rounded-full" />
+                <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#E91E63]/10 to-transparent" />
               </div>
 
               <div className="relative z-10 flex flex-col h-full px-6 pt-8 pb-10">
@@ -103,22 +103,22 @@ export const SiteHeader = () => {
                   id="mobile-nav-panel"
                   className="flex flex-col gap-2"
                 >
-                  <p className="text-xs font-bold text-muted-foreground/50 tracking-widest mb-4 px-4">MENU</p>
+                  <p className="text-xs font-bold text-white/40 tracking-widest mb-4 px-4">MENU</p>
                   {navItems.map((item, index) => (
                     <Link
                       key={item.href}
                       href={item.href}
                       ref={index === 0 ? firstNavLinkRef : undefined}
-                      className="group relative flex items-center py-4 px-4 rounded-xl hover:bg-white/50 transition-all active:scale-[0.98]"
+                      className="group relative flex items-center py-4 px-4 rounded-xl hover:bg-white/5 transition-all active:scale-[0.98]"
                       onClick={closeMenu}
                       style={{
                         animation: `fade-in-up 0.5s ease-out ${index * 0.05}s backwards`
                       }}
                     >
-                      <span className="text-lg font-bold text-slate-800 group-hover:text-[#E91E63] transition-colors">
+                      <span className="text-lg font-bold text-white group-hover:text-[#E91E63] transition-colors">
                         {item.label}
                       </span>
-                      <span className="ml-auto text-slate-300 group-hover:text-[#E91E63]/30 group-hover:translate-x-1 transition-all">
+                      <span className="ml-auto text-white/30 group-hover:text-[#E91E63] group-hover:translate-x-1 transition-all">
                         →
                       </span>
                     </Link>
@@ -126,7 +126,7 @@ export const SiteHeader = () => {
                 </nav>
 
                 <div className="mt-auto space-y-6">
-                  <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   
                   <div className="px-2">
                     <Button
@@ -137,7 +137,7 @@ export const SiteHeader = () => {
                         今すぐ診断する
                       </Link>
                     </Button>
-                    <p className="mt-3 text-center text-xs text-slate-400">
+                    <p className="mt-3 text-center text-xs text-white/40">
                       会員登録なしで診断できます
                     </p>
                   </div>
