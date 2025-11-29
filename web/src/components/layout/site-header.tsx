@@ -8,12 +8,12 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/diagnosis/select", label: "診断" },
-  { href: "/result", label: "マッチング" },
-  { href: "/types", label: "Togel一覧" },
-  { href: "/types/distribution", label: "Togel分布" },
-  { href: "/mypage", label: "マイページ" },
-  { href: "/settings", label: "設定" },
+  { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
+  { href: "/result", label: "マッチング", en: "Matching" },
+  { href: "/types", label: "Togel一覧", en: "Types" },
+  { href: "/types/distribution", label: "Togel分布", en: "Distribution" },
+  { href: "/mypage", label: "マイページ", en: "My Page" },
+  { href: "/settings", label: "設定", en: "Settings" },
 ];
 
 export const SiteHeader = () => {
@@ -79,41 +79,42 @@ export const SiteHeader = () => {
     isBrowser && isOpen
       ? createPortal(
           <div
-            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-white md:hidden"
+            className="mobile-nav-overlay fixed inset-0 top-16 z-[14000] bg-white/90 backdrop-blur-md md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="ナビゲーションメニュー"
             onClick={closeMenu}
-            style={{ backgroundColor: '#FFFFFF', top: '64px' }}
+            style={{ top: '64px' }}
           >
-            <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
-            <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
-            <div className="absolute inset-0 bg-white opacity-100" aria-hidden="true" style={{ backgroundColor: '#FFFFFF' }} />
             <div
-              className="relative z-10 flex h-full flex-col bg-white pb-12 pt-8"
+              className="relative z-10 flex h-full flex-col pb-12 pt-8"
               onClick={(event) => event.stopPropagation()}
-              style={{ backgroundColor: '#FFFFFF' }}
             >
               {/* Nav Content */}
               <div className="flex flex-1 flex-col overflow-y-auto px-6">
                 <nav
                   id="mobile-nav-panel"
-                  className="flex flex-col items-center justify-center gap-8 text-center"
+                  className="flex flex-col items-start justify-center gap-10 pl-8"
                 >
                   {navItems.map((item, index) => (
                     <Link
                       key={item.href}
                       href={item.href}
                       ref={index === 0 ? firstNavLinkRef : undefined}
-                      className="font-heading text-lg font-medium tracking-wide text-[#E91E63] transition-colors hover:text-[#d81b60] py-2"
+                      className="group flex flex-col items-start"
                       onClick={closeMenu}
                     >
-                      {item.label}
+                      <span className="font-heading text-3xl font-bold tracking-tight text-[#E91E63] transition-colors group-hover:text-[#d81b60]">
+                        {item.en}
+                      </span>
+                      <span className="text-sm font-medium text-[#E91E63]/70 group-hover:text-[#d81b60]/80">
+                        {item.label}
+                      </span>
                     </Link>
                   ))}
                 </nav>
 
-                <div className="mt-auto flex flex-col gap-4 pt-12 pb-8">
+                <div className="mt-auto flex flex-col gap-4 pt-12 pb-8 px-4">
                   <Button
                     className="h-14 w-full rounded-full bg-[#E91E63] text-lg font-bold text-white shadow-lg hover:bg-[#c2185b]"
                     asChild
