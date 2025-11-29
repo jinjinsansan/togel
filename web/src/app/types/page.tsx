@@ -52,15 +52,41 @@ const TypeListPage = () => {
         setTimeout(() => {
           const element = document.getElementById(`type-${id}`);
           if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "start" });
+            const headerOffset = 80; // sticky header height + margin
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: "smooth"
+            });
           }
-        }, 100);
+        }, 300);
       }
     }
   }, []);
 
   const toggleOpen = (id: string) => {
-    setOpenId((prev) => (prev === id ? null : id));
+    setOpenId((prev) => {
+      if (prev === id) return null;
+      
+      // 新しく開く場合はスクロール位置を調整
+      setTimeout(() => {
+        const element = document.getElementById(`type-${id}`);
+        if (element) {
+          const headerOffset = 80;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      }, 100);
+      
+      return id;
+    });
   };
 
   return (
@@ -89,7 +115,7 @@ const TypeListPage = () => {
             <div 
               key={type.id} 
               id={`type-${type.id}`}
-              className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-2xl"
+              className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-2xl scroll-mt-24"
             >
               {/* カードヘッダー */}
               <div className="relative p-6 pb-0">
