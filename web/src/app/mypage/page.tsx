@@ -170,7 +170,7 @@ export default function MyPage() {
                 <p className="text-xs text-slate-400 mt-1">
                   ※男性会員かつプロフィールを<br/>すべて入力した方のみ発行可能です
                 </p>
-                <Button variant="link" asChild className="mt-2 h-auto p-0 text-[#E91E63]">
+                <Button variant="ghost" asChild className="mt-2 h-auto p-0 text-[#E91E63] hover:underline">
                   <Link href="/diagnosis/select">診断を受けてプロフィールを作成</Link>
                 </Button>
               </div>
