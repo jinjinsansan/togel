@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, Heart, Skull } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -66,28 +66,30 @@ const TypeListPage = () => {
     }
   }, []);
 
-  const toggleOpen = (id: string) => {
+  const toggleOpen = useCallback((id: string) => {
     setOpenId((prev) => {
-      if (prev === id) return null;
+      const newId = prev === id ? null : id;
       
-      // 新しく開く場合はスクロール位置を調整
-      setTimeout(() => {
-        const element = document.getElementById(`type-${id}`);
-        if (element) {
-          const headerOffset = 80;
-          const elementPosition = element.getBoundingClientRect().top;
-          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-          
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth"
-          });
-        }
-      }, 100);
+      // 新しく開く場合のみスクロール位置を調整
+      if (newId) {
+        setTimeout(() => {
+          const element = document.getElementById(`type-${id}`);
+          if (element) {
+            const headerOffset = 80;
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: "smooth"
+            });
+          }
+        }, 100);
+      }
       
-      return id;
+      return newId;
     });
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12">
@@ -110,13 +112,15 @@ const TypeListPage = () => {
         </div>
 
         {/* タイプ一覧 */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
-          {(personalityTypes as ExtendedPersonalityTypeDefinition[]).map((type) => (
-            <div 
-              key={type.id} 
-              id={`type-${type.id}`}
-              className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-2xl scroll-mt-24"
-            >
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto items-start">
+          {(personalityTypes as ExtendedPersonalityTypeDefinition[]).map((type) => {
+            const isOpen = openId === type.id;
+            return (
+              <div 
+                key={type.id} 
+                id={`type-${type.id}`}
+                className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-2xl scroll-mt-24"
+              >
               {/* カードヘッダー */}
               <div className="relative p-6 pb-0">
                 <div className="flex items-start justify-between mb-2">
@@ -149,12 +153,20 @@ const TypeListPage = () => {
                   onClick={() => toggleOpen(type.id)}
                   className="flex w-full items-center justify-center gap-2 border-t border-slate-100 bg-slate-50/50 p-4 text-sm font-bold text-slate-500 transition-colors hover:bg-slate-100 hover:text-[#E91E63]"
                 >
-                  <span>{openId === type.id ? "閉じる" : "詳細・相性を見る"}</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${openId === type.id ? "rotate-180" : ""}`} />
+                  <span>{isOpen ? "閉じる" : "詳細・相性を見る"}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                 </button>
 
-                {openId === type.id && (
-                  <div className="border-t border-slate-100 bg-slate-50/30 p-6 animate-fade-in-up">
+                <div 
+                  className={`border-t border-slate-100 bg-slate-50/30 overflow-hidden transition-all duration-300 ease-in-out ${
+                    isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                  style={{ 
+                    transitionProperty: "max-height, opacity",
+                    willChange: isOpen ? "max-height, opacity" : "auto"
+                  }}
+                >
+                  <div className="p-6">
                     {/* 強みと弱み */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <div>
@@ -205,10 +217,11 @@ const TypeListPage = () => {
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
     </div>
