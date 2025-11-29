@@ -16,6 +16,7 @@ const navItems = [
   { href: "/result", label: "マッチング結果", en: "Matching" },
   { href: "/types", label: "型一覧", en: "Types" },
   { href: "/types/distribution", label: "分布図", en: "Distribution" },
+  { href: "/profile/edit", label: "プロフィール編集", en: "Profile" },
   { href: "/mypage", label: "マイページ", en: "My Page" },
 ];
 
