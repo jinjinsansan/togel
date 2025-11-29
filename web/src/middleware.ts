@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Protected routes
-  const protectedRoutes = ["/mypage", "/settings", "/admin"];
+  const protectedRoutes = ["/mypage", "/admin"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     req.nextUrl.pathname.startsWith(route)
   );

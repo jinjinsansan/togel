@@ -13,11 +13,10 @@ import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
-  { href: "/result", label: "マッチング", en: "Matching" },
+  { href: "/result", label: "マッチング結果", en: "Matching" },
   { href: "/types", label: "型一覧", en: "Types" },
   { href: "/types/distribution", label: "分布図", en: "Distribution" },
   { href: "/mypage", label: "マイページ", en: "My Page" },
-  { href: "/settings", label: "設定", en: "Settings" },
 ];
 
 const ADMIN_EMAILS = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
