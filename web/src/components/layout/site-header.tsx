@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
+  { href: "/about", label: "使い方", en: "How to Use" },
   { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
   { href: "/result", label: "マッチング", en: "Matching" },
   { href: "/types", label: "Togel一覧", en: "Types" },
