@@ -20,6 +20,8 @@ const navItems = [
   { href: "/settings", label: "設定", en: "Settings" },
 ];
 
+const ADMIN_EMAILS = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
+
 export const SiteHeader = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +29,7 @@ export const SiteHeader = () => {
   const isBrowser = typeof document !== "undefined";
   const supabase = createClientComponentClient();
   const router = useRouter();
+  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -163,6 +166,16 @@ export const SiteHeader = () => {
                       <LoginButton />
                     ) : (
                       <div className="flex flex-col gap-3">
+                        {isAdmin && (
+                          <Button
+                            className="h-14 w-full rounded-xl border-2 border-slate-800 bg-transparent text-lg font-bold text-slate-800 shadow-none hover:bg-slate-100"
+                            asChild
+                          >
+                            <Link href="/admin" onClick={closeMenu}>
+                              管理者パネル
+                            </Link>
+                          </Button>
+                        )}
                         <Button
                           className="h-14 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-lg font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
                           asChild
@@ -221,6 +234,15 @@ export const SiteHeader = () => {
                 <LoginButton />
               ) : (
                 <>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      asChild
+                      className="border-slate-800 text-slate-800 hover:bg-slate-100"
+                    >
+                      <Link href="/admin">管理者パネル</Link>
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     asChild
