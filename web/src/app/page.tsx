@@ -76,9 +76,8 @@ export default function Home() {
           
           {/* Description & Button SPACER (INVISIBLE) */}
           <div className="flex flex-col items-center gap-8 opacity-0">
-             <p className="text-xl md:text-3xl font-bold tracking-wide leading-relaxed">
-              あなたの本音と相性が一瞬でわかる<br />
-              24タイプTogel型診断+AIマッチング
+             <p className="text-lg md:text-xl text-[#E91E63] font-medium tracking-wide">
+              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
             </p>
             <Button size="lg" className="h-16 rounded-full px-12 text-xl">
               LINEで始める
@@ -102,14 +101,13 @@ export default function Home() {
 
           {/* Visible Description & Button */}
           <div className="flex flex-col items-center gap-8 pointer-events-auto">
-             <p className="text-xl md:text-3xl text-[#E91E63] font-bold tracking-wide drop-shadow-sm leading-relaxed">
-              あなたの本音と相性が一瞬でわかる<br />
-              24タイプTogel型診断+AIマッチング
+             <p className="text-lg md:text-xl text-[#E91E63] font-bold tracking-wide drop-shadow-sm">
+              あなたの本音と相性が一瞬でわかる　<br className="md:hidden" />24タイプTogel型診断+AIマッチング
             </p>
 
             <Button
               size="lg"
-              className="h-16 rounded-full bg-[#06C755] px-12 text-xl font-bold text-white hover:bg-[#05b34c] shadow-xl transition-all hover:scale-105"
+              className="h-16 rounded-full bg-white px-12 text-xl font-bold text-[#E91E63] hover:bg-white/90 shadow-xl transition-all hover:scale-105"
               asChild
             >
               <Link href="/diagnosis/select">LINEで始める</Link>
