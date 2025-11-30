@@ -196,7 +196,7 @@ const loadRealProfiles = async (gender: Gender): Promise<MatchingProfile[]> => {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
       .from("users")
-      .select("id, nickname, gender, age, avatar_url, bio, job, favorite_things, hobbies, special_skills")
+      .select("id, nickname, gender, age, avatar_url, bio, job, favorite_things, hobbies, special_skills, created_at")
       .eq("gender", gender)
       .eq("is_mock_data", false)
       .order("created_at", { ascending: false })
