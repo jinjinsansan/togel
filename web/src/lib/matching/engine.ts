@@ -38,6 +38,7 @@ type TraitKey = keyof BigFiveScores;
 const TRAITS: TraitKey[] = ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"];
 
 const MAX_MOCK_PROFILES_PER_GENDER = 150;
+const MIN_REAL_MATCH_SCORE = 40;
 const fallbackAvatars: Record<Gender, string[]> = {
   male: [
     "https://images.unsplash.com/photo-1504595403659-9088ce801e29?auto=format&fit=crop&w=400&q=80",
@@ -992,11 +993,11 @@ export const generateMatchingResults = async (
     .slice(0, MAX_MOCK_PROFILES_PER_GENDER);
   const mockQuota = Math.max(MAX_MOCK_PROFILES_PER_GENDER - realProfiles.length, 0);
   const trimmedMockProfiles = filteredMockProfiles.slice(0, mockQuota);
-  const candidateProfiles = [...realProfiles, ...trimmedMockProfiles];
-  const basePool = candidateProfiles.length > 0 ? candidateProfiles : filteredMockProfiles;
-  const pool = basePool.map((profile, index) => ensureProfileAvatar(profile, index));
+  const realPool = realProfiles.map((profile, index) => ensureProfileAvatar(profile, index));
+  const mockPool = trimmedMockProfiles.map((profile, index) => ensureProfileAvatar(profile, realPool.length + index));
+  const fallbackPool = filteredMockProfiles.map((profile, index) => ensureProfileAvatar(profile, index));
 
-  const computed = pool.map((profile) => {
+  const scoreProfile = (profile: MatchingProfile): MatchingResult => {
     const profileScores = estimateProfileScores(profile);
     const profileType = determinePersonalityType(profileScores);
     const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
@@ -1043,15 +1044,35 @@ export const generateMatchingResults = async (
       relationshipPreview,
       firstDateSuggestion,
     } satisfies MatchingResult;
-  });
+  };
 
-  return computed
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map((item, index) => ({
-      ...item,
-      ranking: index + 1,
-    }));
+  const realResults = realPool.map(scoreProfile);
+  const mockResults = (mockPool.length > 0 ? mockPool : fallbackPool).map(scoreProfile);
+  const sortedReal = [...realResults].sort((a, b) => b.score - a.score);
+  const sortedMock = [...mockResults].sort((a, b) => b.score - a.score);
+  const prioritizedReal = sortedReal.filter((result) => result.score >= MIN_REAL_MATCH_SCORE);
+  const realSelection = prioritizedReal.length > 0 ? prioritizedReal : sortedReal;
+
+  const finalResults: MatchingResult[] = [];
+  for (const result of realSelection) {
+    if (finalResults.length >= 5) break;
+    finalResults.push(result);
+  }
+
+  if (finalResults.length < 5) {
+    for (const result of sortedMock) {
+      finalResults.push(result);
+      if (finalResults.length >= 5) break;
+    }
+  }
+
+  const fallbackResults = sortedMock.slice(0, 5);
+  const preparedResults = finalResults.length > 0 ? finalResults.slice(0, 5) : fallbackResults;
+
+  return preparedResults.map((item, index) => ({
+    ...item,
+    ranking: index + 1,
+  }));
 };
 
 export const generateDiagnosisResult = (
