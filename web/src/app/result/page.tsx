@@ -376,7 +376,6 @@ const ResultPage = () => {
   
   const displayResults = results.filter(r => {
     if (!hasPrank) return true;
-    // @ts-expect-error - isPrank is injected dynamically
     if (r.isPrank) return prankMode;
     return true;
   }).map((r, idx) => ({
