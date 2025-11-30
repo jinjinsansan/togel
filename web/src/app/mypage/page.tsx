@@ -21,6 +21,19 @@ type Notification = {
   metadata: any;
 };
 
+type UserProfile = {
+  id: string;
+  full_name: string;
+  gender: "male" | "female" | "other";
+  avatar_url: string;
+  job: string;
+  city: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  social_links?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  notification_settings?: any;
+};
+
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
