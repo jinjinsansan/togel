@@ -299,7 +299,12 @@ const MismatchResultPage = () => {
 
                 {/* アクションボタン */}
                 <div className="mt-6">
-                  <Button asChild className="w-full" size="lg" variant="outline">
+                  <Button
+                    asChild
+                    className="w-full text-[#E91E63] hover:text-[#F06292]"
+                    size="lg"
+                    variant="outline"
+                  >
                     <Link href={{ pathname: `/profile/${result.profile.id}`, query: { nickname: result.profile.nickname } }}>
                       プロフィール詳細を見る（自己責任） →
                     </Link>
