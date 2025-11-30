@@ -461,7 +461,7 @@ export default function MyPage() {
 
         {profile && (
           <section className="mb-12">
-            <div className="grid gap-4 md:gap-6 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
+            <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
               <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100/60 p-4 shadow-sm sm:p-6">
                 <div className="flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -550,7 +550,7 @@ export default function MyPage() {
           </div>
         </section>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           
           {/* 1. お知らせ受信箱 */}
           <div className="md:col-span-2 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
