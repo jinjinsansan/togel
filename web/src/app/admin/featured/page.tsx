@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Search, Star, Trash2 } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -43,11 +43,7 @@ export default function FeaturedAdminPage() {
 
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    fetchFeatured();
-  }, []);
-
-  const fetchFeatured = async () => {
+  const fetchFeatured = useCallback(async () => {
     setLoading(true);
     // Fetch featured users
     const { data: featured, error } = await supabase
@@ -62,23 +58,29 @@ export default function FeaturedAdminPage() {
       // because standard join might be tricky if foreign key relation name is not obvious or if RLS blocks
       const userIds = featured.map(f => f.user_id);
       if (userIds.length > 0) {
-         const { data: profiles } = await supabase
-           .from("profiles") // Assuming profiles view/table syncs with users
-           .select("id, full_name, avatar_url, gender, job") // Check exact columns
-           .in("id", userIds);
-         
-         // Map profiles to featured
-         const list = featured.map(f => ({
-           ...f,
-           user: profiles?.find(p => p.id === f.user_id)
-         }));
-         setFeaturedList(list);
+        const { data: profiles } = await supabase
+          .from("profiles") // Assuming profiles view/table syncs with users
+          .select("id, full_name, avatar_url, gender, job") // Check exact columns
+          .in("id", userIds);
+
+        // Map profiles to featured
+        const list = featured.map(f => ({
+          ...f,
+          user: profiles?.find(p => p.id === f.user_id)
+        }));
+        setFeaturedList(list);
       } else {
         setFeaturedList([]);
       }
     }
     setLoading(false);
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    void (async () => {
+      await fetchFeatured();
+    })();
+  }, [fetchFeatured]);
 
   const handleSearch = async () => {
     if (!searchTerm) return;
@@ -87,12 +89,16 @@ export default function FeaturedAdminPage() {
     // Search in profiles table
     // Note: Depending on table structure. If 'nickname' is in public.users and 'full_name' in public.profiles
     // Let's assume public.profiles has full_name
-    const { data, error } = await supabase
+    const { data, error: searchError } = await supabase
       .from("profiles")
       .select("id, full_name, avatar_url, gender, job")
       .ilike("full_name", `%${searchTerm}%`)
       .limit(10);
       
+    if (searchError) {
+      console.error(searchError);
+    }
+
     if (data) {
       setSearchResults(data as unknown as Profile[]);
     }
