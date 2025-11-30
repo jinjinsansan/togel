@@ -913,6 +913,71 @@ function generateConversationStarters(
 
 
 
+export const generateSingleMatchingResult = async (
+  payload: DiagnosisPayload,
+  targetUser: UserRow,
+): Promise<MatchingResult | null> => {
+  try {
+    const userScores = calculateBigFiveScores(payload.answers);
+    const userType = determinePersonalityType(userScores);
+
+    const profile = mapUserRowToProfile(targetUser, 9999); // 9999はdummy index
+    const ensureProfile = ensureProfileAvatar(profile, 9999);
+    
+    const profileScores = estimateProfileScores(ensureProfile);
+    const profileType = determinePersonalityType(profileScores);
+    const compatibility = calculate24TypeCompatibility(userType, userScores, profileScores, profileType);
+    
+    const personalizedInsights = generatePersonalizedInsights(userType, profileType, compatibility);
+    const highlights = generateMatchHighlights(userType, profileType, compatibility, userScores, profileScores);
+    const catchphrase = generateCatchphrase(userType, profileType, userScores, profileScores, compatibility.totalCompatibility, ensureProfile);
+    const dateIdea = generateDateIdea(userScores, profileScores, ensureProfile);
+    const commonalities = generateCommonalities(userScores, profileScores, ensureProfile);
+    const conversationStarters = generateConversationStarters(userScores, profileScores, ensureProfile);
+
+    const profileNarrative = generateProfilePersonality(ensureProfile, profileScores);
+    const matchingReasonData = generateMatchingReason(userScores, profileScores);
+    const relationshipPreview = generateRelationshipPreview(userScores, profileScores, ensureProfile);
+    const firstDateSuggestion = generateFirstDate(userScores, profileScores, ensureProfile);
+
+    return {
+      ranking: 0, // Special rank
+      score: compatibility.totalCompatibility,
+      profile: ensureProfile,
+      summary: compatibility.compatibilityReason,
+      highlights,
+      compatibility: {
+        personality: compatibility.personality,
+        valueAlignment: compatibility.valueAlignment,
+        communication: compatibility.communication,
+        total: compatibility.totalCompatibility,
+      },
+      compatibilityReason: compatibility.compatibilityReason,
+      personalityTypes: {
+        user: snapshotPersonalityType(userType),
+        profile: snapshotPersonalityType(profileType),
+      },
+      bigFiveScores: {
+        user: userScores,
+        profile: profileScores,
+      },
+      insights: personalizedInsights,
+      catchphrase,
+      dateIdea,
+      commonalities,
+      conversationStarters,
+      profileNarrative,
+      matchingReasons: matchingReasonData.reasons,
+      relationshipPreview,
+      firstDateSuggestion,
+    } satisfies MatchingResult;
+
+  } catch (error) {
+    console.error("Failed to generate single matching result", error);
+    return null;
+  }
+};
+
 export const generateMatchingResults = async (
   payload: DiagnosisPayload,
 ): Promise<MatchingResult[]> => {

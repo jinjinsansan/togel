@@ -31,6 +31,219 @@ type LatestDiagnosis = {
   };
 };
 
+// 追加: マッチングカードをコンポーネントとして分離
+const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; isFeatured?: boolean }) => {
+  return (
+    <div
+      className={`rounded-none md:rounded-3xl border-b-8 md:border-2 border-muted/20 md:border-border bg-white/95 px-5 py-8 md:p-6 shadow-none md:shadow-lg hover:shadow-xl transition-shadow ${
+        // @ts-expect-error - isPrank is dynamic
+        result.isPrank ? "ring-4 ring-[#E91E63]/30 border-[#E91E63]" : 
+        isFeatured ? "border-yellow-400 ring-4 ring-yellow-400/20" : ""
+      }`}
+    >
+      {/* ヘッダー */}
+      <div className="flex items-start justify-between pb-4 border-b border-border">
+        <div className="flex items-center gap-4">
+          <div className="relative h-24 w-24">
+            <Image
+              src={result.profile.avatarUrl}
+              alt={result.profile.nickname}
+              fill
+              sizes="96px"
+              className={`rounded-full border-4 ${isFeatured ? "border-yellow-400" : "border-primary/20"} object-cover`}
+              onError={(e: SyntheticEvent<HTMLImageElement>) => {
+                const target = e.currentTarget;
+                if (!target.src.includes("dicebear.com")) {
+                  target.src = buildFallbackAvatar(result.profile.id, result.profile.gender);
+                }
+              }}
+            />
+             {isFeatured && (
+               <div className="absolute -top-2 -right-2 bg-yellow-400 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                 PICK UP
+               </div>
+             )}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              {isFeatured ? (
+                 <span className="text-xl font-black text-yellow-500 flex items-center gap-1">
+                   <span className="text-2xl">✨</span> SPECIAL
+                 </span>
+              ) : (
+                 <span className="text-3xl font-black text-primary">#{result.ranking}</span>
+              )}
+              <span className="text-2xl font-bold">{result.profile.nickname}</span>
+              <span className="text-sm text-muted-foreground">{result.profile.age}歳</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-semibold">
+                {getTogelLabel(result.personalityTypes.profile.id)}
+              </span>
+              <span className="text-xs bg-muted px-3 py-1 rounded-full">{result.profile.job}</span>
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-4xl font-black text-primary">{result.compatibility.total}%</p>
+          <p className="text-xs text-muted-foreground">マッチ度</p>
+        </div>
+      </div>
+
+      {/* キャッチフレーズ */}
+      <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
+        <p className="text-base font-semibold text-foreground text-center">
+          {result.catchphrase}
+        </p>
+      </div>
+
+      {/* 👤 この人ってこんな人 */}
+      {result.profileNarrative && (
+        <div className="mt-4 rounded-2xl bg-blue-50 p-5">
+          <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
+            <span className="text-2xl">👤</span>
+            {result.profile.nickname}ってこんな人
+          </h4>
+          <ul className="space-y-2 text-sm">
+            {result.profileNarrative.personalityTraits.map((trait, idx) => (
+              <li key={idx}>• {trait}</li>
+            ))}
+          </ul>
+          
+          {result.profileNarrative.values.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-blue-200">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">こういう価値観</p>
+              <ul className="space-y-1 text-sm">
+                {result.profileNarrative.values.map((value, idx) => (
+                  <li key={idx}>✓ {value}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.profileNarrative.communicationStyle && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-muted-foreground">💬 話し方</p>
+              <p className="mt-1 text-sm">{result.profileNarrative.communicationStyle}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 🤖 なぜあなたとマッチ？ */}
+      {result.matchingReasons && result.matchingReasons.length > 0 && (
+        <div className="mt-4 rounded-2xl bg-purple-50 p-5">
+          <h4 className="flex items-center gap-2 text-lg font-bold mb-4">
+            <span className="text-2xl">🤖</span>
+            なぜあなたとマッチ？
+          </h4>
+          <div className="space-y-4">
+            {result.matchingReasons.map((reason, idx) => (
+              <div key={idx} className="rounded-xl bg-white/70 p-4">
+                <p className="font-bold text-base mb-2">{idx + 1}. {reason.title}</p>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>{reason.userTrait}</p>
+                  <p>{reason.profileTrait}</p>
+                </div>
+                <div className="mt-2 pl-4 border-l-4 border-primary/30">
+                  <p className="text-sm font-medium">💡 なぜ相性がいい？</p>
+                  <p className="mt-1 text-sm text-foreground">{reason.why}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 💭 付き合ったらこんな感じ */}
+      {result.relationshipPreview && (
+        <div className="mt-4 rounded-2xl bg-green-50 p-5">
+          <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
+            <span className="text-2xl">💭</span>
+            付き合ったらこんな感じ
+          </h4>
+          
+          {result.relationshipPreview.goodPoints.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-green-700 mb-2">✅ 良いところ</p>
+              <ul className="space-y-1 text-sm">
+                {result.relationshipPreview.goodPoints.map((point, idx) => (
+                  <li key={idx}>• {point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {result.relationshipPreview.warnings.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-green-200">
+              <p className="text-xs font-semibold text-orange-700 mb-2">⚠️ 気をつけること</p>
+              <ul className="space-y-1 text-sm">
+                {result.relationshipPreview.warnings.map((warning, idx) => (
+                  <li key={idx}>⚠️ {warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 💡 最初のデートはこれで */}
+      {result.firstDateSuggestion && (
+        <details className="group mt-4">
+          <summary className="cursor-pointer rounded-2xl bg-yellow-50 px-5 py-4 font-semibold hover:bg-yellow-100 transition-colors list-none flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <span className="text-2xl">💡</span>
+              最初のデート、どうする？
+            </span>
+            <span className="group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div className="mt-3 space-y-3">
+            {result.firstDateSuggestion.recommendations.length > 0 && (
+              <div className="rounded-xl bg-white/70 p-4">
+                <p className="text-sm font-bold text-muted-foreground mb-2">【おすすめ】</p>
+                {result.firstDateSuggestion.recommendations.map((rec, idx) => (
+                  <p key={idx} className="text-sm">{rec}</p>
+                ))}
+              </div>
+            )}
+
+            {result.firstDateSuggestion.conversationTopics.length > 0 && (
+              <div className="rounded-xl bg-white/70 p-4">
+                <p className="text-sm font-bold text-muted-foreground mb-2">💬 会話ネタ</p>
+                <ul className="space-y-1 text-sm">
+                  {result.firstDateSuggestion.conversationTopics.map((topic, idx) => (
+                    <li key={idx}>• {topic}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {result.firstDateSuggestion.ngActions.length > 0 && (
+              <div className="rounded-xl bg-red-50 p-4">
+                <p className="text-sm font-bold text-red-700 mb-2">🚫 絶対NG行動</p>
+                <ul className="space-y-1 text-sm">
+                  {result.firstDateSuggestion.ngActions.map((ng, idx) => (
+                    <li key={idx}>✗ {ng}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </details>
+      )}
+
+      {/* アクションボタン */}
+      <div className="mt-6">
+        <Button asChild className="w-full" size="lg">
+          <Link href={`/profile/${result.profile.id}`}>
+            プロフィール詳細を見る →
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const traitLabels: Record<keyof BigFiveScores, string> = {
   openness: "アイデア感度",
   conscientiousness: "計画遂行力",
@@ -75,6 +288,18 @@ const ResultPage = () => {
   const [loading, setLoading] = useState(false);
   const [prankMode, setPrankMode] = useState(true);
   const [hasPrank, setHasPrank] = useState(false);
+  
+  // PickUpユーザー
+  const [featuredResult, setFeaturedResult] = useState<MatchingResult | null>(() => {
+    if (typeof window === "undefined") return null;
+    const raw = sessionStorage.getItem("latestFeatured");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as MatchingResult;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +333,11 @@ const ResultPage = () => {
           setResults(data.results);
           setDiagnosis(data.diagnosis);
           
+          if (data.featuredResult) {
+            setFeaturedResult(data.featuredResult);
+            sessionStorage.setItem("latestFeatured", JSON.stringify(data.featuredResult));
+          }
+
           // Check for prank data
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const prankData = data.results.some((r: any) => r.isPrank);
@@ -306,203 +536,20 @@ const ResultPage = () => {
           )}
 
           {displayResults.map((result) => (
-            <div
-              key={result.profile.id}
-              className={`rounded-none md:rounded-3xl border-b-8 md:border-2 border-muted/20 md:border-border bg-white/95 px-5 py-8 md:p-6 shadow-none md:shadow-lg hover:shadow-xl transition-shadow ${
-                // @ts-expect-error - isPrank is dynamic
-                result.isPrank ? "ring-4 ring-[#E91E63]/30 border-[#E91E63]" : ""
-              }`}
-            >
-              {/* ヘッダー */}
-              <div className="flex items-start justify-between pb-4 border-b border-border">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-24 w-24">
-                    <Image
-                      src={result.profile.avatarUrl}
-                      alt={result.profile.nickname}
-                      fill
-                      sizes="96px"
-                      className="rounded-full border-4 border-primary/20 object-cover"
-                      onError={(e: SyntheticEvent<HTMLImageElement>) => {
-                        const target = e.currentTarget;
-                        if (!target.src.includes("dicebear.com")) {
-                          target.src = buildFallbackAvatar(result.profile.id, result.profile.gender);
-                        }
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-3xl font-black text-primary">#{result.ranking}</span>
-                      <span className="text-2xl font-bold">{result.profile.nickname}</span>
-                      <span className="text-sm text-muted-foreground">{result.profile.age}歳</span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-semibold">
-                        {getTogelLabel(result.personalityTypes.profile.id)}
-                      </span>
-                      <span className="text-xs bg-muted px-3 py-1 rounded-full">{result.profile.job}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-4xl font-black text-primary">{result.compatibility.total}%</p>
-                  <p className="text-xs text-muted-foreground">マッチ度</p>
-                </div>
-              </div>
-
-              {/* キャッチフレーズ */}
-              <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
-                <p className="text-base font-semibold text-foreground text-center">
-                  {result.catchphrase}
-                </p>
-              </div>
-
-              {/* 👤 この人ってこんな人 */}
-              {result.profileNarrative && (
-                <div className="mt-4 rounded-2xl bg-blue-50 p-5">
-                  <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
-                    <span className="text-2xl">👤</span>
-                    {result.profile.nickname}ってこんな人
-                  </h4>
-                  <ul className="space-y-2 text-sm">
-                    {result.profileNarrative.personalityTraits.map((trait, idx) => (
-                      <li key={idx}>• {trait}</li>
-                    ))}
-                  </ul>
-                  
-                  {result.profileNarrative.values.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-blue-200">
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">こういう価値観</p>
-                      <ul className="space-y-1 text-sm">
-                        {result.profileNarrative.values.map((value, idx) => (
-                          <li key={idx}>✓ {value}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {result.profileNarrative.communicationStyle && (
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold text-muted-foreground">💬 話し方</p>
-                      <p className="mt-1 text-sm">{result.profileNarrative.communicationStyle}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* 🤖 なぜあなたとマッチ？ */}
-              {result.matchingReasons && result.matchingReasons.length > 0 && (
-                <div className="mt-4 rounded-2xl bg-purple-50 p-5">
-                  <h4 className="flex items-center gap-2 text-lg font-bold mb-4">
-                    <span className="text-2xl">🤖</span>
-                    なぜあなたとマッチ？
-                  </h4>
-                  <div className="space-y-4">
-                    {result.matchingReasons.map((reason, idx) => (
-                      <div key={idx} className="rounded-xl bg-white/70 p-4">
-                        <p className="font-bold text-base mb-2">{idx + 1}. {reason.title}</p>
-                        <div className="space-y-1 text-sm text-muted-foreground">
-                          <p>{reason.userTrait}</p>
-                          <p>{reason.profileTrait}</p>
-                        </div>
-                        <div className="mt-2 pl-4 border-l-4 border-primary/30">
-                          <p className="text-sm font-medium">💡 なぜ相性がいい？</p>
-                          <p className="mt-1 text-sm text-foreground">{reason.why}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 💭 付き合ったらこんな感じ */}
-              {result.relationshipPreview && (
-                <div className="mt-4 rounded-2xl bg-green-50 p-5">
-                  <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
-                    <span className="text-2xl">💭</span>
-                    付き合ったらこんな感じ
-                  </h4>
-                  
-                  {result.relationshipPreview.goodPoints.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-green-700 mb-2">✅ 良いところ</p>
-                      <ul className="space-y-1 text-sm">
-                        {result.relationshipPreview.goodPoints.map((point, idx) => (
-                          <li key={idx}>• {point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {result.relationshipPreview.warnings.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-green-200">
-                      <p className="text-xs font-semibold text-orange-700 mb-2">⚠️ 気をつけること</p>
-                      <ul className="space-y-1 text-sm">
-                        {result.relationshipPreview.warnings.map((warning, idx) => (
-                          <li key={idx}>⚠️ {warning}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* 💡 最初のデートはこれで */}
-              {result.firstDateSuggestion && (
-                <details className="group mt-4">
-                  <summary className="cursor-pointer rounded-2xl bg-yellow-50 px-5 py-4 font-semibold hover:bg-yellow-100 transition-colors list-none flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <span className="text-2xl">💡</span>
-                      最初のデート、どうする？
-                    </span>
-                    <span className="group-open:rotate-180 transition-transform">▼</span>
-                  </summary>
-                  <div className="mt-3 space-y-3">
-                    {result.firstDateSuggestion.recommendations.length > 0 && (
-                      <div className="rounded-xl bg-white/70 p-4">
-                        <p className="text-sm font-bold text-muted-foreground mb-2">【おすすめ】</p>
-                        {result.firstDateSuggestion.recommendations.map((rec, idx) => (
-                          <p key={idx} className="text-sm">{rec}</p>
-                        ))}
-                      </div>
-                    )}
-
-                    {result.firstDateSuggestion.conversationTopics.length > 0 && (
-                      <div className="rounded-xl bg-white/70 p-4">
-                        <p className="text-sm font-bold text-muted-foreground mb-2">💬 会話ネタ</p>
-                        <ul className="space-y-1 text-sm">
-                          {result.firstDateSuggestion.conversationTopics.map((topic, idx) => (
-                            <li key={idx}>• {topic}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {result.firstDateSuggestion.ngActions.length > 0 && (
-                      <div className="rounded-xl bg-red-50 p-4">
-                        <p className="text-sm font-bold text-red-700 mb-2">🚫 絶対NG行動</p>
-                        <ul className="space-y-1 text-sm">
-                          {result.firstDateSuggestion.ngActions.map((ng, idx) => (
-                            <li key={idx}>✗ {ng}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </details>
-              )}
-
-              {/* アクションボタン */}
-              <div className="mt-6">
-                <Button asChild className="w-full" size="lg">
-                  <Link href={`/profile/${result.profile.id}`}>
-                    プロフィール詳細を見る →
-                  </Link>
-                </Button>
-              </div>
-            </div>
+            <MatchingCard key={result.profile.id} result={result} />
           ))}
+
+          {/* PickUp ユーザー (5位の下) */}
+          {featuredResult && (
+             <div className="mt-12">
+               <div className="flex items-center gap-3 mb-4 justify-center md:justify-start">
+                 <span className="text-2xl animate-pulse">✨</span>
+                 <h3 className="font-bold text-xl text-slate-700">Special Pick Up</h3>
+                 <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded border border-yellow-200">期間限定</span>
+               </div>
+               <MatchingCard result={featuredResult} isFeatured={true} />
+             </div>
+          )}
         </div>
 
         {/* 下部ミスマッチ結果リンク */}

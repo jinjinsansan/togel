@@ -129,6 +129,8 @@ export type MatchingResult = {
   profile: MatchingProfile;
   summary: string;
   highlights: string[];
+  isPrank?: boolean;
+  isFeatured?: boolean;
   compatibility: CompatibilityBreakdown;
   compatibilityReason: string;
   personalityTypes: {

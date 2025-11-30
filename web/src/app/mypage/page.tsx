@@ -264,8 +264,8 @@ export default function MyPage() {
             </div>
             <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 mb-4">
               <div>
-                <p className="font-bold text-slate-700">運命の通知を受け取る</p>
-                <p className="text-xs text-slate-500 mt-1">相性の良い相手が見つかった際に通知</p>
+                <p className="font-bold text-slate-700">運営からのお知らせ通知</p>
+                <p className="text-xs text-slate-500 mt-1">サービスに関するお知らせや情報を受け取る</p>
               </div>
               <Switch checked={newsletterEnabled} onCheckedChange={(c) => handleNotificationSettingToggle("newsletter", c)} />
             </div>

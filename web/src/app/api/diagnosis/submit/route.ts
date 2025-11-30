@@ -3,9 +3,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateMatchingResults, generateMismatchingResults, generateDiagnosisResult } from "@/lib/matching/engine";
+import { generateMatchingResults, generateMismatchingResults, generateDiagnosisResult, generateSingleMatchingResult } from "@/lib/matching/engine";
 import { getTogelLabel } from "@/lib/personality";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { MatchingResult } from "@/types/diagnosis";
 
 const schema = z.object({
   diagnosisType: z.enum(["light", "full"]),
@@ -207,6 +208,35 @@ export const POST = async (request: Request) => {
 
     const results = await generateMatchingResults(parsed.data);
     const mismatchResults = await generateMismatchingResults(parsed.data);
+    
+    let featuredResult: MatchingResult | null = null;
+
+    // 広告/ピックアップユーザーの挿入
+    try {
+      // 現在有効なピックアップユーザーを取得
+      const now = new Date().toISOString();
+      const { data: featured } = await supabaseAdmin
+        .from("featured_users")
+        .select("*, users!inner(*)")
+        .eq("active", true)
+        .or(`target_gender.eq.all,target_gender.eq.${parsed.data.userGender === 'male' ? 'male' : 'female'}`)
+        .lte("start_at", now)
+        .gte("end_at", now)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (featured && featured.users) {
+         // 単体マッチング生成 (engine.tsに新規追加する関数を使用)
+         // Note: generateSingleMatchingResultの実装が必要
+         const result = await generateSingleMatchingResult(parsed.data, featured.users);
+         if (result) {
+           featuredResult = { ...result, isFeatured: true };
+         }
+      }
+    } catch (e) {
+      console.error("Failed to fetch featured user", e);
+    }
 
     if (insertResult) {
       const { error: cacheError } = await supabaseAdmin.from("matching_cache").insert({
@@ -262,6 +292,7 @@ export const POST = async (request: Request) => {
 
     return NextResponse.json({
       results,
+      featuredResult,
       mismatchResults,
       diagnosis: diagnosisResult,
     });
