@@ -140,12 +140,12 @@ export default function FeaturedAdminPage() {
   };
 
   return (
-    <div className="container py-10 max-w-4xl">
+    <div className="container max-w-5xl">
       <h1 className="text-2xl font-bold mb-8 flex items-center gap-2">
-        <Star className="text-yellow-500" /> PickUp ユーザー管理
+        PickUp ユーザー管理
       </h1>
 
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid lg:grid-cols-2 gap-8">
         {/* 左側: 新規登録 */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-xl border shadow-sm">

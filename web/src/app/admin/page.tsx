@@ -2,10 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import Link from "next/link";
-import { Mail, Star } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 
 type Profile = {
   id: string;
@@ -21,11 +17,6 @@ export default function AdminPage() {
 
   useEffect(() => {
     const fetchProfiles = async () => {
-      // Note: By default, RLS policies might prevent reading all profiles.
-      // You need to ensure you have an RLS policy on 'profiles' table that allows the admin to read all.
-      // OR use a service role key in an API route (safer).
-      // For this client-side demo, we assume policy allows it or we handle it.
-      
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -43,59 +34,48 @@ export default function AdminPage() {
   }, [supabase]);
 
   return (
-    <div className="container py-10">
-      <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">ダッシュボード</h1>
       
-      <div className="mb-8 p-4 border rounded-lg bg-slate-50 flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Dashboard</h2>
-          <p>Total Users: {loading ? "..." : profiles.length}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-xl border shadow-sm">
+          <h2 className="text-sm font-medium text-slate-500 mb-2">総ユーザー数</h2>
+          <p className="text-3xl font-black text-slate-900">{loading ? "..." : profiles.length}</p>
         </div>
-        <div>
-            <div className="flex gap-2">
-              <Button asChild variant="outline" className="gap-2">
-                <Link href="/admin/featured">
-                  <Star size={16} className="text-yellow-500" />
-                  PickUp設定
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="gap-2">
-                <Link href="/admin/notifications">
-                  <Mail size={16} />
-                  お知らせ配信管理
-                </Link>
-              </Button>
-            </div>
-        </div>
+        {/* Add more stats here later */}
       </div>
 
-      <h2 className="text-2xl font-bold mb-4">User List</h2>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-slate-200">
-            <thead>
-              <tr className="bg-slate-100">
-                <th className="border p-2 text-left">ID</th>
-                <th className="border p-2 text-left">Username</th>
-                <th className="border p-2 text-left">Last Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {profiles.map((profile) => (
-                <tr key={profile.id} className="hover:bg-slate-50">
-                  <td className="border p-2 font-mono text-sm">{profile.id}</td>
-                  <td className="border p-2">{profile.username || "No Name"}</td>
-                  <td className="border p-2 text-sm">
-                    {new Date(profile.updated_at).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+        <div className="p-4 border-b bg-slate-50">
+          <h2 className="font-bold text-slate-700">最近の登録・更新ユーザー</h2>
         </div>
-      )}
+        {loading ? (
+          <div className="p-8 text-center text-slate-400">Loading...</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100 text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium">ID</th>
+                  <th className="px-4 py-3 text-left font-medium">ユーザー名</th>
+                  <th className="px-4 py-3 text-left font-medium">最終更新</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {profiles.slice(0, 10).map((profile) => (
+                  <tr key={profile.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 font-mono text-xs text-slate-400">{profile.id.slice(0, 8)}...</td>
+                    <td className="px-4 py-3 font-medium">{profile.username || "No Name"}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {new Date(profile.updated_at).toLocaleString('ja-JP')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
