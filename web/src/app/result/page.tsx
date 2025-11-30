@@ -75,6 +75,12 @@ const ResultPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // もし既にstateにデータがあれば（sessionStorageから復元済み）、APIを呼ばずに終了
+      if (results.length > 0 && diagnosis) {
+        setLoading(false);
+        return;
+      }
+
       // ログイン済みユーザーの場合は常にAPIから最新データを取得
       setLoading(true);
       try {

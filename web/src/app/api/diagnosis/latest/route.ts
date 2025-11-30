@@ -48,7 +48,19 @@ export const GET = async () => {
       userData = fallbackUser;
     }
 
-    // 最新の診断結果を取得（public.users.id を使用）
+    // 1. まずキャッシュテーブルを確認（高速化）
+    // キャッシュがあれば重いマッチング計算をスキップできる
+    const { data: cachedData } = await supabaseAdmin
+      .from("matching_cache")
+      .select("matched_users, diagnosis_result_id")
+      .eq("user_id", userData.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // 最新の診断結果履歴を取得
+    // キャッシュがあっても、診断自体のデータ（回答など）が必要なため取得する
+    // ただしキャッシュとIDが一致しているか確認することで、キャッシュが古い場合を排除できる
     const { data: latestDiagnosis, error } = await supabaseAdmin
       .from("diagnosis_results")
       .select("*")
@@ -61,13 +73,9 @@ export const GET = async () => {
       return NextResponse.json({ message: "No diagnosis found" }, { status: 404 });
     }
 
-    // マッチング結果を再計算（またはキャッシュから取得）
-    // ここではエンジンのロジックを再利用して計算する（キャッシュ取得より確実）
-    // 必要なデータ形式に整形
     const inputData = {
       diagnosisType: latestDiagnosis.diagnosis_type as "light" | "full",
-      userGender: "male" as "male" | "female", // TODO: profilesから取得すべきだが、一旦male/femaleどちらでも動くロジックならOK。
-      // しかしマッチングには性別が必要。profilesから取る。
+      userGender: "male" as "male" | "female",
       answers: latestDiagnosis.answers as Answer[],
     };
 
@@ -82,10 +90,43 @@ export const GET = async () => {
       inputData.userGender = profile.gender as "male" | "female";
     }
 
-    // 結果生成
+    // 自己診断結果の生成（計算コストは低いので毎回実行でOK）
     const diagnosisResult = generateDiagnosisResult(inputData);
-    const results = await generateMatchingResults(inputData);
-    const mismatchResults = await generateMismatchingResults(inputData);
+
+    // マッチング結果の取得
+    let results;
+    let mismatchResults;
+
+    // キャッシュが有効（存在し、かつ最新の診断結果に対応している）なら使用
+    if (cachedData && cachedData.diagnosis_result_id === latestDiagnosis.id && cachedData.matched_users) {
+      // console.log("Using cached matching results");
+      results = cachedData.matched_users;
+      // ミスマッチ結果はキャッシュしていない場合が多いので、必要な場合は計算するか、キャッシュに追加が必要
+      // ここではミスマッチ結果も毎回計算コストが高いので、本来はキャッシュすべきだが、
+      // 現状のテーブル構造が不明なため、matched_usersがあれば計算をスキップする方針にする。
+      // もしミスマッチもキャッシュするならカラム追加が必要。
+      // 一旦、ミスマッチは「キャッシュがない」場合のみ計算、あるいは軽量なら毎回計算。
+      // matching.tsを見る限り、mismatchもloadRealProfilesするので重い。
+      // キャッシュ構造に mismatch_results があるか不明だが、submit APIを見る限り matched_users しか入れてない。
+      // なので、mismatchだけは計算せざるを得ないが、最も重い「ベストマッチ」はキャッシュで救える。
+      
+      // 妥協案: mismatchだけ計算する
+      mismatchResults = await generateMismatchingResults(inputData);
+    } else {
+      // キャッシュがない、または古い場合は再計算
+      // console.log("Cache miss or stale, recalculating...");
+      results = await generateMatchingResults(inputData);
+      mismatchResults = await generateMismatchingResults(inputData);
+
+      // 新しい結果をキャッシュに保存（次回以降のために）
+      // エラーハンドリングは緩くして、レスポンスを優先
+      /* await supabaseAdmin.from("matching_cache").insert({
+        user_id: userData.id,
+        diagnosis_result_id: latestDiagnosis.id,
+        matched_users: results,
+      }).catch(err => console.warn("Failed to update cache", err)); */
+      // ↑ submit時に保存しているはずなので、ここでは無理に保存しない（重複やデッドロック回避）
+    }
 
     return NextResponse.json({
       results,
