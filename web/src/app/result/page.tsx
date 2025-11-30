@@ -36,7 +36,6 @@ const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; 
   return (
     <div
       className={`rounded-none md:rounded-3xl border-b-8 md:border-2 border-muted/20 md:border-border bg-white/95 px-5 py-8 md:p-6 shadow-none md:shadow-lg hover:shadow-xl transition-shadow ${
-        // @ts-expect-error - isPrank is dynamic
         result.isPrank ? "ring-4 ring-[#E91E63]/30 border-[#E91E63]" : 
         isFeatured ? "border-yellow-400 ring-4 ring-yellow-400/20" : ""
       }`}
