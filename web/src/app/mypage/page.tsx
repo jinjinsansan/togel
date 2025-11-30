@@ -11,7 +11,7 @@ import { TogelCertificateCard } from "@/components/certificate/togel-certificate
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { generateThemeFromColor, presetColors } from "@/lib/color-theme";
-import { getTogelLabel, personalityTypes } from "@/lib/personality";
+import { personalityTypes } from "@/lib/personality";
 
 type Notification = {
   id: string;
@@ -92,6 +92,20 @@ type UserProfile = {
 };
 
 const getDefaultCertificateColor = (gender?: UserGender) => DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
+
+const toTitleCase = (value: string) => value.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+
+const formatTypeNameEn = (typeId?: string | null) => {
+  if (!typeId) return "Type Pending";
+  return toTitleCase(typeId);
+};
+
+const formatTogelTypeCode = (typeId?: string | null) => {
+  if (!typeId) return "Togel-00type";
+  const index = personalityTypes.findIndex((type) => type.id === typeId);
+  const padded = index === -1 ? "00" : String(index + 1).padStart(2, "0");
+  return `Togel-${padded}type`;
+};
 
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -269,11 +283,7 @@ export default function MyPage() {
     !!profile?.job && 
     !!profile?.city;
 
-  const diagnosisDefinition = profile?.diagnosis_type_id
-    ? personalityTypes.find((type) => type.id === profile.diagnosis_type_id) || null
-    : null;
-
-  const diagnosisLabel = profile?.diagnosis_type_id ? getTogelLabel(profile.diagnosis_type_id) : "診断未実施";
+  const certificateTypeCode = formatTogelTypeCode(profile?.diagnosis_type_id);
   const registeredAt = profile?.created_at || user?.created_at;
   const memberSince = registeredAt
     ? new Date(registeredAt).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric" })
@@ -286,7 +296,7 @@ export default function MyPage() {
     user?.user_metadata?.name ||
     user?.email?.split("@")[0] ||
     "Togel Member";
-  const certificateSubtitle = diagnosisDefinition?.typeName ?? "タイプ未選択";
+  const certificateSubtitle = formatTypeNameEn(profile?.diagnosis_type_id);
   const certificateDate = registeredAt
     ? new Date(registeredAt).toISOString().split("T")[0].replace(/-/g, ".")
     : "--";
@@ -367,7 +377,7 @@ export default function MyPage() {
                   <TogelCertificateCard
                     baseColor={certificateBaseColor}
                     nickname={certificateNickname}
-                    togelType={diagnosisLabel}
+                    togelType={certificateTypeCode}
                     togelLabel={certificateSubtitle}
                     registrationDate={certificateDate}
                   />
@@ -579,43 +589,43 @@ const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateCo
   };
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm space-y-5 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="rounded-[26px] border border-slate-100 bg-white px-4 py-4 shadow-sm space-y-4 sm:px-5">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Custom Color</p>
-          <h3 className="font-bold text-lg text-slate-900 mt-1">カードカラーを調整</h3>
-          <p className="text-sm text-slate-500 mt-1">プリセットやHEX入力だけで質感が丸ごと変わります。</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">Color Control</p>
+          <h3 className="font-semibold text-base text-slate-900 mt-1">カードカラー</h3>
+          <p className="text-xs text-slate-500 mt-0.5">プリセット or HEX でサッと変更</p>
         </div>
-        <div className="rounded-2xl bg-slate-50 p-2 text-slate-600">
-          <Palette size={18} />
+        <div className="rounded-2xl bg-slate-50 p-1.5 text-slate-600">
+          <Palette size={16} />
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <input
           type="color"
           value={currentColor}
           onChange={(event) => onSelect(event.target.value.toLowerCase())}
-          className="w-12 h-12 rounded-full border border-slate-200 shadow-inner cursor-pointer"
+          className="w-10 h-10 rounded-full border border-slate-200 shadow-inner cursor-pointer"
         />
         <input
           type="text"
           value={inputValue}
           onChange={(event) => handleInputChange(event.target.value)}
-          className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm focus:border-slate-400 focus:outline-none"
+          className="flex-1 h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 font-mono text-sm focus:border-slate-400 focus:outline-none"
           placeholder="#F8BBD9"
         />
       </div>
 
       <div>
-        <p className="text-xs font-semibold text-slate-500 mb-3">プリセット</p>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
+        <p className="text-[11px] font-semibold text-slate-500 mb-2">プリセット</p>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
           {presetColors.map((preset) => (
             <button
               key={preset.name}
               type="button"
               onClick={() => onSelect(preset.color.toLowerCase())}
-              className={`h-12 rounded-2xl border transition-all ${
+              className={`h-10 rounded-2xl border transition-all ${
                 normalizedColor === preset.color.toLowerCase()
                   ? "ring-2 ring-offset-2 ring-slate-900"
                   : "hover:opacity-90"
@@ -634,16 +644,16 @@ const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateCo
       </div>
 
       <div>
-        <p className="text-xs font-semibold text-slate-500 mb-2">テーマプレビュー</p>
-        <div className="flex gap-2">
+        <p className="text-[11px] font-semibold text-slate-500 mb-1.5">テーマプレビュー</p>
+        <div className="flex gap-1.5">
           {[themePreview.primary, themePreview.secondary, themePreview.accent, themePreview.text, themePreview.textMuted].map((color) => (
-            <div key={color} className="flex-1 h-10 rounded-xl border border-slate-100" style={{ backgroundColor: color }} />
+            <div key={color} className="flex-1 h-8 rounded-lg border border-slate-100" style={{ backgroundColor: color }} />
           ))}
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-400 text-right">
-        {saving ? "保存中..." : "選択すると即座に保存されます"}
+      <p className="text-[10px] text-slate-400 text-right">
+        {saving ? "保存中..." : "タップで即保存"}
       </p>
     </div>
   );

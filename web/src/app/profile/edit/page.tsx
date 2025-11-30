@@ -52,6 +52,7 @@ export default function ProfileEditPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [primaryUserId, setPrimaryUserId] = useState<string | null>(null);
   
   // Form State
   const [fullName, setFullName] = useState("");
@@ -120,30 +121,47 @@ export default function ProfileEditPage() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: authData } = await supabase.auth.getUser();
+      const authUser = authData.user;
+      if (!authUser) {
         router.push("/");
         return;
       }
-      setUser(user);
+      setUser(authUser);
 
-      // Fetch existing profile
-      const { data } = await supabase
+      const profilePromise = supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
-        .single();
+        .eq("id", authUser.id)
+        .maybeSingle();
+      const coreUserPromise = supabase
+        .from("users")
+        .select("id, nickname")
+        .eq("auth_user_id", authUser.id)
+        .maybeSingle();
 
-      if (data) {
-        setFullName(data.full_name || user.user_metadata?.full_name || "");
-        setBio(data.bio || "");
-        setGender(data.gender || "male");
-        setAge(data.age?.toString() || "");
-        setJob(data.job || "");
-        setCity(data.city || "");
-        setIsPublic(data.is_public || false);
-        setAvatarUrl(data.avatar_url || user.user_metadata?.avatar_url || "");
-        const links = (data.social_links as Partial<SocialLinks>) || {};
+      const [{ data: profileRow }, { data: coreUserRow }] = await Promise.all([profilePromise, coreUserPromise]);
+
+      if (coreUserRow) {
+        setPrimaryUserId(coreUserRow.id);
+      }
+
+      if (profileRow) {
+        setFullName(
+          profileRow.full_name ||
+            coreUserRow?.nickname ||
+            authUser.user_metadata?.full_name ||
+            authUser.user_metadata?.name ||
+            ""
+        );
+        setBio(profileRow.bio || "");
+        setGender(profileRow.gender || "male");
+        setAge(profileRow.age?.toString() || "");
+        setJob(profileRow.job || "");
+        setCity(profileRow.city || "");
+        setIsPublic(profileRow.is_public || false);
+        setAvatarUrl(profileRow.avatar_url || authUser.user_metadata?.avatar_url || "");
+        const links = (profileRow.social_links as Partial<SocialLinks>) || {};
         setSocialLinks({
           twitter: links.twitter || "",
           instagram: links.instagram || "",
@@ -151,7 +169,7 @@ export default function ProfileEditPage() {
           line: links.line || "",
         });
 
-        const d = (data.details as Partial<ProfileDetails>) || {};
+        const d = (profileRow.details as Partial<ProfileDetails>) || {};
         setDetails({
           favoriteThings: d.favoriteThings || "",
           hobbies: d.hobbies || "",
@@ -161,8 +179,8 @@ export default function ProfileEditPage() {
         });
       } else {
         // Initial setup from auth metadata
-        setFullName(user.user_metadata?.full_name || "");
-        setAvatarUrl(user.user_metadata?.avatar_url || "");
+        setFullName(coreUserRow?.nickname || authUser.user_metadata?.full_name || authUser.user_metadata?.name || "");
+        setAvatarUrl(authUser.user_metadata?.avatar_url || "");
       }
       setLoading(false);
     };
@@ -245,6 +263,18 @@ export default function ProfileEditPage() {
     setSaving(true);
 
     try {
+      const trimmedFullName = fullName.trim();
+      if (!trimmedFullName) {
+        alert("ニックネームを入力してください。");
+        setSaving(false);
+        return;
+      }
+      if (trimmedFullName.length > 20) {
+        alert("ニックネームは20文字以内で入力してください。");
+        setSaving(false);
+        return;
+      }
+
       const sanitizedLinks = (Object.keys(socialLinks) as (keyof SocialLinks)[]).reduce((acc, key) => {
         const trimmed = socialLinks[key].trim();
         if (trimmed) acc[key] = trimmed;
@@ -253,7 +283,7 @@ export default function ProfileEditPage() {
 
       const updates = {
         id: user.id,
-        full_name: fullName,
+        full_name: trimmedFullName,
         bio,
         gender,
         age: age ? parseInt(age) : null,
@@ -270,10 +300,34 @@ export default function ProfileEditPage() {
 
       if (error) throw error;
       
+      if (primaryUserId || user.id) {
+        const userUpdateQuery = supabase.from("users").update({ nickname: trimmedFullName });
+        const targetedQuery = primaryUserId
+          ? userUpdateQuery.eq("id", primaryUserId)
+          : userUpdateQuery.eq("auth_user_id", user.id);
+        const { error: nicknameError } = await targetedQuery;
+        if (nicknameError) throw nicknameError;
+      }
+
       // Update auth metadata as well for header consistency
       await supabase.auth.updateUser({
-        data: { full_name: fullName, avatar_url: avatarUrl }
+        data: { full_name: trimmedFullName, name: trimmedFullName, avatar_url: avatarUrl }
       });
+
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              user_metadata: {
+                ...prev.user_metadata,
+                full_name: trimmedFullName,
+                name: trimmedFullName,
+                avatar_url: avatarUrl,
+              },
+            }
+          : prev
+      );
+      setFullName(trimmedFullName);
 
       alert("プロフィールを保存しました！");
     } catch (error) {
