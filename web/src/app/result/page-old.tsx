@@ -251,7 +251,7 @@ const ResultPage = () => {
               {/* アクションボタン */}
               <div className="mt-4">
                 <Button asChild className="w-full" size="lg">
-                  <Link href={`/profile/${result.profile.id}`}>プロフィールを見る</Link>
+                  <Link href={{ pathname: `/profile/${result.profile.id}`, query: { nickname: result.profile.nickname } }}>プロフィールを見る</Link>
                 </Button>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, SyntheticEvent, ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { MapPin, Briefcase, Heart, User, Twitter, Instagram, Facebook, MessageCircle, Lock } from "lucide-react";
 
@@ -91,16 +92,21 @@ type DiagnosisDetails = {
 };
 
 const ProfileDetailPage = ({ params }: { params: Params }) => {
+  const searchParams = useSearchParams();
+  const nicknameHint = searchParams.get("nickname") ?? "";
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [accessState, setAccessState] = useState<"private" | "not_found" | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [diagnosisDetails, setDiagnosisDetails] = useState<DiagnosisDetails | null>(null);
+  const [displayName, setDisplayName] = useState<string>(nicknameHint || "このユーザー");
   const supabase = createClientComponentClient();
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const currentUserId = session?.user?.id;
       setViewerId(currentUserId || null);
 
@@ -108,20 +114,34 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
         .from("profiles")
         .select("*")
         .eq("id", params.id)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
-        setError("Profile not found");
-      } else {
-        // Check visibility: Public OR Owner
-        if (data.is_public || data.id === currentUserId) {
-          setProfile(data);
-        } else {
-          setError("Private profile");
-          // 非公開でも、プロフィール情報はstateに入れておく（名前だけ表示するため等）
-          // ただし今回はシンプルにエラー画面で制御
-        }
+      if (error) {
+        console.error("Failed to load profile", error);
+        setDisplayName((prev) => prev || nicknameHint || "このユーザー");
+        setAccessState(error.code === "PGRST116" ? "private" : "not_found");
+        setLoading(false);
+        return;
       }
+
+      if (!data) {
+        setDisplayName((prev) => prev || nicknameHint || "このユーザー");
+        setAccessState("private");
+        setLoading(false);
+        return;
+      }
+
+      const resolvedName = data.full_name?.trim() || nicknameHint || "このユーザー";
+      setDisplayName(resolvedName);
+
+      if (data.is_public || data.id === currentUserId) {
+        setProfile(data as DbProfile);
+        setAccessState(null);
+      } else {
+        setProfile(null);
+        setAccessState("private");
+      }
+
       setLoading(false);
     };
 
@@ -129,20 +149,18 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
       try {
         const res = await fetch(`/api/profile/${params.id}/diagnosis`);
         if (!res.ok) {
-          // 診断データがない場合は何もしない
           return;
         }
         const data = await res.json();
         setDiagnosisDetails(data);
       } catch (err) {
         console.error("Error fetching diagnosis details:", err);
-        // エラーでもプロフィールは表示
       }
     };
 
     fetchProfile();
     fetchDiagnosisDetails();
-  }, [params.id, supabase]);
+  }, [nicknameHint, params.id, supabase]);
 
   if (loading) {
     return (
@@ -152,25 +170,16 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
     );
   }
 
-  if (error || !profile) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
-        <div className="bg-white p-8 rounded-3xl shadow-lg max-w-md w-full">
-          <Lock className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-          <h1 className="text-xl font-bold text-slate-800 mb-2">
-            {error === "Private profile" ? "このユーザーは非公開です" : "プロフィールが見つかりません"}
-          </h1>
-          <p className="text-sm text-slate-500 mb-6">
-            {error === "Private profile" 
-              ? "現在、お相手の方はプロフィールを非公開に設定しているようです。" 
-              : "URLが間違っている可能性があります。"}
-          </p>
-          <Button asChild>
-            <Link href="/">トップページへ戻る</Link>
-          </Button>
-        </div>
-      </div>
-    );
+  if (accessState === "private") {
+    return <PrivateProfileNotice name={displayName} />;
+  }
+
+  if (accessState === "not_found") {
+    return <ProfileNotFoundNotice />;
+  }
+
+  if (!profile) {
+    return <ProfileNotFoundNotice />;
   }
 
   // 診断結果の表示ロジック（推定ロジックは廃止）
@@ -425,5 +434,52 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
     </div>
   );
 };
+
+const formatDisplayName = (raw?: string | null) => {
+  const base = raw?.trim();
+  if (!base) return "このユーザーさん";
+  return base.endsWith("さん") ? base : `${base}さん`;
+};
+
+const PrivateProfileNotice = ({ name }: { name?: string | null }) => {
+  const formattedName = formatDisplayName(name);
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-16 px-4 flex items-center">
+      <div className="mx-auto max-w-xl rounded-[32px] border border-slate-100 bg-white/90 p-10 text-center shadow-2xl shadow-slate-200/70">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900">
+          <Lock className="h-8 w-8" />
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Private Profile</p>
+        <h1 className="mt-4 text-2xl font-black leading-relaxed text-slate-900">
+          {formattedName}はプロフィールページを非公開中です。
+        </h1>
+        <p className="mt-3 text-sm text-slate-500">公開されるまで今しばらくお待ちください。</p>
+        <div className="mt-8 flex flex-col gap-3">
+          <Button asChild size="lg" className="w-full">
+            <Link href="/result">マッチング結果ページに戻る</Link>
+          </Button>
+          <Button asChild variant="ghost" size="lg" className="w-full text-slate-500 hover:text-slate-700">
+            <Link href="/">トップページへ</Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProfileNotFoundNotice = () => (
+  <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
+    <div className="bg-white p-10 rounded-[28px] shadow-xl max-w-md w-full border border-slate-100">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-700">
+        <User className="h-7 w-7" />
+      </div>
+      <h1 className="text-2xl font-bold text-slate-900 mb-3">プロフィールが見つかりません</h1>
+      <p className="text-sm text-slate-500 mb-6">URLが間違っている可能性があります。トップページから再度アクセスしてください。</p>
+      <Button asChild size="lg" className="w-full">
+        <Link href="/">トップページへ戻る</Link>
+      </Button>
+    </div>
+  </div>
+);
 
 export default ProfileDetailPage;

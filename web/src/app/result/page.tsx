@@ -234,7 +234,7 @@ const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; 
       {/* アクションボタン */}
       <div className="mt-6">
         <Button asChild className="w-full" size="lg">
-          <Link href={`/profile/${result.profile.id}`}>
+          <Link href={{ pathname: `/profile/${result.profile.id}`, query: { nickname: result.profile.nickname } }}>
             プロフィール詳細を見る →
           </Link>
         </Button>
