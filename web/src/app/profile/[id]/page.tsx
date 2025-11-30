@@ -94,9 +94,10 @@ type DiagnosisDetails = {
 const ProfileDetailPage = ({ params }: { params: Params }) => {
   const searchParams = useSearchParams();
   const nicknameHint = searchParams.get("nickname") ?? "";
+  const isMockProfile = params.id.startsWith("mock-");
   const [profile, setProfile] = useState<DbProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [accessState, setAccessState] = useState<"private" | "not_found" | null>(null);
+  const [loading, setLoading] = useState(!isMockProfile);
+  const [accessState, setAccessState] = useState<"private" | "not_found" | null>(isMockProfile ? "private" : null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [diagnosisDetails, setDiagnosisDetails] = useState<DiagnosisDetails | null>(null);
   const [displayName, setDisplayName] = useState<string>(nicknameHint || "このユーザー");
@@ -160,7 +161,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
 
     fetchProfile();
     fetchDiagnosisDetails();
-  }, [nicknameHint, params.id, supabase]);
+  }, [isMockProfile, nicknameHint, params.id, supabase]);
 
   if (loading) {
     return (
