@@ -68,7 +68,7 @@ export const GET = async (request: Request) => {
     .from("diagnosis_results")
     .select("id, diagnosis_type, animal_type, personality_type_id, big_five_scores, answers, created_at, completed_at", { count: "exact" })
     .eq("user_id", userId)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (error || !rows) {
@@ -80,6 +80,8 @@ export const GET = async (request: Request) => {
     if (!typeId) return null;
     return personalityTypes.find((type) => type.id === typeId)?.typeName ?? null;
   };
+
+  const total = count ?? rows.length + offset;
 
   const history = rows.map((row, index) => {
     const answers = Array.isArray(row.answers) ? (row.answers as Answer[]) : [];
@@ -99,9 +101,11 @@ export const GET = async (request: Request) => {
       togelLabel = getTogelLabel(togelTypeId);
     }
 
+    const occurrence = Math.max(total - (offset + index), 1);
+
     return {
       id: row.id,
-      occurrence: offset + index + 1,
+      occurrence,
       mode,
       togelTypeId,
       togelLabel,
@@ -109,8 +113,6 @@ export const GET = async (request: Request) => {
       completedAt: row.completed_at ?? row.created_at,
     };
   });
-
-  const total = count ?? history.length;
 
   return NextResponse.json({
     history,

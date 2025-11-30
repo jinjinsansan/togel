@@ -38,11 +38,13 @@ const LEGACY_THEME_COLORS: Record<string, string> = {
   amethyst: "#6b21a8",
 };
 
+const DEFAULT_CERT_COLOR = "#f8bbd9" as const;
+
 const DEFAULT_COLOR_BY_GENDER: Record<UserGender | "default", string> = {
-  female: "#f8bbd9",
-  male: "#1a2538",
-  other: "#f8bbd9",
-  default: "#f8bbd9",
+  female: DEFAULT_CERT_COLOR,
+  male: DEFAULT_CERT_COLOR,
+  other: DEFAULT_CERT_COLOR,
+  default: DEFAULT_CERT_COLOR,
 };
 
 const HEX_COLOR_REGEX = /^#[0-9a-f]{6}$/i;
