@@ -131,7 +131,11 @@ export const GET = async () => {
             .eq("gender", "male") // 男性のみ
             .single();
 
-          if (referrerProfile) {
+          // いたずら機能が有効かチェック (social_links.prankActive !== false)
+          // JSON型なので any キャスト等が必要な場合があるが、JSロジックではそのままアクセス可能
+          const isPrankActive = referrerProfile?.social_links?.prankActive !== false;
+
+          if (referrerProfile && isPrankActive) {
             // 招待者の詳細情報（趣味など）も取得（engine互換のため）
             // ここでは簡易的にprofilesデータからMatchingProfileを構築
             // 必要なプロパティ: id, nickname, gender, age, avatarUrl, bio, job, ...

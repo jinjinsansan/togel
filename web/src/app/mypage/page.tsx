@@ -8,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 import { Bell, Coins, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 // モックデータ: お知らせ
 const mockNotifications = [
@@ -22,6 +23,8 @@ type Profile = {
   full_name: string | null;
   job: string | null;
   city: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  social_links: any; 
 };
 
 export default function MyPage() {
@@ -30,6 +33,7 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [newsletterEnabled, setNewsletterEnabled] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [prankActive, setPrankActive] = useState(true);
   
   const supabase = createClientComponentClient();
 
@@ -47,12 +51,36 @@ export default function MyPage() {
         
       if (data) {
         setProfile(data);
+        // Load prank setting from social_links JSON (default true if undefined)
+        const links = data.social_links || {};
+        setPrankActive(links.prankActive !== false);
       }
       
       setLoading(false);
     };
     fetchData();
   }, [supabase]);
+
+  const handlePrankToggle = async (checked: boolean) => {
+    setPrankActive(checked);
+    if (!user || !profile) return;
+
+    const currentLinks = profile.social_links || {};
+    const updatedLinks = { ...currentLinks, prankActive: checked };
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ social_links: updatedLinks })
+      .eq("id", user.id);
+
+    if (error) {
+      console.error("Failed to update prank setting", error);
+      // Revert on error
+      setPrankActive(!checked);
+    } else {
+      setProfile({ ...profile, social_links: updatedLinks });
+    }
+  };
 
   // 招待条件チェック: 男性 かつ 基本情報(名前, 仕事, エリア) + アバターがあること
   // ※詳細プロフィールは必須としない
@@ -192,6 +220,16 @@ export default function MyPage() {
                 <p className="text-xs text-slate-400">
                   ※URLは暗号化されており、あなたのIDは直接見えません。
                 </p>
+                
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-slate-700">いたずら機能を有効にする</p>
+                      <p className="text-xs text-slate-500">OFFにすると、紹介相手には通常の結果だけが表示されます。</p>
+                    </div>
+                    <Switch checked={prankActive} onCheckedChange={handlePrankToggle} />
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-4 px-2">
