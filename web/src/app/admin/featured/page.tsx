@@ -185,19 +185,19 @@ export default function FeaturedAdminPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>表示ターゲット</Label>
+                <Label>表示ターゲット（誰に見せるか）</Label>
                 <Select value={targetGender} onValueChange={setTargetGender}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全ユーザー (All)</SelectItem>
-                    <SelectItem value="male">男性にのみ表示 (Male Target)</SelectItem>
-                    <SelectItem value="female">女性にのみ表示 (Female Target)</SelectItem>
+                    <SelectItem value="all">全員 (All)</SelectItem>
+                    <SelectItem value="male">男性に見せる (Target: Male)</SelectItem>
+                    <SelectItem value="female">女性に見せる (Target: Female)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-slate-400">
-                  ※ 例: 「女性会員」をPickUpする場合、ターゲットは「男性(Male)」に設定するのが一般的です。
+                  ※ 例: 「男性会員」を宣伝したい場合、ターゲットは「女性に見せる」を選択してください。
                 </p>
               </div>
 
