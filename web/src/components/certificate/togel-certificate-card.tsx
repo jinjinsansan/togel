@@ -122,7 +122,7 @@ export function TogelCertificateCard({
       </div>
 
       <div
-        className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[440px] aspect-[1.7/1] cursor-grab select-none active:cursor-grabbing"
+        className="relative w-full max-w-full lg:max-w-[520px] xl:max-w-[580px] aspect-[1.7/1] cursor-grab select-none active:cursor-grabbing"
         style={{ perspective: "1200px" }}
         onMouseDown={(e) => handleStart(e.clientX)}
         onMouseMove={(e) => handleMove(e.clientX)}
