@@ -2,27 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { User } from "@supabase/supabase-js";
-import {
-  Bell,
-  Coins,
-  History,
-  Mail,
-  Link as LinkIcon,
-  Check,
-  Copy,
-  AlertCircle,
-  Palette,
-  Sparkles,
-  Shield,
-  Calendar,
-  Award,
-} from "lucide-react";
+import { Bell, Coins, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle, Palette } from "lucide-react";
 
+import { TogelCertificateCard } from "@/components/certificate/togel-certificate-card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { generateThemeFromColor, presetColors } from "@/lib/color-theme";
 import { getTogelLabel, personalityTypes } from "@/lib/personality";
 
 type Notification = {
@@ -36,113 +24,45 @@ type Notification = {
   metadata: any;
 };
 
-type CertificateThemeId =
-  | "rose"
-  | "blush"
-  | "citrine"
-  | "pearl"
-  | "onyx"
-  | "royal"
-  | "aurum"
-  | "argent"
-  | "amethyst";
+type UserGender = "male" | "female" | "other";
 
-type CertificateTheme = {
-  label: string;
-  background: string;
-  border: string;
-  accent: string;
-  chip: string;
-  hologram: string;
-  text: string;
+const LEGACY_THEME_COLORS: Record<string, string> = {
+  rose: "#f8bbd9",
+  blush: "#f9c0cb",
+  citrine: "#ffd166",
+  pearl: "#f1f5f9",
+  onyx: "#1a2538",
+  royal: "#2a1a4a",
+  aurum: "#ffd700",
+  argent: "#e0e0e0",
+  amethyst: "#6b21a8",
 };
 
-const CERTIFICATE_THEMES: Record<CertificateThemeId, CertificateTheme> = {
-  rose: {
-    label: "Rosé Bloom",
-    background: "from-rose-50 via-white to-rose-100",
-    border: "border-rose-200/70",
-    accent: "text-rose-600",
-    chip: "bg-rose-100 text-rose-600",
-    hologram: "from-rose-200/70 via-white/70 to-rose-100/80",
-    text: "text-rose-900",
-  },
-  blush: {
-    label: "Blush Pearl",
-    background: "from-pink-50 via-white to-rose-50",
-    border: "border-pink-100",
-    accent: "text-pink-500",
-    chip: "bg-white/70 text-pink-500",
-    hologram: "from-white/80 via-pink-50/80 to-slate-50/90",
-    text: "text-slate-900",
-  },
-  citrine: {
-    label: "Citrine Glow",
-    background: "from-amber-50 via-white to-yellow-100",
-    border: "border-amber-200",
-    accent: "text-amber-600",
-    chip: "bg-amber-100 text-amber-600",
-    hologram: "from-amber-100/70 via-white/70 to-yellow-100/80",
-    text: "text-amber-900",
-  },
-  pearl: {
-    label: "Iridescent Pearl",
-    background: "from-white via-slate-50 to-gray-100",
-    border: "border-slate-200",
-    accent: "text-slate-600",
-    chip: "bg-slate-100 text-slate-600",
-    hologram: "from-slate-100/70 via-white/80 to-slate-50/80",
-    text: "text-slate-900",
-  },
-  onyx: {
-    label: "Onyx Noir",
-    background: "from-slate-900 via-gray-900 to-black",
-    border: "border-slate-800",
-    accent: "text-white",
-    chip: "bg-white/10 text-white",
-    hologram: "from-slate-700/60 via-slate-900/70 to-black/80",
-    text: "text-white",
-  },
-  royal: {
-    label: "Royal Azure",
-    background: "from-indigo-900 via-blue-900 to-slate-900",
-    border: "border-indigo-800",
-    accent: "text-indigo-200",
-    chip: "bg-white/10 text-indigo-100",
-    hologram: "from-indigo-600/50 via-indigo-900/70 to-blue-900/80",
-    text: "text-indigo-50",
-  },
-  aurum: {
-    label: "Aurum Luxe",
-    background: "from-amber-200 via-yellow-300 to-amber-400",
-    border: "border-amber-400",
-    accent: "text-amber-900",
-    chip: "bg-amber-50 text-amber-700",
-    hologram: "from-yellow-200/80 via-white/60 to-amber-200/70",
-    text: "text-amber-900",
-  },
-  argent: {
-    label: "Argent Frost",
-    background: "from-slate-200 via-gray-100 to-slate-50",
-    border: "border-slate-300",
-    accent: "text-slate-600",
-    chip: "bg-white/70 text-slate-500",
-    hologram: "from-slate-100/80 via-white/80 to-slate-200/90",
-    text: "text-slate-900",
-  },
-  amethyst: {
-    label: "Amethyst Veil",
-    background: "from-purple-900 via-violet-900 to-slate-900",
-    border: "border-purple-800",
-    accent: "text-purple-200",
-    chip: "bg-white/10 text-purple-100",
-    hologram: "from-purple-500/40 via-purple-900/70 to-indigo-900/80",
-    text: "text-purple-50",
-  },
+const DEFAULT_COLOR_BY_GENDER: Record<UserGender | "default", string> = {
+  female: "#f8bbd9",
+  male: "#1a2538",
+  other: "#f8bbd9",
+  default: "#f8bbd9",
 };
 
-const FEMALE_THEME_OPTIONS: CertificateThemeId[] = ["rose", "blush", "citrine", "pearl"];
-const MALE_THEME_OPTIONS: CertificateThemeId[] = ["aurum", "argent", "onyx", "royal", "amethyst"];
+const HEX_COLOR_REGEX = /^#[0-9a-f]{6}$/i;
+
+const normalizeHexColor = (value?: string | null): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const prefixed = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  const normalized = prefixed.toLowerCase();
+  return HEX_COLOR_REGEX.test(normalized) ? normalized : null;
+};
+
+const resolveCertificateColor = (stored?: string | null, gender?: UserGender) => {
+  const normalized = normalizeHexColor(stored);
+  if (normalized) return normalized;
+  if (stored && LEGACY_THEME_COLORS[stored]) {
+    return LEGACY_THEME_COLORS[stored];
+  }
+  return DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
+};
 
 type ProfileDetails = {
   favoriteThings?: string;
@@ -152,13 +72,13 @@ type ProfileDetails = {
   communication?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
-  certificateTheme?: CertificateThemeId;
+  certificateTheme?: string;
 };
 
 type UserProfile = {
   id: string;
   full_name: string;
-  gender: "male" | "female" | "other";
+  gender: UserGender;
   avatar_url: string;
   job: string;
   city: string;
@@ -171,16 +91,7 @@ type UserProfile = {
   details?: ProfileDetails | null;
 };
 
-const getThemeOptions = (gender: UserProfile["gender"] | undefined) => {
-  if (gender === "female") return FEMALE_THEME_OPTIONS;
-  if (gender === "male") return MALE_THEME_OPTIONS;
-  return ["pearl", "rose", "argent", "onyx"] as CertificateThemeId[];
-};
-
-const getDefaultTheme = (gender: UserProfile["gender"] | undefined): CertificateThemeId => {
-  const options = getThemeOptions(gender);
-  return options[0] ?? "pearl";
-};
+const getDefaultCertificateColor = (gender?: UserGender) => DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
 
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -191,7 +102,7 @@ export default function MyPage() {
   const [copied, setCopied] = useState(false);
   const [prankActive, setPrankActive] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [certificateTheme, setCertificateTheme] = useState<CertificateThemeId>("rose");
+  const [certificateColor, setCertificateColor] = useState<string>(DEFAULT_COLOR_BY_GENDER.default);
   const [themeSaving, setThemeSaving] = useState(false);
   
   const supabase = createClientComponentClient();
@@ -206,8 +117,8 @@ export default function MyPage() {
     setNewsletterEnabled(notificationSettings.newsletter !== false);
 
     const details = (data.details as ProfileDetails) || {};
-    const nextTheme = (details.certificateTheme as CertificateThemeId) || getDefaultTheme(data.gender);
-    setCertificateTheme(nextTheme);
+    const nextColor = resolveCertificateColor(details.certificateTheme, data.gender);
+    setCertificateColor(nextColor);
   }, []);
 
   useEffect(() => {
@@ -260,16 +171,17 @@ export default function MyPage() {
     };
   }, [supabase, user?.id, hydrateProfile]);
 
-  const handleThemeSelection = async (theme: CertificateThemeId) => {
+  const handleColorSelection = async (color: string) => {
     if (!profile || !user) return;
-    if (theme === certificateTheme) return;
+    const normalized = normalizeHexColor(color);
+    if (!normalized || normalized === certificateColor) return;
 
-    const previousTheme = certificateTheme;
-    setCertificateTheme(theme);
+    const previousColor = certificateColor;
+    setCertificateColor(normalized);
     setThemeSaving(true);
 
     const currentDetails = (profile.details as ProfileDetails) || {};
-    const updatedDetails = { ...currentDetails, certificateTheme: theme };
+    const updatedDetails = { ...currentDetails, certificateTheme: normalized };
 
     const { data, error } = await supabase
       .from("profiles")
@@ -281,8 +193,8 @@ export default function MyPage() {
     setThemeSaving(false);
 
     if (error) {
-      console.error("Failed to save certificate theme", error);
-      setCertificateTheme(previousTheme);
+      console.error("Failed to save certificate color", error);
+      setCertificateColor(previousColor);
       alert("カードのカラー設定の保存に失敗しました。時間を置いて再度お試しください。");
       return;
     }
@@ -367,9 +279,17 @@ export default function MyPage() {
     ? new Date(registeredAt).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric" })
     : "--";
 
-  const themeOptions = getThemeOptions(profile?.gender);
-  const fallbackTheme = getDefaultTheme(profile?.gender);
-  const activeTheme = CERTIFICATE_THEMES[certificateTheme] ?? CERTIFICATE_THEMES[fallbackTheme];
+  const certificateBaseColor = certificateColor || getDefaultCertificateColor(profile?.gender);
+  const certificateNickname =
+    profile?.full_name ||
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "Togel Member";
+  const certificateSubtitle = diagnosisDefinition?.typeName ?? "タイプ未選択";
+  const certificateDate = registeredAt
+    ? new Date(registeredAt).toISOString().split("T")[0].replace(/-/g, ".")
+    : "--";
 
   const handleCopyLink = () => {
     if (!user) return;
@@ -432,19 +352,31 @@ export default function MyPage() {
         {profile && (
           <section className="mb-12">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
-              <CertificateCard
-                profile={profile}
-                diagnosisLabel={diagnosisLabel}
-                diagnosisDefinition={diagnosisDefinition}
-                memberSince={memberSince}
-                theme={activeTheme}
-              />
-              <CertificateThemePanel
-                options={themeOptions}
-                currentTheme={certificateTheme}
-                onSelect={handleThemeSelection}
+              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100/60 p-6 shadow-sm">
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <div>
+                    <p className="text-xs font-semibold tracking-[0.4em] uppercase text-slate-400">Togel Official</p>
+                    <p className="text-slate-800 font-bold">Premium Certificate</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase text-slate-400">Member Since</p>
+                    <p className="text-sm font-semibold text-slate-700">{memberSince}</p>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-center">
+                  <TogelCertificateCard
+                    baseColor={certificateBaseColor}
+                    nickname={certificateNickname}
+                    togelType={diagnosisLabel}
+                    togelLabel={certificateSubtitle}
+                    registrationDate={certificateDate}
+                  />
+                </div>
+              </div>
+              <CertificateColorPanel
+                currentColor={certificateBaseColor}
+                onSelect={handleColorSelection}
                 saving={themeSaving}
-                gender={profile.gender}
               />
             </div>
           </section>
@@ -617,125 +549,103 @@ export default function MyPage() {
   );
 }
 
-type CertificateCardProps = {
-  profile: UserProfile;
-  diagnosisLabel: string;
-  diagnosisDefinition: (typeof personalityTypes)[number] | null;
-  memberSince: string;
-  theme: CertificateTheme;
+type CertificateColorPanelProps = {
+  currentColor: string;
+  onSelect: (color: string) => void;
+  saving: boolean;
 };
 
-const CertificateCard = ({ profile, diagnosisLabel, diagnosisDefinition, memberSince, theme }: CertificateCardProps) => {
-  const typeName = diagnosisDefinition?.typeName || "未診断";
-  const catchphrase = diagnosisDefinition?.catchphrase || "診断を完了すると証明書が発行されます";
-  const emoji = diagnosisDefinition?.emoji || "✨";
+const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateColorPanelProps) => {
+  const [inputValue, setInputValue] = useState(currentColor.toUpperCase());
+  const themePreview = useMemo(() => generateThemeFromColor(currentColor), [currentColor]);
+  const normalizedColor = currentColor.toLowerCase();
+
+  useEffect(() => {
+    setInputValue(currentColor.toUpperCase());
+  }, [currentColor]);
+
+  const handleInputChange = (value: string) => {
+    if (value === "") {
+      setInputValue("#");
+      return;
+    }
+    const formatted = value.startsWith("#") ? value.toUpperCase() : `#${value.toUpperCase()}`;
+    if (/^#[0-9A-F]{0,6}$/.test(formatted)) {
+      setInputValue(formatted);
+      if (formatted.length === 7) {
+        onSelect(formatted.toLowerCase());
+      }
+    }
+  };
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl border ${theme.border} bg-gradient-to-br ${theme.background} shadow-[0_20px_60px_-30px_rgba(0,0,0,0.45)] p-6 sm:p-10` }>
-      <div className="absolute inset-0 pointer-events-none">
-        <div className={`absolute -top-20 -right-10 h-64 w-64 rounded-full opacity-40 blur-3xl bg-gradient-to-r ${theme.hologram}`} />
-        <div className={`absolute bottom-0 left-0 h-32 w-32 opacity-30 blur-3xl bg-gradient-to-br ${theme.hologram}`} />
-      </div>
-
-      <div className="relative space-y-6 text-sm">
-        <div className="flex items-center justify-between text-[0.65rem] tracking-[0.3em] uppercase font-semibold opacity-80">
-          <span className={`flex items-center gap-2 ${theme.accent}`}>
-            <Sparkles className="h-3 w-3" /> Togel Official
-          </span>
-          <span className="text-xs font-mono opacity-70">ID #{profile.id.slice(0, 8)}</span>
-        </div>
-
+    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm space-y-5">
+      <div className="flex items-start justify-between">
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.3em] ${theme.accent}`}>Personality Certificate</p>
-          <h3 className={`text-3xl sm:text-4xl font-black leading-tight ${theme.text}`}>
-            {profile.full_name || "No Name"}
-          </h3>
-          <p className={`text-xs font-semibold mt-1 uppercase tracking-[0.2em] ${theme.accent}`}>Member since {memberSince}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Custom Color</p>
+          <h3 className="font-bold text-lg text-slate-900 mt-1">カードカラーを調整</h3>
+          <p className="text-sm text-slate-500 mt-1">プリセットやHEX入力だけで質感が丸ごと変わります。</p>
         </div>
-
-        <div className="rounded-2xl border border-white/20 bg-white/40 backdrop-blur px-4 py-5 shadow-inner">
-          <p className="text-xs font-semibold text-slate-500">Certified Togel Type</p>
-          <div className="flex items-center justify-between mt-2">
-            <div>
-              <p className="text-sm font-bold text-slate-600">{diagnosisLabel}</p>
-              <p className="text-2xl font-black text-slate-900 leading-tight">{typeName}</p>
-            </div>
-            <div className="flex flex-col items-center text-3xl">
-              <span>{emoji}</span>
-              <Award className="h-5 w-5 text-amber-500 mt-1" />
-            </div>
-          </div>
-          <p className="mt-3 text-xs text-slate-500 leading-relaxed">{catchphrase}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 text-xs">
-          <div className="rounded-xl border border-white/30 bg-white/40 px-3 py-3 backdrop-blur">
-            <p className="text-slate-500 font-semibold flex items-center gap-1 text-[0.65rem]">
-              <Calendar className="h-3 w-3" /> 登録日
-            </p>
-            <p className={`text-sm font-bold ${theme.text}`}>{memberSince}</p>
-          </div>
-          <div className="rounded-xl border border-white/30 bg-white/40 px-3 py-3 backdrop-blur">
-            <p className="text-slate-500 font-semibold flex items-center gap-1 text-[0.65rem]">
-              <Shield className="h-3 w-3" /> ステータス
-            </p>
-            <p className={`text-sm font-bold ${theme.text}`}>{diagnosisDefinition ? "認定済" : "未認定"}</p>
-          </div>
+        <div className="p-2 rounded-2xl bg-slate-50 text-slate-600">
+          <Palette size={18} />
         </div>
       </div>
+
+      <div className="flex items-center gap-4">
+        <input
+          type="color"
+          value={currentColor}
+          onChange={(event) => onSelect(event.target.value.toLowerCase())}
+          className="w-12 h-12 rounded-full border border-slate-200 shadow-inner cursor-pointer"
+        />
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(event) => handleInputChange(event.target.value)}
+          className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm focus:border-slate-400 focus:outline-none"
+          placeholder="#F8BBD9"
+        />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-slate-500 mb-3">プリセット</p>
+        <div className="grid grid-cols-4 gap-3">
+          {presetColors.map((preset) => (
+            <button
+              key={preset.name}
+              type="button"
+              onClick={() => onSelect(preset.color.toLowerCase())}
+              className={`h-12 rounded-2xl border transition-all ${
+                normalizedColor === preset.color.toLowerCase()
+                  ? "ring-2 ring-offset-2 ring-slate-900"
+                  : "hover:opacity-90"
+              }`}
+              style={{
+                background: preset.isDark
+                  ? `linear-gradient(145deg, ${preset.color} 0%, #000 100%)`
+                  : `linear-gradient(145deg, #fff 0%, ${preset.color} 100%)`,
+                borderColor: preset.color,
+              }}
+            >
+              <span className="sr-only">{preset.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-slate-500 mb-2">テーマプレビュー</p>
+        <div className="flex gap-2">
+          {[themePreview.primary, themePreview.secondary, themePreview.accent, themePreview.text, themePreview.textMuted].map((color) => (
+            <div key={color} className="flex-1 h-10 rounded-xl border border-slate-100" style={{ backgroundColor: color }} />
+          ))}
+        </div>
+      </div>
+
+      <p className="text-[11px] text-slate-400 text-right">
+        {saving ? "保存中..." : "選択すると即座に保存されます"}
+      </p>
     </div>
   );
 };
-
-type ThemePanelProps = {
-  options: CertificateThemeId[];
-  currentTheme: CertificateThemeId;
-  onSelect: (theme: CertificateThemeId) => void;
-  saving: boolean;
-  gender: UserProfile["gender"];
-};
-
-const CertificateThemePanel = ({ options, currentTheme, onSelect, saving, gender }: ThemePanelProps) => (
-  <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-    <div className="flex items-center gap-3 mb-4">
-      <div className="p-2 rounded-2xl bg-slate-100 text-slate-600">
-        <Palette className="h-4 w-4" />
-      </div>
-      <div>
-        <p className="font-bold text-slate-900">カードテーマ</p>
-        <p className="text-xs text-slate-500">
-          {gender === "female"
-            ? "女性向けのカラーから選択できます"
-            : gender === "male"
-              ? "男性向けのシックなカラー"
-              : "お好きなカラーを選択できます"}
-        </p>
-      </div>
-    </div>
-    <div className="grid grid-cols-2 gap-3">
-      {options.map((option) => {
-        const theme = CERTIFICATE_THEMES[option];
-        const isActive = option === currentTheme;
-        return (
-          <button
-            key={option}
-            type="button"
-            disabled={saving}
-            onClick={() => onSelect(option)}
-            className={`group w-full rounded-2xl bg-gradient-to-br ${theme.background} px-3 py-4 text-left transition-all ${
-              isActive ? `${theme.border} shadow-lg ring-2 ring-black/5` : "border border-transparent opacity-80"
-            }`}
-          >
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-              <span>{theme.label}</span>
-              {isActive && <Check className="h-4 w-4 text-emerald-500" />}
-            </div>
-            <div className={`mt-3 h-2 w-full rounded-full bg-gradient-to-r ${theme.background}`} />
-          </button>
-        );
-      })}
-    </div>
-    {saving && <p className="mt-3 text-[11px] text-slate-400">保存中...</p>}
-  </div>
-);
 
