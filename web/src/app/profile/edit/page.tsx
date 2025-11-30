@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { User } from "@supabase/supabase-js";
-import { Camera, Save, Eye, EyeOff, Copy, Check, ExternalLink, Loader2 } from "lucide-react";
+import { Camera, Save, Eye, EyeOff, Copy, Check, ExternalLink, Loader2, Twitter, Instagram, Facebook, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+
+type GenderOption = "male" | "female" | "other";
+
+type SocialLinks = {
+  twitter: string;
+  instagram: string;
+  facebook: string;
+  line: string;
+};
 
 // Simple Switch Component
 const SimpleSwitch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (c: boolean) => void }) => (
@@ -39,16 +48,59 @@ export default function ProfileEditPage() {
   // Form State
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
-  const [gender, setGender] = useState<"male" | "female" | "other">("male");
+  const [gender, setGender] = useState<GenderOption>("male");
   const [age, setAge] = useState("");
   const [job, setJob] = useState("");
   const [city, setCity] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({
+    twitter: "",
+    instagram: "",
+    facebook: "",
+    line: "",
+  });
 
   // File Input Ref
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const socialLinkFields: {
+    key: keyof SocialLinks;
+    label: string;
+    placeholder: string;
+    icon: ReactNode;
+    helper: string;
+  }[] = [
+    {
+      key: "twitter",
+      label: "X (Twitter)",
+      placeholder: "https://x.com/yourname",
+      icon: <Twitter className="h-4 w-4 text-slate-400" />,
+      helper: "X(旧Twitter)のプロフィールURL",
+    },
+    {
+      key: "instagram",
+      label: "Instagram",
+      placeholder: "https://instagram.com/yourname",
+      icon: <Instagram className="h-4 w-4 text-slate-400" />,
+      helper: "InstagramのプロフィールURL",
+    },
+    {
+      key: "facebook",
+      label: "Facebook",
+      placeholder: "https://www.facebook.com/yourname",
+      icon: <Facebook className="h-4 w-4 text-slate-400" />,
+      helper: "FacebookのプロフィールURL",
+    },
+    {
+      key: "line",
+      label: "LINE",
+      placeholder: "https://line.me/ti/p/xxxx",
+      icon: <MessageCircle className="h-4 w-4 text-slate-400" />,
+      helper: "LINEオープンチャットやアカウントURL",
+    },
+  ];
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -60,7 +112,7 @@ export default function ProfileEditPage() {
       setUser(user);
 
       // Fetch existing profile
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
@@ -75,6 +127,13 @@ export default function ProfileEditPage() {
         setCity(data.city || "");
         setIsPublic(data.is_public || false);
         setAvatarUrl(data.avatar_url || user.user_metadata?.avatar_url || "");
+        const links = (data.social_links as Partial<SocialLinks>) || {};
+        setSocialLinks({
+          twitter: links.twitter || "",
+          instagram: links.instagram || "",
+          facebook: links.facebook || "",
+          line: links.line || "",
+        });
       } else {
         // Initial setup from auth metadata
         setFullName(user.user_metadata?.full_name || "");
@@ -90,18 +149,70 @@ export default function ProfileEditPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // TODO: Implement Actual R2 Upload here using API Route
-    // For now, we just pretend
+    if (file.size > 5 * 1024 * 1024) {
+      alert("5MB以下の画像を選択してください。");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      alert("画像ファイルのみアップロードできます。");
+      return;
+    }
+
     setUploading(true);
-    
-    // Simulate upload delay
-    setTimeout(() => {
-      // Mock: In real impl, this would be the R2 public URL
-      const mockUrl = URL.createObjectURL(file); 
-      setAvatarUrl(mockUrl);
+
+    const previousUrl = avatarUrl;
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarUrl(previewUrl);
+
+    try {
+      const tokenResponse = await fetch("/api/uploads/avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size,
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error("Failed to obtain upload URL");
+      }
+
+      const { uploadUrl, publicUrl } = await tokenResponse.json();
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to R2");
+      }
+
+      setAvatarUrl(publicUrl);
+    } catch (err) {
+      console.error("Avatar upload failed", err);
+      setAvatarUrl(previousUrl);
+      alert("画像のアップロードに失敗しました。時間を置いて再度お試しください。");
+    } finally {
+      URL.revokeObjectURL(previewUrl);
       setUploading(false);
-      alert("画像アップロード機能はバックエンド設定待ちです。現在はプレビューのみ表示されます。");
-    }, 1500);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleSocialLinkChange = (key: keyof SocialLinks, value: string) => {
+    setSocialLinks((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const handleSave = async () => {
@@ -109,6 +220,12 @@ export default function ProfileEditPage() {
     setSaving(true);
 
     try {
+      const sanitizedLinks = (Object.keys(socialLinks) as (keyof SocialLinks)[]).reduce((acc, key) => {
+        const trimmed = socialLinks[key].trim();
+        if (trimmed) acc[key] = trimmed;
+        return acc;
+      }, {} as Partial<SocialLinks>);
+
       const updates = {
         id: user.id,
         full_name: fullName,
@@ -119,6 +236,7 @@ export default function ProfileEditPage() {
         city,
         is_public: isPublic,
         avatar_url: avatarUrl,
+        social_links: Object.keys(sanitizedLinks).length ? sanitizedLinks : null,
         updated_at: new Date().toISOString(),
       };
 
@@ -216,7 +334,10 @@ export default function ProfileEditPage() {
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-slate-100 shadow-md bg-slate-200">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                    </>
                   ) : (
                     <div className="h-full w-full flex items-center justify-center text-4xl">👤</div>
                   )}
@@ -250,7 +371,7 @@ export default function ProfileEditPage() {
                 <select 
                   id="gender" 
                   value={gender} 
-                  onChange={(e) => setGender(e.target.value as any)}
+                  onChange={(e) => setGender(e.target.value as GenderOption)}
                   className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="male">男性</option>
@@ -280,6 +401,37 @@ export default function ProfileEditPage() {
                   className="h-32 resize-none"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Social Links Card */}
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="font-bold text-xl">外部SNSリンク</h2>
+                <p className="text-sm text-slate-500 mt-1">公開プロフィールに表示されます。信頼できる相手にのみ教えることをおすすめします。</p>
+              </div>
+            </div>
+
+            <div className="grid gap-5">
+              {socialLinkFields.map((field) => (
+                <div key={field.key} className="space-y-2">
+                  <Label htmlFor={`social-${field.key}`} className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                      {field.icon}
+                    </span>
+                    {field.label}
+                  </Label>
+                  <Input
+                    type="url"
+                    id={`social-${field.key}`}
+                    value={socialLinks[field.key]}
+                    onChange={(e) => handleSocialLinkChange(field.key, e.target.value)}
+                    placeholder={field.placeholder}
+                  />
+                  <p className="text-xs text-slate-400">{field.helper}</p>
+                </div>
+              ))}
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChevronDown, Heart, Skull } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ const CompatibilityItem = ({
         <span className="text-lg">{type.emoji}</span>
         <div className="flex flex-col">
           <span className="text-[10px] font-bold text-muted-foreground">{getTogelLabel(typeId)}</span>
+          <span className="text-[10px] font-semibold text-[#E91E63] uppercase">{label}</span>
           <span className="font-bold leading-tight">{type.typeName}</span>
         </div>
       </div>
@@ -44,26 +45,35 @@ const TypeListPage = () => {
   useEffect(() => {
     // URLのハッシュから初期表示するタイプを判定
     const hash = window.location.hash;
+    let openTimeout: ReturnType<typeof setTimeout> | null = null;
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
     if (hash && hash.startsWith("#type-")) {
       const id = hash.replace("#type-", "");
       if (personalityTypes.some(t => t.id === id)) {
-        setOpenId(id);
-        // 少し遅延させてスクロール位置を微調整（アコーディオンが開く分を考慮）
-        setTimeout(() => {
-          const element = document.getElementById(`type-${id}`);
-          if (element) {
-            const headerOffset = 80; // sticky header height + margin
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-            
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: "smooth"
-            });
-          }
-        }, 300);
+        openTimeout = setTimeout(() => {
+          setOpenId(id);
+          // 少し遅延させてスクロール位置を微調整（アコーディオンが開く分を考慮）
+          scrollTimeout = setTimeout(() => {
+            const element = document.getElementById(`type-${id}`);
+            if (element) {
+              const headerOffset = 80; // sticky header height + margin
+              const elementPosition = element.getBoundingClientRect().top;
+              const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+              
+              window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+              });
+            }
+          }, 300);
+        }, 0);
       }
     }
+
+    return () => {
+      if (openTimeout) clearTimeout(openTimeout);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
   }, []);
 
   const toggleOpen = useCallback((id: string) => {

@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { QuestionCard } from "@/components/diagnosis/question-card";
 import { DiagnosisAnalysisOverlay } from "@/components/diagnosis/analysis-overlay";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { DiagnosisQuestion } from "@/types/diagnosis";
 import { clearSession, saveSession } from "@/lib/diagnosis/session";
 import { useDiagnosisStore } from "@/store/diagnosis-store";

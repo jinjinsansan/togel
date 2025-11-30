@@ -31,7 +31,7 @@ const ensureUserRecord = async (
 ) => {
   // 1. ログインユーザーの場合: public.users にレコードがあるか確認、なければ作成
   if (params.authUserId) {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("users")
       .select("id, auth_user_id")
       .eq("id", params.authUserId) // public.users.id と auth.users.id を一致させる運用を想定
@@ -97,7 +97,7 @@ const ensureUserRecord = async (
 
   // 2. ゲストユーザーの場合 (既存ロジック)
   const guestLineId = `guest-${params.gender}`;
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("users")
     .select("id")
     .eq("line_user_id", guestLineId)

@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { DiagnosisQuestion } from "@/types/diagnosis";
 
 type Props = {

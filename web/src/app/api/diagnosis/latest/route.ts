@@ -4,8 +4,9 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult, generateMatchingResults, generateMismatchingResults } from "@/lib/matching/engine";
+import { Answer } from "@/types/diagnosis";
 
-export const GET = async (request: Request) => {
+export const GET = async () => {
   const cookieStore = cookies();
   const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
   const { data: { session } } = await supabaseAuth.auth.getSession();
@@ -18,11 +19,13 @@ export const GET = async (request: Request) => {
 
   try {
     // まず public.users から auth_user_id で検索して user.id を取得
-    let { data: userData, error: userError } = await supabaseAdmin
+    const { data: initialUserData, error: userError } = await supabaseAdmin
       .from("users")
       .select("id")
       .eq("auth_user_id", session.user.id)
       .maybeSingle();
+
+    let userData = initialUserData;
 
     if (userError || !userData) {
       // auth_user_id で見つからない場合、id で直接検索（後方互換性）
@@ -65,7 +68,7 @@ export const GET = async (request: Request) => {
       diagnosisType: latestDiagnosis.diagnosis_type as "light" | "full",
       userGender: "male" as "male" | "female", // TODO: profilesから取得すべきだが、一旦male/femaleどちらでも動くロジックならOK。
       // しかしマッチングには性別が必要。profilesから取る。
-      answers: latestDiagnosis.answers as any[],
+      answers: latestDiagnosis.answers as Answer[],
     };
 
     // プロフィールから性別を取得

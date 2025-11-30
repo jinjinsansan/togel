@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { notFound } from "next/navigation";
-import { useEffect, useState, SyntheticEvent } from "react";
+import Link from "next/link";
+import { useEffect, useState, SyntheticEvent, ReactNode } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { MapPin, Briefcase, Heart, User, Twitter, Instagram, Facebook, MessageCircle, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { determinePersonalityType, estimateProfileScores, getTogelLabel } from "@/lib/personality";
+import { getTogelLabel } from "@/lib/personality";
 import { BigFiveScores } from "@/types/diagnosis";
 
 const buildFallbackAvatar = (seed: string, gender: "male" | "female" | "other"): string => {
@@ -37,6 +37,30 @@ type Params = {
 };
 
 // Database Profile Type
+type ProfileDetails = {
+  favoriteThings?: string;
+  hobbies?: string;
+  specialSkills?: string;
+  values?: string;
+  communication?: string;
+};
+
+type SocialLinks = Partial<Record<"twitter" | "instagram" | "facebook" | "line", string>>;
+
+type SocialLinkMeta = {
+  icon: ReactNode;
+  key: keyof SocialLinks;
+  label: string;
+  color: string;
+};
+
+const SOCIAL_LINKS: SocialLinkMeta[] = [
+  { icon: <Twitter className="h-5 w-5" />, key: "twitter", label: "X (Twitter)", color: "hover:text-black hover:bg-black/5" },
+  { icon: <Instagram className="h-5 w-5" />, key: "instagram", label: "Instagram", color: "hover:text-pink-600 hover:bg-pink-50" },
+  { icon: <MessageCircle className="h-5 w-5" />, key: "line", label: "LINE", color: "hover:text-green-500 hover:bg-green-50" },
+  { icon: <Facebook className="h-5 w-5" />, key: "facebook", label: "Facebook", color: "hover:text-blue-600 hover:bg-blue-50" },
+];
+
 type DbProfile = {
   id: string;
   full_name: string;
@@ -47,8 +71,8 @@ type DbProfile = {
   city: string;
   avatar_url: string;
   is_public: boolean;
-  details: any;
-  social_links: any;
+  details: ProfileDetails | null;
+  social_links: SocialLinks | null;
   diagnosis_type_id?: string;
 };
 
@@ -138,7 +162,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             URLが間違っているか、公開設定がオフになっている可能性があります。
           </p>
           <Button asChild>
-            <a href="/">トップページへ戻る</a>
+            <Link href="/">トップページへ戻る</Link>
           </Button>
         </div>
       </div>
@@ -153,6 +177,8 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   const isOwner = viewerId === profile.id;
   const subjectName = isOwner ? "私" : profile.full_name;
 
+  const avatarSrc = profile.avatar_url || buildFallbackAvatar(profile.id, profile.gender || "other");
+
   const infoItems = [
     { label: "好きなこと", value: profile.details?.favoriteThings || "未設定", icon: <Heart className="h-4 w-4" /> },
     { label: "趣味", value: profile.details?.hobbies || "未設定", icon: <Briefcase className="h-4 w-4" /> },
@@ -162,12 +188,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   ];
 
   // SNS Links from DB
-  const socialLinks = [
-    { icon: <Twitter className="h-5 w-5" />, key: "twitter", label: "X (Twitter)", color: "hover:text-black hover:bg-black/5" },
-    { icon: <Instagram className="h-5 w-5" />, key: "instagram", label: "Instagram", color: "hover:text-pink-600 hover:bg-pink-50" },
-    { icon: <MessageCircle className="h-5 w-5" />, key: "line", label: "LINE", color: "hover:text-green-500 hover:bg-green-50" },
-    { icon: <Facebook className="h-5 w-5" />, key: "facebook", label: "Facebook", color: "hover:text-blue-600 hover:bg-blue-50" },
-  ];
+  const socialLinks = SOCIAL_LINKS;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
@@ -179,7 +200,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             {viewerId === profile.id && (
               <div className="absolute top-6 right-6 z-10">
                 <Button variant="outline" size="sm" className="rounded-full bg-white/80 backdrop-blur" asChild>
-                  <a href="/profile/edit">編集する</a>
+                  <Link href="/profile/edit">編集する</Link>
                 </Button>
               </div>
             )}
@@ -189,7 +210,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
               <div className="relative h-40 w-40 mb-6">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E91E63] to-purple-600 opacity-20 blur-2xl animate-pulse"></div>
                 <Image
-                  src={profile.avatar_url}
+                  src={avatarSrc}
                   alt={profile.full_name}
                   fill
                   sizes="160px"
@@ -266,7 +287,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                     <p className="text-sm text-slate-500 mb-6">このユーザーはまだ診断を受けていません。</p>
                     {viewerId === profile.id && (
                       <Button asChild className="bg-[#E91E63] hover:bg-[#D81B60] text-white rounded-full px-8">
-                        <a href="/diagnosis/select">今すぐ診断する</a>
+                        <Link href="/diagnosis/select">今すぐ診断する</Link>
                       </Button>
                     )}
                   </div>

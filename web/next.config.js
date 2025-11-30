@@ -14,6 +14,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "assets.to-gel.com",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.r2.cloudflarestorage.com",
+      },
     ],
   },
   async headers() {

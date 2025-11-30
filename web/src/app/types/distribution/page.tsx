@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { loadTogelDistribution } from "@/lib/personality/distribution";
@@ -7,7 +7,7 @@ import { loadTogelDistribution } from "@/lib/personality/distribution";
 export const revalidate = 0;
 
 const DistributionPage = async () => {
-  const { total, distribution, legacy } = await loadTogelDistribution();
+  const { total, distribution } = await loadTogelDistribution();
   
   // 多い順にソートして表示（ランキング形式）
   const sortedByCount = [...distribution].sort((a, b) => b.count - a.count);

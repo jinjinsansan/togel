@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -20,10 +21,6 @@ export default function MyPage() {
   const [newsletterEnabled, setNewsletterEnabled] = useState(true);
   const [copied, setCopied] = useState(false);
   
-  // プロフィール情報のモック（実際はDBから取得）
-  // 今回は性別などの情報がないため、紹介状発行は条件付き表示のロジックだけ実装
-  const [profile, setProfile] = useState<{ gender?: string; isProfileComplete: boolean } | null>(null);
-
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -67,11 +64,15 @@ export default function MyPage() {
           <div className="relative h-24 w-24 md:h-32 md:w-32 shrink-0">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E91E63] to-purple-600 opacity-20 blur-lg"></div>
             {user?.user_metadata?.avatar_url ? (
-              <img 
-                src={user.user_metadata.avatar_url} 
-                alt={user.user_metadata.name || "User"} 
-                className="relative h-full w-full rounded-full border-4 border-white object-cover shadow-lg"
-              />
+              <div className="relative h-full w-full">
+                <Image
+                  src={user.user_metadata.avatar_url}
+                  alt={user.user_metadata.name || "User"}
+                  fill
+                  sizes="128px"
+                  className="rounded-full border-4 border-white object-cover shadow-lg"
+                />
+              </div>
             ) : (
               <div className="relative h-full w-full rounded-full border-4 border-white bg-slate-200 flex items-center justify-center shadow-lg">
                 <span className="text-4xl">👤</span>

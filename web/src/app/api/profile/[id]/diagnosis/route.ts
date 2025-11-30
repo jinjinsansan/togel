@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult } from "@/lib/matching/engine";
+import { Answer } from "@/types/diagnosis";
 
 export const GET = async (
   request: Request,
@@ -47,7 +48,7 @@ export const GET = async (
     const result = generateDiagnosisResult({
       diagnosisType: diagnosisData.diagnosis_type as "light" | "full",
       userGender: "male", // ダミー（Big Fiveスコアには影響しない）
-      answers: diagnosisData.answers as any[],
+      answers: diagnosisData.answers as Answer[],
     });
 
     return NextResponse.json({
