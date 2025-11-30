@@ -23,7 +23,7 @@ type Notification = {
 
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [newsletterEnabled, setNewsletterEnabled] = useState(true);
   const [rankInEnabled, setRankInEnabled] = useState(true);
