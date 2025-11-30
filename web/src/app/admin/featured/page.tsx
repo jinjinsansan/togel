@@ -157,13 +157,14 @@ export default function FeaturedAdminPage() {
           <div className="bg-white p-6 rounded-xl border shadow-sm">
             <h2 className="font-bold mb-4">新規PickUp登録</h2>
             
-            <div className="flex gap-2 mb-4">
+            <div className="flex flex-col gap-3 mb-4 sm:flex-row">
               <Input 
                 placeholder="ユーザー名で検索..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1"
               />
-              <Button onClick={handleSearch} disabled={searching}>
+              <Button onClick={handleSearch} disabled={searching} className="w-full sm:w-auto">
                 <Search size={16} />
               </Button>
             </div>

@@ -41,8 +41,8 @@ const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; 
       }`}
     >
       {/* ヘッダー */}
-      <div className="flex items-start justify-between pb-4 border-b border-border">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-4 border-b border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="relative h-24 w-24">
             <Image
               src={result.profile.avatarUrl}
@@ -64,7 +64,7 @@ const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; 
              )}
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               {isFeatured ? (
                  <span className="text-xl font-black text-yellow-500 flex items-center gap-1">
                    <span className="text-2xl">✨</span> SPECIAL
@@ -83,7 +83,7 @@ const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; 
             </div>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-left sm:text-right">
           <p className="text-4xl font-black text-primary">{result.compatibility.total}%</p>
           <p className="text-xs text-muted-foreground">マッチ度</p>
         </div>

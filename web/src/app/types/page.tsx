@@ -106,7 +106,7 @@ const TypeListPage = () => {
       <div className="container px-4 md:px-6">
         {/* ヘッダー */}
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-2">TOGEL TYPES</p>
+          <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-2">Togel Types</p>
           <h1 className="font-heading text-3xl md:text-5xl font-black text-slate-900 mb-4">
             24の<span className="text-[#E91E63]">本性</span>図鑑
           </h1>
@@ -178,7 +178,7 @@ const TypeListPage = () => {
                 >
                   <div className="p-6">
                     {/* 強みと弱み */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid gap-4 mb-6 sm:grid-cols-2">
                       <div>
                         <p className="mb-2 text-xs font-bold text-blue-600 uppercase flex items-center gap-1">
                           ⚡ Strengths

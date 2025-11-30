@@ -94,8 +94,9 @@ export function TogelCertificateShowcase() {
           ))}
         </div>
 
-        <div className="flex items-center gap-4 mt-4">
-          <label className="text-sm text-slate-600 font-medium">Custom Color:</label>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-4 w-full">
+        <label className="text-sm text-slate-600 font-medium">Custom Color:</label>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
           <div className="relative">
             <input
               type="color"
@@ -109,12 +110,13 @@ export function TogelCertificateShowcase() {
             type="text"
             value={displayedHex}
             onChange={(e) => handleTextChange(e.target.value)}
-            className="w-24 px-3 py-2 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300"
+            className="w-full sm:w-24 px-3 py-2 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-300"
             placeholder="#FFFFFF"
           />
         </div>
+      </div>
 
-        <div className="flex items-center gap-2 mt-2">
+      <div className="flex flex-wrap items-center gap-2 mt-2">
           <span className="text-xs text-slate-500">Theme Preview:</span>
           <div className="flex gap-1">
             {[theme.primary, theme.secondary, theme.accent, theme.text, theme.textMuted].map((color, index) => (

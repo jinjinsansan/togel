@@ -131,8 +131,8 @@ const MismatchResultPage = () => {
                 className="rounded-3xl border-2 border-red-900/50 bg-gradient-to-br from-gray-800 to-gray-900 p-6 shadow-2xl hover:shadow-red-900/20 transition-shadow"
               >
                 {/* ヘッダー */}
-                <div className="flex items-start justify-between pb-4 border-b border-gray-700">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-4 border-b border-gray-700">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="relative h-24 w-24">
                       <Image
                         src={result.profile.avatarUrl}
@@ -152,7 +152,7 @@ const MismatchResultPage = () => {
                       </div>
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="text-3xl font-black text-red-500">#{result.ranking}</span>
                         <span className="text-2xl font-bold text-white">{result.profile.nickname}</span>
                         <span className="text-sm text-gray-400">{result.profile.age}歳</span>
@@ -165,7 +165,7 @@ const MismatchResultPage = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <p className="text-4xl font-black text-red-500">{result.score.toFixed(0)}%</p>
                     <p className="text-xs text-gray-400">ミスマッチ度</p>
                   </div>
