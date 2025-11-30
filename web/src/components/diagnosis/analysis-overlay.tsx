@@ -81,7 +81,7 @@ export const DiagnosisAnalysisOverlay = ({ onComplete }: Props) => {
             Presented by
           </p>
           <h1 className="font-heading text-6xl font-black tracking-tighter text-[#E91E63] animate-in zoom-in-50 fade-in duration-1000 delay-500 drop-shadow-[0_0_15px_rgba(233,30,99,0.5)]">
-            TOGEL
+            Togel
           </h1>
         </div>
       </div>

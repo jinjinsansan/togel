@@ -91,6 +91,16 @@ type UserProfile = {
   details?: ProfileDetails | null;
 };
 
+type DiagnosisHistoryEntry = {
+  id: string;
+  occurrence: number;
+  mode: "light" | "full";
+  togelTypeId: string | null;
+  togelLabel: string | null;
+  typeName: string | null;
+  completedAt: string | null;
+};
+
 const getDefaultCertificateColor = (gender?: UserGender) => DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
 
 const toTitleCase = (value: string) => value.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
@@ -119,6 +129,23 @@ const formatRegistrationDate = (value?: string | null) => {
   return formatted.replace(/\//g, ".");
 };
 
+const formatDiagnosisDateTime = (value?: string | null) => {
+  if (!value) return "--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+  const formatted = new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+  return formatted.replace(/\//g, ".");
+};
+
+const formatDiagnosisModeLabel = (mode: "light" | "full") => (mode === "light" ? "ライト版" : "スタンダード版");
+
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -130,6 +157,9 @@ export default function MyPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [certificateColor, setCertificateColor] = useState<string>(DEFAULT_COLOR_BY_GENDER.default);
   const [themeSaving, setThemeSaving] = useState(false);
+  const [diagnosisHistory, setDiagnosisHistory] = useState<DiagnosisHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   
   const supabase = createClientComponentClient();
 
@@ -147,16 +177,43 @@ export default function MyPage() {
     setCertificateColor(nextColor);
   }, []);
 
+  const fetchDiagnosisHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const res = await fetch("/api/diagnosis/history");
+      if (res.status === 401) {
+        setDiagnosisHistory([]);
+        return;
+      }
+      if (!res.ok) {
+        throw new Error("Failed to load history");
+      }
+      const data = await res.json();
+      setDiagnosisHistory(Array.isArray(data.history) ? data.history : []);
+    } catch (err) {
+      console.error("Failed to load diagnosis history", err);
+      setHistoryError("診断履歴を取得できませんでした。");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUser(user);
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) {
+        setLoading(false);
+        return;
+      }
+      setUser(authUser);
       
       const { data } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", authUser.id)
         .single();
         
       if (data) {
@@ -173,11 +230,12 @@ export default function MyPage() {
       } catch (e) {
         console.error("Failed to load notifications", e);
       }
-      
+
+      await fetchDiagnosisHistory();
       setLoading(false);
     };
     fetchData();
-  }, [supabase, hydrateProfile]);
+  }, [supabase, hydrateProfile, fetchDiagnosisHistory]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -398,6 +456,53 @@ export default function MyPage() {
             </div>
           </section>
         )}
+
+        <section className="mb-12">
+          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+              <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
+                <History size={20} />
+              </div>
+              <h2 className="font-bold text-lg text-slate-800">診断ヒストリー</h2>
+            </div>
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="animate-spin rounded-full h-6 w-6 border-4 border-slate-200 border-t-[#E91E63]"></div>
+              </div>
+            ) : historyError ? (
+              <div className="text-center text-sm text-red-500 py-6">{historyError}</div>
+            ) : diagnosisHistory.length === 0 ? (
+              <div className="text-center text-sm text-slate-500 py-6 space-y-2">
+                <p>まだ診断履歴がありません。</p>
+                <Button asChild variant="ghost" className="text-[#E91E63] hover:text-[#D81B60]">
+                  <Link href="/diagnosis/select">診断を受ける</Link>
+                </Button>
+              </div>
+            ) : (
+              <ol className="relative border-l border-slate-200 pl-4 space-y-6">
+                {diagnosisHistory.map((entry) => {
+                  const togelCode = entry.togelTypeId ? formatTogelTypeCode(entry.togelTypeId) : entry.togelLabel ?? "Togel --型";
+                  const togelName = entry.togelTypeId ? formatTypeNameEn(entry.togelTypeId) : entry.typeName ?? "Type Pending";
+                  return (
+                    <li key={entry.id} className="relative pl-4">
+                      <span className="absolute -left-2 top-1 h-3 w-3 rounded-full bg-[#E91E63] border-2 border-white"></span>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">第{entry.occurrence}回</p>
+                          <p className="text-lg font-bold text-slate-900">{formatDiagnosisDateTime(entry.completedAt)}</p>
+                        </div>
+                        <div className="text-sm text-slate-500 text-left sm:text-right">
+                          <p className="font-bold text-slate-800">{formatDiagnosisModeLabel(entry.mode)}</p>
+                          <p className="text-xs text-slate-500">{togelCode} · {togelName}</p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </div>
+        </section>
 
         <div className="grid gap-6 md:grid-cols-2">
           

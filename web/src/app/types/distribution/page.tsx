@@ -18,7 +18,7 @@ const DistributionPage = async () => {
       <div className="relative border-b border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
         <div className="container relative z-10">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-2">TOGEL DISTRIBUTION</p>
+            <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-2">Togel Distribution</p>
             <h1 className="font-heading text-3xl md:text-5xl font-black text-slate-900 mb-4">
               Togel<span className="text-[#E91E63]">生息</span>マップ
             </h1>

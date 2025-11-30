@@ -236,7 +236,7 @@ export default function Home() {
           <div className="grid gap-8 md:gap-12 md:grid-cols-2 md:items-center md:flex-row-reverse">
             <div className="md:order-2 relative aspect-square w-full max-w-[300px] md:max-w-md mx-auto rounded-3xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 flex flex-col items-center justify-center shadow-2xl text-center">
               <div className="text-7xl md:text-8xl mb-4">🐯</div>
-              <div className="text-xl md:text-2xl font-bold text-white">TOGEL 05型</div>
+              <div className="text-xl md:text-2xl font-bold text-white">Togel 05型</div>
               <div className="text-pink-500 font-black text-3xl md:text-4xl">情熱的リーダー</div>
             </div>
             <div className="space-y-4 md:space-y-6 md:order-1 text-center md:text-left flex flex-col items-center md:items-start">
@@ -248,7 +248,7 @@ export default function Home() {
                 に分類。
               </h2>
               <p className="text-lg md:text-xl text-gray-400 leading-relaxed [text-wrap:balance]">
-                診断結果から、あなたを<br className="inline md:hidden" />24種類の「TOGEL型」に分類。<br />
+                診断結果から、あなたを<br className="inline md:hidden" />24種類の「Togel型」に分類。<br />
                 自分でも気づいていなかった<br className="inline md:hidden" />強みや弱み、相性の良いタイプが<br className="inline md:hidden" />明確になります。
               </p>
             </div>

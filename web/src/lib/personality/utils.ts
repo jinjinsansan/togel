@@ -180,11 +180,11 @@ export const snapshotPersonalityType = (type: PersonalityTypeDefinition): Person
 export const getTogelLabel = (typeId: string): string => {
   const index = getTypeIndex(typeId);
   if (index === -1) {
-    return "TOGEL 00型";
+    return "Togel 00型";
   }
   const typeNumber = index + 1;
   const paddedNumber = String(typeNumber).padStart(2, "0");
-  return `TOGEL ${paddedNumber}型`;
+  return `Togel ${paddedNumber}型`;
 };
 
 export const getTogelDescription = (typeId: string): string => {

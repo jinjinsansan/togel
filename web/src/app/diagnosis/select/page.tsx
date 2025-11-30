@@ -15,9 +15,9 @@ const plans = [
   },
   {
     type: "full",
-    title: "しっかり版 (40問)",
-    description: "価値観・コミュニケーションまで深掘り。精度重視の方に。",
-    features: ["40問フル診断", "価値観マップ生成", "AIによる根拠文章"],
+    title: "スタンダード版 (40問)",
+    description: "価値観・コミュニケーションまで深掘り。精度重視のスタンダードプラン。",
+    features: ["40問スタンダード診断", "価値観マップ生成", "AIによる根拠文章"],
     time: "約8分",
   },
 ];
@@ -42,7 +42,7 @@ const DiagnosisSelectPage = () => {
             診断タイプを選択
           </h1>
           <p className="text-slate-600 leading-relaxed max-w-xl mx-auto">
-            時間がない方はライト版、正確な結果が欲しい方はしっかり版をお選びください。
+            時間がない方はライト版、じっくり診断したい方はスタンダード版をお選びください。
           </p>
         </div>
 
@@ -66,7 +66,7 @@ const DiagnosisSelectPage = () => {
                     ? "bg-blue-50 text-blue-600 border-blue-100" 
                     : "bg-pink-50 text-pink-600 border-pink-100"
                 }`}>
-                  {plan.type === "light" ? "カジュアル" : "精密分析"}
+                  {plan.type === "light" ? "カジュアル" : "スタンダード"}
                 </span>
               </div>
 
@@ -95,7 +95,7 @@ const DiagnosisSelectPage = () => {
                       : "bg-gradient-to-r from-[#E91E63] to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white border-0"
                   }`}
                 >
-                  {plan.type === "light" ? "ライト版で始める" : "しっかり版で始める"}
+                  {plan.type === "light" ? "ライト版で始める" : "スタンダード版で始める"}
                 </Button>
               </div>
             </div>

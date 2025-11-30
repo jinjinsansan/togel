@@ -169,7 +169,7 @@ const DiagnosisPage = () => {
                     ? "bg-blue-50 text-blue-600 border-blue-100" 
                     : "bg-pink-50 text-pink-600 border-pink-100"
                 }`}>
-                  {diagnosisType === "light" ? "LIGHT MODE" : "FULL MODE"}
+                {diagnosisType === "light" ? "LIGHT MODE" : "STANDARD MODE"}
                 </span>
                 <span className="font-bold text-slate-400">
                   Q.{currentIndex + 1} <span className="text-xs font-normal text-slate-300">/ {questions.length}</span>

@@ -3,7 +3,7 @@ import { personalityTypes, getTogelLabel } from ".";
 
 export type TogelDistributionItem = {
   id: string;
-  label: string; // TOGEL XX型
+  label: string; // Togel XX型
   typeName: string; // 創造的リーダー 等
   description: string;
   catchphrase: string;
@@ -26,8 +26,9 @@ export const loadTogelDistribution = async () => {
   const counts = new Map<string, number>();
 
   rows.forEach((row) => {
-    const key = row.animal_type ?? "Unknown";
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    const rawLabel = row.animal_type ?? "Unknown";
+    const normalized = typeof rawLabel === "string" ? rawLabel.replace(/^TOGEL/, "Togel") : rawLabel;
+    counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
   });
 
   const distribution: TogelDistributionItem[] = personalityTypes.map((type) => {
