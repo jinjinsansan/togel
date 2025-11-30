@@ -215,6 +215,49 @@ export const POST = async (request: Request) => {
         matched_users: results,
       });
       if (cacheError) console.warn("Failed to cache matching results", cacheError);
+
+      // --- 自動ランクイン通知機能 ---
+      // 上位5名のユーザーに対して、「あなたが〇位に選ばれました」という通知を送る
+      // ただし、相手が「通知ON」にしている場合に限る
+      
+      // 非同期で実行 (awaitせず進むことでレスポンス遅延を防ぐ)
+      (async () => {
+        try {
+          const submitterName = user?.user_metadata?.full_name || "ゲスト";
+          
+          // 結果の上位5名をループ
+          for (const result of results.slice(0, 5)) {
+            const targetUserId = result.profile.id;
+            
+            // 相手のプロフィールと設定を取得
+            const { data: targetProfile } = await supabaseAdmin
+              .from("profiles")
+              .select("notification_settings, id")
+              .eq("id", targetUserId)
+              .single();
+
+            // 設定がない場合はデフォルトON、明示的にfalseなら送らない
+            const settings = targetProfile?.notification_settings || {};
+            if (settings.rank_in === false) continue;
+
+            // 通知を作成
+            await supabaseAdmin.from("notifications").insert({
+              user_id: targetUserId,
+              type: "matching",
+              title: `🎉 ${result.ranking}位にランクイン！`,
+              content: `${submitterName}さんの診断結果で、あなたが相性の良いお相手${result.ranking}位に選ばれました！\n相性度: ${result.score}%`,
+              metadata: {
+                rank: result.ranking,
+                score: result.score,
+                submitter_id: user?.id, // 相手のID (リンク用)
+                url: `/profile/${user?.id || ""}` // プロフィールへのリンク
+              }
+            });
+          }
+        } catch (bgError) {
+          console.error("Background notification error:", bgError);
+        }
+      })();
     }
 
     return NextResponse.json({

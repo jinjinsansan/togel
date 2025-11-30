@@ -118,6 +118,8 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
           setProfile(data);
         } else {
           setError("Private profile");
+          // 非公開でも、プロフィール情報はstateに入れておく（名前だけ表示するため等）
+          // ただし今回はシンプルにエラー画面で制御
         }
       }
       setLoading(false);
@@ -156,10 +158,12 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
         <div className="bg-white p-8 rounded-3xl shadow-lg max-w-md w-full">
           <Lock className="mx-auto h-12 w-12 text-slate-300 mb-4" />
           <h1 className="text-xl font-bold text-slate-800 mb-2">
-            {error === "Private profile" ? "このプロフィールは非公開です" : "プロフィールが見つかりません"}
+            {error === "Private profile" ? "このユーザーは非公開です" : "プロフィールが見つかりません"}
           </h1>
           <p className="text-sm text-slate-500 mb-6">
-            URLが間違っているか、公開設定がオフになっている可能性があります。
+            {error === "Private profile" 
+              ? "現在、お相手の方はプロフィールを非公開に設定しているようです。" 
+              : "URLが間違っている可能性があります。"}
           </p>
           <Button asChild>
             <Link href="/">トップページへ戻る</Link>

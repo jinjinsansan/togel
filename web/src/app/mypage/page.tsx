@@ -10,21 +10,15 @@ import { Bell, Coins, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-// モックデータ: お知らせ
-const mockNotifications = [
-  { id: 1, title: "Togelへようこそ！", date: "2024/01/01", read: false },
-  { id: 2, title: "新機能「ミスマッチランキング」が追加されました", date: "2024/01/15", read: true },
-];
-
-type Profile = {
+type Notification = {
   id: string;
-  gender: string;
-  avatar_url: string | null;
-  full_name: string | null;
-  job: string | null;
-  city: string | null;
+  title: string;
+  content: string;
+  scheduled_at: string;
+  read: boolean;
+  type: "admin" | "matching" | "system";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  social_links: any; 
+  metadata: any;
 };
 
 export default function MyPage() {
@@ -32,8 +26,10 @@ export default function MyPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [newsletterEnabled, setNewsletterEnabled] = useState(true);
+  const [rankInEnabled, setRankInEnabled] = useState(true);
   const [copied, setCopied] = useState(false);
   const [prankActive, setPrankActive] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   
   const supabase = createClientComponentClient();
 
@@ -51,15 +47,65 @@ export default function MyPage() {
         
       if (data) {
         setProfile(data);
-        // Load prank setting from social_links JSON (default true if undefined)
+        // Load settings from JSON
         const links = data.social_links || {};
         setPrankActive(links.prankActive !== false);
+        
+        const notificationSettings = data.notification_settings || {};
+        setRankInEnabled(notificationSettings.rank_in !== false); // Default true
+        setNewsletterEnabled(notificationSettings.newsletter !== false); // Default true
+      }
+
+      // Fetch real notifications
+      try {
+        const res = await fetch("/api/notifications");
+        if (res.ok) {
+          const notifs = await res.json();
+          setNotifications(notifs);
+        }
+      } catch (e) {
+        console.error("Failed to load notifications", e);
       }
       
       setLoading(false);
     };
     fetchData();
   }, [supabase]);
+
+  const handleNotificationRead = async (id: string, isRead: boolean) => {
+    if (isRead) return; // Already read
+    
+    // Optimistic update
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    
+    await fetch("/api/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notificationId: id }),
+    });
+  };
+
+  const handleNotificationSettingToggle = async (key: "rank_in" | "newsletter", checked: boolean) => {
+    if (key === "rank_in") setRankInEnabled(checked);
+    if (key === "newsletter") setNewsletterEnabled(checked);
+    
+    if (!user || !profile) return;
+
+    const currentSettings = profile.notification_settings || {};
+    const updatedSettings = { ...currentSettings, [key]: checked };
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ notification_settings: updatedSettings })
+      .eq("id", user.id);
+
+    if (error) {
+      console.error("Failed to update settings", error);
+      // Revert (omitted for brevity)
+    } else {
+      setProfile({ ...profile, notification_settings: updatedSettings });
+    }
+  };
 
   const handlePrankToggle = async (checked: boolean) => {
     setPrankActive(checked);
@@ -160,15 +206,38 @@ export default function MyPage() {
               <h2 className="font-bold text-lg text-slate-800">お知らせ受信箱</h2>
             </div>
             <div className="space-y-1">
-              {mockNotifications.map((note) => (
-                <div key={note.id} className={`flex items-start gap-4 p-4 rounded-xl transition-colors ${note.read ? "bg-slate-50" : "bg-white border border-slate-100"}`}>
-                  <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${note.read ? "bg-slate-300" : "bg-[#E91E63]"}`} />
-                  <div>
-                    <p className={`text-sm font-medium ${note.read ? "text-slate-600" : "text-slate-900"}`}>{note.title}</p>
-                    <p className="text-xs text-slate-400 mt-1">{note.date}</p>
-                  </div>
+              {notifications.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-sm">
+                  お知らせはありません
                 </div>
-              ))}
+              ) : (
+                notifications.map((note) => (
+                  <div 
+                    key={note.id} 
+                    onClick={() => handleNotificationRead(note.id, note.read)}
+                    className={`flex items-start gap-4 p-4 rounded-xl transition-colors cursor-pointer ${note.read ? "bg-slate-50" : "bg-white border border-slate-100 shadow-sm"}`}
+                  >
+                    <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${note.read ? "bg-slate-300" : "bg-[#E91E63]"}`} />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <p className={`text-sm font-medium ${note.read ? "text-slate-600" : "text-slate-900"}`}>{note.title}</p>
+                        {note.type === "matching" && (
+                          <span className="text-[10px] bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-bold whitespace-nowrap">MATCH</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 whitespace-pre-wrap">{note.content}</p>
+                      {note.metadata?.url && (
+                        <Link href={note.metadata.url} className="text-xs text-blue-500 hover:underline mt-2 block">
+                          詳細を見る →
+                        </Link>
+                      )}
+                      <p className="text-[10px] text-slate-400 mt-2 text-right">
+                        {new Date(note.scheduled_at).toLocaleDateString('ja-JP')}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -180,17 +249,20 @@ export default function MyPage() {
               </div>
               <h2 className="font-bold text-lg text-slate-800">メルマガ通知</h2>
             </div>
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 mb-4">
               <div>
                 <p className="font-bold text-slate-700">運命の通知を受け取る</p>
                 <p className="text-xs text-slate-500 mt-1">相性の良い相手が見つかった際に通知</p>
               </div>
-              <button 
-                onClick={() => setNewsletterEnabled(!newsletterEnabled)}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${newsletterEnabled ? 'bg-[#E91E63]' : 'bg-slate-300'}`}
-              >
-                <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition shadow-md ${newsletterEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
-              </button>
+              <Switch checked={newsletterEnabled} onCheckedChange={(c) => handleNotificationSettingToggle("newsletter", c)} />
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50">
+              <div>
+                <p className="font-bold text-slate-700">ランクイン通知</p>
+                <p className="text-xs text-slate-500 mt-1">誰かの診断結果で上位5名に入った際に通知</p>
+              </div>
+              <Switch checked={rankInEnabled} onCheckedChange={(c) => handleNotificationSettingToggle("rank_in", c)} />
             </div>
           </div>
 
