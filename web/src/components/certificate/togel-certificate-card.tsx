@@ -27,6 +27,8 @@ const DEFAULT_COLORS = {
   masculine: "#1a2538",
 }
 
+const AUTO_ROTATION_SPEED = 0.5
+
 const isDarkHex = (hex: string) => {
   const normalized = hex.replace("#", "")
   if (normalized.length !== 6) return false
@@ -54,15 +56,16 @@ export function TogelCertificateCard({
 
   const [rotation, setRotation] = useState(0)
   const [isAutoRotating, setIsAutoRotating] = useState(true)
-  const [rotationSpeed, setRotationSpeed] = useState(0.5)
   const [isDragging, setIsDragging] = useState(false)
   const lastX = useRef(0)
   const animationRef = useRef<number | null>(null)
+  const toggleAutoRotation = () => setIsAutoRotating((prev) => !prev)
+  const autoStateLabel = isAutoRotating ? "ON" : "OFF"
 
   useEffect(() => {
     const animate = () => {
       if (isAutoRotating && !isDragging) {
-        setRotation((prev) => (prev + rotationSpeed) % 360)
+        setRotation((prev) => (prev + AUTO_ROTATION_SPEED) % 360)
       }
       animationRef.current = requestAnimationFrame(animate)
     }
@@ -73,7 +76,7 @@ export function TogelCertificateCard({
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [isAutoRotating, isDragging, rotationSpeed])
+  }, [isAutoRotating, isDragging])
 
   const handleStart = (clientX: number) => {
     setIsDragging(true)
@@ -99,30 +102,23 @@ export function TogelCertificateCard({
   const innerPanelBg = isDark ? "rgba(15,23,42,0.6)" : "rgba(255,255,255,0.25)"
   const borderColor = `1.5px solid ${resolvedTheme.accent}50`
 
-  const controls = [
-    { label: isAutoRotating ? "Stop" : "Auto", onClick: () => setIsAutoRotating((prev) => !prev) },
-    { label: "Slow", onClick: () => setRotationSpeed((prev) => Math.max(prev - 0.3, -3)) },
-    { label: "Fast", onClick: () => setRotationSpeed((prev) => Math.min(prev + 0.3, 3)) },
-    { label: "Reverse", onClick: () => setRotationSpeed((prev) => -prev) },
-  ]
-
   return (
-    <div className="flex flex-col items-center gap-5 w-full">
-      <div className="flex w-full max-w-[420px] flex-wrap items-center justify-center gap-2">
-        {controls.map((btn) => (
-          <button
-            key={btn.label}
-            onClick={btn.onClick}
-            className="flex-1 min-w-[140px] rounded-lg px-3 py-2 text-xs font-medium transition-all sm:flex-initial sm:min-w-[0] sm:px-4 sm:text-sm"
-            style={{
-              backgroundColor: resolvedTheme.buttonBg,
-              color: resolvedTheme.buttonText,
-              border: `1px solid ${resolvedTheme.buttonBorder}`,
-            }}
-          >
-            {btn.label}
-          </button>
-        ))}
+    <div className="flex flex-col items-center gap-4 w-full">
+      <div className="flex w-full justify-center">
+        <button
+          onClick={toggleAutoRotation}
+          aria-pressed={isAutoRotating}
+          className="flex min-w-[170px] items-center justify-between gap-3 rounded-full px-5 py-2 text-sm font-semibold tracking-wide transition-all"
+          style={{
+            backgroundColor: resolvedTheme.buttonBg,
+            color: resolvedTheme.buttonText,
+            border: `1px solid ${resolvedTheme.buttonBorder}`,
+            opacity: isAutoRotating ? 1 : 0.75,
+          }}
+        >
+          <span>Auto</span>
+          <span className="text-xs font-bold">{autoStateLabel}</span>
+        </button>
       </div>
 
       <div
@@ -206,16 +202,17 @@ export function TogelCertificateCard({
                 </div>
               </div>
 
-              <div className="relative z-10 px-5 pt-1 pb-4">
-                <div className="mb-3">
+              <div className="relative z-10 flex flex-col gap-3 px-5 pt-2 pb-5">
+                <div className="space-y-1">
                   <span className="text-[9px] uppercase tracking-[0.2em] font-semibold" style={{ color: resolvedTheme.textMuted }}>
                     Member
                   </span>
                   <h2
-                    className="text-3xl font-serif font-bold tracking-tight leading-none mt-0.5 sm:text-4xl"
+                    className="text-2xl font-serif font-bold tracking-tight leading-tight sm:text-3xl md:text-4xl"
                     style={{
                       color: resolvedTheme.text,
                       textShadow: isDark ? "0 1px 2px rgba(0,0,0,0.3)" : "0 1px 1px rgba(255,255,255,0.5)",
+                      wordBreak: "break-word",
                     }}
                   >
                     {nickname}
@@ -223,7 +220,7 @@ export function TogelCertificateCard({
                 </div>
 
                 <div
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md"
+                  className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-md px-3 py-1.5"
                   style={{
                     background: `${resolvedTheme.accent}20`,
                     border: `1px solid ${resolvedTheme.accent}50`,

@@ -10,7 +10,7 @@ import { Bell, Coins, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle,
 import { TogelCertificateCard } from "@/components/certificate/togel-certificate-card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { generateThemeFromColor, presetColors } from "@/lib/color-theme";
+import { generateThemeFromColor } from "@/lib/color-theme";
 import { personalityTypes } from "@/lib/personality";
 
 type Notification = {
@@ -105,6 +105,18 @@ const formatTogelTypeCode = (typeId?: string | null) => {
   const index = personalityTypes.findIndex((type) => type.id === typeId);
   const padded = index === -1 ? "00" : String(index + 1).padStart(2, "0");
   return `Togel-${padded}type`;
+};
+
+const formatRegistrationDate = (value?: string | null) => {
+  if (!value) return "--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+  const formatted = new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+  return formatted.replace(/\//g, ".");
 };
 
 export default function MyPage() {
@@ -284,11 +296,6 @@ export default function MyPage() {
     !!profile?.city;
 
   const certificateTypeCode = formatTogelTypeCode(profile?.diagnosis_type_id);
-  const registeredAt = profile?.created_at || user?.created_at;
-  const memberSince = registeredAt
-    ? new Date(registeredAt).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric" })
-    : "--";
-
   const certificateBaseColor = certificateColor || getDefaultCertificateColor(profile?.gender);
   const certificateNickname =
     profile?.full_name ||
@@ -297,9 +304,9 @@ export default function MyPage() {
     user?.email?.split("@")[0] ||
     "Togel Member";
   const certificateSubtitle = formatTypeNameEn(profile?.diagnosis_type_id);
-  const certificateDate = registeredAt
-    ? new Date(registeredAt).toISOString().split("T")[0].replace(/-/g, ".")
-    : "--";
+  const registeredAt = profile?.created_at || user?.created_at;
+  const certificateDateDisplay = formatRegistrationDate(registeredAt);
+  const memberSince = certificateDateDisplay;
 
   const handleCopyLink = () => {
     if (!user) return;
@@ -321,7 +328,7 @@ export default function MyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 md:py-20">
+    <div className="min-h-screen bg-slate-50 py-12 md:py-20 overflow-x-hidden">
       <div className="container px-4 md:px-6 max-w-4xl">
         
         {/* Header Section */}
@@ -379,7 +386,7 @@ export default function MyPage() {
                     nickname={certificateNickname}
                     togelType={certificateTypeCode}
                     togelLabel={certificateSubtitle}
-                    registrationDate={certificateDate}
+                    registrationDate={certificateDateDisplay}
                   />
                 </div>
               </div>
@@ -568,7 +575,6 @@ type CertificateColorPanelProps = {
 const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateColorPanelProps) => {
   const [inputValue, setInputValue] = useState(currentColor.toUpperCase());
   const themePreview = useMemo(() => generateThemeFromColor(currentColor), [currentColor]);
-  const normalizedColor = currentColor.toLowerCase();
 
   useEffect(() => {
     setInputValue(currentColor.toUpperCase());
@@ -589,12 +595,12 @@ const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateCo
   };
 
   return (
-    <div className="rounded-[26px] border border-slate-100 bg-white px-4 py-4 shadow-sm space-y-4 sm:px-5">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-3xl border border-slate-100 bg-white px-4 py-4 shadow-sm space-y-3 sm:px-5">
+      <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">Color Control</p>
           <h3 className="font-semibold text-base text-slate-900 mt-1">カードカラー</h3>
-          <p className="text-xs text-slate-500 mt-0.5">プリセット or HEX でサッと変更</p>
+          <p className="text-xs text-slate-500 mt-0.5">HEXとピッカーで直感操作</p>
         </div>
         <div className="rounded-2xl bg-slate-50 p-1.5 text-slate-600">
           <Palette size={16} />
@@ -602,58 +608,40 @@ const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateCo
       </div>
 
       <div className="flex items-center gap-3">
-        <input
-          type="color"
-          value={currentColor}
-          onChange={(event) => onSelect(event.target.value.toLowerCase())}
-          className="w-10 h-10 rounded-full border border-slate-200 shadow-inner cursor-pointer"
-        />
+        <label className="relative h-10 w-10">
+          <span
+            className="absolute inset-0 rounded-full border border-slate-200 shadow-inner"
+            style={{ backgroundColor: currentColor }}
+          />
+          <input
+            type="color"
+            value={currentColor}
+            onChange={(event) => onSelect(event.target.value.toLowerCase())}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            aria-label="色を選択"
+          />
+        </label>
         <input
           type="text"
           value={inputValue}
           onChange={(event) => handleInputChange(event.target.value)}
           className="flex-1 h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 font-mono text-sm focus:border-slate-400 focus:outline-none"
           placeholder="#F8BBD9"
+          aria-label="HEXカラーコード"
         />
       </div>
 
-      <div>
-        <p className="text-[11px] font-semibold text-slate-500 mb-2">プリセット</p>
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-          {presetColors.map((preset) => (
-            <button
-              key={preset.name}
-              type="button"
-              onClick={() => onSelect(preset.color.toLowerCase())}
-              className={`h-10 rounded-2xl border transition-all ${
-                normalizedColor === preset.color.toLowerCase()
-                  ? "ring-2 ring-offset-2 ring-slate-900"
-                  : "hover:opacity-90"
-              }`}
-              style={{
-                background: preset.isDark
-                  ? `linear-gradient(145deg, ${preset.color} 0%, #000 100%)`
-                  : `linear-gradient(145deg, #fff 0%, ${preset.color} 100%)`,
-                borderColor: preset.color,
-              }}
-            >
-              <span className="sr-only">{preset.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="text-[11px] font-semibold text-slate-500 mb-1.5">テーマプレビュー</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-semibold text-slate-500">Palette Preview</p>
         <div className="flex gap-1.5">
-          {[themePreview.primary, themePreview.secondary, themePreview.accent, themePreview.text, themePreview.textMuted].map((color) => (
-            <div key={color} className="flex-1 h-8 rounded-lg border border-slate-100" style={{ backgroundColor: color }} />
+          {[themePreview.primary, themePreview.accent, themePreview.text].map((color) => (
+            <span key={color} className="h-6 w-6 rounded-full border border-slate-100" style={{ backgroundColor: color }} />
           ))}
         </div>
       </div>
 
       <p className="text-[10px] text-slate-400 text-right">
-        {saving ? "保存中..." : "タップで即保存"}
+        {saving ? "保存中..." : "タップするだけで即保存"}
       </p>
     </div>
   );
