@@ -696,7 +696,7 @@ type ThemePanelProps = {
 };
 
 const CertificateThemePanel = ({ options, currentTheme, onSelect, saving, gender }: ThemePanelProps) => (
-  <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm h-full flex flex-col">
+  <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
     <div className="flex items-center gap-3 mb-4">
       <div className="p-2 rounded-2xl bg-slate-100 text-slate-600">
         <Palette className="h-4 w-4" />
@@ -712,7 +712,7 @@ const CertificateThemePanel = ({ options, currentTheme, onSelect, saving, gender
         </p>
       </div>
     </div>
-    <div className="grid grid-cols-2 gap-3 flex-1">
+    <div className="grid grid-cols-2 gap-3">
       {options.map((option) => {
         const theme = CERTIFICATE_THEMES[option];
         const isActive = option === currentTheme;
