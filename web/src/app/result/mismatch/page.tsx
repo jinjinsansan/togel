@@ -73,10 +73,10 @@ const MismatchResultPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="container py-10">
+      <div className="w-full md:container py-8 md:py-10">
         <div className="mx-auto max-w-5xl">
           {/* ヘッダー */}
-          <div className="text-center mb-8">
+          <div className="text-center px-4 md:px-0 mb-8">
             <p className="text-sm font-semibold text-red-400">⚠️ DANGER ZONE</p>
             <h1 className="mt-2 font-heading text-4xl text-white">ミスマッチランキング</h1>
             <p className="mt-3 text-gray-300">
@@ -91,8 +91,8 @@ const MismatchResultPage = () => {
 
           {/* あなたのタイプセクション（簡易版） */}
           {diagnosis?.detailedNarrative && (
-            <div className="mb-10 rounded-3xl border-2 border-gray-700 bg-gray-800/90 p-6 shadow-xl">
-              <div className="border-b border-gray-700 pb-3">
+            <div className="mb-10 rounded-none md:rounded-3xl border-0 md:border-2 border-gray-700 bg-gray-800/80 px-5 py-6 md:p-6 shadow-none md:shadow-xl">
+              <div className="pb-3 md:border-b md:border-gray-700">
                 <p className="text-xs font-bold uppercase tracking-[0.4em] text-gray-400">📊 あなたの性格診断結果</p>
                 <h2 className="mt-2 font-heading text-2xl text-white">{diagnosis.detailedNarrative.title}</h2>
                 <p className="mt-1 text-base font-medium text-gray-300">{diagnosis.detailedNarrative.subtitle}</p>
@@ -115,9 +115,9 @@ const MismatchResultPage = () => {
           )}
 
           {/* ミスマッチランキング */}
-          <div className="space-y-8">
+          <div className="mt-8 space-y-0 md:space-y-8">
             {results.length === 0 && (
-              <div className="rounded-3xl border border-dashed border-gray-600 bg-gray-800/50 px-6 py-12 text-center">
+              <div className="rounded-none md:rounded-3xl border border-dashed border-gray-600 bg-gray-800/50 px-6 py-12 text-center">
                 <p className="text-gray-400">まだ診断結果がありません。</p>
                 <Button asChild className="mt-4">
                   <Link href="/diagnosis/select">診断ページへ</Link>
@@ -128,10 +128,10 @@ const MismatchResultPage = () => {
             {results.map((result) => (
               <div
                 key={result.profile.id}
-                className="rounded-3xl border-2 border-red-900/50 bg-gradient-to-br from-gray-800 to-gray-900 p-6 shadow-2xl hover:shadow-red-900/20 transition-shadow"
+                className="rounded-none md:rounded-3xl border-0 md:border-2 md:border-red-900/50 bg-gradient-to-br from-gray-800/80 via-gray-900/80 to-gray-900 px-4 py-6 md:px-6 md:py-6 shadow-none md:shadow-2xl hover:shadow-red-900/20 transition-shadow"
               >
                 {/* ヘッダー */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-4 border-b border-gray-700">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-4 md:border-b md:border-gray-700">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="relative h-24 w-24">
                       <Image
@@ -172,7 +172,7 @@ const MismatchResultPage = () => {
                 </div>
 
                 {/* キャッチフレーズ */}
-                <div className="mt-4 p-4 rounded-2xl bg-red-950/50 border-2 border-red-900/50">
+                <div className="mt-4 p-4 rounded-2xl bg-red-950/30 md:border md:border-red-900/50">
                   <p className="text-base font-bold text-red-400 text-center flex items-center justify-center gap-2">
                     <span className="text-2xl">⚠️</span>
                     {result.catchphrase}
@@ -181,7 +181,7 @@ const MismatchResultPage = () => {
 
                 {/* 💀 この人のヤバい特徴 */}
                 {result.profileNarrative && (
-                  <div className="mt-4 rounded-2xl bg-gray-700/30 border border-gray-600 p-5">
+                  <div className="mt-4 rounded-2xl bg-gray-800/40 md:border md:border-gray-600 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-white">
                       <span className="text-2xl">💀</span>
                       {result.profile.nickname}のヤバい特徴
@@ -196,7 +196,7 @@ const MismatchResultPage = () => {
                     </ul>
                     
                     {result.profileNarrative.incompatibleValues.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-600">
+                      <div className="mt-3 pt-3 md:border-t md:border-gray-600">
                         <p className="text-xs font-semibold text-gray-400 mb-2">🚫 あなたとは真逆の価値観</p>
                         <ul className="space-y-1 text-sm text-gray-300">
                           {result.profileNarrative.incompatibleValues.map((value, idx) => (
@@ -217,14 +217,14 @@ const MismatchResultPage = () => {
 
                 {/* 🚨 なぜミスマッチ？ */}
                 {result.mismatchReasons && result.mismatchReasons.length > 0 && (
-                  <div className="mt-4 rounded-2xl bg-red-950/30 border border-red-900/50 p-5">
+                  <div className="mt-4 rounded-2xl bg-red-950/30 md:border md:border-red-900/50 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-4 text-white">
                       <span className="text-2xl">🚨</span>
                       なぜあなたとミスマッチ？
                     </h4>
                     <div className="space-y-4">
                       {result.mismatchReasons.map((reason, idx) => (
-                        <div key={idx} className="rounded-xl bg-gray-800/50 border border-gray-700 p-4">
+                        <div key={idx} className="rounded-xl bg-gray-800/50 md:border md:border-gray-700 p-4">
                           <p className="font-bold text-base mb-2 text-red-400">{idx + 1}. {reason.title}</p>
                           <div className="space-y-1 text-sm text-gray-400">
                             <p>{reason.userTrait}</p>
@@ -242,7 +242,7 @@ const MismatchResultPage = () => {
 
                 {/* 🔥 付き合ったら起こる地獄のシナリオ */}
                 {result.disasterScenario && (
-                  <div className="mt-4 rounded-2xl bg-orange-950/30 border border-orange-900/50 p-5">
+                  <div className="mt-4 rounded-2xl bg-orange-950/30 md:border md:border-orange-900/50 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-white">
                       <span className="text-2xl">🔥</span>
                       付き合ったら起こる地獄のシナリオ
@@ -260,7 +260,7 @@ const MismatchResultPage = () => {
                     )}
 
                     {result.disasterScenario.warnings.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-orange-900/50">
+                      <div className="mt-3 pt-3 md:border-t md:border-orange-900/50">
                         <p className="text-xs font-semibold text-red-500 mb-2">⚠️ 深刻な警告</p>
                         <ul className="space-y-1 text-sm text-gray-300">
                           {result.disasterScenario.warnings.map((warning, idx) => (
@@ -274,7 +274,7 @@ const MismatchResultPage = () => {
 
                 {/* 🚫 絶対にやってはいけないこと */}
                 {result.absolutelyNotToDo && result.absolutelyNotToDo.length > 0 && (
-                  <div className="mt-4 rounded-2xl bg-red-950/50 border-2 border-red-900 p-5">
+                  <div className="mt-4 rounded-2xl bg-red-950/40 md:border-2 md:border-red-900 p-5">
                     <h4 className="flex items-center gap-2 text-lg font-bold mb-3 text-white">
                       <span className="text-2xl">🚫</span>
                       絶対にやってはいけないこと
@@ -291,7 +291,7 @@ const MismatchResultPage = () => {
                 )}
 
                 {/* 注意メッセージ */}
-                <div className="mt-6 p-4 rounded-xl bg-gray-700/50 border border-gray-600">
+                <div className="mt-6 p-4 rounded-xl bg-gray-700/40 md:border md:border-gray-600">
                   <p className="text-sm text-gray-300 text-center">
                     <span className="font-bold text-red-400">AI判定：</span> この組み合わせは避けるべき。時間の無駄。
                   </p>
@@ -310,7 +310,7 @@ const MismatchResultPage = () => {
           </div>
 
           {/* フッター */}
-          <div className="mt-12 text-center">
+          <div className="mt-12 text-center px-4 md:px-0">
             <p className="text-sm text-gray-500">
               ※ この診断結果はエンターテイメント目的です。実際の相性は人それぞれです。
             </p>

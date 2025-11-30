@@ -3,7 +3,35 @@ import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/admin/check-admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-type AdminOverviewRow = Record<string, any>;
+type JsonRecord = Record<string, unknown>;
+
+type AdminOverviewRow = {
+  user_id: string;
+  auth_user_id: string | null;
+  line_user_id: string | null;
+  user_gender: string | null;
+  nickname: string | null;
+  city: string | null;
+  job: string | null;
+  age: number | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  is_public: boolean | null;
+  diagnosis_type_id: number | null;
+  notification_settings: JsonRecord | null;
+  social_links: JsonRecord | null;
+  details: JsonRecord | null;
+  user_created_at: string;
+  profile_updated_at: string | null;
+  is_blocked: boolean;
+  blocked_reason: string | null;
+  blocked_at: string | null;
+  is_deleted: boolean;
+  deleted_at: string | null;
+  admin_notes: string | null;
+  is_mock_data: boolean;
+  profile_gender?: string | null;
+};
 
 const parseNumber = (value: string | null, fallback: number, opts?: { min?: number; max?: number }) => {
   const parsed = Number(value);
@@ -103,7 +131,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to load users" }, { status: 500 });
   }
 
-  const typedRows = (rows ?? []) as AdminOverviewRow[];
+  const typedRows = (rows ?? []) as unknown as AdminOverviewRow[];
 
   const userIds = typedRows.map((row) => row.user_id as string).filter(Boolean);
 
