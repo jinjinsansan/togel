@@ -104,6 +104,10 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   const supabase = createClientComponentClient();
 
   useEffect(() => {
+    if (isMockProfile) {
+      return;
+    }
+
     const fetchProfile = async () => {
       const {
         data: { session },
