@@ -4,9 +4,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { generateMatchingResults, generateMismatchingResults, generateDiagnosisResult, generateSingleMatchingResult } from "@/lib/matching/engine";
+import { getMatchingCacheExpiry } from "@/lib/matching/cache";
 import { getTogelLabel } from "@/lib/personality";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { MatchingResult } from "@/types/diagnosis";
+
+type NotificationPayload = {
+  user_id: string;
+  type: "matching" | "admin" | "system";
+  title: string;
+  content: string;
+  metadata: Record<string, unknown>;
+};
 
 const schema = z.object({
   diagnosisType: z.enum(["light", "full"]),
@@ -196,6 +205,8 @@ export const POST = async (request: Request) => {
         diagnosis_type: parsed.data.diagnosisType,
         animal_type: animalType,
         answers: parsed.data.answers,
+        personality_type_id: typeId,
+        big_five_scores: diagnosisResult.bigFiveScores,
       })
       .select("id")
       .single();
@@ -243,6 +254,9 @@ export const POST = async (request: Request) => {
         user_id: userId,
         diagnosis_result_id: insertResult.id,
         matched_users: results,
+        mismatched_users: mismatchResults,
+        featured_user: featuredResult,
+        expires_at: getMatchingCacheExpiry(),
       });
       if (cacheError) console.warn("Failed to cache matching results", cacheError);
 
@@ -254,35 +268,39 @@ export const POST = async (request: Request) => {
       (async () => {
         try {
           const submitterName = user?.user_metadata?.full_name || "ゲスト";
-          
-          // 結果の上位5名をループ
-          for (const result of results.slice(0, 5)) {
-            const targetUserId = result.profile.id;
-            
-            // 相手のプロフィールと設定を取得
-            const { data: targetProfile } = await supabaseAdmin
-              .from("profiles")
-              .select("notification_settings, id")
-              .eq("id", targetUserId)
-              .single();
+          const rankedResults = results.slice(0, 5);
+          if (rankedResults.length === 0) return;
 
-            // 設定がない場合はデフォルトON、明示的にfalseなら送らない
-            const settings = targetProfile?.notification_settings || {};
-            if (settings.rank_in === false) continue;
+          const targetIds = rankedResults.map((result) => result.profile.id);
+          const { data: targetProfiles } = await supabaseAdmin
+            .from("profiles")
+            .select("id, notification_settings")
+            .in("id", targetIds);
 
-            // 通知を作成
-            await supabaseAdmin.from("notifications").insert({
-              user_id: targetUserId,
+          const settingsMap = new Map<string, Record<string, unknown>>(
+            (targetProfiles ?? []).map((profile) => [profile.id, profile.notification_settings || {}])
+          );
+
+          const payloads = rankedResults.reduce<NotificationPayload[]>((acc, result) => {
+            const preferences = settingsMap.get(result.profile.id) || {};
+            if (preferences.rank_in === false) return acc;
+            acc.push({
+              user_id: result.profile.id,
               type: "matching",
               title: `🎉 ${result.ranking}位にランクイン！`,
               content: `${submitterName}さんの診断結果で、あなたが相性の良いお相手${result.ranking}位に選ばれました！\n相性度: ${result.score}%`,
               metadata: {
                 rank: result.ranking,
                 score: result.score,
-                submitter_id: user?.id, // 相手のID (リンク用)
-                url: `/profile/${user?.id || ""}` // プロフィールへのリンク
-              }
+                submitter_id: user?.id ?? null,
+                url: user?.id ? `/profile/${user.id}` : null,
+              },
             });
+            return acc;
+          }, []);
+
+          if (payloads.length > 0) {
+            await supabaseAdmin.from("notifications").insert(payloads);
           }
         } catch (bgError) {
           console.error("Background notification error:", bgError);

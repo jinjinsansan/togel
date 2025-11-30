@@ -15,21 +15,23 @@ export type TogelDistributionItem = {
 
 export const loadTogelDistribution = async () => {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase.from("diagnosis_results").select("animal_type");
-
-  if (error) {
-    throw error;
-  }
-
-  const rows = data ?? [];
-  const total = rows.length;
   const counts = new Map<string, number>();
+  let total = 0;
 
-  rows.forEach((row) => {
-    const rawLabel = row.animal_type ?? "Unknown";
-    const normalized = typeof rawLabel === "string" ? rawLabel.replace(/^TOGEL/, "Togel") : rawLabel;
-    counts.set(normalized, (counts.get(normalized) ?? 0) + 1);
-  });
+  try {
+    const { data, error } = await supabase.from("togel_type_counts").select("animal_type, total");
+    if (error) throw error;
+
+    const rows = data ?? [];
+    rows.forEach((row) => {
+      if (!row?.animal_type) return;
+      const count = Number(row.total) || 0;
+      counts.set(row.animal_type, count);
+      total += count;
+    });
+  } catch (error) {
+    console.error("Failed to load togel distribution", error);
+  }
 
   const distribution: TogelDistributionItem[] = personalityTypes.map((type) => {
     const label = getTogelLabel(type.id);
@@ -49,9 +51,9 @@ export const loadTogelDistribution = async () => {
     };
   });
 
-  const legacyRemainders = Array.from(counts.entries()).map(([label, count]) => ({
+  const legacyRemainders = Array.from(counts.entries()).map(([label, value]) => ({
     label,
-    count,
+    count: value,
   }));
 
   return {

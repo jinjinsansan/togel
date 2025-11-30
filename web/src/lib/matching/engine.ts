@@ -139,6 +139,9 @@ type UserRow = {
   favorite_things: string;
   hobbies: string;
   special_skills: string;
+  auth_user_id?: string | null;
+  updated_at?: string | null;
+  last_viewed_results_at?: string | null;
 };
 
 const isValidHttpsUrl = (candidate: string): boolean => {
@@ -195,17 +198,76 @@ const mapUserRowToProfile = (row: UserRow, index: number): MatchingProfile => {
 const loadRealProfiles = async (gender: Gender): Promise<MatchingProfile[]> => {
   try {
     const supabase = createSupabaseAdminClient();
+    
+    // アクティブユーザー定義: 以下のいずれかを満たす
+    // 1. 直近2週間以内にログインした
+    // 2. 直近1週間以内にプロフィールを更新した
+    // 3. 直近1週間以内にマッチング結果を閲覧した
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    // まず条件2,3でフィルタ（updated_at または last_viewed_results_at）
     const { data, error } = await supabase
       .from("users")
-      .select("id, nickname, gender, age, avatar_url, bio, job, favorite_things, hobbies, special_skills, created_at")
+      .select("id, nickname, gender, age, avatar_url, bio, job, favorite_things, hobbies, special_skills, created_at, updated_at, last_viewed_results_at, auth_user_id")
       .eq("gender", gender)
       .eq("is_mock_data", false)
-      .order("created_at", { ascending: false })
-      .limit(200);
+      .or(`updated_at.gte.${oneWeekAgo.toISOString()},last_viewed_results_at.gte.${oneWeekAgo.toISOString()}`)
+      .order("updated_at", { ascending: false })
+      .limit(100);
 
     if (error || !data) {
       console.error("Failed to load real profiles", error);
       return [];
+    }
+    
+    // 条件1: auth.users.last_sign_in_at で2週間以内にログインしたユーザーを追加取得
+    // （auth_user_idがある場合のみ）
+    const authUserIds = data
+      .map(u => u.auth_user_id)
+      .filter((id): id is string => !!id);
+    
+    let recentLoginUserIds: string[] = [];
+    
+    if (authUserIds.length > 0) {
+      try {
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+        
+        if (!authError && authUsers?.users) {
+          recentLoginUserIds = authUsers.users
+            .filter(au => 
+              au.last_sign_in_at && 
+              new Date(au.last_sign_in_at) >= twoWeeksAgo
+            )
+            .map(au => au.id);
+        }
+      } catch (authErr) {
+        console.warn("Failed to check auth last_sign_in_at", authErr);
+      }
+    }
+    
+    // 条件1で追加すべきユーザー（まだ含まれていない）を取得
+    const existingIds = new Set(data.map(u => u.id));
+    const additionalAuthUserIds = recentLoginUserIds.filter(aid => {
+      const correspondingUser = data.find(u => u.auth_user_id === aid);
+      return correspondingUser ? !existingIds.has(correspondingUser.id) : false;
+    });
+    
+    if (additionalAuthUserIds.length > 0) {
+      const { data: additionalData } = await supabase
+        .from("users")
+        .select("id, nickname, gender, age, avatar_url, bio, job, favorite_things, hobbies, special_skills, created_at, updated_at, last_viewed_results_at, auth_user_id")
+        .eq("gender", gender)
+        .eq("is_mock_data", false)
+        .in("auth_user_id", additionalAuthUserIds)
+        .limit(50);
+      
+      if (additionalData && additionalData.length > 0) {
+        data.push(...additionalData);
+      }
     }
 
     return data.map((row, index) => mapUserRowToProfile(row as UserRow, index));

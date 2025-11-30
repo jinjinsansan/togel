@@ -101,6 +101,15 @@ type DiagnosisHistoryEntry = {
   completedAt: string | null;
 };
 
+type DiagnosisHistoryMeta = {
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+};
+
+const HISTORY_PAGE_SIZE = 10;
+
 const getDefaultCertificateColor = (gender?: UserGender) => DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
 
 const toTitleCase = (value: string) => value.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
@@ -159,7 +168,9 @@ export default function MyPage() {
   const [themeSaving, setThemeSaving] = useState(false);
   const [diagnosisHistory, setDiagnosisHistory] = useState<DiagnosisHistoryEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyMeta, setHistoryMeta] = useState<DiagnosisHistoryMeta>({ total: 0, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
   
   const supabase = createClientComponentClient();
 
@@ -177,25 +188,49 @@ export default function MyPage() {
     setCertificateColor(nextColor);
   }, []);
 
-  const fetchDiagnosisHistory = useCallback(async () => {
-    setHistoryLoading(true);
+  const fetchDiagnosisHistory = useCallback(async (nextOffset = 0, append = false) => {
+    if (append) {
+      setHistoryLoadingMore(true);
+    } else {
+      setHistoryLoading(true);
+    }
     setHistoryError(null);
     try {
-      const res = await fetch("/api/diagnosis/history");
+      const params = new URLSearchParams({
+        limit: String(HISTORY_PAGE_SIZE),
+        offset: String(nextOffset),
+      });
+      const res = await fetch(`/api/diagnosis/history?${params.toString()}`);
       if (res.status === 401) {
         setDiagnosisHistory([]);
+        setHistoryMeta({ total: 0, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
         return;
       }
       if (!res.ok) {
         throw new Error("Failed to load history");
       }
       const data = await res.json();
-      setDiagnosisHistory(Array.isArray(data.history) ? data.history : []);
+      const entries = Array.isArray(data.history) ? data.history : [];
+      setDiagnosisHistory((prev) => (append ? [...prev, ...entries] : entries));
+      if (data.meta) {
+        setHistoryMeta({
+          total: Number(data.meta.total) || entries.length,
+          limit: Number(data.meta.limit) || HISTORY_PAGE_SIZE,
+          offset: Number(data.meta.offset) || nextOffset,
+          hasMore: Boolean(data.meta.hasMore),
+        });
+      } else if (!append) {
+        setHistoryMeta({ total: entries.length, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
+      }
     } catch (err) {
       console.error("Failed to load diagnosis history", err);
       setHistoryError("診断履歴を取得できませんでした。");
     } finally {
-      setHistoryLoading(false);
+      if (append) {
+        setHistoryLoadingMore(false);
+      } else {
+        setHistoryLoading(false);
+      }
     }
   }, []);
 
@@ -465,7 +500,7 @@ export default function MyPage() {
               </div>
               <h2 className="font-bold text-lg text-slate-800">診断ヒストリー</h2>
             </div>
-            {historyLoading ? (
+            {historyLoading && diagnosisHistory.length === 0 ? (
               <div className="flex items-center justify-center py-10">
                 <div className="animate-spin rounded-full h-6 w-6 border-4 border-slate-200 border-t-[#E91E63]"></div>
               </div>
@@ -500,6 +535,17 @@ export default function MyPage() {
                   );
                 })}
               </ol>
+            )}
+            {historyMeta.hasMore && (
+              <div className="mt-6 text-center">
+                <Button
+                  variant="outline"
+                  onClick={() => fetchDiagnosisHistory(historyMeta.offset + historyMeta.limit, true)}
+                  disabled={historyLoadingMore}
+                >
+                  {historyLoadingMore ? "読み込み中..." : "さらに表示"}
+                </Button>
+              </div>
             )}
           </div>
         </section>

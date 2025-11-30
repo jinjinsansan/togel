@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { requireAdminUser } from "@/lib/admin/check-admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+type AdminOverviewRow = Record<string, any>;
+
 const parseNumber = (value: string | null, fallback: number, opts?: { min?: number; max?: number }) => {
   const parsed = Number(value);
   if (Number.isNaN(parsed) || parsed <= 0) return fallback;
@@ -30,7 +32,35 @@ export async function GET(request: Request) {
 
   let overviewQuery = supabaseAdmin
     .from("admin_user_overview")
-    .select("*", { count: "exact" })
+    .select(
+      [
+        "user_id",
+        "auth_user_id",
+        "line_user_id",
+        "user_gender",
+        "nickname",
+        "city",
+        "job",
+        "age",
+        "full_name",
+        "avatar_url",
+        "is_public",
+        "diagnosis_type_id",
+        "notification_settings",
+        "social_links",
+        "details",
+        "user_created_at",
+        "profile_updated_at",
+        "is_blocked",
+        "blocked_reason",
+        "blocked_at",
+        "is_deleted",
+        "deleted_at",
+        "admin_notes",
+        "is_mock_data"
+      ].join(","),
+      { count: "exact" }
+    )
     .range(offset, offset + limit - 1);
 
   if (gender !== "all") {
@@ -73,7 +103,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to load users" }, { status: 500 });
   }
 
-  const userIds = rows?.map((row) => row.user_id).filter(Boolean) as string[];
+  const typedRows = (rows ?? []) as AdminOverviewRow[];
+
+  const userIds = typedRows.map((row) => row.user_id as string).filter(Boolean);
 
   let diagnosisRows: { user_id: string; created_at: string; diagnosis_type: string }[] = [];
   let featuredRows: { user_id: string; target_gender: string; start_at: string; end_at: string; active: boolean }[] = [];
@@ -131,19 +163,19 @@ export async function GET(request: Request) {
     }
   });
 
-  const users = (rows ?? []).map((row) => {
+  const users = typedRows.map((row) => {
     const notifSettings = (row.notification_settings as Record<string, unknown>) || {};
     const socialLinks = (row.social_links as Record<string, unknown>) || {};
     const details = (row.details as Record<string, unknown>) || {};
-    const stats = diagnosisMap.get(row.user_id) ?? {
+    const stats = diagnosisMap.get(row.user_id as string) ?? {
       totalDiagnoses: 0,
       lastDiagnosisAt: null,
       lastDiagnosisType: null,
     };
-    const featured = featuredMap.get(row.user_id) || null;
+    const featured = featuredMap.get(row.user_id as string) || null;
 
     return {
-      id: row.user_id,
+      id: row.user_id as string,
       fullName: row.full_name,
       nickname: row.nickname,
       gender: row.profile_gender || row.user_gender,

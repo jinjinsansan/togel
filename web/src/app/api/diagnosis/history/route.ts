@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult } from "@/lib/matching/engine";
 import { Answer } from "@/types/diagnosis";
+import { getTogelLabel, personalityTypes } from "@/lib/personality";
 
 const resolveUserId = async (supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>, authUserId: string) => {
   const { data: authLinked } = await supabaseAdmin
@@ -31,7 +32,7 @@ const resolveUserId = async (supabaseAdmin: ReturnType<typeof createSupabaseAdmi
   return null;
 };
 
-export const GET = async () => {
+export const GET = async (request: Request) => {
   const cookieStore = cookies();
   const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
   const {
@@ -57,25 +58,37 @@ export const GET = async () => {
 
   const gender = profile?.gender === "female" ? "female" : "male";
 
-  const { data: rows, error } = await supabaseAdmin
+  const url = new URL(request.url);
+  const limitParam = Number(url.searchParams.get("limit"));
+  const offsetParam = Number(url.searchParams.get("offset"));
+  const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 50) : 10;
+  const offset = Number.isFinite(offsetParam) ? Math.max(offsetParam, 0) : 0;
+
+  const { data: rows, error, count } = await supabaseAdmin
     .from("diagnosis_results")
-    .select("id, diagnosis_type, animal_type, answers, created_at, completed_at")
+    .select("id, diagnosis_type, animal_type, personality_type_id, big_five_scores, answers, created_at, completed_at", { count: "exact" })
     .eq("user_id", userId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .range(offset, offset + limit - 1);
 
   if (error || !rows) {
     console.error("Failed to load diagnosis history", error);
     return NextResponse.json({ history: [] });
   }
 
+  const fallbackTypeName = (typeId: string | null) => {
+    if (!typeId) return null;
+    return personalityTypes.find((type) => type.id === typeId)?.typeName ?? null;
+  };
+
   const history = rows.map((row, index) => {
     const answers = Array.isArray(row.answers) ? (row.answers as Answer[]) : [];
     const mode: "light" | "full" = row.diagnosis_type === "full" ? "full" : "light";
-    let togelTypeId: string | null = null;
-    const togelLabel: string | null = row.animal_type ?? null;
-    let typeName: string | null = null;
+    let togelTypeId: string | null = row.personality_type_id ?? null;
+    let typeName: string | null = fallbackTypeName(togelTypeId);
+    let togelLabel: string | null = row.animal_type ?? (togelTypeId ? getTogelLabel(togelTypeId) : null);
 
-    if (answers.length > 0) {
+    if ((!togelTypeId || !typeName) && answers.length > 0) {
       const diagnosis = generateDiagnosisResult({
         diagnosisType: mode,
         userGender: gender,
@@ -83,11 +96,12 @@ export const GET = async () => {
       });
       togelTypeId = diagnosis.personalityType.id;
       typeName = diagnosis.personalityType.typeName ?? null;
+      togelLabel = getTogelLabel(togelTypeId);
     }
 
     return {
       id: row.id,
-      occurrence: index + 1,
+      occurrence: offset + index + 1,
       mode,
       togelTypeId,
       togelLabel,
@@ -96,5 +110,15 @@ export const GET = async () => {
     };
   });
 
-  return NextResponse.json({ history });
+  const total = count ?? history.length;
+
+  return NextResponse.json({
+    history,
+    meta: {
+      total,
+      limit,
+      offset,
+      hasMore: offset + history.length < total,
+    },
+  });
 };

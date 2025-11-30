@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { loadTogelDistribution } from "@/lib/personality/distribution";
 
-export const revalidate = 0;
+export const revalidate = 600;
 
 const DistributionPage = async () => {
   const { total, distribution } = await loadTogelDistribution();

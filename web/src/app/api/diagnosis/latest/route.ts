@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult, generateMatchingResults, generateMismatchingResults } from "@/lib/matching/engine";
 import { Answer } from "@/types/diagnosis";
 import { estimateProfileScores } from "@/lib/personality";
+import { getMatchingCacheExpiry, isMatchingCacheValid } from "@/lib/matching/cache";
 
 export const GET = async () => {
   const cookieStore = cookies();
@@ -53,7 +54,7 @@ export const GET = async () => {
     // キャッシュがあれば重いマッチング計算をスキップできる
     const { data: cachedData } = await supabaseAdmin
       .from("matching_cache")
-      .select("matched_users, diagnosis_result_id")
+      .select("matched_users, mismatched_users, featured_user, diagnosis_result_id, expires_at")
       .eq("user_id", userData.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -96,18 +97,38 @@ export const GET = async () => {
 
     // マッチング結果の取得
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let results: any[];
+    let results: any[] = [];
     let mismatchResults;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const featuredResult: any = cachedData?.featured_user ?? null;
 
     // キャッシュが有効（存在し、かつ最新の診断結果に対応している）なら使用
-    if (cachedData && cachedData.diagnosis_result_id === latestDiagnosis.id && cachedData.matched_users) {
-      // console.log("Using cached matching results");
+    const cacheUsable =
+      cachedData &&
+      cachedData.diagnosis_result_id === latestDiagnosis.id &&
+      cachedData.matched_users &&
+      isMatchingCacheValid(cachedData.expires_at);
+
+    if (cacheUsable) {
       results = cachedData.matched_users;
-      mismatchResults = await generateMismatchingResults(inputData);
+      mismatchResults = cachedData.mismatched_users ?? (await generateMismatchingResults(inputData));
     } else {
       // キャッシュがない、または古い場合は再計算
       results = await generateMatchingResults(inputData);
       mismatchResults = await generateMismatchingResults(inputData);
+
+      try {
+        await supabaseAdmin.from("matching_cache").insert({
+          user_id: userData.id,
+          diagnosis_result_id: latestDiagnosis.id,
+          matched_users: results,
+          mismatched_users: mismatchResults,
+          featured_user: featuredResult,
+          expires_at: getMatchingCacheExpiry(),
+        });
+      } catch (cacheError) {
+        console.warn("Failed to refresh matching cache", cacheError);
+      }
     }
 
     // --- いたずら機能 (Prank Mode) ---
@@ -238,9 +259,22 @@ export const GET = async () => {
       }
     }
 
+    // アクティブユーザー追跡: マッチング結果を閲覧した日時を記録（非同期、エラーは無視）
+    (async () => {
+      try {
+        await supabaseAdmin
+          .from("users")
+          .update({ last_viewed_results_at: new Date().toISOString() })
+          .eq("id", userData.id);
+      } catch (err) {
+        console.warn("Failed to update last_viewed_results_at", err);
+      }
+    })();
+
     return NextResponse.json({
       results,
       mismatchResults,
+      featuredResult,
       diagnosis: diagnosisResult,
     });
 

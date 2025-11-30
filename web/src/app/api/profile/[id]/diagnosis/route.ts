@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult } from "@/lib/matching/engine";
-import { Answer } from "@/types/diagnosis";
+import { Answer, BigFiveScores } from "@/types/diagnosis";
+import { personalityTypes } from "@/lib/personality";
+import { generatePersonalityNarrative } from "@/lib/personality/narrative";
 
 export const GET = async (
   request: Request,
@@ -29,7 +31,7 @@ export const GET = async (
     // 最新の診断結果を取得
     const { data: diagnosisData, error } = await supabaseAdmin
       .from("diagnosis_results")
-      .select("*")
+      .select("diagnosis_type, answers, personality_type_id, big_five_scores")
       .eq("user_id", params.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -40,14 +42,24 @@ export const GET = async (
       return NextResponse.json({ message: "Diagnosis not found" }, { status: 404 });
     }
 
+    const storedScores = diagnosisData?.big_five_scores as BigFiveScores | null;
+    const storedTypeId = diagnosisData?.personality_type_id;
+    const storedType = personalityTypes.find((type) => type.id === storedTypeId);
+
+    if (storedScores && storedType) {
+      return NextResponse.json({
+        bigFiveScores: storedScores,
+        detailedNarrative: generatePersonalityNarrative(storedScores, storedType),
+      });
+    }
+
     if (!diagnosisData?.answers) {
       return NextResponse.json({ message: "No diagnosis data" }, { status: 404 });
     }
 
-    // 診断結果を再計算
     const result = generateDiagnosisResult({
       diagnosisType: diagnosisData.diagnosis_type as "light" | "full",
-      userGender: "male", // ダミー（Big Fiveスコアには影響しない）
+      userGender: "male",
       answers: diagnosisData.answers as Answer[],
     });
 
