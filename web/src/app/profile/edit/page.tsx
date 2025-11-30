@@ -20,6 +20,14 @@ type SocialLinks = {
   line: string;
 };
 
+type ProfileDetails = {
+  favoriteThings: string;
+  hobbies: string;
+  specialSkills: string;
+  values: string;
+  communication: string;
+};
+
 // Simple Switch Component
 const SimpleSwitch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (c: boolean) => void }) => (
   <button
@@ -60,6 +68,14 @@ export default function ProfileEditPage() {
     instagram: "",
     facebook: "",
     line: "",
+  });
+
+  const [details, setDetails] = useState<ProfileDetails>({
+    favoriteThings: "",
+    hobbies: "",
+    specialSkills: "",
+    values: "",
+    communication: "",
   });
 
   // File Input Ref
@@ -133,6 +149,15 @@ export default function ProfileEditPage() {
           instagram: links.instagram || "",
           facebook: links.facebook || "",
           line: links.line || "",
+        });
+
+        const d = (data.details as Partial<ProfileDetails>) || {};
+        setDetails({
+          favoriteThings: d.favoriteThings || "",
+          hobbies: d.hobbies || "",
+          specialSkills: d.specialSkills || "",
+          values: d.values || "",
+          communication: d.communication || "",
         });
       } else {
         // Initial setup from auth metadata
@@ -237,6 +262,7 @@ export default function ProfileEditPage() {
         is_public: isPublic,
         avatar_url: avatarUrl,
         social_links: Object.keys(sanitizedLinks).length ? sanitizedLinks : null,
+        details,
         updated_at: new Date().toISOString(),
       };
 
@@ -399,6 +425,59 @@ export default function ProfileEditPage() {
                   onChange={(e) => setBio(e.target.value)} 
                   placeholder="よろしくお願いします！" 
                   className="h-32 resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Info Card */}
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+            <h2 className="font-bold text-xl mb-6 border-b border-slate-100 pb-4">詳細プロフィール</h2>
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="favoriteThings">好きなこと</Label>
+                <Textarea 
+                  id="favoriteThings" 
+                  value={details.favoriteThings} 
+                  onChange={(e) => setDetails({...details, favoriteThings: e.target.value})} 
+                  placeholder="例：休日のカフェ巡り、映画鑑賞" 
+                  className="resize-none h-20"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="hobbies">趣味</Label>
+                <Input 
+                  id="hobbies" 
+                  value={details.hobbies} 
+                  onChange={(e) => setDetails({...details, hobbies: e.target.value})} 
+                  placeholder="例：サウナ、キャンプ" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="specialSkills">特技</Label>
+                <Input 
+                  id="specialSkills" 
+                  value={details.specialSkills} 
+                  onChange={(e) => setDetails({...details, specialSkills: e.target.value})} 
+                  placeholder="例：早起き、料理" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="values">価値観</Label>
+                <Input 
+                  id="values" 
+                  value={details.values} 
+                  onChange={(e) => setDetails({...details, values: e.target.value})} 
+                  placeholder="例：誠実さを大切にしたい" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="communication">コミュ力</Label>
+                <Input 
+                  id="communication" 
+                  value={details.communication} 
+                  onChange={(e) => setDetails({...details, communication: e.target.value})} 
+                  placeholder="例：聞き上手と言われます" 
                 />
               </div>
             </div>
