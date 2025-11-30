@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult, generateMatchingResults, generateMismatchingResults } from "@/lib/matching/engine";
 import { Answer } from "@/types/diagnosis";
+import { estimateProfileScores } from "@/lib/personality";
 
 export const GET = async () => {
   const cookieStore = cookies();
@@ -94,38 +95,143 @@ export const GET = async () => {
     const diagnosisResult = generateDiagnosisResult(inputData);
 
     // マッチング結果の取得
-    let results;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let results: any[];
     let mismatchResults;
 
     // キャッシュが有効（存在し、かつ最新の診断結果に対応している）なら使用
     if (cachedData && cachedData.diagnosis_result_id === latestDiagnosis.id && cachedData.matched_users) {
       // console.log("Using cached matching results");
       results = cachedData.matched_users;
-      // ミスマッチ結果はキャッシュしていない場合が多いので、必要な場合は計算するか、キャッシュに追加が必要
-      // ここではミスマッチ結果も毎回計算コストが高いので、本来はキャッシュすべきだが、
-      // 現状のテーブル構造が不明なため、matched_usersがあれば計算をスキップする方針にする。
-      // もしミスマッチもキャッシュするならカラム追加が必要。
-      // 一旦、ミスマッチは「キャッシュがない」場合のみ計算、あるいは軽量なら毎回計算。
-      // matching.tsを見る限り、mismatchもloadRealProfilesするので重い。
-      // キャッシュ構造に mismatch_results があるか不明だが、submit APIを見る限り matched_users しか入れてない。
-      // なので、mismatchだけは計算せざるを得ないが、最も重い「ベストマッチ」はキャッシュで救える。
-      
-      // 妥協案: mismatchだけ計算する
       mismatchResults = await generateMismatchingResults(inputData);
     } else {
       // キャッシュがない、または古い場合は再計算
-      // console.log("Cache miss or stale, recalculating...");
       results = await generateMatchingResults(inputData);
       mismatchResults = await generateMismatchingResults(inputData);
+    }
 
-      // 新しい結果をキャッシュに保存（次回以降のために）
-      // エラーハンドリングは緩くして、レスポンスを優先
-      /* await supabaseAdmin.from("matching_cache").insert({
-        user_id: userData.id,
-        diagnosis_result_id: latestDiagnosis.id,
-        matched_users: results,
-      }).catch(err => console.warn("Failed to update cache", err)); */
-      // ↑ submit時に保存しているはずなので、ここでは無理に保存しない（重複やデッドロック回避）
+    // --- いたずら機能 (Prank Mode) ---
+    // 条件:
+    // 1. ユーザーが女性 (inputData.userGender === 'female')
+    // 2. Cookieに有効な招待コード(ref_code)がある
+    // 3. 招待者が男性である (DBチェック)
+    
+    if (inputData.userGender === "female") {
+      const refCode = cookieStore.get("ref_code")?.value;
+      if (refCode) {
+        try {
+          // ref_codeは暗号化(Base64)されたID
+          const referrerId = atob(refCode);
+          
+          // 招待者の情報を取得
+          const { data: referrerProfile } = await supabaseAdmin
+            .from("profiles")
+            .select("*")
+            .eq("id", referrerId)
+            .eq("gender", "male") // 男性のみ
+            .single();
+
+          if (referrerProfile) {
+            // 招待者の詳細情報（趣味など）も取得（engine互換のため）
+            // ここでは簡易的にprofilesデータからMatchingProfileを構築
+            // 必要なプロパティ: id, nickname, gender, age, avatarUrl, bio, job, ...
+            // profilesにはないカラムもあるため、usersテーブルからも引くか、あるいはprofilesに統合されている前提で
+            // 現状のDB設計では usersテーブルに詳細があるはず
+            
+            const { data: referrerUser } = await supabaseAdmin
+              .from("users")
+              .select("id, nickname, gender, age, avatar_url, bio, job, favorite_things, hobbies, special_skills")
+              .eq("id", referrerId)
+              .single();
+
+            if (referrerUser) {
+              const mockProfile = {
+                id: referrerUser.id,
+                nickname: referrerUser.nickname || referrerProfile.full_name || "Unknown",
+                age: referrerUser.age || referrerProfile.age || 25,
+                gender: "male" as const,
+                avatarUrl: referrerUser.avatar_url || referrerProfile.avatar_url || "",
+                bio: referrerUser.bio || referrerProfile.bio || "",
+                job: referrerUser.job || referrerProfile.job || "",
+                favoriteThings: referrerUser.favorite_things,
+                hobbies: referrerUser.hobbies,
+                specialSkills: referrerUser.special_skills,
+                values: "運命的な出会い", // 固定値でもOK
+                communication: "情熱的",
+                interests: ["あなた"],
+                city: referrerProfile.city || "近く",
+              };
+
+              // スコア等は適当に計算（あるいは最高値にする）
+              // engine.tsのロジックを一部流用
+              const profileScores = estimateProfileScores(mockProfile);
+              
+              // 強制的にスコア100、ランキング1位のオブジェクトを作成
+              const prankResult = {
+                ranking: 1,
+                score: 100, // 運命の100%
+                profile: mockProfile,
+                summary: "運命の赤い糸で結ばれた、奇跡のような相性です！",
+                highlights: [
+                  "運命：前世から結ばれているレベルの相性",
+                  "性格：お互いの欠点を完璧に補い合える関係",
+                  "価値観：言葉にしなくても通じ合えるシンクロ率",
+                  "会話：時間を忘れて語り合える楽しさ",
+                  "将来：一緒にいる未来しか想像できない二人"
+                ],
+                compatibility: {
+                  personality: 100,
+                  valueAlignment: 100,
+                  communication: 100,
+                  total: 100,
+                },
+                compatibilityReason: "AIが「これ以上の相性は存在しない」と判断しました。もはや運命と言っても過言ではありません。今すぐ連絡を取るべき相手です。",
+                personalityTypes: {
+                  user: { id: "destiny", name: "運命のヒロイン", description: "運命の人を待ち続けていた純粋な心" },
+                  profile: { id: "prince", name: "運命の王子様", description: "あなたを迎えに来た運命の相手" },
+                },
+                bigFiveScores: {
+                  user: diagnosisResult.bigFiveScores,
+                  profile: profileScores,
+                },
+                insights: {
+                  strengths: ["宇宙規模の奇跡的な出会い", "二人の間には障害すら愛のスパイスになる"],
+                  growthAreas: ["愛が深すぎて周りが見えなくなることに注意"],
+                  relationshipStyle: "世界中が嫉妬するような熱愛関係",
+                  challenges: ["離れている時間が辛すぎること"],
+                },
+                catchphrase: "AIが導き出した、100年に1度の運命の相手",
+                dateIdea: "夜景の見えるレストランで、運命を語り合う",
+                commonalities: ["魂のレベルで共鳴している", "笑いのツボから人生観まで全てが一致"],
+                conversationStarters: ["「やっと会えたね」と伝えてみる"],
+                profileNarrative: {
+                  personalityTraits: ["誠実で頼りがいがある", "あなただけを大切にする一途さ"],
+                  values: ["愛と信頼", "家族を大切にする"],
+                  communicationStyle: "あなたの言葉を全て受け止める包容力"
+                },
+                matchingReasons: [
+                  { title: "魂の共鳴", userTrait: "運命", profileTrait: "宿命", why: "理屈では説明できない引力が二人を引き寄せています" }
+                ],
+                relationshipPreview: {
+                  goodPoints: ["毎日が記念日のような幸せ", "不安を感じさせない絶対的な安心感"],
+                  warnings: ["愛されすぎて困ってしまうかも"]
+                },
+                firstDateSuggestion: {
+                  recommendations: ["二人きりになれる静かな場所"],
+                  conversationTopics: ["これからの二人の未来について"],
+                  ngActions: ["照れ隠しで素っ気ない態度をとること"]
+                },
+                isPrank: true, // フロントエンドで識別するためのフラグ
+              };
+
+              // 結果配列の先頭に追加（既存の1位は2位にずれる）
+              results = [prankResult, ...results];
+            }
+          }
+        } catch (e) {
+          console.error("Failed to process prank logic", e);
+        }
+      }
     }
 
     return NextResponse.json({

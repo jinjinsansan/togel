@@ -35,6 +35,19 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // Referral code handling
+  const referralCode = req.nextUrl.searchParams.get("c");
+  if (referralCode) {
+    // If referral code exists in URL parameters, save it to cookie
+    // Valid for 30 days
+    res.cookies.set("ref_code", referralCode, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+  }
+
   return res;
 }
 

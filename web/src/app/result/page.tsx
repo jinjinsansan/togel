@@ -7,6 +7,7 @@ import { useState, useEffect, SyntheticEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { getTogelLabel } from "@/lib/personality";
 import { BigFiveScores, MatchingResult, PersonalityTypeDefinition } from "@/types/diagnosis";
+import { Switch } from "@/components/ui/switch";
 
 const buildFallbackAvatar = (seed: string, gender: "male" | "female"): string => {
   const palette = gender === "male" ? "blue" : "pink";
@@ -72,12 +73,18 @@ const ResultPage = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [prankMode, setPrankMode] = useState(true);
+  const [hasPrank, setHasPrank] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       // もし既にstateにデータがあれば（sessionStorageから復元済み）、APIを呼ばずに終了
       if (results.length > 0 && diagnosis) {
         setLoading(false);
+        // Check if result contains prank data (marked with isPrank)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const prankData = results.some((r: any) => r.isPrank);
+        setHasPrank(prankData);
         return;
       }
 
@@ -100,6 +107,12 @@ const ResultPage = () => {
         if (data.results && data.diagnosis) {
           setResults(data.results);
           setDiagnosis(data.diagnosis);
+          
+          // Check for prank data
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const prankData = data.results.some((r: any) => r.isPrank);
+          setHasPrank(prankData);
+
           // セッションストレージにも保存
           sessionStorage.setItem("latestMatching", JSON.stringify(data.results));
           sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
@@ -127,6 +140,21 @@ const ResultPage = () => {
     );
   }
 
+  // Prank mode filtering:
+  // If hasPrank is true and prankMode is true, show the prank result at rank 1.
+  // If hasPrank is true and prankMode is false, filter out the prank result (marked with isPrank).
+  // If hasPrank is false, show original results.
+  
+  const displayResults = results.filter(r => {
+    if (!hasPrank) return true;
+    // @ts-expect-error - isPrank is injected dynamically
+    if (r.isPrank) return prankMode;
+    return true;
+  }).map((r, idx) => ({
+    ...r,
+    ranking: idx + 1
+  }));
+
   return (
     <div className="w-full md:container py-6 md:py-10">
       <div className="mx-auto max-w-5xl">
@@ -136,6 +164,15 @@ const ResultPage = () => {
           <p className="mt-3 text-sm md:text-base text-muted-foreground">
             あなたの回答データから相性の良い5名を抽出しました
           </p>
+          
+          {hasPrank && (
+            <div className="mt-4 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
+               <span className={`text-sm font-bold ${!prankMode ? "text-primary" : "text-muted-foreground"}`}>通常モード</span>
+               <Switch checked={prankMode} onCheckedChange={setPrankMode} />
+               <span className={`text-sm font-bold ${prankMode ? "text-[#E91E63]" : "text-muted-foreground"}`}>運命モード</span>
+            </div>
+          )}
+
           <div className="mt-4">
             <Button asChild variant="outline" size="sm" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
               <Link href="/result/mismatch">
@@ -259,7 +296,7 @@ const ResultPage = () => {
 
         {/* マッチング結果 - 新デザイン */}
         <div className="mt-0 md:mt-10 space-y-0 md:space-y-8">
-          {results.length === 0 && (
+          {displayResults.length === 0 && (
             <div className="rounded-3xl border border-dashed border-border px-6 py-12 text-center">
               <p className="text-muted-foreground">まだ診断結果がありません。まずは診断を実施しましょう。</p>
               <Button asChild className="mt-4">
@@ -268,10 +305,13 @@ const ResultPage = () => {
             </div>
           )}
 
-          {results.map((result) => (
+          {displayResults.map((result) => (
             <div
               key={result.profile.id}
-              className="rounded-none md:rounded-3xl border-b-8 md:border-2 border-muted/20 md:border-border bg-white/95 px-5 py-8 md:p-6 shadow-none md:shadow-lg hover:shadow-xl transition-shadow"
+              className={`rounded-none md:rounded-3xl border-b-8 md:border-2 border-muted/20 md:border-border bg-white/95 px-5 py-8 md:p-6 shadow-none md:shadow-lg hover:shadow-xl transition-shadow ${
+                // @ts-expect-error - isPrank is dynamic
+                result.isPrank ? "ring-4 ring-[#E91E63]/30 border-[#E91E63]" : ""
+              }`}
             >
               {/* ヘッダー */}
               <div className="flex items-start justify-between pb-4 border-b border-border">

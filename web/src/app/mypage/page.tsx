@@ -15,8 +15,18 @@ const mockNotifications = [
   { id: 2, title: "新機能「ミスマッチランキング」が追加されました", date: "2024/01/15", read: true },
 ];
 
+type Profile = {
+  id: string;
+  gender: string;
+  avatar_url: string | null;
+  full_name: string | null;
+  job: string | null;
+  city: string | null;
+};
+
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [newsletterEnabled, setNewsletterEnabled] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -26,22 +36,39 @@ export default function MyPage() {
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
       setUser(user);
       
-      // 本来はここで profiles テーブルから性別や完了状況を取得
-      // const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user?.id).single();
-      // setProfile(profileData);
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+        
+      if (data) {
+        setProfile(data);
+      }
       
-      // 一旦モックとして、診断セッションがあればそこから性別を推測することも可能だが
-      // ここでは「未設定」として扱う
       setLoading(false);
     };
     fetchData();
   }, [supabase]);
 
+  // 招待条件チェック: 男性 かつ 基本情報(名前, 仕事, エリア) + アバターがあること
+  // ※詳細プロフィールは必須としない
+  const isEligibleForReferral = 
+    profile?.gender === "male" && 
+    !!profile?.avatar_url && 
+    !!profile?.full_name && 
+    !!profile?.job && 
+    !!profile?.city;
+
   const handleCopyLink = () => {
-    // 本来はユーザー固有の紹介コード
-    const referralLink = `https://to-gel.com/invite/${user?.id?.slice(0, 8) || "guest"}`;
+    if (!user) return;
+    // シンプルなBase64エンコードでIDを隠蔽 (完全な暗号化ではないが、パッと見でIDとは分からない)
+    // 復号時は atob() を使用
+    const encodedId = btoa(user.id);
+    const referralLink = `${window.location.origin}?c=${encodedId}`;
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -148,31 +175,33 @@ export default function MyPage() {
               <h2 className="font-bold text-lg text-slate-800">友達を紹介する</h2>
             </div>
             
-            {/* 条件: 男性かつプロフィール充実 (今回はモックロジック) */}
-            {/* 本来は profile?.gender === 'male' && profile.isCompleted */}
-            {false ? ( 
+            {/* 条件: 男性かつプロフィール充実 */}
+            {isEligibleForReferral ? ( 
               <div className="space-y-4">
                 <p className="text-sm text-slate-600">
-                  あなたの紹介URLから登録すると、特別なポイントが付与されます。
+                  このURLから女性が診断すると、<strong className="text-[#E91E63]">あなたがマッチング結果の1位に表示される</strong>確率が大幅に上がります（いたずら機能）。
                 </p>
                 <div className="flex gap-2">
                   <div className="flex-1 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500 font-mono truncate border border-slate-200">
-                    https://to-gel.com/invite/{user?.id?.slice(0, 8)}
+                    {typeof window !== 'undefined' ? `${window.location.origin}?c=*******` : 'Loading...'}
                   </div>
                   <Button onClick={handleCopyLink} className="shrink-0" size="icon" variant="outline">
                     {copied ? <Check size={18} className="text-green-600" /> : <Copy size={18} />}
                   </Button>
                 </div>
+                <p className="text-xs text-slate-400">
+                  ※URLは暗号化されており、あなたのIDは直接見えません。
+                </p>
               </div>
             ) : (
               <div className="text-center py-4 px-2">
                 <AlertCircle className="mx-auto h-8 w-8 text-slate-300 mb-2" />
                 <p className="text-sm font-bold text-slate-400">発行条件を満たしていません</p>
                 <p className="text-xs text-slate-400 mt-1">
-                  ※男性会員かつプロフィールを<br/>すべて入力した方のみ発行可能です
+                  ※男性会員かつ基本プロフィール（写真含む）を<br/>すべて入力した方のみ発行可能です
                 </p>
                 <Button variant="ghost" asChild className="mt-2 h-auto p-0 text-[#E91E63] hover:underline">
-                  <Link href="/diagnosis/select">診断を受けてプロフィールを作成</Link>
+                  <Link href="/profile/edit">プロフィールを編集する</Link>
                 </Button>
               </div>
             )}
