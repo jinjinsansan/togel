@@ -41,6 +41,16 @@ const ensureUserRecord = async (
 ) => {
   // 1. ログインユーザーの場合: public.users にレコードがあるか確認、なければ作成
   if (params.authUserId) {
+    const { data: linked } = await supabase
+      .from("users")
+      .select("id")
+      .eq("auth_user_id", params.authUserId)
+      .maybeSingle();
+
+    if (linked?.id) {
+      return linked.id;
+    }
+
     const { data } = await supabase
       .from("users")
       .select("id, auth_user_id")
@@ -48,12 +58,11 @@ const ensureUserRecord = async (
       .maybeSingle();
 
     if (data?.id) {
-      // 既存レコードがあるが auth_user_id が null の場合は修正
       if (!data.auth_user_id) {
         await supabase
           .from("users")
           .update({ auth_user_id: params.authUserId })
-          .eq("id", params.authUserId);
+          .eq("id", data.id);
       }
       return data.id;
     }
@@ -83,18 +92,24 @@ const ensureUserRecord = async (
         .single();
         
       if (insertError) {
-        // 既に存在する場合はスルー（ただし通常は上のselectで見つかるはず）
         console.warn("Failed to insert user, trying to fetch again:", insertError);
-        
-        // 再取得を試みる
-        const { data: existing } = await supabase
+
+        const { data: existingByAuth } = await supabase
+          .from("users")
+          .select("id")
+          .eq("auth_user_id", params.authUserId)
+          .maybeSingle();
+
+        if (existingByAuth?.id) return existingByAuth.id;
+
+        const { data: existingById } = await supabase
           .from("users")
           .select("id")
           .eq("id", params.authUserId)
-          .single();
-          
-        if (existing) return existing.id;
-        
+          .maybeSingle();
+
+        if (existingById?.id) return existingById.id;
+
         throw insertError;
       }
       return inserted.id;
@@ -212,9 +227,8 @@ export const POST = async (request: Request) => {
       .single();
 
     if (insertError || !insertResult) {
-      // 古いテーブル構造などでエラーになる場合は無視して進む（今回はプロフィールの更新が主目的）
-      console.warn("Failed to store diagnosis result history:", insertError);
-      // throw insertError; 
+      console.error("Failed to store diagnosis result history", insertError);
+      return NextResponse.json({ message: "Failed to store diagnosis result" }, { status: 500 });
     }
 
     const results = await generateMatchingResults(parsed.data);

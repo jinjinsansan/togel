@@ -64,12 +64,31 @@ export const GET = async (request: Request) => {
   const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 50) : 10;
   const offset = Number.isFinite(offsetParam) ? Math.max(offsetParam, 0) : 0;
 
-  const { data: rows, error, count } = await supabaseAdmin
-    .from("diagnosis_results")
-    .select("id, diagnosis_type, animal_type, personality_type_id, big_five_scores, answers, created_at, completed_at", { count: "exact" })
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  const selectColumns = "id, diagnosis_type, animal_type, personality_type_id, big_five_scores, answers, created_at, completed_at";
+
+  const fetchHistory = async (targetUserId: string) =>
+    supabaseAdmin
+      .from("diagnosis_results")
+      .select(selectColumns, { count: "exact" })
+      .eq("user_id", targetUserId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+  const initial = userId ? await fetchHistory(userId) : { data: null, error: null, count: 0 };
+  let rows = initial.data;
+  let count = initial.count;
+  const { error } = initial;
+
+  if ((!rows || rows.length === 0) && session.user.id) {
+    const fallback = await fetchHistory(session.user.id);
+    if (fallback.data && fallback.data.length > 0) {
+      rows = fallback.data;
+      count = fallback.count;
+      if (userId && userId !== session.user.id) {
+        await supabaseAdmin.from("users").update({ auth_user_id: session.user.id }).eq("id", userId);
+      }
+    }
+  }
 
   if (error || !rows) {
     console.error("Failed to load diagnosis history", error);
