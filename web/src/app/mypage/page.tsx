@@ -351,9 +351,9 @@ export default function MyPage() {
 
         {profile && (
           <section className="mb-12">
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
-              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100/60 p-6 shadow-sm">
-                <div className="flex items-center justify-between text-sm text-slate-500">
+            <div className="grid gap-4 md:gap-6 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
+              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100/60 p-4 shadow-sm sm:p-6">
+                <div className="flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.4em] uppercase text-slate-400">Togel Official</p>
                     <p className="text-slate-800 font-bold">Premium Certificate</p>
@@ -579,14 +579,14 @@ const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateCo
   };
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm space-y-5">
-      <div className="flex items-start justify-between">
+    <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm space-y-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Custom Color</p>
           <h3 className="font-bold text-lg text-slate-900 mt-1">カードカラーを調整</h3>
           <p className="text-sm text-slate-500 mt-1">プリセットやHEX入力だけで質感が丸ごと変わります。</p>
         </div>
-        <div className="p-2 rounded-2xl bg-slate-50 text-slate-600">
+        <div className="rounded-2xl bg-slate-50 p-2 text-slate-600">
           <Palette size={18} />
         </div>
       </div>
@@ -609,7 +609,7 @@ const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateCo
 
       <div>
         <p className="text-xs font-semibold text-slate-500 mb-3">プリセット</p>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
           {presetColors.map((preset) => (
             <button
               key={preset.name}

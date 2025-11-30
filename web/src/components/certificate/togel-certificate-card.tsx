@@ -107,13 +107,13 @@ export function TogelCertificateCard({
   ]
 
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="flex items-center gap-2 flex-wrap justify-center">
+    <div className="flex flex-col items-center gap-5 w-full">
+      <div className="flex w-full max-w-[420px] flex-wrap items-center justify-center gap-2">
         {controls.map((btn) => (
           <button
             key={btn.label}
             onClick={btn.onClick}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            className="flex-1 min-w-[140px] rounded-lg px-3 py-2 text-xs font-medium transition-all sm:flex-initial sm:min-w-[0] sm:px-4 sm:text-sm"
             style={{
               backgroundColor: resolvedTheme.buttonBg,
               color: resolvedTheme.buttonText,
@@ -126,7 +126,7 @@ export function TogelCertificateCard({
       </div>
 
       <div
-        className="relative w-[400px] md:w-[440px] aspect-[1.7/1] cursor-grab active:cursor-grabbing select-none"
+        className="relative w-full max-w-[320px] sm:max-w-[380px] md:max-w-[440px] aspect-[1.7/1] cursor-grab select-none active:cursor-grabbing"
         style={{ perspective: "1200px" }}
         onMouseDown={(e) => handleStart(e.clientX)}
         onMouseMove={(e) => handleMove(e.clientX)}
@@ -212,7 +212,7 @@ export function TogelCertificateCard({
                     Member
                   </span>
                   <h2
-                    className="text-4xl font-serif font-bold tracking-tight leading-none mt-0.5"
+                    className="text-3xl font-serif font-bold tracking-tight leading-none mt-0.5 sm:text-4xl"
                     style={{
                       color: resolvedTheme.text,
                       textShadow: isDark ? "0 1px 2px rgba(0,0,0,0.3)" : "0 1px 1px rgba(255,255,255,0.5)",
@@ -275,7 +275,7 @@ export function TogelCertificateCard({
 
             <div className="absolute inset-0 flex items-center justify-center">
               <h1
-                className="text-6xl font-bold tracking-widest"
+                className="text-4xl font-bold tracking-widest sm:text-5xl md:text-6xl"
                 style={{
                   color: resolvedTheme.text,
                   textShadow: isDark
