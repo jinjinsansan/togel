@@ -7,7 +7,13 @@ import { generateDiagnosisResult } from "@/lib/matching/engine";
 import { Answer } from "@/types/diagnosis";
 import { getTogelLabel, personalityTypes } from "@/lib/personality";
 
-const resolveUserId = async (supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>, authUserId: string) => {
+const resolveUserIds = async (
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+  authUserId: string
+) => {
+  const ids = new Set<string>();
+  ids.add(authUserId);
+
   const { data: authLinked } = await supabaseAdmin
     .from("users")
     .select("id")
@@ -15,21 +21,23 @@ const resolveUserId = async (supabaseAdmin: ReturnType<typeof createSupabaseAdmi
     .maybeSingle();
 
   if (authLinked?.id) {
-    return authLinked.id;
+    ids.add(authLinked.id);
   }
 
   const { data: fallback } = await supabaseAdmin
     .from("users")
-    .select("id")
+    .select("id, auth_user_id")
     .eq("id", authUserId)
     .maybeSingle();
 
   if (fallback?.id) {
-    await supabaseAdmin.from("users").update({ auth_user_id: authUserId }).eq("id", fallback.id);
-    return fallback.id;
+    ids.add(fallback.id);
+    if (!fallback.auth_user_id) {
+      await supabaseAdmin.from("users").update({ auth_user_id: authUserId }).eq("id", fallback.id);
+    }
   }
 
-  return null;
+  return Array.from(ids);
 };
 
 export const GET = async (request: Request) => {
@@ -44,9 +52,9 @@ export const GET = async (request: Request) => {
   }
 
   const supabaseAdmin = createSupabaseAdminClient();
-  const userId = await resolveUserId(supabaseAdmin, session.user.id);
+  const candidateUserIds = await resolveUserIds(supabaseAdmin, session.user.id);
 
-  if (!userId) {
+  if (candidateUserIds.length === 0) {
     return NextResponse.json({ history: [] });
   }
 
@@ -66,27 +74,24 @@ export const GET = async (request: Request) => {
 
   const selectColumns = "id, diagnosis_type, animal_type, personality_type_id, big_five_scores, answers, created_at, completed_at";
 
-  const fetchHistory = async (targetUserId: string) =>
+  const fetchHistory = async (targetUserIds: string[]) =>
     supabaseAdmin
       .from("diagnosis_results")
       .select(selectColumns, { count: "exact" })
-      .eq("user_id", targetUserId)
+      .in("user_id", targetUserIds)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
-  const initial = userId ? await fetchHistory(userId) : { data: null, error: null, count: 0 };
+  const initial = await fetchHistory(candidateUserIds);
   let rows = initial.data;
   let count = initial.count;
   const { error } = initial;
 
   if ((!rows || rows.length === 0) && session.user.id) {
-    const fallback = await fetchHistory(session.user.id);
+    const fallback = await fetchHistory([session.user.id]);
     if (fallback.data && fallback.data.length > 0) {
       rows = fallback.data;
       count = fallback.count;
-      if (userId && userId !== session.user.id) {
-        await supabaseAdmin.from("users").update({ auth_user_id: session.user.id }).eq("id", userId);
-      }
     }
   }
 
