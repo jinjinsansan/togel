@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { User } from "@supabase/supabase-js";
-import { Camera, Save, Eye, EyeOff, Copy, Check, Loader2 } from "lucide-react";
+import { Camera, Save, Eye, EyeOff, Copy, Check, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -229,11 +229,12 @@ export default function ProfileEditPage() {
       <div className="w-full mx-auto px-3 py-4 max-w-2xl">
         
         {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-lg font-bold text-slate-900 mb-2">プロフィール編集</h1>
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-lg font-bold text-slate-900">プロフィール編集</h1>
           {isPublic && (
-            <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#E91E63] underline">
-              公開ページを見る
+            <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#E91E63] flex items-center gap-1 hover:underline">
+              <ExternalLink size={12} />
+              <span>公開ページ</span>
             </a>
           )}
         </div>
@@ -323,34 +324,51 @@ export default function ProfileEditPage() {
 
         {/* Details */}
         <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
-          <h2 className="text-sm font-bold mb-3">詳細</h2>
+          <h2 className="text-sm font-bold mb-3">詳細プロフィール</h2>
           <div className="space-y-2">
             <div>
-              <Label className="text-xs">好きなこと</Label>
-              <Input value={details.favoriteThings} onChange={(e) => setDetails({...details, favoriteThings: e.target.value})} className="text-sm h-9" />
+              <Label htmlFor="favoriteThings" className="text-xs">好きなこと</Label>
+              <Input id="favoriteThings" value={details.favoriteThings} onChange={(e) => setDetails({...details, favoriteThings: e.target.value})} placeholder="例：カフェ巡り" className="text-sm h-9" />
             </div>
             <div>
-              <Label className="text-xs">趣味</Label>
-              <Input value={details.hobbies} onChange={(e) => setDetails({...details, hobbies: e.target.value})} className="text-sm h-9" />
+              <Label htmlFor="hobbies" className="text-xs">趣味</Label>
+              <Input id="hobbies" value={details.hobbies} onChange={(e) => setDetails({...details, hobbies: e.target.value})} placeholder="例：サウナ" className="text-sm h-9" />
             </div>
             <div>
-              <Label className="text-xs">特技</Label>
-              <Input value={details.specialSkills} onChange={(e) => setDetails({...details, specialSkills: e.target.value})} className="text-sm h-9" />
+              <Label htmlFor="specialSkills" className="text-xs">特技</Label>
+              <Input id="specialSkills" value={details.specialSkills} onChange={(e) => setDetails({...details, specialSkills: e.target.value})} placeholder="例：料理" className="text-sm h-9" />
+            </div>
+            <div>
+              <Label htmlFor="values" className="text-xs">価値観</Label>
+              <Input id="values" value={details.values} onChange={(e) => setDetails({...details, values: e.target.value})} placeholder="例：誠実さ" className="text-sm h-9" />
+            </div>
+            <div>
+              <Label htmlFor="communication" className="text-xs">コミュニケーション</Label>
+              <Input id="communication" value={details.communication} onChange={(e) => setDetails({...details, communication: e.target.value})} placeholder="例：聞き上手" className="text-sm h-9" />
             </div>
           </div>
         </div>
 
         {/* SNS */}
         <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
-          <h2 className="text-sm font-bold mb-3">SNS</h2>
+          <h2 className="text-sm font-bold mb-3">外部SNSリンク</h2>
+          <p className="text-[10px] text-slate-500 mb-2">公開プロフィールに表示されます</p>
           <div className="space-y-2">
             <div>
-              <Label className="text-xs">Twitter</Label>
-              <Input type="url" value={socialLinks.twitter} onChange={(e) => setSocialLinks({...socialLinks, twitter: e.target.value})} placeholder="https://x.com/..." className="text-sm h-9" />
+              <Label className="text-xs">X (Twitter)</Label>
+              <Input type="url" value={socialLinks.twitter} onChange={(e) => setSocialLinks({...socialLinks, twitter: e.target.value})} placeholder="https://x.com/yourname" className="text-sm h-9" />
             </div>
             <div>
               <Label className="text-xs">Instagram</Label>
-              <Input type="url" value={socialLinks.instagram} onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})} placeholder="https://instagram.com/..." className="text-sm h-9" />
+              <Input type="url" value={socialLinks.instagram} onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})} placeholder="https://instagram.com/yourname" className="text-sm h-9" />
+            </div>
+            <div>
+              <Label className="text-xs">Facebook</Label>
+              <Input type="url" value={socialLinks.facebook} onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})} placeholder="https://facebook.com/yourname" className="text-sm h-9" />
+            </div>
+            <div>
+              <Label className="text-xs">LINE</Label>
+              <Input type="url" value={socialLinks.line} onChange={(e) => setSocialLinks({...socialLinks, line: e.target.value})} placeholder="https://line.me/ti/p/xxxx" className="text-sm h-9" />
             </div>
           </div>
         </div>
