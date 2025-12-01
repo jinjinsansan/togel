@@ -271,9 +271,12 @@ export function TogelCertificateCard({
             <div className="absolute inset-0" style={{ background: sharpHighlight }} />
             <div className="absolute inset-0 rounded-xl" style={{ boxShadow: edgeHighlight }} />
 
-            <div className="relative z-10 absolute inset-0 flex items-center justify-center">
+            <div 
+              className="absolute inset-0 flex items-center justify-center" 
+              style={{ zIndex: 10 }}
+            >
               <h1
-                className="text-4xl font-bold tracking-widest sm:text-5xl md:text-6xl"
+                className="text-4xl font-bold tracking-widest sm:text-5xl md:text-6xl m-0 p-0"
                 style={{
                   color: resolvedTheme.text,
                   textShadow: isDark
