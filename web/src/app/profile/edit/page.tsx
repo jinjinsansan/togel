@@ -354,8 +354,8 @@ export default function ProfileEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 md:py-16 overflow-x-hidden">
-      <div className="w-full max-w-3xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-slate-50 py-6 md:py-12 overflow-x-hidden w-screen">
+      <div className="w-full mx-auto px-3 sm:px-4 max-w-3xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-2 sm:gap-4">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">プロフィール編集</h1>
           {isPublic && (
