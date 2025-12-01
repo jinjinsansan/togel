@@ -1,27 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const videos = [
-    "https://assets.to-gel.com/hero-movie-optimized.mp4",
-    "https://assets.to-gel.com/hero-movie-v3-optimized.mp4",
-    "https://assets.to-gel.com/hero-movie-v4-optimized.mp4",
-  ];
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClientComponentClient();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % videos.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [videos.length]);
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -52,21 +38,16 @@ export default function Home() {
   return (
     <>
       <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFD1DC]">
-        {/* 1. Video Background (Carousel) */}
-      {videos.map((src, index) => (
+        {/* 1. Video Background */}
         <video
-          key={src}
           autoPlay
           loop
           muted
           playsInline
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-            index === currentVideoIndex ? "opacity-100" : "opacity-0"
-          }`}
+          className="absolute inset-0 h-full w-full object-cover"
         >
-          <source src={src} type="video/mp4" />
+          <source src="https://assets.to-gel.com/hero-movie-v4-optimized.mp4" type="video/mp4" />
         </video>
-      ))}
 
       {/* 2. Pink Background Layer (Screen Blend) */}
       {/* This creates the base pink tint over the video where text isn't present */}
