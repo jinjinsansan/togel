@@ -8,7 +8,7 @@ import { Answer } from "@/types/diagnosis";
 import { estimateProfileScores } from "@/lib/personality";
 import { getMatchingCacheExpiry, isMatchingCacheValid } from "@/lib/matching/cache";
 
-export const GET = async () => {
+export const GET = async (request: Request) => {
   const cookieStore = cookies();
   const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
   const { data: { session } } = await supabaseAuth.auth.getSession();
@@ -16,6 +16,10 @@ export const GET = async () => {
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
+
+  const url = new URL(request.url);
+  const forceFresh = url.searchParams.get("fresh") === "1";
+  const revalidate = url.searchParams.get("revalidate") === "1";
 
   const supabaseAdmin = createSupabaseAdminClient();
 
@@ -95,40 +99,70 @@ export const GET = async () => {
     // 自己診断結果の生成（計算コストは低いので毎回実行でOK）
     const diagnosisResult = generateDiagnosisResult(inputData);
 
-    // マッチング結果の取得
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let results: any[] = [];
-    let mismatchResults;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const featuredResult: any = cachedData?.featured_user ?? null;
+    const cacheMatchesLatest =
+      Boolean(
+        cachedData &&
+          cachedData.diagnosis_result_id === latestDiagnosis.id &&
+          cachedData.matched_users
+      );
+    const cacheValid = cacheMatchesLatest && isMatchingCacheValid(cachedData?.expires_at ?? null);
+    const cachedFeaturedResult = cachedData?.featured_user ?? null;
 
-    // キャッシュが有効（存在し、かつ最新の診断結果に対応している）なら使用
-    const cacheUsable =
-      cachedData &&
-      cachedData.diagnosis_result_id === latestDiagnosis.id &&
-      cachedData.matched_users &&
-      isMatchingCacheValid(cachedData.expires_at);
+    const cachedPayload = cacheMatchesLatest
+      ? {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          results: (cachedData?.matched_users as any[]) ?? [],
+          mismatchResults: cachedData?.mismatched_users ?? null,
+          featuredResult: cachedFeaturedResult,
+        }
+      : null;
 
-    if (cacheUsable) {
-      results = cachedData.matched_users;
-      mismatchResults = cachedData.mismatched_users ?? (await generateMismatchingResults(inputData));
-    } else {
-      // キャッシュがない、または古い場合は再計算
-      results = await generateMatchingResults(inputData);
-      mismatchResults = await generateMismatchingResults(inputData);
+    const recomputeAndCache = async () => {
+      const [freshResults, freshMismatch] = await Promise.all([
+        generateMatchingResults(inputData),
+        generateMismatchingResults(inputData),
+      ]);
 
       try {
         await supabaseAdmin.from("matching_cache").insert({
           user_id: userData.id,
           diagnosis_result_id: latestDiagnosis.id,
-          matched_users: results,
-          mismatched_users: mismatchResults,
-          featured_user: featuredResult,
+          matched_users: freshResults,
+          mismatched_users: freshMismatch,
+          featured_user: cachedFeaturedResult,
           expires_at: getMatchingCacheExpiry(),
         });
       } catch (cacheError) {
         console.warn("Failed to refresh matching cache", cacheError);
       }
+
+      return {
+        results: freshResults,
+        mismatchResults: freshMismatch,
+        featuredResult: cachedFeaturedResult,
+      };
+    };
+
+    const shouldUseCache = !forceFresh && cacheMatchesLatest;
+    let basePayload = cachedPayload;
+    let staleResponse = false;
+
+    if (!shouldUseCache) {
+      basePayload = await recomputeAndCache();
+    } else {
+      staleResponse = !cacheValid;
+      if (revalidate || !cacheValid) {
+        recomputeAndCache().catch((err) => console.error("Background matching cache refresh failed", err));
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let results: any[] = basePayload?.results ?? [];
+    let mismatchResults = basePayload?.mismatchResults ?? null;
+    const featuredResult = basePayload?.featuredResult ?? null;
+
+    if (!mismatchResults) {
+      mismatchResults = await generateMismatchingResults(inputData);
     }
 
     // --- いたずら機能 (Prank Mode) ---
@@ -276,6 +310,7 @@ export const GET = async () => {
       mismatchResults,
       featuredResult,
       diagnosis: diagnosisResult,
+      stale: staleResponse,
     });
 
   } catch (error) {

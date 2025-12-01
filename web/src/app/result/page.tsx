@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, SyntheticEvent } from "react";
+import { useState, useEffect, useRef, useCallback, SyntheticEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { getTogelLabel } from "@/lib/personality";
@@ -284,7 +284,8 @@ const ResultPage = () => {
     }
   });
 
-  const [loading, setLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(() => results.length === 0 || !diagnosis);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [prankMode, setPrankMode] = useState(true);
   const [hasPrank, setHasPrank] = useState(false);
   
@@ -300,68 +301,95 @@ const ResultPage = () => {
     }
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // もし既にstateにデータがあれば（sessionStorageから復元済み）、APIを呼ばずに終了
-      if (results.length > 0 && diagnosis) {
-        setLoading(false);
-        // Check if result contains prank data (marked with isPrank)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const prankData = results.some((r: any) => r.isPrank);
-        setHasPrank(prankData);
-        return;
+  const persistSessionPayload = useCallback((payload: {
+    results?: MatchingResult[];
+    diagnosis?: LatestDiagnosis | null;
+    mismatchResults?: unknown;
+    featuredResult?: MatchingResult | null;
+  }) => {
+    if (typeof window === "undefined") return;
+    if (payload.results) {
+      sessionStorage.setItem("latestMatching", JSON.stringify(payload.results));
+    }
+    if (payload.diagnosis) {
+      sessionStorage.setItem("latestDiagnosis", JSON.stringify(payload.diagnosis));
+    }
+    if (payload.mismatchResults) {
+      sessionStorage.setItem("latestMismatch", JSON.stringify(payload.mismatchResults));
+    }
+    if (payload.featuredResult) {
+      sessionStorage.setItem("latestFeatured", JSON.stringify(payload.featuredResult));
+    }
+  }, []);
+
+  const fetchLatest = useCallback(
+    async ({ skipLoading = false, forceFresh = false } = {}) => {
+      if (skipLoading) {
+        setIsRefreshing(true);
+      } else {
+        setIsInitialLoading(true);
       }
 
-      // ログイン済みユーザーの場合は常にAPIから最新データを取得
-      setLoading(true);
       try {
-        const res = await fetch("/api/diagnosis/latest");
+        const params = new URLSearchParams();
+        params.set(forceFresh ? "fresh" : "revalidate", "1");
+        const res = await fetch(`/api/diagnosis/latest?${params.toString()}`, { cache: "no-store" });
         if (!res.ok) {
-          // 404や401の場合、sessionStorageにフォールバック
-          if (results.length > 0 && diagnosis) {
-            // sessionStorageに既にデータがあればそれを使う
-            setLoading(false);
-            return;
-          }
-          // sessionStorageにもない場合は未診断として扱う
           return;
         }
         const data = await res.json();
-        
+
         if (data.results && data.diagnosis) {
           setResults(data.results);
           setDiagnosis(data.diagnosis);
-          
           if (data.featuredResult) {
             setFeaturedResult(data.featuredResult);
-            sessionStorage.setItem("latestFeatured", JSON.stringify(data.featuredResult));
           }
-
-          // Check for prank data
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const prankData = data.results.some((r: any) => r.isPrank);
-          setHasPrank(prankData);
-
-          // セッションストレージにも保存
-          sessionStorage.setItem("latestMatching", JSON.stringify(data.results));
-          sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
-          if (data.mismatchResults) {
-            sessionStorage.setItem("latestMismatch", JSON.stringify(data.mismatchResults));
+          persistSessionPayload({
+            results: data.results,
+            diagnosis: data.diagnosis,
+            mismatchResults: data.mismatchResults,
+            featuredResult: data.featuredResult,
+          });
+          if (Array.isArray(data.results)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const prankData = data.results.some((r: any) => r.isPrank);
+            setHasPrank(prankData);
           }
         }
       } catch (error) {
         console.error("Failed to fetch latest diagnosis", error);
-        // エラー時はsessionStorageのデータを使用（既に初期値として読み込まれている）
       } finally {
-        setLoading(false);
+        if (skipLoading) {
+          setIsRefreshing(false);
+        } else {
+          setIsInitialLoading(false);
+        }
       }
-    };
+    },
+    [persistSessionPayload]
+  );
 
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 初回マウント時のみ実行（results/diagnosisは初期値として使用）
+  const initialFetchTriggered = useRef(false);
+  useEffect(() => {
+    if (initialFetchTriggered.current) return;
+    initialFetchTriggered.current = true;
+    const hasCachedData = results.length > 0 && Boolean(diagnosis);
+    fetchLatest({ skipLoading: hasCachedData });
+  }, [fetchLatest, results.length, diagnosis]);
 
-  if (loading) {
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const prankData = results.some((r: any) => r.isPrank);
+    setHasPrank(prankData);
+  }, [results]);
+
+  const handleManualRefresh = () => {
+    const hasCachedData = results.length > 0 && Boolean(diagnosis);
+    fetchLatest({ skipLoading: hasCachedData, forceFresh: true });
+  };
+
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-[#E91E63]"></div>
@@ -392,6 +420,19 @@ const ResultPage = () => {
           <p className="mt-3 text-sm md:text-base text-muted-foreground">
             あなたの回答データから相性の良い5名を抽出しました
           </p>
+          {results.length > 0 && (
+            <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                className="inline-flex items-center gap-1 text-primary hover:underline"
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? "更新中..." : "最新状態を取得"}
+              </button>
+              {isRefreshing && <span className="inline-flex h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />}
+            </div>
+          )}
           
           {hasPrank && (
             <div className="mt-4 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
