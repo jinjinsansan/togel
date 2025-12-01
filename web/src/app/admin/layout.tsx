@@ -45,8 +45,8 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-900 text-white flex items-center justify-between px-4 z-50">
+      {/* Mobile Header - positioned above SiteHeader */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-900 text-white flex items-center justify-between px-4 z-[100]">
         <h1 className="text-lg font-bold">Togel Admin</h1>
         <Button 
           variant="ghost" 
@@ -61,14 +61,14 @@ export default function AdminLayout({
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-[90]"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        w-64 bg-slate-900 text-white flex flex-col fixed h-full z-50
+        w-64 bg-slate-900 text-white flex flex-col fixed h-full z-[95]
         transition-transform duration-300
         lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
