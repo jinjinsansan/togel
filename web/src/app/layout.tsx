@@ -11,13 +11,26 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Togel診断 | 性格診断マッチングサービス",
+  title: "Togel型AI性格診断によるマッチングサービス",
   description:
-    "性格診断から相性の良い異性5名を紹介するカジュアルなマッチングサービス",
+    "Togel型AI性格診断によるマッチングサービス。あなたの性格を分析し、相性の良い異性をご紹介します。",
   viewport: {
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
+  },
+  openGraph: {
+    title: "Togel型AI性格診断によるマッチングサービス",
+    description: "Togel型AI性格診断によるマッチングサービス。あなたの性格を分析し、相性の良い異性をご紹介します。",
+    url: "https://www.to-gel.com",
+    siteName: "Togel",
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Togel型AI性格診断によるマッチングサービス",
+    description: "Togel型AI性格診断によるマッチングサービス。あなたの性格を分析し、相性の良い異性をご紹介します。",
   },
 };
 
