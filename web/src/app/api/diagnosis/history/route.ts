@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult } from "@/lib/matching/engine";
-import { Answer } from "@/types/diagnosis";
+import { Answer, BigFiveScores } from "@/types/diagnosis";
 import { getTogelLabel, personalityTypes } from "@/lib/personality";
 
 const resolveUserIds = async (
@@ -107,14 +107,18 @@ export const GET = async (request: Request) => {
 
   const total = count ?? rows.length + offset;
 
+  const derivedUpdates: { id: string; personality_type_id: string; big_five_scores: BigFiveScores; animal_type?: string | null }[] = [];
+
   const history = rows.map((row, index) => {
     const answers = Array.isArray(row.answers) ? (row.answers as Answer[]) : [];
     const mode: "light" | "full" = row.diagnosis_type === "full" ? "full" : "light";
     let togelTypeId: string | null = row.personality_type_id ?? null;
     let typeName: string | null = fallbackTypeName(togelTypeId);
     let togelLabel: string | null = row.animal_type ?? (togelTypeId ? getTogelLabel(togelTypeId) : null);
+    let derivedScores = (row.big_five_scores as BigFiveScores | null) ?? null;
+    let shouldPersistDerived = false;
 
-    if ((!togelTypeId || !typeName) && answers.length > 0) {
+    if ((!togelTypeId || !typeName || !derivedScores) && answers.length > 0) {
       const diagnosis = generateDiagnosisResult({
         diagnosisType: mode,
         userGender: gender,
@@ -123,6 +127,17 @@ export const GET = async (request: Request) => {
       togelTypeId = diagnosis.personalityType.id;
       typeName = diagnosis.personalityType.typeName ?? null;
       togelLabel = getTogelLabel(togelTypeId);
+      derivedScores = diagnosis.bigFiveScores;
+      shouldPersistDerived = Boolean(togelTypeId && derivedScores);
+    }
+
+    if (shouldPersistDerived && togelTypeId && derivedScores) {
+      derivedUpdates.push({
+        id: row.id,
+        personality_type_id: togelTypeId,
+        big_five_scores: derivedScores,
+        animal_type: togelLabel ?? row.animal_type ?? null,
+      });
     }
 
     const occurrence = Math.max(total - (offset + index), 1);
@@ -137,6 +152,14 @@ export const GET = async (request: Request) => {
       completedAt: row.completed_at ?? row.created_at,
     };
   });
+
+  if (derivedUpdates.length > 0) {
+    try {
+      await supabaseAdmin.from("diagnosis_results").upsert(derivedUpdates);
+    } catch (updateError) {
+      console.error("Failed to persist derived diagnosis data", updateError);
+    }
+  }
 
   return NextResponse.json({
     history,

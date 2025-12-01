@@ -112,6 +112,47 @@ type DiagnosisHistoryMeta = {
 
 const HISTORY_PAGE_SIZE = 10;
 
+const HISTORY_CACHE_KEY = "mypageDiagnosisHistoryCache";
+const HISTORY_CACHE_TTL = 1000 * 60 * 5;
+
+type HistoryCacheEntry = {
+  cachedAt: number;
+  meta: DiagnosisHistoryMeta;
+  entries: DiagnosisHistoryEntry[];
+};
+
+type HistoryCacheCollection = Record<string, HistoryCacheEntry>;
+
+const readHistoryCache = (): HistoryCacheCollection => {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.sessionStorage.getItem(HISTORY_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as HistoryCacheCollection) : {};
+  } catch (error) {
+    console.warn("Failed to parse history cache", error);
+    return {};
+  }
+};
+
+const getCachedHistory = (userId: string): HistoryCacheEntry | null => {
+  const collection = readHistoryCache();
+  const entry = collection[userId];
+  if (!entry) return null;
+  if (Date.now() - entry.cachedAt > HISTORY_CACHE_TTL) return null;
+  return entry;
+};
+
+const persistHistoryCache = (userId: string, payload: HistoryCacheEntry) => {
+  if (typeof window === "undefined") return;
+  try {
+    const collection = readHistoryCache();
+    collection[userId] = payload;
+    window.sessionStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(collection));
+  } catch (error) {
+    console.warn("Failed to persist history cache", error);
+  }
+};
+
 const getDefaultCertificateColor = (gender?: UserGender) => DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
 
 const toTitleCase = (value: string) => value.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
@@ -181,6 +222,18 @@ export default function MyPage() {
   
   const supabase = createClientComponentClient();
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (res.ok) {
+        const notifs = await res.json();
+        setNotifications(notifs);
+      }
+    } catch (error) {
+      console.error("Failed to load notifications", error);
+    }
+  }, []);
+
   const hydrateProfile = useCallback((data: UserProfile) => {
     setProfile(data);
     const links = data.social_links || {};
@@ -195,51 +248,90 @@ export default function MyPage() {
     setCertificateColor(nextColor);
   }, []);
 
-  const fetchDiagnosisHistory = useCallback(async (nextOffset = 0, append = false) => {
-    if (append) {
-      setHistoryLoadingMore(true);
-    } else {
-      setHistoryLoading(true);
-    }
-    setHistoryError(null);
-    try {
-      const params = new URLSearchParams({
-        limit: String(HISTORY_PAGE_SIZE),
-        offset: String(nextOffset),
-      });
-      const res = await fetch(`/api/diagnosis/history?${params.toString()}`);
-      if (res.status === 401) {
-        setDiagnosisHistory([]);
-        setHistoryMeta({ total: 0, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
+  const fetchDiagnosisHistory = useCallback(
+    async (
+      nextOffset = 0,
+      append = false,
+      options?: { allowCache?: boolean; forceRefresh?: boolean; userId?: string }
+    ) => {
+      const effectiveUserId = options?.userId ?? user?.id ?? null;
+      const allowCache = options?.allowCache !== false && !append && nextOffset === 0 && Boolean(effectiveUserId);
+      const forceRefresh = options?.forceRefresh ?? true;
+      let cacheApplied = false;
+
+      if (allowCache && effectiveUserId) {
+        const cached = getCachedHistory(effectiveUserId);
+        if (cached) {
+          setDiagnosisHistory(cached.entries);
+          setHistoryMeta(cached.meta);
+          cacheApplied = true;
+          setHistoryError(null);
+        }
+      }
+
+      if (append) {
+        setHistoryLoadingMore(true);
+      } else if (!cacheApplied) {
+        setHistoryLoading(true);
+      }
+      setHistoryError(null);
+
+      if (cacheApplied && !forceRefresh) {
+        if (append) {
+          setHistoryLoadingMore(false);
+        } else {
+          setHistoryLoading(false);
+        }
         return;
       }
-      if (!res.ok) {
-        throw new Error("Failed to load history");
-      }
-      const data = await res.json();
-      const entries = Array.isArray(data.history) ? data.history : [];
-      setDiagnosisHistory((prev) => (append ? [...prev, ...entries] : entries));
-      if (data.meta) {
-        setHistoryMeta({
-          total: Number(data.meta.total) || entries.length,
-          limit: Number(data.meta.limit) || HISTORY_PAGE_SIZE,
-          offset: Number(data.meta.offset) || nextOffset,
-          hasMore: Boolean(data.meta.hasMore),
+
+      try {
+        const params = new URLSearchParams({
+          limit: String(HISTORY_PAGE_SIZE),
+          offset: String(nextOffset),
         });
-      } else if (!append) {
-        setHistoryMeta({ total: entries.length, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
+        const res = await fetch(`/api/diagnosis/history?${params.toString()}`);
+        if (res.status === 401) {
+          setDiagnosisHistory([]);
+          setHistoryMeta({ total: 0, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
+          return;
+        }
+        if (!res.ok) {
+          throw new Error("Failed to load history");
+        }
+        const data = await res.json();
+        const entries = Array.isArray(data.history) ? data.history : [];
+        setDiagnosisHistory((prev) => (append ? [...prev, ...entries] : entries));
+        const nextMeta = data.meta
+          ? {
+              total: Number(data.meta.total) || entries.length,
+              limit: Number(data.meta.limit) || HISTORY_PAGE_SIZE,
+              offset: Number(data.meta.offset) || nextOffset,
+              hasMore: Boolean(data.meta.hasMore),
+            }
+          : { total: entries.length, limit: HISTORY_PAGE_SIZE, offset: append ? historyMeta.offset : 0, hasMore: false };
+        setHistoryMeta(nextMeta);
+
+        if (!append && nextOffset === 0 && effectiveUserId) {
+          persistHistoryCache(effectiveUserId, {
+            cachedAt: Date.now(),
+            entries,
+            meta: nextMeta,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load diagnosis history", err);
+        setHistoryError("診断履歴を取得できませんでした。");
+      } finally {
+        if (append) {
+          setHistoryLoadingMore(false);
+        } else if (!cacheApplied) {
+          setHistoryLoading(false);
+        }
       }
-    } catch (err) {
-      console.error("Failed to load diagnosis history", err);
-      setHistoryError("診断履歴を取得できませんでした。");
-    } finally {
-      if (append) {
-        setHistoryLoadingMore(false);
-      } else {
-        setHistoryLoading(false);
-      }
-    }
-  }, []);
+    },
+    [historyMeta.offset, user?.id]
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -251,33 +343,27 @@ export default function MyPage() {
         return;
       }
       setUser(authUser);
-      
-      const { data } = await supabase
+
+      const profilePromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", authUser.id)
-        .single();
-        
-      if (data) {
-        hydrateProfile(data as UserProfile);
-      }
+        .maybeSingle();
 
-      // Fetch real notifications
-      try {
-        const res = await fetch("/api/notifications");
-        if (res.ok) {
-          const notifs = await res.json();
-          setNotifications(notifs);
-        }
-      } catch (e) {
-        console.error("Failed to load notifications", e);
-      }
+      await Promise.all([
+        profilePromise.then((res) => {
+          if (res?.data) {
+            hydrateProfile(res.data as UserProfile);
+          }
+        }),
+        fetchNotifications(),
+        fetchDiagnosisHistory(0, false, { allowCache: true, userId: authUser.id }),
+      ]);
 
-      await fetchDiagnosisHistory();
       setLoading(false);
     };
     fetchData();
-  }, [supabase, hydrateProfile, fetchDiagnosisHistory]);
+  }, [supabase, hydrateProfile, fetchNotifications, fetchDiagnosisHistory]);
 
   useEffect(() => {
     if (!user?.id) return;
