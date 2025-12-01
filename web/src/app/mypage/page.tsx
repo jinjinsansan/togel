@@ -157,6 +157,11 @@ const formatDiagnosisDateTime = (value?: string | null) => {
 
 const formatDiagnosisModeLabel = (mode: "light" | "full") => (mode === "light" ? "ライト版" : "スタンダード版");
 
+const MODE_BADGE_STYLES: Record<DiagnosisHistoryEntry["mode"], string> = {
+  light: "bg-rose-50 text-[#E91E63] border border-rose-100",
+  full: "bg-violet-50 text-violet-600 border border-violet-100",
+};
+
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -520,17 +525,25 @@ export default function MyPage() {
                 {diagnosisHistory.map((entry) => {
                   const togelCode = entry.togelTypeId ? formatTogelTypeCode(entry.togelTypeId) : entry.togelLabel ?? "Togel --型";
                   const togelName = entry.togelTypeId ? formatTypeNameEn(entry.togelTypeId) : entry.typeName ?? "Type Pending";
+                  const modeBadgeClass = MODE_BADGE_STYLES[entry.mode];
                   return (
                     <li key={entry.id} className="relative pl-4">
                       <span className="absolute -left-2 top-1 h-3 w-3 rounded-full bg-[#E91E63] border-2 border-white"></span>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">第{entry.occurrence}回</p>
                           <p className="text-lg font-bold text-slate-900">{formatDiagnosisDateTime(entry.completedAt)}</p>
                         </div>
-                        <div className="text-sm text-slate-500 text-left sm:text-right">
-                          <p className="font-bold text-slate-800">{formatDiagnosisModeLabel(entry.mode)}</p>
-                          <p className="text-xs text-slate-500">{togelCode} · {togelName}</p>
+                        <div className="text-sm text-slate-500 text-left sm:text-right space-y-1">
+                          <div className="flex flex-wrap gap-2 sm:justify-end">
+                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${modeBadgeClass}`}>
+                              {formatDiagnosisModeLabel(entry.mode)}
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
+                              {togelCode}
+                            </span>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800">{togelName}</p>
                         </div>
                       </div>
                     </li>
