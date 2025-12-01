@@ -209,10 +209,10 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   const socialLinks = SOCIAL_LINKS;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
-      <div className="container px-4 md:px-6">
-        <div className="mx-auto max-w-3xl">
-          <div className="rounded-[2.5rem] border-2 border-white bg-white/80 backdrop-blur-sm p-8 md:p-12 shadow-xl shadow-slate-200/50 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-10 md:py-16">
+      <div className="container px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <div className="rounded-[2.5rem] border border-transparent md:border-2 md:border-white bg-white/95 backdrop-blur-md p-5 sm:p-8 md:p-12 shadow-md md:shadow-xl shadow-slate-200/30 relative">
             
             {/* Edit Button for Owner */}
             {viewerId === profile.id && (
@@ -224,8 +224,8 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             )}
 
             {/* Header Profile Info */}
-            <div className="flex flex-col items-center text-center mb-10">
-              <div className="relative h-40 w-40 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between lg:text-left text-center gap-8 mb-10">
+              <div className="relative h-32 w-32 sm:h-36 sm:w-36 lg:h-40 lg:w-40 mx-auto lg:mx-0">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E91E63] to-purple-600 opacity-20 blur-2xl animate-pulse"></div>
                 <Image
                   src={avatarSrc}
@@ -244,48 +244,46 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                   {profile.gender === "male" ? "👨" : profile.gender === "female" ? "👩" : "🧑"}
                 </div>
               </div>
-              
-              <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900 mb-2">
-                {profile.full_name} <span className="text-lg font-medium text-slate-400">({profile.age ? `${profile.age}歳` : "年齢非公開"})</span>
-              </h1>
-              
-              <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-medium text-slate-500 mb-6">
-                {profile.job && (
-                  <span className="flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full">
-                    <Briefcase className="h-3.5 w-3.5" /> {profile.job}
-                  </span>
-                )}
-                {profile.city && (
-                  <span className="flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full">
-                    <MapPin className="h-3.5 w-3.5" /> {profile.city}
-                  </span>
-                )}
-              </div>
-
-              {/* SNS Links */}
-              <div className="flex gap-4 mt-2">
-                {socialLinks.map((link, index) => {
-                  const url = profile.social_links?.[link.key];
-                  if (!url) return null;
-                  
-                  return (
-                    <a
-                      key={index}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-all hover:scale-110 hover:border-transparent hover:shadow-md ${link.color}`}
-                      aria-label={link.label}
-                    >
-                      {link.icon}
-                    </a>
-                  );
-                })}
+              <div>
+                <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900 mb-3">
+                  {profile.full_name} <span className="text-lg font-medium text-slate-400 block sm:inline">({profile.age ? `${profile.age}歳` : "年齢非公開"})</span>
+                </h1>
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-medium text-slate-500 mb-4">
+                  {profile.job && (
+                    <span className="flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full">
+                      <Briefcase className="h-3.5 w-3.5" /> {profile.job}
+                    </span>
+                  )}
+                  {profile.city && (
+                    <span className="flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full">
+                      <MapPin className="h-3.5 w-3.5" /> {profile.city}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap justify-center lg:justify-start gap-4 mt-2">
+                  {socialLinks.map((link, index) => {
+                    const url = profile.social_links?.[link.key];
+                    if (!url) return null;
+                    
+                    return (
+                      <a
+                        key={index}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-all hover:scale-110 hover:border-transparent hover:shadow-md ${link.color}`}
+                        aria-label={link.label}
+                      >
+                        {link.icon}
+                      </a>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {/* Personality Type */}
-            <div className="rounded-[2rem] bg-gradient-to-br from-slate-50 to-slate-100 p-8 border border-slate-200 mb-10 relative overflow-hidden">
+            <div className="rounded-[2rem] bg-gradient-to-br from-slate-50 to-white p-5 sm:p-8 border border-transparent md:border-slate-200 mb-10 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E91E63] to-purple-600"></div>
               <div className="relative z-10 text-center">
                 <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-3">DIAGNOSIS RESULT</p>
@@ -317,7 +315,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             {diagnosisDetails && (
               <div className="mb-10 space-y-6">
                 {/* 🎯 こんな人 */}
-                <div className="rounded-2xl bg-white/70 p-6 border border-slate-200">
+                <div className="rounded-2xl bg-white/80 p-5 sm:p-6 border border-transparent md:border-slate-200">
                   <h3 className="flex items-center gap-2 text-lg font-bold mb-4">
                     <span className="text-2xl">🎯</span>
                     {subjectName}ってこんな人
@@ -346,7 +344,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
 
                 {/* ⚡ 得意技 */}
                 {diagnosisDetails.detailedNarrative.strengths.length > 0 && (
-                  <div className="rounded-2xl bg-green-50 p-6 border border-green-200">
+                  <div className="rounded-2xl bg-green-50/80 p-5 sm:p-6 border border-transparent md:border-green-200">
                     <h3 className="flex items-center gap-2 text-lg font-bold mb-3">
                       <span className="text-2xl">⚡</span>
                       {subjectName}の得意技
@@ -361,7 +359,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
 
                 {/* 💑 恋愛になるとこうなる */}
                 {diagnosisDetails.detailedNarrative.loveTendency.length > 0 && (
-                  <div className="rounded-2xl bg-pink-50 p-6 border border-pink-200">
+                  <div className="rounded-2xl bg-pink-50/80 p-5 sm:p-6 border border-transparent md:border-pink-200">
                     <h3 className="flex items-center gap-2 text-lg font-bold mb-3">
                       <span className="text-2xl">💑</span>
                       恋愛になるとこうなる
@@ -387,11 +385,11 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
 
                 {/* 詳細スコア */}
                 <details className="group">
-                  <summary className="cursor-pointer rounded-2xl bg-slate-100 px-6 py-4 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors list-none flex items-center justify-between">
+                  <summary className="cursor-pointer rounded-2xl bg-slate-100 px-4 sm:px-6 py-4 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors list-none flex items-center justify-between">
                     <span>📊 詳細スコアを見る</span>
                     <span className="group-open:rotate-180 transition-transform">▼</span>
                   </summary>
-                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {TRAITS.map((trait) => (
                       <div key={trait} className="flex items-center justify-between rounded-xl bg-white px-4 py-3 border border-slate-200">
                         <span className="text-sm font-medium">{traitLabels[trait]}</span>
@@ -406,7 +404,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             {/* Detailed Info */}
             <div className="space-y-8">
               {/* Bio Card */}
-              <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm relative">
+              <div className="rounded-3xl border border-transparent md:border-slate-100 bg-white p-6 sm:p-8 shadow-sm relative">
                 <div className="absolute top-6 left-6 text-slate-200">
                   <User className="h-8 w-8" />
                 </div>
@@ -419,9 +417,9 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
               </div>
 
               <h3 className="font-heading text-xl font-bold text-slate-900 border-b border-slate-100 pb-4 px-2">基本プロフィール</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {infoItems.map((item, index) => (
-                  <div key={index} className="rounded-2xl border border-slate-100 bg-white p-5 transition-colors hover:border-slate-200">
+                  <div key={index} className="rounded-2xl border border-transparent md:border-slate-100 bg-white p-4 sm:p-5 transition-colors hover:border-slate-200">
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
                       {item.icon} {item.label}
                     </p>
