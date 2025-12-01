@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bell, Star, LogOut } from "lucide-react";
+import { LayoutDashboard, Bell, Star, LogOut, Menu, X } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClientComponentClient();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -43,13 +45,39 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen flex bg-slate-50">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-900 text-white flex items-center justify-between px-4 z-50">
+        <h1 className="text-lg font-bold">Togel Admin</h1>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="text-white hover:bg-slate-800"
+        >
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </Button>
+      </div>
+
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col fixed h-full z-10">
+      <aside className={`
+        w-64 bg-slate-900 text-white flex flex-col fixed h-full z-50
+        transition-transform duration-300
+        lg:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-xl font-bold tracking-wider">Togel Admin</h1>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
             const isActive = item.exact 
               ? pathname === item.href
@@ -59,6 +87,7 @@ export default function AdminLayout({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive 
                     ? "bg-[#E91E63] text-white font-bold" 
@@ -85,7 +114,7 @@ export default function AdminLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 lg:ml-64 pt-14 lg:pt-0 p-4 lg:p-8 w-full overflow-x-hidden">
         {children}
       </main>
     </div>
