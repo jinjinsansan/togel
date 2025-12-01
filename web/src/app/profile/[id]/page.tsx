@@ -208,10 +208,10 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   const socialLinks = SOCIAL_LINKS;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-10 md:py-16">
-      <div className="container px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-10 md:py-16 overflow-x-hidden">
+      <div className="container px-4 sm:px-6 lg:px-8 max-w-full">
         <div className="mx-auto max-w-5xl">
-          <div className="rounded-[2.5rem] border border-transparent md:border-2 md:border-white bg-white/95 backdrop-blur-md p-5 sm:p-8 md:p-12 shadow-md md:shadow-xl shadow-slate-200/30 relative">
+          <div className="rounded-[2.5rem] border border-transparent md:border-2 md:border-white bg-white/95 backdrop-blur-md p-5 sm:p-8 md:p-12 shadow-md md:shadow-xl shadow-slate-200/30 relative overflow-hidden">
             
             {/* Edit Button for Owner */}
             {viewerId === profile.id && (
@@ -242,8 +242,8 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                   {profile.gender === "male" ? "👨" : profile.gender === "female" ? "👩" : "🧑"}
                 </div>
               </div>
-              <div>
-                <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900 mb-3">
+              <div className="w-full overflow-hidden">
+                <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900 mb-3 break-words">
                   {profile.full_name} <span className="text-lg font-medium text-slate-400 block sm:inline">({profile.age ? `${profile.age}歳` : "年齢非公開"})</span>
                 </h1>
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-medium text-slate-500 mb-4">
@@ -324,7 +324,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                       <p className="text-sm font-semibold text-muted-foreground mb-2">💡 考え方のクセ</p>
                       <ul className="space-y-1 text-base">
                         {diagnosisDetails.detailedNarrative.thinkingStyle.map((text, idx) => (
-                          <li key={idx}>• {text}</li>
+                          <li key={idx} className="break-words">• {text}</li>
                         ))}
                       </ul>
                     </div>
@@ -333,7 +333,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                       <p className="text-sm font-semibold text-muted-foreground mb-2">💬 コミュニケーションスタイル</p>
                       <ul className="space-y-1 text-base">
                         {diagnosisDetails.detailedNarrative.communicationStyle.map((text, idx) => (
-                          <li key={idx}>• {text}</li>
+                          <li key={idx} className="break-words">• {text}</li>
                         ))}
                       </ul>
                     </div>
@@ -349,7 +349,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                     </h3>
                     <ul className="space-y-1 text-base">
                       {diagnosisDetails.detailedNarrative.strengths.map((strength, idx) => (
-                        <li key={idx}>✓ {strength}</li>
+                        <li key={idx} className="break-words">✓ {strength}</li>
                       ))}
                     </ul>
                   </div>
@@ -364,7 +364,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                     </h3>
                     <ul className="space-y-1 text-base mb-4">
                       {diagnosisDetails.detailedNarrative.loveTendency.map((text, idx) => (
-                        <li key={idx}>• {text}</li>
+                        <li key={idx} className="break-words">• {text}</li>
                       ))}
                     </ul>
 
@@ -373,7 +373,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                         <p className="text-sm font-semibold text-muted-foreground mb-2">💕 求めてるのはこんな相手</p>
                         <ul className="space-y-1 text-base">
                           {diagnosisDetails.detailedNarrative.idealPartner.map((text, idx) => (
-                            <li key={idx}>→ {text}</li>
+                            <li key={idx} className="break-words">→ {text}</li>
                           ))}
                         </ul>
                       </div>
@@ -408,7 +408,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
                 </div>
                 <div className="relative z-10 text-center">
                    <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">SELF INTRODUCTION</h3>
-                   <p className="text-lg text-slate-700 leading-loose whitespace-pre-wrap font-medium">
+                   <p className="text-lg text-slate-700 leading-loose whitespace-pre-wrap font-medium break-words">
                      {profile.bio || "自己紹介はまだありません。"}
                    </p>
                 </div>
@@ -417,11 +417,11 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
               <h3 className="font-heading text-xl font-bold text-slate-900 border-b border-slate-100 pb-4 px-2">基本プロフィール</h3>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {infoItems.map((item, index) => (
-                  <div key={index} className="rounded-2xl border border-transparent md:border-slate-100 bg-white p-4 sm:p-5 transition-colors hover:border-slate-200">
+                  <div key={index} className="rounded-2xl border border-transparent md:border-slate-100 bg-white p-4 sm:p-5 transition-colors hover:border-slate-200 overflow-hidden">
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
                       {item.icon} {item.label}
                     </p>
-                    <p className="text-base font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
+                    <p className="text-base font-medium text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
                       {item.value}
                     </p>
                   </div>
