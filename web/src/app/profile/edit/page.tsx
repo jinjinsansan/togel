@@ -354,10 +354,10 @@ export default function ProfileEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 md:py-20">
-      <div className="container px-4 max-w-3xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">プロフィール編集</h1>
+    <div className="min-h-screen bg-slate-50 py-12 md:py-20 overflow-x-hidden">
+      <div className="container px-4 max-w-3xl max-w-full">
+        <div className="flex items-center justify-between mb-8 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">プロフィール編集</h1>
           {isPublic && (
             <Button variant="outline" className="text-[#E91E63] border-[#E91E63] hover:bg-[#E91E63]/10 gap-2" asChild>
               <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer">
@@ -388,17 +388,17 @@ export default function ProfileEditPage() {
             </div>
 
             {isPublic && (
-              <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in slide-in-from-top-2">
+              <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in slide-in-from-top-2 overflow-hidden">
                 <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">PUBLIC URL</p>
-                <div className="flex gap-2">
-                  <code className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono text-slate-600 truncate">
+                <div className="flex gap-2 min-w-0">
+                  <code className="flex-1 min-w-0 bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-slate-600 truncate overflow-hidden">
                     {`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${user?.id}`}
                   </code>
-                  <Button size="icon" variant="outline" onClick={copyPublicLink}>
+                  <Button size="icon" variant="outline" onClick={copyPublicLink} className="shrink-0">
                     {copied ? <Check size={18} className="text-green-600" /> : <Copy size={18} />}
                   </Button>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-slate-400 mt-2 break-words">
                   このURLをシェアすると、誰でもあなたのプロフィールを閲覧できます。
                 </p>
               </div>
@@ -406,8 +406,8 @@ export default function ProfileEditPage() {
           </div>
 
           {/* Basic Info Card */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-            <h2 className="font-bold text-xl mb-6 border-b border-slate-100 pb-4">基本情報</h2>
+          <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm overflow-hidden">
+            <h2 className="font-bold text-lg sm:text-xl mb-6 border-b border-slate-100 pb-4">基本情報</h2>
             
             {/* Avatar */}
             <div className="flex flex-col items-center mb-8">
@@ -442,113 +442,117 @@ export default function ProfileEditPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="fullName">ニックネーム</Label>
-                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Togel太郎" />
+                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Togel太郎" className="w-full" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="gender">性別</Label>
                 <select 
                   id="gender" 
                   value={gender} 
                   onChange={(e) => setGender(e.target.value as GenderOption)}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 max-w-full"
                 >
                   <option value="male">男性</option>
                   <option value="female">女性</option>
                   <option value="other">その他</option>
                 </select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="age">年齢</Label>
-                <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" />
+                <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" className="w-full" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="job">職業</Label>
-                <Input id="job" value={job} onChange={(e) => setJob(e.target.value)} placeholder="会社員" />
+                <Input id="job" value={job} onChange={(e) => setJob(e.target.value)} placeholder="会社員" className="w-full" />
               </div>
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 md:col-span-2 min-w-0">
                 <Label htmlFor="city">居住地</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="東京都 渋谷区" />
+                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="東京都 渋谷区" className="w-full" />
               </div>
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2 md:col-span-2 min-w-0">
                 <Label htmlFor="bio">自己紹介</Label>
                 <Textarea 
                   id="bio" 
                   value={bio} 
                   onChange={(e) => setBio(e.target.value)} 
                   placeholder="よろしくお願いします！" 
-                  className="h-32 resize-none"
+                  className="h-32 resize-none w-full"
                 />
               </div>
             </div>
           </div>
 
           {/* Detailed Info Card */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-            <h2 className="font-bold text-xl mb-6 border-b border-slate-100 pb-4">詳細プロフィール</h2>
+          <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm overflow-hidden">
+            <h2 className="font-bold text-lg sm:text-xl mb-6 border-b border-slate-100 pb-4">詳細プロフィール</h2>
             <div className="grid gap-6">
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="favoriteThings">好きなこと</Label>
                 <Textarea 
                   id="favoriteThings" 
                   value={details.favoriteThings} 
                   onChange={(e) => setDetails({...details, favoriteThings: e.target.value})} 
                   placeholder="例：休日のカフェ巡り、映画鑑賞" 
-                  className="resize-none h-20"
+                  className="resize-none h-20 w-full"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="hobbies">趣味</Label>
                 <Input 
                   id="hobbies" 
                   value={details.hobbies} 
                   onChange={(e) => setDetails({...details, hobbies: e.target.value})} 
                   placeholder="例：サウナ、キャンプ" 
+                  className="w-full"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="specialSkills">特技</Label>
                 <Input 
                   id="specialSkills" 
                   value={details.specialSkills} 
                   onChange={(e) => setDetails({...details, specialSkills: e.target.value})} 
                   placeholder="例：早起き、料理" 
+                  className="w-full"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="values">価値観</Label>
                 <Input 
                   id="values" 
                   value={details.values} 
                   onChange={(e) => setDetails({...details, values: e.target.value})} 
                   placeholder="例：誠実さを大切にしたい" 
+                  className="w-full"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="communication">コミュ力</Label>
                 <Input 
                   id="communication" 
                   value={details.communication} 
                   onChange={(e) => setDetails({...details, communication: e.target.value})} 
                   placeholder="例：聞き上手と言われます" 
+                  className="w-full"
                 />
               </div>
             </div>
           </div>
 
           {/* Social Links Card */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+          <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
-              <div>
-                <h2 className="font-bold text-xl">外部SNSリンク</h2>
-                <p className="text-sm text-slate-500 mt-1">公開プロフィールに表示されます。信頼できる相手にのみ教えることをおすすめします。</p>
+              <div className="min-w-0">
+                <h2 className="font-bold text-lg sm:text-xl">外部SNSリンク</h2>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1 break-words">公開プロフィールに表示されます。信頼できる相手にのみ教えることをおすすめします。</p>
               </div>
             </div>
 
             <div className="grid gap-5">
               {socialLinkFields.map((field) => (
-                <div key={field.key} className="space-y-2">
+                <div key={field.key} className="space-y-2 min-w-0">
                   <Label htmlFor={`social-${field.key}`} className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">
                       {field.icon}
@@ -561,8 +565,9 @@ export default function ProfileEditPage() {
                     value={socialLinks[field.key]}
                     onChange={(e) => handleSocialLinkChange(field.key, e.target.value)}
                     placeholder={field.placeholder}
+                    className="w-full"
                   />
-                  <p className="text-xs text-slate-400">{field.helper}</p>
+                  <p className="text-xs text-slate-400 break-words">{field.helper}</p>
                 </div>
               ))}
             </div>
