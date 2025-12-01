@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, SyntheticEvent, ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
@@ -227,18 +226,17 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between lg:text-left text-center gap-8 mb-10">
               <div className="relative h-32 w-32 sm:h-36 sm:w-36 lg:h-40 lg:w-40 mx-auto lg:mx-0">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E91E63] to-purple-600 opacity-20 blur-2xl animate-pulse"></div>
-                <Image
+                <img
                   src={avatarSrc}
                   alt={profile.full_name}
-                  fill
-                  sizes="160px"
-                  className="rounded-full border-4 border-white object-cover shadow-lg"
+                  className="h-full w-full rounded-full border-4 border-white object-cover shadow-lg"
                   onError={(e: SyntheticEvent<HTMLImageElement>) => {
                     const target = e.currentTarget;
                     if (!target.src.includes("dicebear.com")) {
                       target.src = buildFallbackAvatar(profile.id, profile.gender || "other");
                     }
                   }}
+                  loading="lazy"
                 />
                 <div className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md text-lg">
                   {profile.gender === "male" ? "👨" : profile.gender === "female" ? "👩" : "🧑"}
