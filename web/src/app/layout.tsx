@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   title: "Togel診断 | 性格診断マッチングサービス",
   description:
     "性格診断から相性の良い異性5名を紹介するカジュアルなマッチングサービス",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
