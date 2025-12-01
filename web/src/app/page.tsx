@@ -46,7 +46,7 @@ export default function Home() {
           playsInline
           className="absolute inset-0 h-full w-full object-cover"
         >
-          <source src="https://assets.to-gel.com/hero-movie-v4-optimized.mp4" type="video/mp4" />
+          <source src="/hero-movie-v4-optimized.mp4" type="video/mp4" />
         </video>
 
       {/* 2. Pink Background Layer (Screen Blend) */}
