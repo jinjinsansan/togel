@@ -354,24 +354,24 @@ export default function ProfileEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 md:py-20 overflow-x-hidden">
-      <div className="container px-4 max-w-3xl max-w-full">
-        <div className="flex items-center justify-between mb-8 gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">プロフィール編集</h1>
+    <div className="min-h-screen bg-slate-50 py-8 md:py-16 overflow-x-hidden">
+      <div className="w-full max-w-3xl mx-auto px-3 sm:px-4 md:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-2 sm:gap-4">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">プロフィール編集</h1>
           {isPublic && (
-            <Button variant="outline" className="text-[#E91E63] border-[#E91E63] hover:bg-[#E91E63]/10 gap-2" asChild>
+            <Button variant="outline" size="sm" className="text-[#E91E63] border-[#E91E63] hover:bg-[#E91E63]/10 gap-1 whitespace-nowrap text-xs sm:text-sm self-start sm:self-auto" asChild>
               <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer">
-                <ExternalLink size={16} />
-                公開ページを確認
+                <ExternalLink size={12} className="sm:w-4 sm:h-4" />
+                公開ページ
               </a>
             </Button>
           )}
         </div>
 
-        <div className="grid gap-8">
+        <div className="grid gap-6 sm:gap-8">
           
           {/* Public Settings Card */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-full ${isPublic ? "bg-green-100 text-green-600" : "bg-slate-100 text-slate-500"}`}>
@@ -388,18 +388,18 @@ export default function ProfileEditPage() {
             </div>
 
             {isPublic && (
-              <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-in fade-in slide-in-from-top-2 overflow-hidden">
-                <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">PUBLIC URL</p>
-                <div className="flex gap-2 min-w-0">
-                  <code className="flex-1 min-w-0 bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-slate-600 truncate overflow-hidden">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-xl border border-slate-200 animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                <p className="text-[9px] sm:text-xs font-bold text-slate-500 mb-1.5 sm:mb-2 uppercase tracking-wider">URL</p>
+                <div className="flex gap-1 sm:gap-2 min-w-0">
+                  <code className="flex-1 min-w-0 bg-white border border-slate-300 rounded px-1.5 sm:px-3 py-1 sm:py-2 text-[9px] sm:text-xs font-mono text-slate-600 truncate overflow-hidden break-all leading-tight sm:leading-normal">
                     {`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${user?.id}`}
                   </code>
-                  <Button size="icon" variant="outline" onClick={copyPublicLink} className="shrink-0">
-                    {copied ? <Check size={18} className="text-green-600" /> : <Copy size={18} />}
+                  <Button size="icon" variant="outline" onClick={copyPublicLink} className="shrink-0 h-7 w-7 sm:h-10 sm:w-10">
+                    {copied ? <Check size={12} className="text-green-600 sm:w-[18px] sm:h-[18px]" /> : <Copy size={12} className="sm:w-[18px] sm:h-[18px]" />}
                   </Button>
                 </div>
-                <p className="text-xs text-slate-400 mt-2 break-words">
-                  このURLをシェアすると、誰でもあなたのプロフィールを閲覧できます。
+                <p className="text-[9px] sm:text-xs text-slate-400 mt-1.5 sm:mt-2 break-words leading-snug">
+                  このURLをシェアできます
                 </p>
               </div>
             )}
