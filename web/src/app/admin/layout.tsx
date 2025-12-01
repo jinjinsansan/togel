@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bell, Star, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Bell, Star, LogOut, Menu, X, Home } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -101,7 +101,16 @@ export default function AdminLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800 space-y-2">
+          <Link href="/">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800 gap-3"
+            >
+              <Home size={20} />
+              <span>サイトに戻る</span>
+            </Button>
+          </Link>
           <Button 
             variant="ghost" 
             className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800 gap-3"
