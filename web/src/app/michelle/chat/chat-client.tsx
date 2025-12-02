@@ -126,6 +126,24 @@ export function MichelleChatClient() {
   }, [loadSessions]);
 
   useEffect(() => {
+    const setViewportHeight = () => {
+      if (typeof window === "undefined") return;
+      const viewport = window.visualViewport;
+      const height = viewport ? viewport.height : window.innerHeight;
+      document.documentElement.style.setProperty("--michelle-vh", `${height}px`);
+    };
+
+    setViewportHeight();
+    window.addEventListener("resize", setViewportHeight);
+    window.visualViewport?.addEventListener("resize", setViewportHeight);
+
+    return () => {
+      window.removeEventListener("resize", setViewportHeight);
+      window.visualViewport?.removeEventListener("resize", setViewportHeight);
+    };
+  }, []);
+
+  useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
@@ -313,8 +331,11 @@ export function MichelleChatClient() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]">
-      <aside className="hidden w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex">
+    <div
+      className="flex w-full overflow-x-hidden bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
+      style={{ minHeight: "calc(var(--michelle-vh, 100vh) - 4rem)" }}
+    >
+      <aside className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex">
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
@@ -393,7 +414,7 @@ export function MichelleChatClient() {
         </div>
       )}
 
-      <main className="flex flex-1 flex-col bg-white/75">
+      <main className="flex min-w-0 flex-1 flex-col bg-white/75">
         <header className="flex items-center justify-between border-b border-[#ffdfea] px-4 py-3 text-sm text-[#95506a]">
             <div className="flex items-center gap-2">
               <Button
@@ -477,13 +498,16 @@ export function MichelleChatClient() {
                   )}
                 </div>
               ))}
-              <div className="h-20" />
+              <div className="h-12 md:h-20" />
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
-        <div className="border-t border-[#ffdbe8] bg-white/95 px-4 py-4">
+        <div
+          className="border-t border-[#ffdbe8] bg-white/95 px-4 pt-2"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+        >
           {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
           <form
             onSubmit={(event) => {
