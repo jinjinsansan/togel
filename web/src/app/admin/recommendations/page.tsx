@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   CalendarDays,
   CheckCircle2,
+  ExternalLink,
   Gift,
   GripVertical,
   Layers,
@@ -98,6 +100,13 @@ const toInputDateTime = (value?: string | null) => {
   return local.toISOString().slice(0, 16);
 };
 
+const getTogelNumericLabel = (typeId?: string) => {
+  if (!typeId) return "Togel??型";
+  const index = personalityTypes.findIndex((type) => type.id === typeId);
+  if (index === -1) return "Togel??型";
+  return `Togel${String(index + 1).padStart(2, "0")}型`;
+};
+
 export default function RecommendationAdminPage() {
   const [selectedType, setSelectedType] = useState(personalityTypes[0]?.id ?? "");
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -109,8 +118,10 @@ export default function RecommendationAdminPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [ordering, setOrdering] = useState(false);
+  const noServicesAvailable = services.length === 0;
 
   const selectedTypeInfo = useMemo(() => personalityTypes.find((type) => type.id === selectedType), [selectedType]);
+  const selectedNumericLabel = useMemo(() => getTogelNumericLabel(selectedType), [selectedType]);
 
   const fetchServices = useCallback(async () => {
     try {
@@ -154,6 +165,10 @@ export default function RecommendationAdminPage() {
   }, [fetchRecommendations]);
 
   const openCreateForm = () => {
+    if (services.length === 0) {
+      alert("先に「サービス管理」でサービスを追加してください");
+      return;
+    }
     if (recommendations.length >= 6) {
       alert("1つの型につき最大6件まで登録できます");
       return;
@@ -278,7 +293,12 @@ export default function RecommendationAdminPage() {
           <p className="text-sm text-slate-400">Togel型別にサービスを表示</p>
           <h1 className="text-2xl font-black text-slate-900">レコメンデーション管理</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" className="gap-2" asChild>
+            <Link href="/admin/services">
+              <Layers className="h-4 w-4" /> サービスを追加
+            </Link>
+          </Button>
           <Button variant="outline" className="gap-2" onClick={fetchRecommendations} disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
             再読み込み
@@ -295,13 +315,16 @@ export default function RecommendationAdminPage() {
           <div>
             <label className="text-xs font-semibold text-slate-500">Togel型を選択</label>
             <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="mt-1">
+              <SelectTrigger className="mt-1 rounded-2xl border-slate-200 bg-white/95 shadow-sm">
                 <SelectValue placeholder="選択" />
               </SelectTrigger>
-              <SelectContent className="max-h-72">
+              <SelectContent className="max-h-72 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur">
                 {personalityTypes.map((type) => (
                   <SelectItem key={type.id} value={type.id}>
-                    {type.typeName}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-slate-900">{getTogelNumericLabel(type.id)}</span>
+                      <span className="text-xs text-slate-500">{type.typeName}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -309,8 +332,9 @@ export default function RecommendationAdminPage() {
           </div>
           <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
             <p className="text-xs font-semibold text-slate-500">現在の型</p>
-            <p className="text-lg font-bold text-slate-900">{selectedTypeInfo?.typeName ?? "未選択"}</p>
-            <p className="text-xs text-slate-500">{selectedTypeInfo?.catchphrase}</p>
+            <p className="text-lg font-bold text-slate-900">{selectedNumericLabel}</p>
+            <p className="text-xs text-slate-500">{selectedTypeInfo?.typeName ?? "未選択"}</p>
+            {selectedTypeInfo?.catchphrase && <p className="text-[11px] text-slate-400">{selectedTypeInfo.catchphrase}</p>}
           </div>
           <div className="rounded-2xl border border-slate-100 bg-pink-50 px-4 py-3">
             <p className="text-xs font-semibold text-[#E91E63]">登録件数</p>
@@ -484,11 +508,11 @@ export default function RecommendationAdminPage() {
               <div>
                 <label className="text-xs font-semibold text-slate-500">サービス</label>
                 <Select value={formState.serviceId} onValueChange={(value) => setFormState((prev) => ({ ...prev, serviceId: value }))}>
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-1 rounded-2xl border-slate-200 bg-white/95 shadow-sm">
                     <SelectValue placeholder="選択してください" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {services.length === 0 ? (
+                  <SelectContent className="max-h-72 rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur">
+                    {noServicesAvailable ? (
                       <SelectItem value="no-service" disabled>
                         公開中のサービスがありません
                       </SelectItem>
@@ -502,6 +526,14 @@ export default function RecommendationAdminPage() {
                     )}
                   </SelectContent>
                 </Select>
+                {noServicesAvailable && (
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+                    <span>まずは「サービス管理」でサービスを追加してください。</span>
+                    <Link href="/admin/services" className="flex items-center gap-1 text-[#E91E63] font-semibold">
+                      サービスを追加する <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-500">おすすめ理由</label>
