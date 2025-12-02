@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Boxes, ImageIcon, Link as LinkIcon, Loader2, PencilLine, Plus, Search, Trash2 } from "lucide-react";
+import { Boxes, ImageIcon, Link as LinkIcon, Loader2, PencilLine, Plus, Search, Trash2, UploadCloud } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,8 @@ export default function ServicesPage() {
   const [formState, setFormState] = useState<ServiceFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchServices = useCallback(async () => {
     try {
@@ -171,6 +173,51 @@ export default function ServicesPage() {
   };
 
   const activeCount = useMemo(() => services.filter((service) => service.isActive).length, [services]);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("画像ファイルのみアップロードできます");
+      event.target.value = "";
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const tokenResponse = await fetch("/api/uploads/service-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name, fileType: file.type, fileSize: file.size }),
+      });
+
+      const tokenBody = await tokenResponse.json().catch(() => ({}));
+      if (!tokenResponse.ok) {
+        throw new Error(tokenBody.error ?? "アップロードURLの取得に失敗しました");
+      }
+
+      const { uploadUrl, publicUrl } = tokenBody as { uploadUrl: string; publicUrl: string };
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("画像のアップロードに失敗しました");
+      }
+
+      setFormState((prev) => ({ ...prev, imageUrl: publicUrl }));
+    } catch (error) {
+      console.error("service image upload failed", error);
+      alert(error instanceof Error ? error.message : "画像のアップロードに失敗しました");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setUploadingImage(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -345,12 +392,28 @@ export default function ServicesPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-500">画像URL</label>
-                  <Input
-                    className="mt-1"
-                    value={formState.imageUrl}
-                    onChange={(event) => setFormState((prev) => ({ ...prev, imageUrl: event.target.value }))}
-                    placeholder="https://"
-                  />
+                  <div className="mt-1 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Input
+                        className="flex-1"
+                        value={formState.imageUrl}
+                        onChange={(event) => setFormState((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                        placeholder="https://"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="whitespace-nowrap"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage}
+                      >
+                        {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                        <span className="ml-1">アップロード</span>
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-slate-500">URLを直接入力するか、デバイスから画像をアップロードできます。</p>
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </div>
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
