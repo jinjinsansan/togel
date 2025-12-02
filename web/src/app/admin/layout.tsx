@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bell, Star, LogOut, Menu, X, Home } from "lucide-react";
+import { LayoutDashboard, Bell, Star, LogOut, Menu, X, Home, Gift, Boxes } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -40,6 +40,16 @@ export default function AdminLayout({
       href: "/admin/notifications",
       label: "お知らせ配信",
       icon: Bell,
+    },
+    {
+      href: "/admin/services",
+      label: "サービス管理",
+      icon: Boxes,
+    },
+    {
+      href: "/admin/recommendations",
+      label: "レコメンデーション",
+      icon: Gift,
     },
   ];
 

@@ -1,0 +1,1 @@
+export const RECOMMENDATIONS_ENABLED = process.env.NEXT_PUBLIC_RECOMMENDATIONS_ENABLED !== "false";

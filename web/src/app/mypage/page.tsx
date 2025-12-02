@@ -8,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 import { Bell, Coins, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle, Palette } from "lucide-react";
 
 import { TogelCertificateCard } from "@/components/certificate/togel-certificate-card";
+import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { generateThemeFromColor } from "@/lib/color-theme";
@@ -584,6 +585,13 @@ export default function MyPage() {
             </div>
           </section>
         )}
+
+        <RecommendationsSection
+          togelType={profile?.diagnosis_type_id}
+          page="mypage"
+          heading="あなたに合った最新サービス"
+          subheading="診断結果をもとに運営が厳選しました"
+        />
 
         <section className="mb-12">
           <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef, useCallback, SyntheticEvent } from "react";
 
 import { Button } from "@/components/ui/button";
+import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { getTogelLabel } from "@/lib/personality";
 import { BigFiveScores, MatchingResult, PersonalityTypeDefinition } from "@/types/diagnosis";
 import { Switch } from "@/components/ui/switch";
@@ -590,6 +591,13 @@ const ResultPage = () => {
              </div>
           )}
         </div>
+
+        <RecommendationsSection
+          togelType={diagnosis?.personalityType?.id}
+          page="result"
+          heading={diagnosis?.personalityType?.typeName ? `${diagnosis.personalityType.typeName}型のあなたにおすすめ` : undefined}
+          subheading="あなたの診断データに合わせてキュレーションされた注目サービス"
+        />
 
         {/* 下部ミスマッチ結果リンク */}
         {results.length > 0 && (

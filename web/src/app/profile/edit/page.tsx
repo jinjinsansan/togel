@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { User } from "@supabase/supabase-js";
-import { Camera, Save, Eye, EyeOff, Copy, Check, Loader2, ExternalLink } from "lucide-react";
+import { Save, Eye, EyeOff, Copy, Check, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -267,9 +268,9 @@ export default function ProfileEditPage() {
         <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
           <div className="flex flex-col items-center">
             <div className="relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100">
+              <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                  <Image src={avatarUrl} alt="Avatar" fill sizes="96px" className="object-cover" />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center text-3xl">👤</div>
                 )}
