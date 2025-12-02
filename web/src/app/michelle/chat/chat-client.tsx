@@ -326,7 +326,11 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
     }
   };
 
-  const cleanContent = (content: string) => content.replace(/【[^】]+】/g, "");
+  const cleanContent = (content: string) => {
+    let cleaned = content.replace(/【\d+:\d+†.*?】/g, "");
+    cleaned = cleaned.replace(/【参考[：:][^】]*】/g, "");
+    return cleaned;
+  };
 
   if (needsAuth) {
     return (
