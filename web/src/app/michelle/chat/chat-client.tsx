@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, X } from "lucide-react";
+import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -479,7 +479,7 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
                     className={cn(
                       "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
                       message.role === "user"
-                        ? "rounded-tr-sm bg-[#4a6bf2] text-white"
+                        ? "rounded-tr-sm bg-gradient-to-r from-[#ff77b3] via-[#ff94c3] to-[#ffb8d6] text-white"
                         : "rounded-tl-sm border border-[#e4e9fb] bg-white text-[#4c5368]",
                     )}
                   >
@@ -498,8 +498,8 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
                     {message.pending && message.content && <span className="ml-1 inline-block h-4 w-1.5 animate-pulse bg-current" />}
                   </div>
                   {message.role === "user" && (
-                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffd7e8] bg-white text-xs text-[#b1637d]">
-                      あなた
+                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffd7e8] bg-white text-[#b1637d]">
+                      <User className="h-4 w-4" />
                     </div>
                   )}
                 </div>
