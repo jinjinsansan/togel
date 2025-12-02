@@ -1,8 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { setDefaultResultOrder } from "node:dns";
 import { config as loadEnv } from "dotenv";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+
+setDefaultResultOrder("ipv4first");
 
 const envLocalPath = path.resolve(process.cwd(), ".env.local");
 loadEnv({ path: envLocalPath, override: true });
