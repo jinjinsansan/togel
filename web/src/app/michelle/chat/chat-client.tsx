@@ -46,23 +46,7 @@ type StreamPayload = {
   knowledge?: SSEKnowledge[];
 };
 
-type VisualViewportEventTarget = {
-  height: number;
-  addEventListener: (type: "resize" | "scroll", listener: () => void) => void;
-  removeEventListener: (type: "resize" | "scroll", listener: () => void) => void;
-};
-
-const getVisualViewport = (): VisualViewportEventTarget | null => {
-  if (typeof window === "undefined") return null;
-  const candidate = (window as unknown as { visualViewport?: unknown }).visualViewport;
-  if (!candidate) return null;
-  const maybeViewport = candidate as VisualViewportEventTarget;
-  if (typeof maybeViewport.height !== "number") return null;
-  return maybeViewport;
-};
-
 const ACTIVE_SESSION_STORAGE_KEY = "michelle-active-session-id";
-const NEW_CHAT_SENTINEL = "__michelle_new_chat__";
 
 const initialPrompts = [
   "会社の上司に怒られた...",
@@ -93,10 +77,7 @@ export function MichelleChatClient() {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const autoScrollRef = useRef(true);
   const scrollFrameRef = useRef<number>();
-  const composerRef = useRef<HTMLDivElement | null>(null);
-  const [composerPadding, setComposerPadding] = useState(160);
-  const hasHydratedActiveSessionRef = useRef(false);
-  const skipInitialStorageSyncRef = useRef(true);
+  const hasHydratedSessionRef = useRef(false);
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -151,63 +132,20 @@ export function MichelleChatClient() {
   }, [loadSessions]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const updateViewportHeight = () => {
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-      document.documentElement.style.setProperty("--michelle-chat-vh", `${viewportHeight}px`);
-    };
-
-    const handleViewportChange = () => updateViewportHeight();
-
-    updateViewportHeight();
-
-    const viewportTarget: VisualViewportEventTarget | null | undefined = getVisualViewport();
-    if (viewportTarget) {
-      viewportTarget.addEventListener("resize", handleViewportChange);
-      viewportTarget.addEventListener("scroll", handleViewportChange);
-    }
-    window.addEventListener("resize", updateViewportHeight);
-    window.addEventListener("orientationchange", updateViewportHeight);
-
-    return () => {
-      if (viewportTarget) {
-        viewportTarget.removeEventListener("resize", handleViewportChange);
-        viewportTarget.removeEventListener("scroll", handleViewportChange);
-      }
-      window.removeEventListener("resize", updateViewportHeight);
-      window.removeEventListener("orientationchange", updateViewportHeight);
-      document.documentElement.style.removeProperty("--michelle-chat-vh");
-    };
-  }, []);
-
-  useEffect(() => {
-    if (hasHydratedActiveSessionRef.current) return;
+    if (hasHydratedSessionRef.current) return;
     if (sessions.length === 0) return;
     if (typeof window === "undefined") return;
 
-    const storedValue = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
-
-    if (storedValue === NEW_CHAT_SENTINEL) {
-      hasHydratedActiveSessionRef.current = true;
-      return;
-    }
-
-    if (storedValue) {
-      const exists = sessions.some((session) => session.id === storedValue);
+    const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+    
+    if (storedSessionId) {
+      const exists = sessions.some((s) => s.id === storedSessionId);
       if (exists) {
-        setActiveSessionId(storedValue);
-        hasHydratedActiveSessionRef.current = true;
-        return;
+        setActiveSessionId(storedSessionId);
       }
     }
 
-    const fallbackSession = sessions[0];
-    if (fallbackSession) {
-      setActiveSessionId(fallbackSession.id);
-    }
-
-    hasHydratedActiveSessionRef.current = true;
+    hasHydratedSessionRef.current = true;
   }, [sessions]);
 
   useEffect(() => {
@@ -217,51 +155,14 @@ export function MichelleChatClient() {
     }
   }, [input]);
 
-  useLayoutEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const updatePadding = () => {
-      if (!composerRef.current) return;
-      const height = composerRef.current.offsetHeight;
-      setComposerPadding(height + 32);
-    };
-
-    updatePadding();
-
-    let observer: ResizeObserver | null = null;
-    const supportsResizeObserver =
-      typeof (window as Window & typeof globalThis).ResizeObserver !== "undefined";
-
-    if (supportsResizeObserver) {
-      observer = new ResizeObserver(() => updatePadding());
-      if (composerRef.current) {
-        observer.observe(composerRef.current);
-      }
-    } else {
-      window.addEventListener("resize", updatePadding);
-      window.addEventListener("orientationchange", updatePadding);
-    }
-
-    return () => {
-      observer?.disconnect();
-      if (!supportsResizeObserver) {
-        window.removeEventListener("resize", updatePadding);
-        window.removeEventListener("orientationchange", updatePadding);
-      }
-    };
-  }, []);
-
   useEffect(() => {
-    if (skipInitialStorageSyncRef.current) {
-      skipInitialStorageSyncRef.current = false;
-      return;
-    }
     if (typeof window === "undefined") return;
+    if (!hasHydratedSessionRef.current) return;
 
     if (activeSessionId) {
       window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
     } else {
-      window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, NEW_CHAT_SENTINEL);
+      window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
     }
   }, [activeSessionId]);
 
@@ -455,12 +356,6 @@ export function MichelleChatClient() {
     }
   };
 
-  const handleComposerFocus = () => {
-    scheduleScrollToBottom();
-    requestAnimationFrame(scheduleScrollToBottom);
-    setTimeout(scheduleScrollToBottom, 200);
-  };
-
   const cleanContent = (content: string) => {
     let cleaned = content.replace(/【\d+:\d+†.*?】/g, "");
     cleaned = cleaned.replace(/【参考[：:][^】]*】/g, "");
@@ -482,13 +377,13 @@ export function MichelleChatClient() {
     <div
       className="flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
       style={{
-        minHeight: "calc(var(--michelle-chat-vh, 100dvh) - 4rem)",
-        height: "calc(var(--michelle-chat-vh, 100dvh) - 4rem)",
+        minHeight: "calc(100dvh - 4rem)",
+        height: "calc(100dvh - 4rem)",
       }}
     >
       <aside
         className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
-        style={{ height: "calc(var(--michelle-chat-vh, 100dvh) - 4rem)" }}
+        style={{ height: "calc(100dvh - 4rem)" }}
       >
         <Button
           onClick={handleNewChat}
@@ -592,7 +487,6 @@ export function MichelleChatClient() {
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1]"
-          style={{ scrollPaddingBottom: `${composerPadding}px` }}
         >
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
@@ -620,10 +514,7 @@ export function MichelleChatClient() {
               </div>
             </div>
           ) : (
-            <div
-              className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-8"
-              style={{ paddingBottom: `${composerPadding}px` }}
-            >
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-8 pb-32">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -665,11 +556,7 @@ export function MichelleChatClient() {
           )}
         </div>
 
-        <div
-          ref={composerRef}
-          className="sticky bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + env(keyboard-inset-height, 0px) + 0.5rem)" }}
-        >
+        <div className="sticky bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
           <form
             onSubmit={(event) => {
@@ -683,7 +570,6 @@ export function MichelleChatClient() {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
-              onFocus={handleComposerFocus}
               placeholder="ミシェルに話しかける..."
               className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none md:text-sm"
               rows={1}
