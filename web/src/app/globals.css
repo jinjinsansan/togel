@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 :root {
-  --michelle-vh: 100vh;
   --background: 220 23% 98%;
   --foreground: 228 14% 16%;
   /* --primary: 340 89% 66%; Previous strong pink */

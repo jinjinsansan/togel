@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
+    viewportFit: "cover",
   },
   openGraph: {
     title: "Togel型AI性格診断によるマッチングサービス",

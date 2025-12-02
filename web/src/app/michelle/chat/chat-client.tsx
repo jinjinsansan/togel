@@ -126,24 +126,6 @@ export function MichelleChatClient() {
   }, [loadSessions]);
 
   useEffect(() => {
-    const setViewportHeight = () => {
-      if (typeof window === "undefined") return;
-      const viewport = window.visualViewport;
-      const height = viewport ? viewport.height : window.innerHeight;
-      document.documentElement.style.setProperty("--michelle-vh", `${height}px`);
-    };
-
-    setViewportHeight();
-    window.addEventListener("resize", setViewportHeight);
-    window.visualViewport?.addEventListener("resize", setViewportHeight);
-
-    return () => {
-      window.removeEventListener("resize", setViewportHeight);
-      window.visualViewport?.removeEventListener("resize", setViewportHeight);
-    };
-  }, []);
-
-  useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
@@ -332,8 +314,8 @@ export function MichelleChatClient() {
 
   return (
     <div
-      className="flex w-full overflow-x-hidden bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
-      style={{ minHeight: "calc(var(--michelle-vh, 100vh) - 4rem)" }}
+      className="flex w-full flex-1 overflow-hidden bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
+      style={{ minHeight: "calc(100dvh - 4rem)" }}
     >
       <aside className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex">
         <Button
@@ -462,7 +444,7 @@ export function MichelleChatClient() {
               </div>
             </div>
           ) : (
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pb-32 pt-8">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -505,8 +487,8 @@ export function MichelleChatClient() {
         </div>
 
         <div
-          className="border-t border-[#ffdbe8] bg-white/95 px-4 pt-2"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+          className="sticky bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" }}
         >
           {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
           <form
