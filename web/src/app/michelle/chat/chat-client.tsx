@@ -498,7 +498,7 @@ export function MichelleChatClient() {
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="ミシェルに話しかける..."
-              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-sm leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none"
+              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none md:text-sm"
               rows={1}
             />
             <Button
