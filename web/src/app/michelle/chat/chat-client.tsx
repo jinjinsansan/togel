@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
+import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -345,7 +345,7 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-start gap-2 rounded-2xl bg-gradient-to-r from-[#ff6ba6] to-[#ff8ac0] text-white shadow-lg hover:brightness-105"
+          className="mb-6 w-full justify-start gap-2 rounded-2xl border border-[#ffd7e8] bg-[#fff5f8] text-[#a1315d] shadow-sm hover:bg-white"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
@@ -379,12 +379,7 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
             <p className="text-center text-xs text-[#c08ca3]">まだチャット履歴がありません。</p>
           )}
         </div>
-        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-[#ffe3ee] px-3 py-2 text-sm text-[#8b5269]">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffeef4]">
-            <MichelleAvatar size="sm" />
-          </div>
-          <span className="font-medium">ユーザー</span>
-        </div>
+        {/* user info removed */}
       </aside>
 
       {isSidebarOpen && (
@@ -397,7 +392,10 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <Button onClick={handleNewChat} className="mb-4 gap-2 rounded-2xl bg-gradient-to-r from-[#ff6ba6] to-[#ff8ac0] text-white">
+            <Button
+              onClick={handleNewChat}
+              className="mb-4 gap-2 rounded-2xl border border-[#ffd7e8] bg-[#fff5f8] text-[#a1315d]"
+            >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
             <div className="flex-1 overflow-y-auto">
@@ -500,8 +498,8 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
                     {message.pending && message.content && <span className="ml-1 inline-block h-4 w-1.5 animate-pulse bg-current" />}
                   </div>
                   {message.role === "user" && (
-                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#e2e8ff] bg-white">
-                      <User className="h-4 w-4 text-[#94a3b8]" />
+                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffd7e8] bg-white text-xs text-[#b1637d]">
+                      あなた
                     </div>
                   )}
                 </div>
@@ -535,7 +533,7 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
               event.preventDefault();
               handleSendMessage();
             }}
-            className="mx-auto flex max-w-3xl items-end gap-2 rounded-3xl border border-[#ffd7e8] bg-white p-3 shadow-sm"
+            className="mx-auto flex max-w-3xl items-center gap-3 rounded-3xl border border-[#ffd7e8] bg-white px-4 py-3 shadow-sm"
           >
             <textarea
               ref={textareaRef}
@@ -543,7 +541,7 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="ミシェルに話しかける..."
-              className="max-h-40 flex-1 resize-none border-0 bg-transparent text-sm text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none"
+              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-sm leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none"
               rows={1}
             />
             <Button
