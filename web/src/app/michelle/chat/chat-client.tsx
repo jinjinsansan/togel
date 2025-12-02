@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, X } from "lucide-react";
+import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -528,8 +528,8 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
           )}
         </div>
 
-        <div className="border-t border-[#dfe6ff] bg-white/95 px-4 py-4">
-        <div className="border-t border[#ffdbe8] bg-white/95 px-4 py-4">
+        <div className="border-t border-[#ffdbe8] bg-white/95 px-4 py-4">
+          {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
           <form
             onSubmit={(event) => {
               event.preventDefault();
