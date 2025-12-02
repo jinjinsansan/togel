@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
+import { Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,12 +46,6 @@ type StreamPayload = {
   knowledge?: SSEKnowledge[];
 };
 
-type KnowledgeReference = {
-  id: string;
-  preview: string;
-  similarity?: number;
-};
-
 const initialPrompts = [
   "会社の上司に怒られた...",
   "最近なんだか寂しい",
@@ -71,7 +65,6 @@ export function MichelleChatClient() {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
-  const [knowledgeRefs, setKnowledgeRefs] = useState<KnowledgeReference[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState({ sessions: false, messages: false, sending: false });
   const [needsAuth, setNeedsAuth] = useState(false);
@@ -119,7 +112,6 @@ export function MichelleChatClient() {
         if (!res.ok) throw new Error("Failed to load messages");
         const data = (await res.json()) as MessagesResponse;
         setMessages(data.messages ?? []);
-        setKnowledgeRefs([]);
       } catch (err) {
         console.error(err);
       } finally {
@@ -164,23 +156,9 @@ export function MichelleChatClient() {
   const handleNewChat = () => {
     setActiveSessionId(null);
     setMessages([]);
-    setKnowledgeRefs([]);
     setError(null);
     textareaRef.current?.focus();
   };
-
-const deriveKnowledgePreview = (item: SSEKnowledge) => {
-  if (item.metadata && typeof item.metadata === "object") {
-    const title = (item.metadata as Record<string, unknown>).title;
-    if (typeof title === "string" && title.trim()) {
-      return title;
-    }
-  }
-  if (item.content) {
-    return item.content.slice(0, 60);
-  }
-  return "参考ノート";
-};
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading.sending) return;
@@ -243,15 +221,6 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
                   setActiveSessionId(payload.sessionId);
                   loadSessions();
                 }
-              }
-              if (payload.knowledge) {
-                setKnowledgeRefs(
-                  payload.knowledge.slice(0, 4).map((ref) => ({
-                    id: ref.id,
-                    preview: deriveKnowledgePreview(ref),
-                    similarity: ref.similarity,
-                  })),
-                );
               }
             }
             if (payload.type === "delta" && payload.content) {
@@ -508,22 +477,6 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
                   )}
                 </div>
               ))}
-
-              {knowledgeRefs.length > 0 && (
-                <div className="rounded-2xl border border-[#d9e2ff] bg-white/80 p-4 text-xs text-[#4c5368]">
-                  <p className="mb-2 flex items-center gap-2 font-semibold text-[#2a3b8d]">
-                    <Bot className="h-3.5 w-3.5" /> 参考にした知識
-                  </p>
-                  <ul className="space-y-1">
-                    {knowledgeRefs.map((ref) => (
-                      <li key={ref.id} className="truncate" title={ref.preview}>
-                        {ref.preview}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               <div className="h-20" />
               <div ref={messagesEndRef} />
             </div>
