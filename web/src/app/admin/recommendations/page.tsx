@@ -161,6 +161,17 @@ export default function RecommendationAdminPage() {
   }, [fetchServices]);
 
   useEffect(() => {
+    const handleFocus = () => {
+      fetchServices();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [fetchServices]);
+
+  useEffect(() => {
     fetchRecommendations();
   }, [fetchRecommendations]);
 
@@ -298,6 +309,10 @@ export default function RecommendationAdminPage() {
             <Link href="/admin/services">
               <Layers className="h-4 w-4" /> サービスを追加
             </Link>
+          </Button>
+          <Button variant="outline" className="gap-2" onClick={fetchServices} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+            サービス再読み込み
           </Button>
           <Button variant="outline" className="gap-2" onClick={fetchRecommendations} disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
