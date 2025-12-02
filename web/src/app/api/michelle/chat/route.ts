@@ -8,6 +8,7 @@ import { z } from "zod";
 import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
 import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/openai";
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
+import type { MichelleDatabase } from "@/types/michelle-db";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -56,7 +57,8 @@ export async function POST(request: Request) {
   }
 
   const { sessionId: incomingSessionId, message, category } = parsed.data;
-  const supabase = createRouteHandlerClient({ cookies }) as unknown as MichelleSupabase;
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient<MichelleDatabase>({ cookies: () => cookieStore }) as unknown as MichelleSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
       throw new Error("OpenAI Assistants API is not available in the current SDK version");
     }
 
-    const knowledgeMatches = await retrieveKnowledgeMatches(supabase, message, {
+    const knowledgeMatches = await retrieveKnowledgeMatches(message, {
       matchCount: 8,
       similarityThreshold: 0.45,
     });

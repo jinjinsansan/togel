@@ -1,5 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getMichelleOpenAIClient } from "@/lib/michelle/openai";
 import type { Json } from "@/types/michelle-db";
 
@@ -34,19 +33,13 @@ type RetrieveOptions = {
   similarityThreshold?: number;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SupabaseAny = SupabaseClient<any>;
-
-export async function retrieveKnowledgeMatches(
-  supabase: SupabaseAny,
-  text: string,
-  options: RetrieveOptions = {},
-): Promise<KnowledgeMatch[]> {
+export async function retrieveKnowledgeMatches(text: string, options: RetrieveOptions = {}): Promise<KnowledgeMatch[]> {
   const embedding = await embedText(text);
   if (!embedding.length) {
     return [];
   }
 
+  const supabase = createSupabaseAdminClient();
   const attempt = async (threshold: number) => {
     const rpcArgs = {
       query_embedding: embedding,
