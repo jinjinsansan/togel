@@ -33,6 +33,15 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.
   },
 });
 
+function sanitizeUnicode(value) {
+  return Array.from(value)
+    .filter((char) => {
+      const codePoint = char.codePointAt(0);
+      return typeof codePoint === "number" && (codePoint < 0xd800 || codePoint > 0xdfff);
+    })
+    .join("");
+}
+
 function chunkText(text, chunkSize = 1000, overlap = 200) {
   if (chunkSize <= overlap) {
     throw new Error("chunkSize must be greater than overlap");
@@ -90,7 +99,7 @@ async function embedText(input) {
 }
 
 async function processFile(filePath) {
-  const relativeSource = path.relative(KNOWLEDGE_DIR, filePath) || path.basename(filePath);
+  const relativeSource = sanitizeUnicode(path.relative(KNOWLEDGE_DIR, filePath) || path.basename(filePath));
   console.log(`\n📄 Processing ${relativeSource}`);
 
   const content = await fs.readFile(filePath, "utf-8");
@@ -118,7 +127,7 @@ async function processFile(filePath) {
     }
 
     const rows = slice.map((chunk, idx) => ({
-      content: chunk.content,
+      content: sanitizeUnicode(chunk.content),
       embedding: embeddings[idx],
       metadata: {
         source: relativeSource,

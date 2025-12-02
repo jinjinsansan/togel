@@ -40,6 +40,15 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+function sanitizeUnicode(value: string): string {
+  return Array.from(value)
+    .filter((char) => {
+      const codePoint = char.codePointAt(0);
+      return typeof codePoint === "number" && (codePoint < 0xd800 || codePoint > 0xdfff);
+    })
+    .join("");
+}
+
 async function listMarkdownFiles(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
@@ -66,7 +75,7 @@ async function embedText(input: string): Promise<number[]> {
 }
 
 async function processFile(filePath: string) {
-  const relativeSource = path.relative(KNOWLEDGE_DIR, filePath) || path.basename(filePath);
+  const relativeSource = sanitizeUnicode(path.relative(KNOWLEDGE_DIR, filePath) || path.basename(filePath));
   console.log(`\n📄 Processing ${relativeSource}`);
 
   const content = await fs.readFile(filePath, "utf-8");
@@ -94,16 +103,14 @@ async function processFile(filePath: string) {
       embeddings.push(embedding);
     }
 
-    const rows: MichelleKnowledgeInsert[] = slice.map(
-      (chunk, idx) => ({
-        content: chunk.content,
-        embedding: embeddings[idx],
-        metadata: {
-          source: relativeSource,
-          chunk_index: chunk.index,
-        },
-      }),
-    );
+    const rows: MichelleKnowledgeInsert[] = slice.map((chunk, idx) => ({
+      content: sanitizeUnicode(chunk.content),
+      embedding: embeddings[idx],
+      metadata: {
+        source: relativeSource,
+        chunk_index: chunk.index,
+      },
+    }));
 
     const { error } = await supabase.from("michelle_knowledge").insert(rows);
     if (error) {
