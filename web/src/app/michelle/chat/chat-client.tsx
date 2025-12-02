@@ -317,7 +317,7 @@ export function MichelleChatClient() {
       className="flex w-full flex-1 overflow-hidden bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
       style={{ minHeight: "calc(100dvh - 4rem)" }}
     >
-      <aside className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex">
+      <aside className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:h-[calc(100dvh-4rem)] md:self-start md:overflow-y-auto">
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
