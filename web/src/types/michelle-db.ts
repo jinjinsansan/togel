@@ -111,5 +111,6 @@ export type MichelleDatabase = {
       michelle_session_category: "love" | "life" | "relationship";
       michelle_message_role: "user" | "assistant" | "system";
     };
+    CompositeTypes: Record<string, never>;
   };
 };

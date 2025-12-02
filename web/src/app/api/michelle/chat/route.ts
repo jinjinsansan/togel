@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type OpenAI from "openai";
 import { z } from "zod";
 
 import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
@@ -13,6 +14,35 @@ const requestSchema = z.object({
   message: z.string().min(1).max(2000),
   category: z.enum(["love", "life", "relationship"]).optional(),
 });
+
+type StreamEventMap = {
+  textDelta: { value?: string };
+  error: unknown;
+  end: unknown;
+};
+
+type ThreadRunStream = {
+  on: <E extends keyof StreamEventMap>(event: E, handler: (payload: StreamEventMap[E]) => void) => ThreadRunStream;
+};
+
+type OpenAIThreadsBeta = {
+  create: () => Promise<{ id: string }>;
+  messages: {
+    create: (threadId: string, payload: { role: string; content: string }) => Promise<unknown>;
+  };
+  runs: {
+    stream: (threadId: string, payload: { assistant_id: string }) => ThreadRunStream;
+  };
+};
+
+type OpenAIWithBeta = OpenAI & {
+  beta?: {
+    threads?: OpenAIThreadsBeta;
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MichelleSupabase = SupabaseClient<any>;
 
 export async function POST(request: Request) {
   if (!MICHELLE_AI_ENABLED) {
@@ -26,8 +56,7 @@ export async function POST(request: Request) {
   }
 
   const { sessionId: incomingSessionId, message, category } = parsed.data;
-  const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabase = createRouteHandlerClient({ cookies }) as unknown as MichelleSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,9 +70,9 @@ export async function POST(request: Request) {
 
     const openai = getMichelleOpenAIClient();
     const assistantId = getMichelleAssistantId();
-    const betaClient = (openai as Record<string, any>).beta;
+    const betaThreads = (openai as OpenAIWithBeta).beta?.threads;
 
-    if (!betaClient?.threads) {
+    if (!betaThreads) {
       throw new Error("OpenAI Assistants API is not available in the current SDK version");
     }
 
@@ -67,7 +96,7 @@ export async function POST(request: Request) {
       content: message,
     });
 
-    await betaClient.threads.messages.create(threadId, {
+    await betaThreads.messages.create(threadId, {
       role: "user",
       content: finalMessage,
     });
@@ -84,7 +113,7 @@ export async function POST(request: Request) {
 
           let fullReply = "";
 
-          const runStream = betaClient.threads.runs.stream(threadId, {
+          const runStream = betaThreads.runs.stream(threadId, {
             assistant_id: assistantId,
           });
 
@@ -133,7 +162,7 @@ export async function POST(request: Request) {
 }
 
 const resolveSession = async (
-  supabase: SupabaseClient<any>,
+  supabase: MichelleSupabase,
   authUserId: string,
   incomingSessionId: string | null | undefined,
   message: string,
@@ -176,19 +205,19 @@ const resolveSession = async (
   return { sessionId: data.id, threadId };
 };
 
-const ensureThreadId = async (supabase: SupabaseClient<any>, sessionId: string, current: string | null) => {
+const ensureThreadId = async (supabase: MichelleSupabase, sessionId: string, current: string | null) => {
   if (current) {
     return current;
   }
 
   const openai = getMichelleOpenAIClient();
-  const betaClient = (openai as Record<string, any>).beta;
+  const betaThreads = (openai as OpenAIWithBeta).beta?.threads;
 
-  if (!betaClient?.threads) {
+  if (!betaThreads) {
     throw new Error("OpenAI Assistants API is not available in the current SDK version");
   }
 
-  const thread = await betaClient.threads.create();
+  const thread = await betaThreads.create();
   await supabase.from("michelle_sessions").update({ openai_thread_id: thread.id }).eq("id", sessionId);
   return thread.id;
 };

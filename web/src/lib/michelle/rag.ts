@@ -34,8 +34,11 @@ type RetrieveOptions = {
   similarityThreshold?: number;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseAny = SupabaseClient<any>;
+
 export async function retrieveKnowledgeMatches(
-  supabase: SupabaseClient<any>,
+  supabase: SupabaseAny,
   text: string,
   options: RetrieveOptions = {},
 ): Promise<KnowledgeMatch[]> {
