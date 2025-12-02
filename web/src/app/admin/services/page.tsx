@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useMemo, useRef, useState, useId } from "react";
+import NextImage from "next/image";
 import { Boxes, ImageIcon, Link as LinkIcon, Loader2, PencilLine, Plus, Search, Trash2, UploadCloud } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,56 @@ const badgeClass = (service: Service) =>
     ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
     : "bg-slate-100 text-slate-500 border border-slate-200";
 
+const MAX_IMAGE_WIDTH = 1200;
+const MAX_IMAGE_HEIGHT = 800;
+
+const resizeImageFile = async (file: File): Promise<File> => {
+  if (file.type === "image/gif") return file;
+
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = document.createElement("img");
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = dataUrl;
+  });
+
+  const widthScale = MAX_IMAGE_WIDTH / image.width;
+  const heightScale = MAX_IMAGE_HEIGHT / image.height;
+  const scale = Math.min(widthScale, heightScale, 1);
+
+  if (scale >= 1) {
+    return file;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return file;
+  }
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  const outputType = file.type === "image/png" ? "image/png" : file.type === "image/webp" ? "image/webp" : "image/jpeg";
+  const quality = outputType === "image/jpeg" || outputType === "image/webp" ? 0.9 : undefined;
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, quality));
+  if (!blob) {
+    return file;
+  }
+
+  const extension = outputType.split("/")[1] ?? "jpg";
+  const newFileName = file.name.replace(/\.[^.]+$/, ``) + `.${extension}`;
+  return new File([blob], newFileName, { type: outputType, lastModified: Date.now() });
+};
+
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +117,7 @@ export default function ServicesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputId = useId();
 
   const fetchServices = useCallback(async () => {
     try {
@@ -187,10 +238,11 @@ export default function ServicesPage() {
     setUploadingImage(true);
 
     try {
+      const processedFile = await resizeImageFile(file);
       const tokenResponse = await fetch("/api/uploads/service-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileName: file.name, fileType: file.type, fileSize: file.size }),
+        body: JSON.stringify({ fileName: processedFile.name, fileType: processedFile.type, fileSize: processedFile.size }),
       });
 
       const tokenBody = await tokenResponse.json().catch(() => ({}));
@@ -201,8 +253,8 @@ export default function ServicesPage() {
       const { uploadUrl, publicUrl } = tokenBody as { uploadUrl: string; publicUrl: string };
       const uploadResponse = await fetch(uploadUrl, {
         method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
+        headers: { "Content-Type": processedFile.type },
+        body: processedFile,
       });
 
       if (!uploadResponse.ok) {
@@ -299,7 +351,7 @@ export default function ServicesPage() {
               <div className="flex items-start gap-4">
                 <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-slate-100">
                   {service.imageUrl ? (
-                    <Image src={service.imageUrl} alt={service.name} fill sizes="80px" className="object-cover" />
+                    <NextImage src={service.imageUrl} alt={service.name} fill sizes="80px" className="object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-slate-400">
                       <ImageIcon className="h-6 w-6" />
@@ -400,19 +452,23 @@ export default function ServicesPage() {
                         onChange={(event) => setFormState((prev) => ({ ...prev, imageUrl: event.target.value }))}
                         placeholder="https://"
                       />
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="whitespace-nowrap"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingImage}
-                      >
-                        {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
-                        <span className="ml-1">アップロード</span>
+                      <Button type="button" variant="secondary" className="whitespace-nowrap" disabled={uploadingImage} asChild>
+                        <label htmlFor={fileInputId} className="flex cursor-pointer items-center">
+                          {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                          <span className="ml-1">アップロード</span>
+                        </label>
                       </Button>
                     </div>
-                    <p className="text-[11px] text-slate-500">URLを直接入力するか、デバイスから画像をアップロードできます。</p>
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    <p className="text-[11px] text-slate-500">URLを直接入力するか、デバイスから画像をアップロードできます（最大1200pxに自動調整）。</p>
+                    <input
+                      id={fileInputId}
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                    />
                   </div>
                 </div>
               </div>
