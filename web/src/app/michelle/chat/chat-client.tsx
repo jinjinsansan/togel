@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -72,6 +72,9 @@ export function MichelleChatClient() {
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const autoScrollRef = useRef(true);
+  const scrollFrameRef = useRef<number>();
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -132,6 +135,33 @@ export function MichelleChatClient() {
     }
   }, [input]);
 
+  const scheduleScrollToBottom = useCallback(() => {
+    if (!autoScrollRef.current) return;
+    if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+    });
+  }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const distanceFromBottom = container.scrollHeight - (container.scrollTop + container.clientHeight);
+      autoScrollRef.current = distanceFromBottom < 120;
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     if (isLoading.sending) return;
     if (activeSessionId) {
@@ -141,9 +171,9 @@ export function MichelleChatClient() {
     }
   }, [activeSessionId, isLoading.sending, loadMessages]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useLayoutEffect(() => {
+    scheduleScrollToBottom();
+  }, [messages, scheduleScrollToBottom]);
 
   useEffect(() => {
     if (!messages.some((msg) => msg.pending)) return;
@@ -417,7 +447,7 @@ export function MichelleChatClient() {
           )}
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1]">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1]">
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
               <MichelleAvatar size="lg" />
