@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
+import { Bot, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MichelleAvatar } from "./avatar";
 
 type SessionSummary = {
   id: string;
@@ -64,26 +65,6 @@ const thinkingMessages = [
   "思考を整えています...",
   "寄り添いながら考えています...",
 ];
-
-const MichelleAvatar = ({ className = "", size = "md" }: { className?: string; size?: "sm" | "md" | "lg" }) => {
-  const sizeMap = {
-    sm: "h-8 w-8",
-    md: "h-12 w-12",
-    lg: "h-28 w-28",
-  } as const;
-
-  return (
-    <div
-      className={cn(
-        "flex items-center justify-center rounded-full bg-[#e4edff] text-[#4a6bf2] shadow-inner",
-        sizeMap[size],
-        className,
-      )}
-    >
-      <User className={cn(size === "lg" ? "h-20 w-20" : size === "md" ? "h-6 w-6" : "h-4 w-4") + " text-inherit"} />
-    </div>
-  );
-};
 
 export function MichelleChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -227,7 +208,18 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
         body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: text }),
       });
 
-      if (!res.ok || !res.body) throw new Error("ネットワークエラーが発生しました");
+      if (!res.ok || !res.body) {
+        let serverMessage = "ネットワークエラーが発生しました";
+        try {
+          const errorBody = (await res.json()) as { error?: string };
+          if (errorBody?.error) {
+            serverMessage = errorBody.error;
+          }
+        } catch (parseError) {
+          console.error("Failed to parse error response", parseError);
+        }
+        throw new Error(serverMessage);
+      }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -338,26 +330,26 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#f4f7ff]">
-        <div className="rounded-2xl bg-white px-10 py-12 text-center shadow-xl">
-          <p className="text-lg font-semibold text-[#1f2a37]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#596579]">ミシェルAIをご利用いただくにはログインしてください。</p>
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff2f6] to-[#ffe4ef]">
+        <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
+          <p className="text-lg font-semibold text-[#a1315d]">ログインが必要です</p>
+          <p className="mt-4 text-sm text-[#8b5269]">ミシェルAIをご利用いただくにはログインしてください。</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-[#f4f7ff] text-[#1f2a37]">
-      <aside className="hidden w-[260px] flex-col border-r border-[#e0e7ff] bg-white/90 px-4 py-6 shadow-sm md:flex">
+    <div className="flex h-[calc(100vh-4rem)] bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]">
+      <aside className="hidden w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex">
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-start gap-2 rounded-xl bg-[#4a6bf2] text-white shadow-lg hover:bg-[#3d59d2]"
+          className="mb-6 w-full justify-start gap-2 rounded-2xl bg-gradient-to-r from-[#ff6ba6] to-[#ff8ac0] text-white shadow-lg hover:brightness-105"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#9aa4c2]">履歴</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#d48ca9]">履歴</p>
         <div className="flex-1 overflow-y-auto">
           {sessions.map((session) => (
             <button
@@ -366,8 +358,8 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
               className={cn(
                 "group flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                 session.id === activeSessionId
-                  ? "border-[#b8c5ff] bg-[#eef2ff] text-[#2a3b8d]"
-                  : "border-transparent bg-transparent text-[#4c5368] hover:border-[#e0e7ff] hover:bg-[#f7f9ff]",
+                  ? "border-[#ffc2d8] bg-[#fff0f6] text-[#a63c68]"
+                  : "border-transparent bg-transparent text-[#7a4f63] hover:border-[#ffe1ed] hover:bg-[#fff7fb]",
               )}
             >
               <div className="flex min-w-0 items-center gap-2">
@@ -377,19 +369,19 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
               <button
                 type="button"
                 onClick={(event) => handleDeleteSession(session.id, event)}
-                className="rounded-full p-1 text-[#94a3b8] opacity-0 transition group-hover:opacity-100 hover:bg-white"
+                className="rounded-full p-1 text-[#cfa0b3] opacity-0 transition group-hover:opacity-100 hover:bg-white"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </button>
           ))}
           {sessions.length === 0 && !isLoading.sessions && (
-            <p className="text-center text-xs text-[#94a3b8]">まだチャット履歴がありません。</p>
+            <p className="text-center text-xs text-[#c08ca3]">まだチャット履歴がありません。</p>
           )}
         </div>
-        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-[#e4e9fb] px-3 py-2 text-sm text-[#5d6b8b]">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef2ff]">
-            <User className="h-4 w-4" />
+        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-[#ffe3ee] px-3 py-2 text-sm text-[#8b5269]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffeef4]">
+            <MichelleAvatar size="sm" />
           </div>
           <span className="font-medium">ユーザー</span>
         </div>
@@ -398,14 +390,14 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#dde5ff] bg-white/95 px-4 py-6 shadow-xl">
+          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#ffdbe8] bg-white/95 px-4 py-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm font-semibold">履歴</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <Button onClick={handleNewChat} className="mb-4 gap-2 rounded-xl bg-[#4a6bf2] text-white">
+            <Button onClick={handleNewChat} className="mb-4 gap-2 rounded-2xl bg-gradient-to-r from-[#ff6ba6] to-[#ff8ac0] text-white">
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
             <div className="flex-1 overflow-y-auto">
@@ -430,29 +422,34 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
         </div>
       )}
 
-      <main className="flex flex-1 flex-col bg-white/90">
-        <header className="flex items-center justify-between border-b border-[#e2e8ff] px-4 py-3 text-sm text-[#5a6380]">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSidebarOpen(true)}>
-              <Menu className="h-5 w-5 text-[#4a6bf2]" />
-            </Button>
-            <span className="font-semibold text-[#2a3b8d]">{activeSession?.title || "ミシェルAI"}</span>
+      <main className="flex flex-1 flex-col bg-white/75">
+        <header className="flex items-center justify-between border-b border-[#ffdfea] px-4 py-3 text-sm text-[#95506a]">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full border border-[#ffd7e8] bg-white text-[#ff6ba6] hover:bg-[#fff4f7] md:hidden"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            <span className="font-semibold text-[#a1315d]">{activeSession?.title || "ミシェルAI"}</span>
             {isLoading.messages && <Loader2 className="h-4 w-4 animate-spin text-[#9aa4c2]" />}
           </div>
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-[#5a6380]" onClick={handleShare}>
+            <Button variant="ghost" size="sm" className="text-[#b1637d]" onClick={handleShare}>
               <Share2 className="mr-2 h-4 w-4" /> 共有
             </Button>
           )}
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-[#f6f8ff]">
+        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1]">
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
               <MichelleAvatar size="lg" />
               <div className="space-y-2">
-                <h2 className="text-2xl font-semibold text-[#1c2a4a]">こんにちは、ミシェルです</h2>
-                <p className="text-sm text-[#5d6b8b]">
+                <h2 className="text-2xl font-semibold text-[#a1315d]">こんにちは、ミシェルです</h2>
+                <p className="text-sm text-[#8b5269]">
                   心のモヤモヤ、誰にも言えない悩み、なんでも話してください。<br />
                   私はあなたの鏡となって、一緒に答えを探します。
                 </p>
@@ -461,7 +458,7 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
                 {initialPrompts.map((prompt) => (
                   <button
                     key={prompt}
-                    className="rounded-2xl border border-[#e2e8ff] bg-white px-4 py-3 text-sm text-[#4c5368] shadow-sm transition hover:-translate-y-0.5 hover:border-[#cdd8ff]"
+                    className="rounded-2xl border border-[#ffd7e8] bg-white px-4 py-3 text-sm text-[#7a4f63] shadow-sm transition hover:-translate-y-0.5 hover:border-[#ffc8de]"
                     onClick={() => {
                       setInput(prompt);
                       textareaRef.current?.focus();
@@ -532,13 +529,13 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
         </div>
 
         <div className="border-t border-[#dfe6ff] bg-white/95 px-4 py-4">
-          {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
+        <div className="border-t border[#ffdbe8] bg-white/95 px-4 py-4">
           <form
             onSubmit={(event) => {
               event.preventDefault();
               handleSendMessage();
             }}
-            className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-[#dfe6ff] bg-white p-3 shadow-sm"
+            className="mx-auto flex max-w-3xl items-end gap-2 rounded-3xl border border-[#ffd7e8] bg-white p-3 shadow-sm"
           >
             <textarea
               ref={textareaRef}
@@ -546,19 +543,19 @@ const deriveKnowledgePreview = (item: SSEKnowledge) => {
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="ミシェルに話しかける..."
-              className="max-h-40 flex-1 resize-none border-0 bg-transparent text-sm text-[#1f2a37] placeholder:text-[#a0aac8] focus:outline-none"
+              className="max-h-40 flex-1 resize-none border-0 bg-transparent text-sm text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none"
               rows={1}
             />
             <Button
               type="submit"
               size="icon"
               disabled={!input.trim() || isLoading.sending}
-              className="h-10 w-10 rounded-full bg-[#4a6bf2] text-white hover:bg-[#3f5cd8]"
+              className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#ff6ba6] to-[#ff8ac0] text-white shadow-lg hover:brightness-105"
             >
               {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
-          <p className="mt-2 text-center text-[10px] text-[#94a3b8]">ミシェルAIは誤った情報を生成する場合があります。重要事項は専門家にご相談ください。</p>
+          <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。重要事項は専門家にご相談ください。</p>
         </div>
       </main>
     </div>

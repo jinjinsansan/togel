@@ -157,7 +157,8 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Michelle chat error", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
