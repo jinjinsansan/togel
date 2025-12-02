@@ -10,8 +10,9 @@ import { User } from "@supabase/supabase-js";
 
 import { LoginButton } from "@/components/auth/login-button";
 import { Button } from "@/components/ui/button";
+import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
 
-const navItems = [
+const baseNavItems = [
   { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
   { href: "/result", label: "マッチング結果", en: "Matching" },
   { href: "/types", label: "型一覧", en: "Types" },
@@ -19,6 +20,14 @@ const navItems = [
   { href: "/profile/edit", label: "プロフィール", en: "Profile" },
   { href: "/mypage", label: "マイページ", en: "My Page" },
 ];
+
+const navItems = MICHELLE_AI_ENABLED
+  ? [
+      baseNavItems[0],
+      { href: "/michelle", label: "ミシェル心理学", en: "Michelle" },
+      ...baseNavItems.slice(1),
+    ]
+  : baseNavItems;
 
 const ADMIN_EMAILS = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
 
