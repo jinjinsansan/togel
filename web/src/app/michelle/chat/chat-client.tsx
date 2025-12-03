@@ -475,29 +475,48 @@ export function MichelleChatClient() {
 
   const handleDeleteSession = async (sessionId: string, event?: React.MouseEvent) => {
     event?.stopPropagation();
-    if (!confirm("このチャット履歴を削除しますか？")) return;
+    if (!confirm("このチャット履歴を削除しますか？\n削除後は復元できません。")) return;
+    
+    const wasActive = activeSessionId === sessionId;
+    
     try {
       const res = await fetch(`/api/michelle/sessions/${sessionId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete session");
+      
+      console.log("[Delete] Session deleted:", sessionId);
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
-      if (activeSessionId === sessionId) {
+      
+      if (wasActive) {
+        console.log("[Delete] Deleted active session, creating new chat");
         handleNewChat();
+        // アクティブセッションを削除した場合はモバイルサイドバーも閉じる
+        if (isMobile) {
+          setIsSidebarOpen(false);
+        }
       }
     } catch (err) {
-      console.error(err);
-      alert("削除に失敗しました");
+      console.error("[Delete] Failed to delete session:", err);
+      setError("削除に失敗しました。もう一度お試しください。");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!messages.length) return;
     const text = messages
       .map((m) => `${m.role === "user" ? "あなた" : "ミシェル"}: ${m.content}`)
       .join("\n\n");
-    navigator.clipboard
-      .writeText(text)
-      .then(() => alert("会話内容をコピーしました"))
-      .catch(() => alert("コピーに失敗しました"));
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      // Toast通知の代わりに一時的なメッセージを表示
+      setError("✓ 会話内容をコピーしました");
+      setTimeout(() => setError(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      setError("コピーに失敗しました");
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -561,17 +580,17 @@ export function MichelleChatClient() {
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#d48ca9]">履歴</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#d48ca9]">チャット</p>
         <div className="flex-1 overflow-y-auto">
           {sessions.map((session) => (
             <button
               key={session.id}
               onClick={() => {
-                console.log("[User Action] Clicked on session:", session.id);
+                console.log("[User Action] Desktop: Clicked on session:", session.id);
                 setActiveSessionId(session.id);
               }}
               className={cn(
-                "group flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
+                "group flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all mb-2",
                 session.id === activeSessionId
                   ? "border-[#ffc2d8] bg-[#fff0f6] text-[#a63c68]"
                   : "border-transparent bg-transparent text-[#7a4f63] hover:border-[#ffe1ed] hover:bg-[#fff7fb]",
@@ -602,34 +621,54 @@ export function MichelleChatClient() {
           <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
           <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#ffdbe8] bg-white/95 px-4 py-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-semibold">履歴</span>
+              <span className="text-sm font-semibold text-[#a1315d]">履歴</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
             <Button
-              onClick={handleNewChat}
-              className="mb-4 gap-2 rounded-2xl border border-[#ffd7e8] bg-[#fff5f8] text-[#a1315d]"
+              onClick={() => {
+                handleNewChat();
+                setIsSidebarOpen(false);
+              }}
+              disabled={isLoading.sending}
+              className="mb-4 gap-2 rounded-2xl border border-[#ffd7e8] bg-[#fff5f8] text-[#a1315d] hover:bg-white"
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#d48ca9]">チャット</p>
             <div className="flex-1 overflow-y-auto">
               {sessions.map((session) => (
                 <button
                   key={session.id}
                   onClick={() => {
+                    console.log("[User Action] Mobile: Clicked on session:", session.id);
                     setActiveSessionId(session.id);
                     setIsSidebarOpen(false);
                   }}
-                  className="flex w-full items-center justify-between rounded-2xl border border-transparent px-3 py-3 text-left text-sm hover:border-[#e0e7ff] hover:bg-[#f7f9ff]"
+                  className={cn(
+                    "group flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all mb-2",
+                    session.id === activeSessionId
+                      ? "border-[#ffc2d8] bg-[#fff0f6] text-[#a63c68]"
+                      : "border-transparent bg-transparent text-[#7a4f63] hover:border-[#ffe1ed] hover:bg-[#fff7fb]"
+                  )}
                 >
-                  <span className="truncate">{session.title || "新しいチャット"}</span>
-                  <Trash2
-                    className="h-4 w-4 text-[#c1c9e7]"
+                  <div className="flex min-w-0 items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="truncate">{session.title || "新しいチャット"}</span>
+                  </div>
+                  <button
+                    type="button"
                     onClick={(event) => handleDeleteSession(session.id, event)}
-                  />
+                    className="rounded-full p-1 text-[#cfa0b3] transition hover:bg-white"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </button>
               ))}
+              {sessions.length === 0 && !isLoading.sessions && (
+                <p className="text-center text-xs text-[#c08ca3]">まだチャット履歴がありません。</p>
+              )}
             </div>
           </div>
         </div>
@@ -742,7 +781,18 @@ export function MichelleChatClient() {
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)"
           }}
         >
-          {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
+          {error && (
+            <p 
+              className={cn(
+                "mb-2 text-xs rounded-lg px-3 py-2 text-center",
+                error.startsWith("✓") 
+                  ? "bg-green-50 text-green-700 border border-green-200" 
+                  : "bg-red-50 text-red-600 border border-red-200"
+              )}
+            >
+              {error}
+            </p>
+          )}
           <form
             onSubmit={(event) => {
               event.preventDefault();
