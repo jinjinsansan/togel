@@ -157,6 +157,12 @@ export function MichelleChatClient() {
     setIsMounted(true);
     setIsMobile(window.innerWidth < 768);
     
+    // モバイルでは初回ロード時に意図しないフォーカスを防ぐ
+    if (window.innerWidth < 768 && textareaRef.current) {
+      textareaRef.current.blur();
+      console.log("[Mount] Mobile: textarea blur applied to prevent unwanted keyboard");
+    }
+    
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -345,7 +351,10 @@ export function MichelleChatClient() {
       console.error("[User Action] Failed to clear localStorage:", error);
     }
     
-    textareaRef.current?.focus();
+    // モバイルでは自動フォーカスしない（キーボードがURLバーに被る問題を防ぐ）
+    if (!isMobile) {
+      textareaRef.current?.focus();
+    }
   };
 
   const handleSendMessage = async () => {
@@ -360,6 +369,11 @@ export function MichelleChatClient() {
     const text = input.trim();
     setInput("");
     setError(null);
+    
+    // モバイルでは送信後にキーボードを閉じる
+    if (isMobile && textareaRef.current) {
+      textareaRef.current.blur();
+    }
 
     const tempUserId = `user-${Date.now()}`;
     const tempAiId = `ai-${Date.now()}`;
@@ -567,6 +581,7 @@ export function MichelleChatClient() {
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
+        maxHeight: "calc(100vh - 4rem)",
       }}
     >
       <aside
@@ -720,7 +735,10 @@ export function MichelleChatClient() {
                     className="rounded-2xl border border-[#ffd7e8] bg-white px-4 py-3 text-sm text-[#7a4f63] shadow-sm transition hover:-translate-y-0.5 hover:border-[#ffc8de] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       setInput(prompt);
-                      textareaRef.current?.focus();
+                      // モバイルでは自動フォーカスしない
+                      if (!isMobile) {
+                        textareaRef.current?.focus();
+                      }
                     }}
                   >
                     {prompt}
@@ -805,6 +823,14 @@ export function MichelleChatClient() {
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={(event) => {
+                // モバイルでフォーカス時にスムーズにスクロール（URLバーを隠す）
+                if (isMobile) {
+                  setTimeout(() => {
+                    event.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }, 300);
+                }
+              }}
               placeholder="ミシェルに話しかける..."
               enterKeyHint="send"
               autoComplete="off"
