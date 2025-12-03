@@ -62,10 +62,19 @@ const thinkingMessages = [
   "寄り添いながら考えています...",
 ];
 
+const getInitialSessionId = (): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
 export function MichelleChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(getInitialSessionId);
   const [input, setInput] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState({ sessions: false, messages: false, sending: false });
@@ -134,19 +143,20 @@ export function MichelleChatClient() {
   useEffect(() => {
     if (hasHydratedSessionRef.current) return;
     if (sessions.length === 0) return;
-    if (typeof window === "undefined") return;
-
-    const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
     
+    const storedSessionId = activeSessionId;
     if (storedSessionId) {
       const exists = sessions.some((s) => s.id === storedSessionId);
-      if (exists) {
-        setActiveSessionId(storedSessionId);
+      if (!exists) {
+        setActiveSessionId(null);
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+        }
       }
     }
 
     hasHydratedSessionRef.current = true;
-  }, [sessions]);
+  }, [sessions, activeSessionId]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -377,13 +387,13 @@ export function MichelleChatClient() {
     <div
       className="flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
       style={{
-        minHeight: "calc(100dvh - 4rem)",
-        height: "calc(100dvh - 4rem)",
+        minHeight: "calc(100vh - 4rem)",
+        height: "calc(100vh - 4rem)",
       }}
     >
       <aside
         className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
-        style={{ height: "calc(100dvh - 4rem)" }}
+        style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
           onClick={handleNewChat}
@@ -463,7 +473,7 @@ export function MichelleChatClient() {
         </div>
       )}
 
-      <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75">
+      <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
         <header className="flex items-center justify-between border-b border-[#ffdfea] px-4 py-3 text-sm text-[#95506a]">
             <div className="flex items-center gap-2">
               <Button
@@ -486,7 +496,8 @@ export function MichelleChatClient() {
 
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1]"
+          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1] overscroll-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
@@ -571,6 +582,10 @@ export function MichelleChatClient() {
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="ミシェルに話しかける..."
+              enterKeyHint="send"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none md:text-sm"
               rows={1}
             />
