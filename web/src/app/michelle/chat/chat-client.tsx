@@ -476,8 +476,8 @@ export function MichelleChatClient() {
     );
   }
 
-  // セッション復元中、またはマウント前はローディング表示
-  if (!isMounted || isRestoringSession) {
+  // セッション復元中、またはマウント前、またはメッセージ読み込み中はローディング表示
+  if (!isMounted || isRestoringSession || (activeSessionId && isLoading.messages)) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef]">
         <div className="text-center">
