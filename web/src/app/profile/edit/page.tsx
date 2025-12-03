@@ -219,171 +219,226 @@ export default function ProfileEditPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#E91E63]" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[#E91E63]" />
+          <p className="text-slate-500 font-bold animate-pulse">読み込み中...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 w-screen overflow-x-hidden">
-      <div className="w-full mx-auto px-3 py-4 max-w-2xl">
-        
-        {/* Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-slate-900">プロフィール編集</h1>
-          {isPublic && (
-            <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#E91E63] flex items-center gap-1 hover:underline">
-              <ExternalLink size={12} />
-              <span>公開ページ</span>
-            </a>
-          )}
-        </div>
-
-        {/* Public Toggle */}
-        <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              {isPublic ? <Eye size={18} className="text-green-600 shrink-0" /> : <EyeOff size={18} className="text-slate-400 shrink-0" />}
-              <span className="text-sm font-semibold">{isPublic ? "公開中" : "非公開"}</span>
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-32">
+      {/* Hero Header */}
+      <div className="relative border-b border-slate-100 bg-gradient-to-br from-white to-slate-100 py-12">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-3 uppercase">Settings</p>
+              <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900">
+                プロフィール編集
+              </h1>
             </div>
-            <SimpleSwitch checked={isPublic} onCheckedChange={setIsPublic} />
+            {isPublic && (
+              <Button variant="outline" size="sm" asChild className="rounded-full border-2 border-[#E91E63]/20 text-[#E91E63] hover:bg-[#E91E63] hover:text-white font-bold">
+                <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  公開ページを確認
+                </a>
+              </Button>
+            )}
           </div>
-          {isPublic && (
-            <div className="mt-2 p-2 bg-slate-50 rounded text-[9px] overflow-hidden">
-              <p className="text-slate-500 mb-1 font-semibold">URL</p>
-              <div className="flex gap-1">
-                <code className="flex-1 min-w-0 bg-white border border-slate-300 rounded px-1.5 py-1 text-[8px] truncate">
-                  {`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${user?.id}`}
-                </code>
-                <Button size="sm" variant="outline" onClick={copyPublicLink} className="h-6 w-6 p-0 shrink-0">
-                  {copied ? <Check size={10} className="text-green-600" /> : <Copy size={10} />}
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
+      </div>
 
-        {/* Avatar */}
-        <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
-          <div className="flex flex-col items-center">
-            <div className="relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-slate-200 bg-slate-100">
-                {avatarUrl ? (
-                  <Image src={avatarUrl} alt="Avatar" fill sizes="96px" className="object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-3xl">👤</div>
-                )}
+      <div className="container max-w-4xl mx-auto px-4 -mt-8 relative z-10 space-y-8">
+        
+        {/* Avatar & Public Status Grid */}
+        <div className="grid md:grid-cols-3 gap-6">
+          
+          {/* Left Col: Avatar */}
+          <div className="md:col-span-1">
+            <div className="h-full bg-white rounded-3xl border-2 border-slate-100 p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+              <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                <div className="relative h-32 w-32 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 shadow-inner">
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt="Avatar" fill sizes="128px" className="object-cover transition-transform group-hover:scale-105" />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-4xl">👤</div>
+                  )}
+                </div>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-full transition-colors flex items-center justify-center">
+                   {uploading ? (
+                    <Loader2 className="animate-spin text-white" size={32} />
+                   ) : (
+                    <span className="text-white font-bold opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all">変更</span>
+                   )}
+                </div>
               </div>
-              {uploading && (
-                <div className="absolute inset-0 bg-white/80 rounded-full flex items-center justify-center">
-                  <Loader2 className="animate-spin text-[#E91E63]" size={20} />
+              <p className="text-xs font-bold text-slate-400 mt-4">プロフィール写真</p>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+            </div>
+          </div>
+
+          {/* Right Col: Public Toggle & URL */}
+          <div className="md:col-span-2">
+            <div className="h-full bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-8 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-heading text-lg font-black text-slate-900 flex items-center gap-2">
+                    {isPublic ? <Eye className="text-[#E91E63]" size={20} /> : <EyeOff className="text-slate-400" size={20} />}
+                    公開設定
+                  </h3>
+                  <p className="text-sm text-slate-500 font-medium mt-1">
+                    {isPublic ? "プロフィールは公開されています" : "プロフィールは非公開です"}
+                  </p>
+                </div>
+                <SimpleSwitch checked={isPublic} onCheckedChange={setIsPublic} />
+              </div>
+
+              {isPublic && (
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                  <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Your Public URL</p>
+                  <div className="flex gap-2">
+                    <code className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 truncate">
+                      {`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${user?.id}`}
+                    </code>
+                    <Button onClick={copyPublicLink} className={`shrink-0 rounded-xl font-bold ${copied ? "bg-green-500 hover:bg-green-600 text-white" : "bg-slate-900 text-white hover:bg-slate-800"}`}>
+                      {copied ? <Check size={18} /> : <Copy size={18} />}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
-            <p className="text-[10px] text-slate-400 mt-2">タップして変更</p>
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
           </div>
         </div>
 
-        {/* Basic Info */}
-        <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
-          <h2 className="text-sm font-bold mb-3">基本情報</h2>
-          <div className="space-y-2">
-            <div>
-              <Label htmlFor="fullName" className="text-xs">ニックネーム</Label>
-              <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Togel太郎" className="text-sm h-9" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="gender" className="text-xs">性別</Label>
-                <select id="gender" value={gender} onChange={(e) => setGender(e.target.value as GenderOption)} className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm">
-                  <option value="male">男性</option>
-                  <option value="female">女性</option>
-                  <option value="other">その他</option>
-                </select>
+        {/* Basic Info Form */}
+        <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-10 shadow-sm">
+          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
+             <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#E91E63]/10 text-xl">📝</span>
+             <h2 className="font-heading text-2xl font-black text-slate-900">基本情報</h2>
+          </div>
+          
+          <div className="grid gap-8">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-sm font-bold text-slate-700">ニックネーム <span className="text-[#E91E63]">*</span></Label>
+                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Togel太郎" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
               </div>
-              <div>
-                <Label htmlFor="age" className="text-xs">年齢</Label>
-                <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" className="text-sm h-9" />
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="gender" className="text-sm font-bold text-slate-700">性別</Label>
+                  <div className="relative">
+                    <select 
+                      id="gender" 
+                      value={gender} 
+                      onChange={(e) => setGender(e.target.value as GenderOption)} 
+                      className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-base focus:outline-none focus:ring-2 focus:ring-[#E91E63] appearance-none"
+                    >
+                      <option value="male">男性</option>
+                      <option value="female">女性</option>
+                      <option value="other">その他</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="age" className="text-sm font-bold text-slate-700">年齢</Label>
+                  <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+                </div>
               </div>
             </div>
-            <div>
-              <Label htmlFor="job" className="text-xs">職業</Label>
-              <Input id="job" value={job} onChange={(e) => setJob(e.target.value)} placeholder="会社員" className="text-sm h-9" />
+
+            <div className="grid md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                <Label htmlFor="job" className="text-sm font-bold text-slate-700">職業</Label>
+                <Input id="job" value={job} onChange={(e) => setJob(e.target.value)} placeholder="会社員" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city" className="text-sm font-bold text-slate-700">居住地</Label>
+                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="東京都" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="city" className="text-xs">居住地</Label>
-              <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="東京都" className="text-sm h-9" />
-            </div>
-            <div>
-              <Label htmlFor="bio" className="text-xs">自己紹介</Label>
-              <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="よろしく！" className="text-sm h-20 resize-none" />
+
+            <div className="space-y-2">
+              <Label htmlFor="bio" className="text-sm font-bold text-slate-700">自己紹介</Label>
+              <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="趣味や性格など、自由にかいてください！" className="min-h-[120px] rounded-xl border-slate-200 text-base focus:ring-[#E91E63] p-4 leading-relaxed" />
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Details */}
-        <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
-          <h2 className="text-sm font-bold mb-3">詳細プロフィール</h2>
-          <div className="space-y-2">
-            <div>
-              <Label htmlFor="favoriteThings" className="text-xs">好きなこと</Label>
-              <Input id="favoriteThings" value={details.favoriteThings} onChange={(e) => setDetails({...details, favoriteThings: e.target.value})} placeholder="例：カフェ巡り" className="text-sm h-9" />
+        {/* Details Form */}
+        <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-10 shadow-sm">
+          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
+             <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-xl">💡</span>
+             <h2 className="font-heading text-2xl font-black text-slate-900">詳細プロフィール</h2>
+          </div>
+
+          <div className="space-y-6">
+            {[
+              { id: "favoriteThings", label: "好きなこと", value: details.favoriteThings, setter: (v: string) => setDetails({...details, favoriteThings: v}) },
+              { id: "hobbies", label: "趣味", value: details.hobbies, setter: (v: string) => setDetails({...details, hobbies: v}) },
+              { id: "specialSkills", label: "特技", value: details.specialSkills, setter: (v: string) => setDetails({...details, specialSkills: v}) },
+              { id: "values", label: "大切にしている価値観", value: details.values, setter: (v: string) => setDetails({...details, values: v}) },
+              { id: "communication", label: "コミュニケーションスタイル", value: details.communication, setter: (v: string) => setDetails({...details, communication: v}) },
+            ].map((field) => (
+              <div key={field.id} className="space-y-2">
+                <Label htmlFor={field.id} className="text-sm font-bold text-slate-700">{field.label}</Label>
+                <Input id={field.id} value={field.value} onChange={(e) => field.setter(e.target.value)} className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SNS Form */}
+        <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-10 shadow-sm">
+          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
+             <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-green-100 text-xl">🔗</span>
+             <div>
+               <h2 className="font-heading text-2xl font-black text-slate-900">SNSリンク</h2>
+               <p className="text-xs font-bold text-slate-400 mt-1">公開プロフィールに表示されます</p>
+             </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-slate-700">X (Twitter)</Label>
+              <Input type="url" value={socialLinks.twitter} onChange={(e) => setSocialLinks({...socialLinks, twitter: e.target.value})} placeholder="https://x.com/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
             </div>
-            <div>
-              <Label htmlFor="hobbies" className="text-xs">趣味</Label>
-              <Input id="hobbies" value={details.hobbies} onChange={(e) => setDetails({...details, hobbies: e.target.value})} placeholder="例：サウナ" className="text-sm h-9" />
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-slate-700">Instagram</Label>
+              <Input type="url" value={socialLinks.instagram} onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})} placeholder="https://instagram.com/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
             </div>
-            <div>
-              <Label htmlFor="specialSkills" className="text-xs">特技</Label>
-              <Input id="specialSkills" value={details.specialSkills} onChange={(e) => setDetails({...details, specialSkills: e.target.value})} placeholder="例：料理" className="text-sm h-9" />
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-slate-700">Facebook</Label>
+              <Input type="url" value={socialLinks.facebook} onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})} placeholder="https://facebook.com/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
             </div>
-            <div>
-              <Label htmlFor="values" className="text-xs">価値観</Label>
-              <Input id="values" value={details.values} onChange={(e) => setDetails({...details, values: e.target.value})} placeholder="例：誠実さ" className="text-sm h-9" />
-            </div>
-            <div>
-              <Label htmlFor="communication" className="text-xs">コミュニケーション</Label>
-              <Input id="communication" value={details.communication} onChange={(e) => setDetails({...details, communication: e.target.value})} placeholder="例：聞き上手" className="text-sm h-9" />
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-slate-700">LINE</Label>
+              <Input type="url" value={socialLinks.line} onChange={(e) => setSocialLinks({...socialLinks, line: e.target.value})} placeholder="https://line.me/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* SNS */}
-        <div className="bg-white rounded-lg p-3 mb-3 border border-slate-200">
-          <h2 className="text-sm font-bold mb-3">外部SNSリンク</h2>
-          <p className="text-[10px] text-slate-500 mb-2">公開プロフィールに表示されます</p>
-          <div className="space-y-2">
-            <div>
-              <Label className="text-xs">X (Twitter)</Label>
-              <Input type="url" value={socialLinks.twitter} onChange={(e) => setSocialLinks({...socialLinks, twitter: e.target.value})} placeholder="https://x.com/yourname" className="text-sm h-9" />
-            </div>
-            <div>
-              <Label className="text-xs">Instagram</Label>
-              <Input type="url" value={socialLinks.instagram} onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})} placeholder="https://instagram.com/yourname" className="text-sm h-9" />
-            </div>
-            <div>
-              <Label className="text-xs">Facebook</Label>
-              <Input type="url" value={socialLinks.facebook} onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})} placeholder="https://facebook.com/yourname" className="text-sm h-9" />
-            </div>
-            <div>
-              <Label className="text-xs">LINE</Label>
-              <Input type="url" value={socialLinks.line} onChange={(e) => setSocialLinks({...socialLinks, line: e.target.value})} placeholder="https://line.me/ti/p/xxxx" className="text-sm h-9" />
-            </div>
-          </div>
-        </div>
+      </div>
 
-        {/* Save Button */}
-        <div className="sticky bottom-0 bg-white/95 backdrop-blur border-t border-slate-200 p-3 -mx-3">
-          <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={() => router.back()} size="sm" className="text-sm">キャンセル</Button>
-            <Button onClick={handleSave} disabled={saving} size="sm" className="bg-[#E91E63] hover:bg-[#D81B60] text-white text-sm">
-              {saving ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" /> 保存中...</> : <><Save className="mr-1 h-3 w-3" /> 保存</>}
-            </Button>
-          </div>
+      {/* Sticky Footer Action */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 p-4 z-50">
+        <div className="container max-w-4xl mx-auto flex items-center justify-between">
+          <Button variant="ghost" onClick={() => router.back()} className="font-bold text-slate-500 hover:text-slate-900">
+            キャンセル
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={saving} 
+            size="lg" 
+            className="rounded-full bg-[#E91E63] hover:bg-[#D81B60] text-white font-bold px-8 shadow-lg shadow-[#E91E63]/30 transition-all hover:scale-105"
+          >
+            {saving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> 保存中...</> : <><Save className="mr-2 h-5 w-5" /> 保存する</>}
+          </Button>
         </div>
-
       </div>
     </div>
   );
