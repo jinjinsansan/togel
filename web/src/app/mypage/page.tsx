@@ -213,6 +213,7 @@ export default function MyPage() {
   const [copied, setCopied] = useState(false);
   const [prankActive, setPrankActive] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [certificateColor, setCertificateColor] = useState<string>(DEFAULT_COLOR_BY_GENDER.default);
   const [themeSaving, setThemeSaving] = useState(false);
   const [diagnosisHistory, setDiagnosisHistory] = useState<DiagnosisHistoryEntry[]>([]);
@@ -234,6 +235,20 @@ export default function MyPage() {
       console.error("Failed to load notifications", error);
     }
   }, []);
+
+  useEffect(() => {
+    if (!notifications.length) {
+      setSelectedNotification(null);
+      return;
+    }
+    setSelectedNotification((prev) => {
+      if (!prev) {
+        return notifications[0];
+      }
+      const stillExists = notifications.find((note) => note.id === prev.id);
+      return stillExists ?? notifications[0];
+    });
+  }, [notifications]);
 
   const hydrateProfile = useCallback((data: UserProfile) => {
     setProfile(data);
@@ -670,37 +685,80 @@ export default function MyPage() {
               <h2 className="font-bold text-lg text-slate-800">お知らせ受信箱</h2>
             </div>
             <div className="space-y-1">
-              {notifications.length === 0 ? (
+{notifications.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-sm">
                   お知らせはありません
                 </div>
               ) : (
-                notifications.map((note) => (
-                  <div 
-                    key={note.id} 
-                    onClick={() => handleNotificationRead(note.id, note.read)}
-                    className={`flex items-start gap-4 p-4 rounded-xl transition-colors cursor-pointer ${note.read ? "bg-slate-50" : "bg-white border border-slate-100 shadow-sm"}`}
-                  >
-                    <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${note.read ? "bg-slate-300" : "bg-[#E91E63]"}`} />
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start gap-2">
-                        <p className={`text-sm font-medium ${note.read ? "text-slate-600" : "text-slate-900"}`}>{note.title}</p>
-                        {note.type === "matching" && (
-                          <span className="text-[10px] bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-bold whitespace-nowrap">MATCH</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1 whitespace-pre-wrap">{note.content}</p>
-                      {note.metadata?.url && (
-                        <Link href={note.metadata.url} className="text-xs text-blue-500 hover:underline mt-2 block">
-                          詳細を見る →
-                        </Link>
-                      )}
-                      <p className="text-[10px] text-slate-400 mt-2 text-right">
-                        {new Date(note.scheduled_at).toLocaleDateString('ja-JP')}
-                      </p>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="md:w-2/5 flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>すべての通知</span>
+                      <span>{notifications.filter((note) => !note.read).length} 件の未読</span>
+                    </div>
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/50 divide-y divide-slate-100 max-h-[360px] overflow-y-auto">
+                      {notifications.map((note) => (
+                        <button
+                          key={note.id}
+                          onClick={() => {
+                            setSelectedNotification(note);
+                            handleNotificationRead(note.id, note.read);
+                          }}
+                          className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
+                            selectedNotification?.id === note.id ? "bg-white shadow-sm" : "bg-transparent"
+                          }`}
+                        >
+                          <span
+                            className={`h-2 w-2 rounded-full mt-2 ${note.read ? "bg-slate-300" : "bg-[#E91E63]"}`}
+                          />
+                          <div className="flex-1">
+                            <p className={`text-sm font-semibold ${note.read ? "text-slate-500" : "text-slate-900"}`}>
+                              {note.title}
+                            </p>
+                            <p className="text-[11px] text-slate-400">
+                              {new Date(note.scheduled_at).toLocaleString("ja-JP")}
+                            </p>
+                          </div>
+                          {!note.read && (
+                            <span className="text-[10px] font-semibold text-[#E91E63] bg-[#E91E63]/10 px-2 py-0.5 rounded-full">
+                              未読
+                            </span>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                ))
+
+                  <div className="flex-1 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-5 min-h-[280px]">
+                    {!selectedNotification ? (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm gap-2">
+                        <span>左のリストからお知らせを選択してください</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] tracking-[0.3em] text-slate-400 uppercase">
+                            {selectedNotification.type === "matching" ? "MATCH" : "ADMIN"}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {new Date(selectedNotification.scheduled_at).toLocaleString("ja-JP")}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-900">{selectedNotification.title}</h3>
+                          <p className="text-sm text-slate-500 whitespace-pre-wrap mt-2">
+                            {selectedNotification.content}
+                          </p>
+                          {selectedNotification.metadata?.url && (
+                            <Button asChild variant="ghost" className="mt-4 h-auto px-0 text-[#E91E63] hover:text-[#C2185B]">
+                              <Link href={selectedNotification.metadata.url}>詳細を見る →</Link>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
