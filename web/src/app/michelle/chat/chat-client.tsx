@@ -350,6 +350,12 @@ export function MichelleChatClient() {
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading.sending) return;
+    
+    // pending メッセージがある場合は送信不可
+    if (messages.some((msg) => msg.pending)) {
+      console.log("[Send] Blocked - AI is still responding");
+      return;
+    }
 
     const text = input.trim();
     setInput("");
@@ -381,6 +387,10 @@ export function MichelleChatClient() {
           if (errorBody?.error) {
             serverMessage = errorBody.error;
           }
+          // 429エラーの場合は特別な処理
+          if (res.status === 429) {
+            console.log("[Send] Rate limited - AI still responding");
+          }
         } catch (parseError) {
           console.error("Failed to parse error response", parseError);
         }
@@ -391,6 +401,7 @@ export function MichelleChatClient() {
       const decoder = new TextDecoder();
       let aiContent = "";
       let resolvedSessionId = activeSessionId;
+      let streamCompleted = false;
 
       while (true) {
         const { value, done } = await reader.read();
@@ -415,6 +426,10 @@ export function MichelleChatClient() {
               aiContent += payload.content;
               setMessages((prev) => prev.map((msg) => (msg.id === tempAiId ? { ...msg, content: aiContent } : msg)));
             }
+            if (payload.type === "done") {
+              streamCompleted = true;
+              console.log("[Stream] Completed successfully");
+            }
             if (payload.type === "error") {
               throw new Error(payload.message ?? "AI応答中にエラーが発生しました");
             }
@@ -422,6 +437,11 @@ export function MichelleChatClient() {
             console.error("Failed to parse stream payload", err);
           }
         }
+      }
+
+      // ストリーム完了を確認
+      if (!streamCompleted) {
+        console.warn("[Stream] Ended without 'done' event");
       }
 
       setMessages((prev) =>
@@ -445,7 +465,11 @@ export function MichelleChatClient() {
         ),
       );
     } finally {
-      setIsLoading((prev) => ({ ...prev, sending: false }));
+      // ローディング状態を解除する前に少し待機
+      setTimeout(() => {
+        setIsLoading((prev) => ({ ...prev, sending: false }));
+        console.log("[Send] Loading state released");
+      }, 300);
     }
   };
 
@@ -479,7 +503,10 @@ export function MichelleChatClient() {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      handleSendMessage();
+      // AIが応答中は送信不可
+      if (!messages.some((msg) => msg.pending)) {
+        handleSendMessage();
+      }
     }
   };
 
@@ -650,7 +677,8 @@ export function MichelleChatClient() {
                 {initialPrompts.slice(0, isMobile ? 2 : 4).map((prompt) => (
                   <button
                     key={prompt}
-                    className="rounded-2xl border border-[#ffd7e8] bg-white px-4 py-3 text-sm text-[#7a4f63] shadow-sm transition hover:-translate-y-0.5 hover:border-[#ffc8de]"
+                    disabled={isLoading.sending || messages.some((msg) => msg.pending)}
+                    className="rounded-2xl border border-[#ffd7e8] bg-white px-4 py-3 text-sm text-[#7a4f63] shadow-sm transition hover:-translate-y-0.5 hover:border-[#ffc8de] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       setInput(prompt);
                       textareaRef.current?.focus();
@@ -732,16 +760,17 @@ export function MichelleChatClient() {
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none md:text-sm"
+              disabled={isLoading.sending || messages.some((msg) => msg.pending)}
+              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none disabled:opacity-60 md:text-sm"
               rows={1}
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!input.trim() || isLoading.sending}
-              className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#ff6ba6] to-[#ff8ac0] text-white shadow-lg hover:brightness-105"
+              disabled={!input.trim() || isLoading.sending || messages.some((msg) => msg.pending)}
+              className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#ff6ba6] to-[#ff8ac0] text-white shadow-lg hover:brightness-105 disabled:opacity-50"
             >
-              {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {isLoading.sending || messages.some((msg) => msg.pending) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
           <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。</p>

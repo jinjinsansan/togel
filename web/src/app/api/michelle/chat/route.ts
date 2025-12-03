@@ -98,10 +98,24 @@ export async function POST(request: Request) {
       content: message,
     });
 
-    await betaThreads.messages.create(threadId, {
-      role: "user",
-      content: finalMessage,
-    });
+    try {
+      await betaThreads.messages.create(threadId, {
+        role: "user",
+        content: finalMessage,
+      });
+    } catch (openaiError) {
+      console.error("OpenAI message creation error:", openaiError);
+      
+      // 400エラーの場合は、runが実行中であることをユーザーに通知
+      if (openaiError instanceof Error && openaiError.message.includes("while a run")) {
+        return NextResponse.json(
+          { error: "前の応答がまだ処理中です。少しお待ちください。" },
+          { status: 429 }
+        );
+      }
+      
+      throw openaiError;
+    }
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
