@@ -73,6 +73,7 @@ export function MichelleChatClient() {
   const [error, setError] = useState<string | null>(null);
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -131,17 +132,38 @@ export function MichelleChatClient() {
   );
 
   useEffect(() => {
+    console.log("[Mount] Component mounted");
     setIsMounted(true);
+    setIsMobile(window.innerWidth < 768);
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
+    console.log("[Sessions] Loading sessions...");
     loadSessions();
   }, [loadSessions]);
 
   useEffect(() => {
-    if (!isMounted) return;
-    if (hasRestoredSessionRef.current) return;
-    if (sessions.length === 0) return;
+    console.log("[Session Restore] Effect triggered - isMounted:", isMounted, "hasRestored:", hasRestoredSessionRef.current, "sessions.length:", sessions.length);
+    
+    if (!isMounted) {
+      console.log("[Session Restore] Skipped - not mounted yet");
+      return;
+    }
+    if (hasRestoredSessionRef.current) {
+      console.log("[Session Restore] Skipped - already restored");
+      return;
+    }
+    if (sessions.length === 0) {
+      console.log("[Session Restore] Skipped - no sessions loaded yet");
+      return;
+    }
 
     try {
       const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
@@ -154,13 +176,18 @@ export function MichelleChatClient() {
         if (exists) {
           console.log("[Session Restore] Restoring session:", storedSessionId);
           setActiveSessionId(storedSessionId);
+        } else {
+          console.log("[Session Restore] Session not found in sessions array");
         }
+      } else {
+        console.log("[Session Restore] No stored session ID found");
       }
     } catch (error) {
-      console.error("Failed to restore session:", error);
+      console.error("[Session Restore] Failed to restore session:", error);
     }
     
     hasRestoredSessionRef.current = true;
+    console.log("[Session Restore] Flag set to true");
   }, [isMounted, sessions]);
 
   useEffect(() => {
@@ -544,7 +571,7 @@ export function MichelleChatClient() {
                 </p>
               </div>
               <div className="grid w-full max-w-2xl gap-3 px-6 md:grid-cols-2">
-                {initialPrompts.map((prompt) => (
+                {initialPrompts.slice(0, isMobile ? 2 : 4).map((prompt) => (
                   <button
                     key={prompt}
                     className="rounded-2xl border border-[#ffd7e8] bg-white px-4 py-3 text-sm text-[#7a4f63] shadow-sm transition hover:-translate-y-0.5 hover:border-[#ffc8de]"
