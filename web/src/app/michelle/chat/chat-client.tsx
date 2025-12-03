@@ -503,7 +503,7 @@ export function MichelleChatClient() {
   const showGlobalLoader =
     !isMounted ||
     isRestoringSession ||
-    (!hasLoadedMessages && (isLoading.messages || (isLoading.sessions && sessions.length === 0)));
+    (messages.length === 0 && !hasLoadedMessages && (isLoading.messages || (isLoading.sessions && sessions.length === 0)));
 
   if (showGlobalLoader) {
     return (
@@ -620,7 +620,7 @@ export function MichelleChatClient() {
                 <Menu className="h-5 w-5" />
               </Button>
             <span className="font-semibold text-[#a1315d]">{activeSession?.title || "ミシェルAI"}</span>
-            {isLoading.messages && <Loader2 className="h-4 w-4 animate-spin text-[#9aa4c2]" />}
+            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#9aa4c2]" />}
           </div>
           {messages.length > 0 && (
             <Button variant="ghost" size="sm" className="text-[#b1637d]" onClick={handleShare}>
