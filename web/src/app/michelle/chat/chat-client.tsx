@@ -145,9 +145,14 @@ export function MichelleChatClient() {
 
     try {
       const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+      console.log("[Session Restore] Stored ID:", storedSessionId, "Sessions count:", sessions.length);
+      
       if (storedSessionId) {
         const exists = sessions.some((s) => s.id === storedSessionId);
+        console.log("[Session Restore] Session exists:", exists);
+        
         if (exists) {
+          console.log("[Session Restore] Restoring session:", storedSessionId);
           setActiveSessionId(storedSessionId);
         }
       }
@@ -225,9 +230,14 @@ export function MichelleChatClient() {
 
   useEffect(() => {
     if (isLoading.sending) return;
+    
+    console.log("[Load Messages] activeSessionId:", activeSessionId);
+    
     if (activeSessionId) {
+      console.log("[Load Messages] Loading messages for:", activeSessionId);
       loadMessages(activeSessionId);
     } else {
+      console.log("[Load Messages] Clearing messages (no active session)");
       setMessages([]);
     }
   }, [activeSessionId, isLoading.sending, loadMessages]);
@@ -596,7 +606,7 @@ export function MichelleChatClient() {
 
         <div 
           ref={composerRef}
-          className="fixed bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 z-50"
+          className="sticky bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 z-50"
           style={{ 
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)"
           }}
