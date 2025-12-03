@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CheckCircle2, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
@@ -16,79 +17,173 @@ export default function MichelleLandingPage() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-white via-pink-50/40 to-white">
-      <section className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-20 lg:flex-row lg:items-center">
-        <div className="space-y-6 lg:w-1/2">
-          <span className="inline-flex items-center rounded-full border border-pink-200 bg-white px-4 py-1 text-xs font-semibold text-pink-600">
-            新機能
-          </span>
-          <h1 className="text-4xl font-black leading-tight text-slate-900 lg:text-5xl">
-            ミシェル心理学 × Togel<br />心の思い込みをほどくAIカウンセリング
-          </h1>
-          <p className="text-base leading-relaxed text-slate-600">
-            ミシェル心理学で培ったカウンセリング知見と最先端のLLMを掛け合わせ、単なる占いや診断ではなく「気づき」と「伴走」を提供するAIを搭載しました。
-            状況の整理から感情の分解、次のアクション設計まで、あなたのペースで寄り添います。
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" className="h-14 rounded-2xl bg-gradient-to-r from-[#E91E63] to-[#D81B60] text-base font-bold shadow-lg" asChild>
-              <Link href="/michelle/chat">カウンセリングを始める</Link>
-            </Button>
-            <Button size="lg" variant="outline" className="h-14 rounded-2xl border-slate-300 text-base font-semibold text-slate-700" asChild>
-              <Link href="#features">ミシェル心理学とは？</Link>
-            </Button>
-          </div>
-          <ul className="grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
-            {[
-              "思考・感情・行動の3層分析",
-              "独自のRAGで3万字以上の知識を参照",
-              "毎セッションの記録を安全に保存",
-              "相性診断データとも連携予定",
-            ].map((item) => (
-              <li key={item} className="flex items-center gap-2 rounded-xl border border-white/40 bg-white/70 px-4 py-3 shadow-sm">
-                <span className="text-pink-500">●</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="relative lg:w-1/2">
-          <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-white/70 shadow-2xl">
-            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#E91E63]/10 to-transparent" />
-            <div className="overflow-hidden rounded-[32px] border border-pink-100 bg-white p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-pink-400">MICHELLE AI</p>
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                「そのモヤモヤ、どこから来ていますか？」
-                <br />
-                ミシェルAIは問いかけと要約を繰り返しながら、心の奥にある“思い込み”を優しくほどいていきます。
-              </p>
-              <div className="mt-6 rounded-2xl border border-pink-100 bg-gradient-to-br from-white to-pink-50/80 p-4 text-sm text-slate-700">
-                <p className="font-semibold text-pink-600">想定フロー</p>
-                <ol className="mt-3 space-y-2 text-xs text-slate-600">
-                  <li>1. 状況の棚卸し（問いかけ）</li>
-                  <li>2. 感情の分解と命名</li>
-                  <li>3. 思い込み仮説の提示</li>
-                  <li>4. 日常で試せるワークの提案</li>
-                </ol>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-20 pb-16 lg:pt-32">
+        <div className="container px-4 md:px-6 mx-auto">
+          <div className="flex flex-col lg:flex-row gap-12 lg:items-start">
+            {/* Left Column: Content */}
+            <div className="lg:w-1/2 space-y-8">
+              <div>
+                <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-4 uppercase">
+                  New Feature
+                </p>
+                <h1 className="font-heading text-4xl md:text-6xl font-black text-slate-900 leading-tight mb-6">
+                  ミシェル心理学<br />
+                  <span className="text-3xl md:text-5xl text-slate-700">×</span><br />
+                  <span className="text-[#E91E63]">AIカウンセリング</span>
+                </h1>
+                <p className="text-lg text-slate-600 leading-relaxed">
+                  ミシェル心理学で培ったカウンセリング知見と最先端のLLMを掛け合わせ、単なる占いや診断ではなく「気づき」と「伴走」を提供するAIを搭載しました。
+                  状況の整理から感情の分解、次のアクション設計まで、あなたのペースで寄り添います。
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="h-14 px-8 rounded-full bg-[#E91E63] hover:bg-[#D81B60] text-white text-base font-bold shadow-lg shadow-pink-200 transition-all hover:scale-105" asChild>
+                  <Link href="/michelle/chat">
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    カウンセリングを始める
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="h-14 px-8 rounded-full border-2 border-slate-200 bg-white hover:bg-slate-50 hover:text-[#E91E63] text-base font-bold text-slate-700 transition-all" asChild>
+                  <Link href="#features">ミシェル心理学とは？</Link>
+                </Button>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[
+                  "苦しい感情の原因は心の中にある",
+                  "ミシェルAIの知識は講義動画100本分",
+                  "秘匿性守秘義務完備",
+                  "Togel型診断と連携予定",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3 bg-white/60 p-3 rounded-xl border border-slate-100 shadow-sm">
+                    <CheckCircle2 className="h-5 w-5 text-[#E91E63] flex-shrink-0" />
+                    <span className="text-sm font-bold text-slate-700">{item}</span>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* Right Column: Visual/Card */}
+            <div className="lg:w-1/2 relative mt-8 lg:mt-0">
+              <div className="relative z-10 rounded-3xl bg-white p-8 shadow-2xl shadow-slate-200/50 border border-slate-100">
+                <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                  <span className="text-xs font-bold tracking-[0.3em] text-slate-400 uppercase">MICHELLE AI</span>
+                  <span className="inline-flex items-center rounded-full bg-pink-50 px-3 py-1 text-xs font-bold text-[#E91E63]">
+                    BETA
+                  </span>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 mb-3">
+                      「そのモヤモヤ、<br/>どこから来ていますか？」
+                    </h3>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      ミシェルAIは問いかけと要約を繰り返しながら、心の奥にある“思い込み”を優しくほどいていきます。
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+                    <p className="text-sm font-bold text-[#E91E63] mb-4 flex items-center gap-2">
+                      <span className="block w-1.5 h-4 bg-[#E91E63] rounded-full"></span>
+                      カウンセリングフロー
+                    </p>
+                    <div className="space-y-4">
+                      {[
+                        { step: "01", text: "現在の状況ヒアリング" },
+                        { step: "02", text: "感情の整理整頓" },
+                        { step: "03", text: "意味づけを探る" },
+                        { step: "04", text: "気づきを促すフェーズ" },
+                      ].map((flow) => (
+                        <div key={flow.step} className="flex items-center gap-4">
+                          <span className="text-xs font-black text-slate-300 font-mono">{flow.step}</span>
+                          <span className="text-sm font-bold text-slate-700">{flow.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Decorative elements matching /types/page style */}
+              <div className="absolute -top-10 -right-10 w-64 h-64 bg-[#E91E63]/5 rounded-full blur-3xl -z-10" />
+              <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-10" />
+            </div>
           </div>
-          <div className="absolute -top-8 -right-6 h-32 w-32 rounded-full bg-pink-200/40 blur-3xl" />
-          <div className="absolute -bottom-8 -left-4 h-24 w-24 rounded-full bg-purple-200/30 blur-2xl" />
         </div>
       </section>
 
-      <section id="features" className="mx-auto grid max-w-6xl gap-8 px-6 pb-24 lg:grid-cols-3">
-        {["思考を整える","感情を受け止める","行動につなげる"].map((title, index) => (
-          <div key={title} className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-pink-400">Phase {index + 1}</p>
-            <h2 className="mt-4 text-2xl font-bold text-slate-900">{title}</h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">
-              {index === 0 && "出来事・言葉・事実を丁寧に分解し、混ざった感情を整理します。"}
-              {index === 1 && "感情の根っこにある“思い込み”を仮説として提示し、新しい視点を提案します。"}
-              {index === 2 && "すぐ試せる具体的な行動やセルフワークを提案し、次の一歩をサポートします。"}
-            </p>
+      {/* Comparison Text Section */}
+      <section className="py-16 bg-white border-y border-slate-100">
+        <div className="container px-4 mx-auto max-w-4xl">
+          <div className="bg-slate-50 rounded-3xl p-8 md:p-12 text-center border border-slate-100 shadow-inner">
+            <h2 className="font-heading text-2xl md:text-3xl font-black text-slate-900 mb-8">
+              他のAIとの<span className="text-[#E91E63]">決定的な違い</span>
+            </h2>
+            <div className="space-y-6 text-slate-700 font-medium leading-loose">
+              <p>
+                通常のchatGPTやGeminiなどの大規模自然言語モデルのAIでも
+                占い、心理カウンセリング、愚痴聞きなどを行えますが、
+                それらは全てユーザーに忖度した形で耳障りの良い言葉の羅列です。
+              </p>
+              <p className="text-lg">
+                ミシェル心理学では一般的な心理学やAIとは全く異なる視点で
+                心理学を論理化しています。<br className="hidden md:block"/>
+                お気軽にミシェルに語りかけてみてください。
+              </p>
+            </div>
           </div>
-        ))}
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="py-20 container px-4 mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {[
+            {
+              phase: "Phase 1",
+              title: "思考を整える",
+              desc: "出来事・言葉・事実を丁寧に分解し、混ざった感情を整理します。",
+              icon: "🧠"
+            },
+            {
+              phase: "Phase 2",
+              title: "感情を受け止める",
+              desc: "感情の根っこにある“思い込み”を仮説として提示し、新しい視点を提案します。",
+              icon: "❤️"
+            },
+            {
+              phase: "Phase 3",
+              title: "行動につなげる",
+              desc: "すぐ試せる具体的な行動やセルフワークを提案し、次の一歩をサポートします。",
+              icon: "👣"
+            }
+          ].map((feature) => (
+            <div 
+              key={feature.phase}
+              className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all hover:-translate-y-1 hover:shadow-2xl border border-slate-100"
+            >
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">
+                    {feature.phase}
+                  </span>
+                  <span className="text-2xl">{feature.icon}</span>
+                </div>
+                <h3 className="font-heading text-2xl font-black text-slate-900 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-slate-600 leading-relaxed font-medium">
+                  {feature.desc}
+                </p>
+              </div>
+              <div className="mt-auto h-1.5 w-full bg-gradient-to-r from-slate-100 via-[#E91E63]/20 to-slate-100 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );
