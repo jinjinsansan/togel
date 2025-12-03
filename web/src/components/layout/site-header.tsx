@@ -253,13 +253,6 @@ export const SiteHeader = () => {
                     </Button>
                   )}
                   <Button
-                    variant="outline"
-                    asChild
-                    className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
-                  >
-                    <Link href="/mypage">マイページ</Link>
-                  </Button>
-                  <Button
                     variant="ghost"
                     size="icon"
                     onClick={handleLogout}
