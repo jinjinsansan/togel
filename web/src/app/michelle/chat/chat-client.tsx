@@ -75,6 +75,7 @@ export function MichelleChatClient() {
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
+  const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -104,6 +105,7 @@ export function MichelleChatClient() {
       console.error(err);
     } finally {
       setIsLoading((prev) => ({ ...prev, sessions: false }));
+      setHasInitializedSessions(true);
     }
   }, []);
 
@@ -165,8 +167,17 @@ export function MichelleChatClient() {
   }, [loadSessions]);
 
   useEffect(() => {
-    console.log("[Session Restore] Effect triggered - isMounted:", isMounted, "hasRestored:", hasRestoredSessionRef.current, "sessions.length:", sessions.length);
-    
+    console.log(
+      "[Session Restore] Effect triggered - isMounted:",
+      isMounted,
+      "hasRestored:",
+      hasRestoredSessionRef.current,
+      "sessions.length:",
+      sessions.length,
+      "initialized:",
+      hasInitializedSessions,
+    );
+
     if (!isMounted) {
       console.log("[Session Restore] Skipped - not mounted yet");
       return;
@@ -175,8 +186,14 @@ export function MichelleChatClient() {
       console.log("[Session Restore] Skipped - already restored");
       return;
     }
+    if (!hasInitializedSessions) {
+      console.log("[Session Restore] Skipped - sessions not initialized yet");
+      return;
+    }
     if (sessions.length === 0) {
-      console.log("[Session Restore] Skipped - no sessions loaded yet");
+      console.log("[Session Restore] No sessions available - finishing restore state");
+      hasRestoredSessionRef.current = true;
+      setIsRestoringSession(false);
       return;
     }
 
@@ -204,7 +221,7 @@ export function MichelleChatClient() {
     hasRestoredSessionRef.current = true;
     setIsRestoringSession(false);
     console.log("[Session Restore] Flag set to true, restoration complete");
-  }, [isMounted, sessions]);
+  }, [isMounted, sessions, hasInitializedSessions]);
 
   useEffect(() => {
     if (textareaRef.current) {
