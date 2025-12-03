@@ -140,8 +140,8 @@ export function MichelleChatClient() {
 
   useEffect(() => {
     if (!isMounted) return;
-    if (sessions.length === 0) return;
     if (hasRestoredSessionRef.current) return;
+    if (sessions.length === 0) return;
 
     try {
       const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
@@ -149,12 +149,13 @@ export function MichelleChatClient() {
         const exists = sessions.some((s) => s.id === storedSessionId);
         if (exists) {
           setActiveSessionId(storedSessionId);
-          hasRestoredSessionRef.current = true;
         }
       }
     } catch (error) {
       console.error("Failed to restore session:", error);
     }
+    
+    hasRestoredSessionRef.current = true;
   }, [isMounted, sessions]);
 
   useEffect(() => {
@@ -517,10 +518,9 @@ export function MichelleChatClient() {
 
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1] overscroll-none"
+          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1]"
           style={{ 
-            WebkitOverflowScrolling: "touch",
-            overscrollBehavior: "none"
+            WebkitOverflowScrolling: "touch"
           }}
         >
           {messages.length === 0 ? (
@@ -631,7 +631,7 @@ export function MichelleChatClient() {
               {isLoading.sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
-          <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。重要事項は専門家にご相談ください。</p>
+          <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。</p>
         </div>
       </main>
     </div>
