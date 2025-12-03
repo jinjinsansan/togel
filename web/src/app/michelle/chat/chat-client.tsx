@@ -62,31 +62,24 @@ const thinkingMessages = [
   "寄り添いながら考えています...",
 ];
 
-const getInitialSessionId = (): string | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-};
-
 export function MichelleChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(getInitialSessionId);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState({ sessions: false, messages: false, sending: false });
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLDivElement | null>(null);
   const autoScrollRef = useRef(true);
   const scrollFrameRef = useRef<number>();
-  const hasHydratedSessionRef = useRef(false);
+  const [composerHeight, setComposerHeight] = useState(0);
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -137,26 +130,30 @@ export function MichelleChatClient() {
   );
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     loadSessions();
   }, [loadSessions]);
 
   useEffect(() => {
-    if (hasHydratedSessionRef.current) return;
+    if (!isMounted) return;
     if (sessions.length === 0) return;
-    
-    const storedSessionId = activeSessionId;
-    if (storedSessionId) {
-      const exists = sessions.some((s) => s.id === storedSessionId);
-      if (!exists) {
-        setActiveSessionId(null);
-        if (typeof window !== "undefined") {
-          window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+    if (activeSessionId !== null) return;
+
+    try {
+      const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
+      if (storedSessionId) {
+        const exists = sessions.some((s) => s.id === storedSessionId);
+        if (exists) {
+          setActiveSessionId(storedSessionId);
         }
       }
+    } catch (error) {
+      console.error("Failed to restore session:", error);
     }
-
-    hasHydratedSessionRef.current = true;
-  }, [sessions, activeSessionId]);
+  }, [isMounted, sessions, activeSessionId]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -166,15 +163,35 @@ export function MichelleChatClient() {
   }, [input]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!hasHydratedSessionRef.current) return;
-
-    if (activeSessionId) {
-      window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
-    } else {
-      window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+    if (!isMounted) return;
+    
+    try {
+      if (activeSessionId) {
+        window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
+      } else {
+        window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.error("Failed to save session:", error);
     }
-  }, [activeSessionId]);
+  }, [isMounted, activeSessionId]);
+
+  useEffect(() => {
+    if (!composerRef.current) return;
+
+    const updateHeight = () => {
+      if (composerRef.current) {
+        setComposerHeight(composerRef.current.offsetHeight);
+      }
+    };
+
+    updateHeight();
+
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(composerRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   const scheduleScrollToBottom = useCallback(() => {
     if (!autoScrollRef.current) return;
@@ -387,13 +404,13 @@ export function MichelleChatClient() {
     <div
       className="flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
       style={{
-        minHeight: "calc(100vh - 4rem)",
-        height: "calc(100vh - 4rem)",
+        minHeight: "calc(100dvh - 4rem)",
+        height: "calc(100dvh - 4rem)",
       }}
     >
       <aside
         className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
-        style={{ height: "calc(100vh - 4rem)" }}
+        style={{ height: "calc(100dvh - 4rem)" }}
       >
         <Button
           onClick={handleNewChat}
@@ -473,7 +490,7 @@ export function MichelleChatClient() {
         </div>
       )}
 
-      <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
+      <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
         <header className="flex items-center justify-between border-b border-[#ffdfea] px-4 py-3 text-sm text-[#95506a]">
             <div className="flex items-center gap-2">
               <Button
@@ -525,7 +542,10 @@ export function MichelleChatClient() {
               </div>
             </div>
           ) : (
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-8 pb-32">
+            <div 
+              className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-8"
+              style={{ paddingBottom: `${Math.max(composerHeight + 16, 128)}px` }}
+            >
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -567,7 +587,13 @@ export function MichelleChatClient() {
           )}
         </div>
 
-        <div className="sticky bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
+        <div 
+          ref={composerRef}
+          className="absolute bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 z-10"
+          style={{ 
+            paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)"
+          }}
+        >
           {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
           <form
             onSubmit={(event) => {
