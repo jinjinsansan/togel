@@ -1,3 +1,5 @@
+import { Resend } from "resend";
+
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type EmailPayload = {
@@ -7,48 +9,34 @@ type EmailPayload = {
   html?: string;
 };
 
+const resendApiKey = process.env.RESEND_API_KEY;
+const resendFrom = process.env.RESEND_FROM_EMAIL || "Togel <noreply@to-gel.com>";
+const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
+
 /**
- * Sends an email via Mailgun (or logs it if API key is missing).
- * This function is designed to be called simultaneously with DB notifications.
+ * Sends an email via Resend (or logs it if API key is missing).
  */
 export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
-  const mailgunKey = process.env.MAILGUN_API_KEY;
-  const mailgunDomain = process.env.MAILGUN_DOMAIN;
-
-  // Mock sending if no API key (Development/Preview)
-  if (!mailgunKey || !mailgunDomain) {
+  if (!resendClient) {
     console.log("📧 [Mock Email Sender] Would send email:", {
       to: payload.to,
       subject: payload.subject,
-      contentPreview: payload.text.substring(0, 50) + "...",
+      contentPreview: payload.text.substring(0, 80) + (payload.text.length > 80 ? "..." : ""),
     });
     return true;
   }
 
   try {
-    const formData = new FormData();
-    formData.append("from", `Togel <noreply@${mailgunDomain}>`);
-    formData.append("to", payload.to);
-    formData.append("subject", payload.subject);
-    formData.append("text", payload.text);
-    if (payload.html) formData.append("html", payload.html);
+    const { error } = await resendClient.emails.send({
+      from: resendFrom,
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.text,
+      html: payload.html,
+    });
 
-    const auth = Buffer.from(`api:${mailgunKey}`).toString("base64");
-
-    const response = await fetch(
-      `https://api.mailgun.net/v3/${mailgunDomain}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${auth}`,
-        },
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error("Failed to send email via Mailgun:", error);
+    if (error) {
+      console.error("Failed to send email via Resend:", error);
       return false;
     }
 
