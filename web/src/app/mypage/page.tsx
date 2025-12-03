@@ -781,36 +781,23 @@ export default function MyPage() {
             )}
           </div>
 
-          {/* 2. ポイント購入 (準備中) */}
-          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-sm overflow-hidden">
-            <div className="absolute top-3 right-3 bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-200">
-              COMING SOON
-            </div>
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4 opacity-50">
-              <div className="p-2 rounded-xl bg-yellow-50 text-yellow-600">
-                <Coins size={20} />
+          <div className="md:col-span-2 rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-yellow-100 text-yellow-700">
+                <Coins size={24} />
               </div>
-              <h2 className="font-bold text-lg text-slate-800">ポイント購入</h2>
-            </div>
-            <div className="text-center py-8 opacity-50">
-              <p className="text-sm text-slate-400">現在準備中です</p>
-            </div>
-          </div>
-
-          {/* 3. ポイント履歴 (準備中) */}
-          <div className="relative rounded-3xl border border-slate-100 bg-white p-6 shadow-sm overflow-hidden">
-            <div className="absolute top-3 right-3 bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full border border-slate-200">
-              COMING SOON
-            </div>
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4 opacity-50">
-              <div className="p-2 rounded-xl bg-orange-50 text-orange-600">
-                <History size={20} />
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Point Wallet</p>
+                <h2 className="text-xl font-bold text-slate-900">ポイントの購入・履歴はこちら</h2>
+                <p className="text-sm text-slate-500 mt-1">専用ページで残高確認から決済まで完結できます。</p>
               </div>
-              <h2 className="font-bold text-lg text-slate-800">ポイント履歴</h2>
             </div>
-            <div className="text-center py-8 opacity-50">
-              <p className="text-sm text-slate-400">現在準備中です</p>
-            </div>
+            <Button asChild className="gap-2 shrink-0">
+              <Link href="/points">
+                ポイント管理ページへ
+                <History size={18} />
+              </Link>
+            </Button>
           </div>
 
         </div>

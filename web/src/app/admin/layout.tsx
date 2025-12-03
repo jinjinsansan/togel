@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bell, Star, LogOut, Menu, X, Home, Gift, Boxes } from "lucide-react";
+import { LayoutDashboard, Bell, Star, LogOut, Menu, X, Home, Gift, Boxes, Coins } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -50,6 +50,11 @@ export default function AdminLayout({
       href: "/admin/recommendations",
       label: "レコメンデーション",
       icon: Gift,
+    },
+    {
+      href: "/admin/points",
+      label: "ポイント管理",
+      icon: Coins,
     },
   ];
 
