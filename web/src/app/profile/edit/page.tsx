@@ -255,11 +255,11 @@ export default function ProfileEditPage() {
       <div className="container max-w-4xl mx-auto px-3 md:px-4 mt-6 md:-mt-8 relative z-10 space-y-6 md:space-y-8">
         
         {/* Avatar & Public Status Grid */}
-        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+        <div className="flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-6">
           
           {/* Left Col: Avatar */}
           <div className="md:col-span-1">
-            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-4 md:p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow overflow-hidden">
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 shadow-inner">
                   {avatarUrl ? (
@@ -283,14 +283,14 @@ export default function ProfileEditPage() {
 
           {/* Right Col: Public Toggle & URL */}
           <div className="md:col-span-2">
-            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-8 shadow-sm">
+            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-4 md:p-8 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="font-heading text-lg font-black text-slate-900 flex items-center gap-2">
-                    {isPublic ? <Eye className="text-[#E91E63]" size={20} /> : <EyeOff className="text-slate-400" size={20} />}
+                <div className="min-w-0 flex-1 mr-2">
+                  <h3 className="font-heading text-lg font-black text-slate-900 flex items-center gap-2 whitespace-nowrap">
+                    {isPublic ? <Eye className="text-[#E91E63] shrink-0" size={20} /> : <EyeOff className="text-slate-400 shrink-0" size={20} />}
                     公開設定
                   </h3>
-                  <p className="text-sm text-slate-500 font-medium mt-1">
+                  <p className="text-sm text-slate-500 font-medium mt-1 truncate">
                     {isPublic ? "プロフィールは公開されています" : "プロフィールは非公開です"}
                   </p>
                 </div>
@@ -298,14 +298,14 @@ export default function ProfileEditPage() {
               </div>
 
               {isPublic && (
-                <div className="bg-slate-50 rounded-xl md:rounded-2xl p-4 border border-slate-200">
+                <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-200 max-w-full">
                   <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Your Public URL</p>
-                  <div className="flex gap-2">
-                    <code className="flex-1 min-w-0 bg-white border border-slate-200 rounded-xl px-3 py-3 text-xs md:text-sm font-mono text-slate-600 truncate">
+                  <div className="flex gap-2 items-center max-w-full">
+                    <div className="flex-1 min-w-0 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs md:text-sm font-mono text-slate-600 truncate">
                       {`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${user?.id}`}
-                    </code>
-                    <Button onClick={copyPublicLink} className={`shrink-0 rounded-xl font-bold ${copied ? "bg-green-500 hover:bg-green-600 text-white" : "bg-slate-900 text-white hover:bg-slate-800"}`}>
-                      {copied ? <Check size={18} /> : <Copy size={18} />}
+                    </div>
+                    <Button onClick={copyPublicLink} size="icon" className={`shrink-0 h-9 w-9 rounded-xl font-bold ${copied ? "bg-green-500" : "bg-slate-900"}`}>
+                      {copied ? <Check size={16} /> : <Copy size={16} />}
                     </Button>
                   </div>
                 </div>
