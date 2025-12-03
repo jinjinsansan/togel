@@ -10,7 +10,7 @@ import { User } from "@supabase/supabase-js";
 
 import { LoginButton } from "@/components/auth/login-button";
 import { Button } from "@/components/ui/button";
-import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
+import { MICHELLE_AI_ENABLED, MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
 
 const baseNavItems = [
   { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
@@ -24,6 +24,9 @@ const navItems = [
   ...baseNavItems,
   ...(MICHELLE_AI_ENABLED
     ? [{ href: "/michelle", label: "ミシェル心理学", en: "Michelle" }]
+    : []),
+  ...(MICHELLE_ATTRACTION_AI_ENABLED
+    ? [{ href: "/michelle/attraction", label: "ミシェル引き寄せ", en: "Michelle Attraction" }]
     : []),
   { href: "/points", label: "ポイント", en: "Points" },
   { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ", en: "Contact" },

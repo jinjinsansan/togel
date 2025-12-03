@@ -46,23 +46,23 @@ type StreamPayload = {
   knowledge?: SSEKnowledge[];
 };
 
-const ACTIVE_SESSION_STORAGE_KEY = "michelle-active-session-id";
+const ACTIVE_SESSION_STORAGE_KEY = "michelle-attraction-active-session-id";
 
 const initialPrompts = [
-  "会社の上司に怒られた...",
-  "最近なんだか寂しい",
-  "将来が不安で眠れない",
-  "自分が何をしたいか分からない",
+  "理想の収入を引き寄せるヒントは？",
+  "魂レベルで望む出会いを叶えたい",
+  "波動を整えて不安を手放したい",
+  "叶えたい夢を具体化してみたい",
 ];
 
 const thinkingMessages = [
-  "心の声を聞いています...",
-  "感情を整理しています...",
-  "思考を整えています...",
-  "寄り添いながら考えています...",
+  "波動を整えています...",
+  "宇宙のサインを整理しています...",
+  "意図と行動を結びつけています...",
+  "叶うイメージを磨いています...",
 ];
 
-export function MichelleChatClient() {
+export function MichelleAttractionChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -94,7 +94,7 @@ export function MichelleChatClient() {
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
     try {
-      const res = await fetch("/api/michelle/sessions");
+      const res = await fetch("/api/michelle-attraction/sessions");
       if (res.status === 401) {
         setNeedsAuth(true);
         return;
@@ -115,7 +115,7 @@ export function MichelleChatClient() {
       console.log("[loadMessages] Starting to load messages for session:", sessionId);
       setIsLoading((prev) => ({ ...prev, messages: true }));
       try {
-        const res = await fetch(`/api/michelle/sessions/${sessionId}/messages`);
+        const res = await fetch(`/api/michelle-attraction/sessions/${sessionId}/messages`);
         console.log("[loadMessages] Response status:", res.status);
         
         if (res.status === 401) {
@@ -388,7 +388,7 @@ export function MichelleChatClient() {
     setIsLoading((prev) => ({ ...prev, sending: true }));
 
     try {
-      const res = await fetch("/api/michelle/chat", {
+      const res = await fetch("/api/michelle-attraction/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: text }),
@@ -494,7 +494,7 @@ export function MichelleChatClient() {
     const wasActive = activeSessionId === sessionId;
     
     try {
-      const res = await fetch(`/api/michelle/sessions/${sessionId}`, { method: "DELETE" });
+      const res = await fetch(`/api/michelle-attraction/sessions/${sessionId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete session");
       
       console.log("[Delete] Session deleted:", sessionId);
@@ -518,7 +518,7 @@ export function MichelleChatClient() {
   const handleShare = async () => {
     if (!messages.length) return;
     const text = messages
-      .map((m) => `${m.role === "user" ? "あなた" : "ミシェル"}: ${m.content}`)
+      .map((m) => `${m.role === "user" ? "あなた" : "ミシェル引き寄せ"}: ${m.content}`)
       .join("\n\n");
     
     try {
@@ -551,10 +551,10 @@ export function MichelleChatClient() {
 
   if (needsAuth) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff2f6] to-[#ffe4ef]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#e0f2fe] to-[#cfe9ff]">
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
-          <p className="text-lg font-semibold text-[#a1315d]">ログインが必要です</p>
-          <p className="mt-4 text-sm text-[#8b5269]">ミシェルAIをご利用いただくにはログインしてください。</p>
+          <p className="text-lg font-semibold text-[#0f4c81]">ログインが必要です</p>
+          <p className="mt-4 text-sm text-[#1f5c82]">ミシェル引き寄せAIをご利用いただくにはログインしてください。</p>
         </div>
       </div>
     );
@@ -567,9 +567,9 @@ export function MichelleChatClient() {
 
   if (showGlobalLoader) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef]">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#dbeafe]">
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#ff6ba6]" />
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#38bdf8]" />
         </div>
       </div>
     );
@@ -577,7 +577,7 @@ export function MichelleChatClient() {
 
   return (
     <div
-      className="flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
+      className="flex w-full flex-1 items-stretch bg-gradient-to-br from-[#f0f9ff] via-[#e0f2fe] to-[#dbeafe] text-[#0f2f4d]"
       style={{
         minHeight: "calc(100vh - 4rem)",
         height: "calc(100vh - 4rem)",
@@ -585,17 +585,17 @@ export function MichelleChatClient() {
       }}
     >
       <aside
-        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
+        className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#cfe8ff] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
         style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
           onClick={handleNewChat}
           disabled={isLoading.sending}
-          className="mb-6 w-full justify-start gap-2 rounded-2xl border border-[#ffd7e8] bg-[#fff5f8] text-[#a1315d] shadow-sm hover:bg-white"
+          className="mb-6 w-full justify-start gap-2 rounded-2xl border border-[#cfe8ff] bg-[#f7fbff] text-[#0f4c81] shadow-sm hover:bg-white"
         >
           <Plus className="h-4 w-4" /> 新しいチャット
         </Button>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#d48ca9]">チャット</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">チャット</p>
         <div className="flex-1 overflow-y-auto">
           {sessions.map((session) => (
             <button
@@ -607,8 +607,8 @@ export function MichelleChatClient() {
               className={cn(
                 "group flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all mb-2",
                 session.id === activeSessionId
-                  ? "border-[#ffc2d8] bg-[#fff0f6] text-[#a63c68]"
-                  : "border-transparent bg-transparent text-[#7a4f63] hover:border-[#ffe1ed] hover:bg-[#fff7fb]",
+                  ? "border-[#b7e0ff] bg-[#edf7ff] text-[#0c4a6e]"
+                  : "border-transparent bg-transparent text-[#35648a] hover:border-[#cfe9ff] hover:bg-[#f8fbff]",
               )}
             >
               <div className="flex min-w-0 items-center gap-2">
@@ -618,14 +618,14 @@ export function MichelleChatClient() {
               <button
                 type="button"
                 onClick={(event) => handleDeleteSession(session.id, event)}
-                className="rounded-full p-1 text-[#cfa0b3] opacity-0 transition group-hover:opacity-100 hover:bg-white"
+                className="rounded-full p-1 text-[#7bb8dd] opacity-0 transition group-hover:opacity-100 hover:bg-white"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </button>
           ))}
           {sessions.length === 0 && !isLoading.sessions && (
-            <p className="text-center text-xs text-[#c08ca3]">まだチャット履歴がありません。</p>
+            <p className="text-center text-xs text-[#6a9cc4]">まだチャット履歴がありません。</p>
           )}
         </div>
         {/* user info removed */}
@@ -634,9 +634,9 @@ export function MichelleChatClient() {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/30" onClick={() => setIsSidebarOpen(false)} />
-          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#ffdbe8] bg-white/95 px-4 py-6 shadow-xl">
+          <div className="relative ml-auto flex h-full w-[80%] max-w-[300px] flex-col border-l border-[#d3ecff] bg-white/95 px-4 py-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-semibold text-[#a1315d]">履歴</span>
+              <span className="text-sm font-semibold text-[#0f4c81]">履歴</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
@@ -647,11 +647,11 @@ export function MichelleChatClient() {
                 setIsSidebarOpen(false);
               }}
               disabled={isLoading.sending}
-              className="mb-4 gap-2 rounded-2xl border border-[#ffd7e8] bg-[#fff5f8] text-[#a1315d] hover:bg-white"
+              className="mb-4 gap-2 rounded-2xl border border-[#cfe8ff] bg-[#f7fbff] text-[#0f4c81] hover:bg-white"
             >
               <Plus className="h-4 w-4" /> 新しいチャット
             </Button>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#d48ca9]">チャット</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">チャット</p>
             <div className="flex-1 overflow-y-auto">
               {sessions.map((session) => (
                 <button
@@ -664,8 +664,8 @@ export function MichelleChatClient() {
                   className={cn(
                     "group flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all mb-2",
                     session.id === activeSessionId
-                      ? "border-[#ffc2d8] bg-[#fff0f6] text-[#a63c68]"
-                      : "border-transparent bg-transparent text-[#7a4f63] hover:border-[#ffe1ed] hover:bg-[#fff7fb]"
+                      ? "border-[#b7e0ff] bg-[#edf7ff] text-[#0c4a6e]"
+                      : "border-transparent bg-transparent text-[#35648a] hover:border-[#cfe9ff] hover:bg-[#f8fbff]"
                   )}
                 >
                   <div className="flex min-w-0 items-center gap-2">
@@ -675,14 +675,14 @@ export function MichelleChatClient() {
                   <button
                     type="button"
                     onClick={(event) => handleDeleteSession(session.id, event)}
-                    className="rounded-full p-1 text-[#cfa0b3] transition hover:bg-white"
+                    className="rounded-full p-1 text-[#7bb8dd] transition hover:bg-white"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </button>
               ))}
               {sessions.length === 0 && !isLoading.sessions && (
-                <p className="text-center text-xs text-[#c08ca3]">まだチャット履歴がありません。</p>
+                <p className="text-center text-xs text-[#6a9cc4]">まだチャット履歴がありません。</p>
               )}
             </div>
           </div>
@@ -690,21 +690,21 @@ export function MichelleChatClient() {
       )}
 
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
-        <header className="flex items-center justify-between border-b border-[#ffdfea] px-4 py-3 text-sm text-[#95506a]">
+        <header className="flex items-center justify-between border-b border-[#d8efff] px-4 py-3 text-sm text-[#1f5c82]">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full border border-[#ffd7e8] bg-white text-[#ff6ba6] hover:bg-[#fff4f7] md:hidden"
+                className="rounded-full border border-[#cfe8ff] bg-white text-[#38bdf8] hover:bg-[#f1f9ff] md:hidden"
                 onClick={() => setIsSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
-            <span className="font-semibold text-[#a1315d]">{activeSession?.title || "ミシェルAI"}</span>
-            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#9aa4c2]" />}
+            <span className="font-semibold text-[#0f4c81]">{activeSession?.title || "ミシェル引き寄せAI"}</span>
+            {isLoading.messages && messages.length === 0 && <Loader2 className="h-4 w-4 animate-spin text-[#7fb3dd]" />}
           </div>
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="text-[#b1637d]" onClick={handleShare}>
+            <Button variant="ghost" size="sm" className="text-[#2c769f]" onClick={handleShare}>
               <Share2 className="mr-2 h-4 w-4" /> 共有
             </Button>
           )}
@@ -712,19 +712,19 @@ export function MichelleChatClient() {
 
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1]"
+          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#e6f4ff] to-[#e5f0ff]"
           style={{ 
             WebkitOverflowScrolling: "touch"
           }}
         >
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
-              <MichelleAvatar size="lg" variant="rose" />
+              <MichelleAvatar size="lg" variant="aqua" />
               <div className="space-y-2">
-                <h2 className="text-2xl font-semibold text-[#a1315d]">こんにちは、ミシェルです</h2>
-                <p className="text-sm text-[#8b5269]">
-                  心のモヤモヤ、誰にも言えない悩み、なんでも話してください。<br />
-                  私はあなたの鏡となって、一緒に答えを探します。
+                <h2 className="text-2xl font-semibold text-[#0f4c81]">こんにちは、ミシェル引き寄せです</h2>
+                <p className="text-sm text-[#1f5c82]">
+                  叶えたい未来・受け取りたい現実を遠慮なく教えてください。<br />
+                  願望の言語化から波動を整えるセルフワークまで一緒にデザインします。
                 </p>
               </div>
               <div className="grid w-full max-w-2xl gap-3 px-6 md:grid-cols-2">
@@ -732,7 +732,7 @@ export function MichelleChatClient() {
                   <button
                     key={prompt}
                     disabled={isLoading.sending || messages.some((msg) => msg.pending)}
-                    className="rounded-2xl border border-[#ffd7e8] bg-white px-4 py-3 text-sm text-[#7a4f63] shadow-sm transition hover:-translate-y-0.5 hover:border-[#ffc8de] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-2xl border border-[#cfe8ff] bg-white px-4 py-3 text-sm text-[#35648a] shadow-sm transition hover:-translate-y-0.5 hover:border-[#cfe9ff] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       setInput(prompt);
                       // モバイルでは自動フォーカスしない
@@ -756,21 +756,21 @@ export function MichelleChatClient() {
                   key={message.id}
                   className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
                 >
-                  {message.role === "assistant" && <MichelleAvatar size="sm" variant="rose" className="mt-1" />}
+                  {message.role === "assistant" && <MichelleAvatar size="sm" variant="aqua" className="mt-1" />}
                   <div
                     className={cn(
                       "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
                       message.role === "user"
-                        ? "rounded-tr-sm bg-gradient-to-r from-[#ff77b3] via-[#ff94c3] to-[#ffb8d6] text-white"
-                        : "rounded-tl-sm border border-[#e4e9fb] bg-white text-[#4c5368]",
+                        ? "rounded-tr-sm bg-gradient-to-r from-[#2f8fe0] via-[#4fb6ff] to-[#8fd8ff] text-white"
+                        : "rounded-tl-sm border border-[#d4e4ff] bg-white text-[#15395c]",
                     )}
                   >
                     {message.pending && !message.content ? (
-                      <div className="flex items-center gap-2 text-xs text-[#6f7ba5]">
+                      <div className="flex items-center gap-2 text-xs text-[#3a7fb3]">
                         <span className="inline-flex gap-1">
-                          <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" />
-                          <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" style={{ animationDelay: "300ms" }} />
+                          <span className="h-2 w-2 rounded-full bg-[#0ea5e9] animate-bounce" />
+                          <span className="h-2 w-2 rounded-full bg-[#0ea5e9] animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="h-2 w-2 rounded-full bg-[#0ea5e9] animate-bounce" style={{ animationDelay: "300ms" }} />
                         </span>
                         {thinkingMessages[currentThinkingIndex]}
                       </div>
@@ -780,7 +780,7 @@ export function MichelleChatClient() {
                     {message.pending && message.content && <span className="ml-1 inline-block h-4 w-1.5 animate-pulse bg-current" />}
                   </div>
                   {message.role === "user" && (
-                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffd7e8] bg-white text-[#b1637d]">
+                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#cfe8ff] bg-white text-[#2c769f]">
                       <User className="h-4 w-4" />
                     </div>
                   )}
@@ -794,7 +794,7 @@ export function MichelleChatClient() {
 
         <div 
           ref={composerRef}
-          className="sticky bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 z-50"
+          className="sticky bottom-0 left-0 right-0 border-t border-[#d3ecff] bg-white/95 px-4 pt-2 z-50"
           style={{ 
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)"
           }}
@@ -816,7 +816,7 @@ export function MichelleChatClient() {
               event.preventDefault();
               handleSendMessage();
             }}
-            className="mx-auto flex max-w-3xl items-center gap-3 rounded-3xl border border-[#ffd7e8] bg-white px-4 py-3 shadow-sm"
+            className="mx-auto flex max-w-3xl items-center gap-3 rounded-3xl border border-[#cfe8ff] bg-white px-4 py-3 shadow-sm"
           >
             <textarea
               ref={textareaRef}
@@ -831,25 +831,25 @@ export function MichelleChatClient() {
                   }, 300);
                 }
               }}
-              placeholder="ミシェルに話しかける..."
+              placeholder="ミシェル引き寄せに話しかける..."
               enterKeyHint="send"
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
               disabled={isLoading.sending || messages.some((msg) => msg.pending)}
-              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none disabled:opacity-60 md:text-sm"
+              className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#0f2f4d] placeholder:text-[#6a9fc2] focus:outline-none disabled:opacity-60 md:text-sm"
               rows={1}
             />
             <Button
               type="submit"
               size="icon"
               disabled={!input.trim() || isLoading.sending || messages.some((msg) => msg.pending)}
-              className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#ff6ba6] to-[#ff8ac0] text-white shadow-lg hover:brightness-105 disabled:opacity-50"
+              className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#38bdf8] to-[#4cc9ff] text-white shadow-lg hover:brightness-105 disabled:opacity-50"
             >
               {isLoading.sending || messages.some((msg) => msg.pending) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
-          <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。</p>
+          <p className="mt-2 text-center text-[10px] text-[#6fb2d4]">ミシェル引き寄せAIは誤った情報を生成する場合があります。</p>
         </div>
       </main>
     </div>

@@ -5,3 +5,7 @@ const envToBoolean = (value: string | undefined, defaultValue: boolean) => {
 
 export const RECOMMENDATIONS_ENABLED = envToBoolean(process.env.NEXT_PUBLIC_RECOMMENDATIONS_ENABLED, true);
 export const MICHELLE_AI_ENABLED = envToBoolean(process.env.NEXT_PUBLIC_MICHELLE_AI_ENABLED, false);
+export const MICHELLE_ATTRACTION_AI_ENABLED = envToBoolean(
+  process.env.NEXT_PUBLIC_MICHELLE_ATTRACTION_AI_ENABLED,
+  false,
+);

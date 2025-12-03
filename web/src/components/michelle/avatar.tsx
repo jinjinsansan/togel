@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 type MichelleAvatarProps = {
   size?: "sm" | "md" | "lg";
+  variant?: "rose" | "aqua";
   className?: string;
 };
 
@@ -14,11 +15,17 @@ const sizeClasses = {
   lg: "h-[110px] w-[110px]",
 } as const;
 
-export const MichelleAvatar = ({ size = "md", className = "" }: MichelleAvatarProps) => {
+const variantClasses = {
+  rose: "border-white/60 bg-[#ffeef4]",
+  aqua: "border-white/70 bg-[#e0f4ff]",
+} as const;
+
+export const MichelleAvatar = ({ size = "md", variant = "rose", className = "" }: MichelleAvatarProps) => {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-full border border-white/60 bg-[#ffeef4] shadow-lg",
+        "overflow-hidden rounded-full shadow-lg",
+        variantClasses[variant],
         sizeClasses[size],
         className,
       )}
