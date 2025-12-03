@@ -13,6 +13,8 @@ const resendApiKey = process.env.RESEND_API_KEY;
 const resendFrom = process.env.RESEND_FROM_EMAIL || "Togel <noreply@to-gel.com>";
 const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
 
+const PAGE_SIZE = 200;
+
 /**
  * Sends an email via Resend (or logs it if API key is missing).
  */
@@ -45,6 +47,37 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
     console.error("Email sending error:", error);
     return false;
   }
+};
+
+const fetchAllUserEmails = async (): Promise<string[]> => {
+  const supabase = createSupabaseAdminClient();
+  const emails: string[] = [];
+  let page = 1;
+  let shouldContinue = true;
+
+  while (shouldContinue) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: PAGE_SIZE });
+
+    if (error) {
+      console.error("Failed to list users for email broadcast:", error);
+      break;
+    }
+
+    const pageUsers = data?.users ?? [];
+    pageUsers.forEach((user) => {
+      if (user.email) {
+        emails.push(user.email);
+      }
+    });
+
+    if (!pageUsers.length || pageUsers.length < PAGE_SIZE) {
+      shouldContinue = false;
+    } else {
+      page += 1;
+    }
+  }
+
+  return emails;
 };
 
 /**
@@ -83,38 +116,47 @@ export const broadcastNotification = async (
   // due to timeout risks. Real-world would use a queue. 
   // For this implementation, we handle single target or specific email.
   
-  let emailSuccess = false;
+  const sentEmails: string[] = [];
+  const failedEmails: { to: string; reason: unknown }[] = [];
 
-  if (params.targetEmail) {
-    // Direct email
-    emailSuccess = await sendEmail({
-      to: params.targetEmail,
+  const sendWithTracking = async (to: string) => {
+    const success = await sendEmail({
+      to,
       subject: params.title,
       text: params.content,
     });
+    if (success) {
+      sentEmails.push(to);
+    } else {
+      failedEmails.push({ to, reason: "sendEmail returned false" });
+    }
+  };
+
+  if (params.targetEmail) {
+    await sendWithTracking(params.targetEmail);
   } else if (params.targetUserId) {
-    // Fetch email from user ID (auth table or public users table if email stored there)
-    // Since we can't easily access auth.users emails from here without admin privilege on auth schema,
-    // we assume we might have it or need to fetch it.
-    // For now, we'll log that we need the email.
-    // ideally: const { data: user } = await supabase.auth.admin.getUserById(params.targetUserId);
-    // But supabase-js admin client has auth.admin methods.
-    
-    const { data: { user } } = await supabase.auth.admin.getUserById(params.targetUserId);
-    
-    if (user?.email) {
-      emailSuccess = await sendEmail({
-        to: user.email,
-        subject: params.title,
-        text: params.content,
-      });
+    const { data, error: userError } = await supabase.auth.admin.getUserById(params.targetUserId);
+    if (userError) {
+      console.error("Failed to fetch user for notification email:", userError);
+    } else if (data?.user?.email) {
+      await sendWithTracking(data.user.email);
     } else {
       console.warn("Could not find email for user:", params.targetUserId);
     }
   } else {
-    console.warn("Skipping email for global broadcast to prevent timeout (Needs Batch Job)");
-    // In a real scenario, we would trigger a background function here.
+    const allEmails = await fetchAllUserEmails();
+    for (const email of allEmails) {
+      // Avoid overwhelming Resend in tiny burst; sequential send is safer for now.
+      await sendWithTracking(email);
+    }
   }
 
-  return { success: true, notification, emailSent: emailSuccess };
+  return {
+    success: true,
+    notification,
+    emailDelivery: {
+      sent: sentEmails.length,
+      failed: failedEmails,
+    },
+  };
 };
