@@ -340,9 +340,6 @@ export default function Home() {
               </Link>
             </Button>
           </div>
-          <p className="text-sm text-gray-600">
-            ※ 完全無料・登録不要
-          </p>
         </div>
       </section>
 
