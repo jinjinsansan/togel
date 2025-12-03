@@ -80,6 +80,7 @@ export function MichelleChatClient() {
   const autoScrollRef = useRef(true);
   const scrollFrameRef = useRef<number>();
   const [composerHeight, setComposerHeight] = useState(0);
+  const hasRestoredSessionRef = useRef(false);
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -140,19 +141,21 @@ export function MichelleChatClient() {
   useEffect(() => {
     if (!isMounted) return;
     if (sessions.length === 0) return;
+    if (hasRestoredSessionRef.current) return;
 
     try {
       const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
       if (storedSessionId) {
         const exists = sessions.some((s) => s.id === storedSessionId);
-        if (exists && activeSessionId !== storedSessionId) {
+        if (exists) {
           setActiveSessionId(storedSessionId);
+          hasRestoredSessionRef.current = true;
         }
       }
     } catch (error) {
       console.error("Failed to restore session:", error);
     }
-  }, [isMounted, sessions, activeSessionId]);
+  }, [isMounted, sessions]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -229,8 +232,9 @@ export function MichelleChatClient() {
   }, [activeSessionId, isLoading.sending, loadMessages]);
 
   useLayoutEffect(() => {
+    if (messages.length === 0) return;
     scheduleScrollToBottom();
-  }, [messages, scheduleScrollToBottom]);
+  }, [messages.length, scheduleScrollToBottom]);
 
   useEffect(() => {
     if (!messages.some((msg) => msg.pending)) return;
@@ -244,6 +248,7 @@ export function MichelleChatClient() {
     setActiveSessionId(null);
     setMessages([]);
     setError(null);
+    hasRestoredSessionRef.current = false;
     textareaRef.current?.focus();
   };
 
@@ -512,8 +517,11 @@ export function MichelleChatClient() {
 
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1] overscroll-contain"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#fff3f7] to-[#ffe8f1] overscroll-none"
+          style={{ 
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "none"
+          }}
         >
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
