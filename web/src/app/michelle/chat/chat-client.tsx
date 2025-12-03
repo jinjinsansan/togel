@@ -212,16 +212,24 @@ export function MichelleChatClient() {
   }, [input]);
 
   useEffect(() => {
-    if (!isMounted) return;
+    console.log("[Save Session] Effect triggered - isMounted:", isMounted, "activeSessionId:", activeSessionId);
+    
+    if (!isMounted) {
+      console.log("[Save Session] Skipped - not mounted yet");
+      return;
+    }
     
     try {
       if (activeSessionId) {
+        console.log("[Save Session] Saving to localStorage:", activeSessionId);
         window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
+        console.log("[Save Session] Saved successfully");
       } else {
+        console.log("[Save Session] Removing from localStorage (activeSessionId is null)");
         window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
       }
     } catch (error) {
-      console.error("Failed to save session:", error);
+      console.error("[Save Session] Failed to save session:", error);
     }
   }, [isMounted, activeSessionId]);
 
@@ -480,7 +488,10 @@ export function MichelleChatClient() {
           {sessions.map((session) => (
             <button
               key={session.id}
-              onClick={() => setActiveSessionId(session.id)}
+              onClick={() => {
+                console.log("[User Action] Clicked on session:", session.id);
+                setActiveSessionId(session.id);
+              }}
               className={cn(
                 "group flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition-all",
                 session.id === activeSessionId
