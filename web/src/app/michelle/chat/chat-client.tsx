@@ -76,6 +76,7 @@ export function MichelleChatClient() {
   const [isMobile, setIsMobile] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
+  const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -120,11 +121,13 @@ export function MichelleChatClient() {
         if (res.status === 401) {
           console.log("[loadMessages] Unauthorized - setting needsAuth");
           setNeedsAuth(true);
+          setHasLoadedMessages(true);
           return;
         }
         if (res.status === 404) {
           console.log("[loadMessages] Session not found - clearing activeSessionId");
           setActiveSessionId(null);
+           setHasLoadedMessages(true);
           return;
         }
         if (!res.ok) throw new Error("Failed to load messages");
@@ -137,6 +140,7 @@ export function MichelleChatClient() {
         });
         
         setMessages(data.messages ?? []);
+        setHasLoadedMessages(true);
         console.log("[loadMessages] Messages state updated with", data.messages?.length ?? 0, "messages");
       } catch (err) {
         console.error("[loadMessages] Error loading messages:", err);
@@ -298,15 +302,17 @@ export function MichelleChatClient() {
 
   useEffect(() => {
     if (isLoading.sending) return;
-    
+
     console.log("[Load Messages] activeSessionId:", activeSessionId);
-    
+
     if (activeSessionId) {
+      setHasLoadedMessages(false);
       console.log("[Load Messages] Loading messages for:", activeSessionId);
       loadMessages(activeSessionId);
     } else {
       console.log("[Load Messages] Clearing messages (no active session)");
       setMessages([]);
+      setHasLoadedMessages(true);
     }
   }, [activeSessionId, isLoading.sending, loadMessages]);
 
@@ -328,6 +334,7 @@ export function MichelleChatClient() {
     setActiveSessionId(null);
     setMessages([]);
     setError(null);
+    setHasLoadedMessages(true);
     hasRestoredSessionRef.current = false;
     
     // 新しいチャットの場合のみlocalStorageを削除
@@ -493,8 +500,12 @@ export function MichelleChatClient() {
     );
   }
 
-  // セッション復元中、またはマウント前、またはメッセージ読み込み中はローディング表示
-  if (!isMounted || isRestoringSession || (activeSessionId && isLoading.messages)) {
+  const showGlobalLoader =
+    !isMounted ||
+    isRestoringSession ||
+    (!hasLoadedMessages && (isLoading.messages || (isLoading.sessions && sessions.length === 0)));
+
+  if (showGlobalLoader) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef]">
         <div className="text-center">
