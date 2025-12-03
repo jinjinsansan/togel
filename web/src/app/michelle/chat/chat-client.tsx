@@ -140,13 +140,12 @@ export function MichelleChatClient() {
   useEffect(() => {
     if (!isMounted) return;
     if (sessions.length === 0) return;
-    if (activeSessionId !== null) return;
 
     try {
       const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
       if (storedSessionId) {
         const exists = sessions.some((s) => s.id === storedSessionId);
-        if (exists) {
+        if (exists && activeSessionId !== storedSessionId) {
           setActiveSessionId(storedSessionId);
         }
       }
@@ -404,13 +403,13 @@ export function MichelleChatClient() {
     <div
       className="flex w-full flex-1 items-stretch bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef] text-[#2b152c]"
       style={{
-        minHeight: "calc(100dvh - 4rem)",
-        height: "calc(100dvh - 4rem)",
+        minHeight: "calc(100vh - 4rem)",
+        height: "calc(100vh - 4rem)",
       }}
     >
       <aside
         className="hidden w-[260px] min-w-[260px] flex-col border-r border-[#ffd7e8] bg-white/90 px-4 py-6 shadow-sm md:flex md:sticky md:top-16 md:self-start md:overflow-y-auto"
-        style={{ height: "calc(100dvh - 4rem)" }}
+        style={{ height: "calc(100vh - 4rem)" }}
       >
         <Button
           onClick={handleNewChat}
@@ -490,7 +489,7 @@ export function MichelleChatClient() {
         </div>
       )}
 
-      <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
+      <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-white/75 touch-auto overscroll-none">
         <header className="flex items-center justify-between border-b border-[#ffdfea] px-4 py-3 text-sm text-[#95506a]">
             <div className="flex items-center gap-2">
               <Button
@@ -589,7 +588,7 @@ export function MichelleChatClient() {
 
         <div 
           ref={composerRef}
-          className="absolute bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 z-10"
+          className="fixed bottom-0 left-0 right-0 border-t border-[#ffdbe8] bg-white/95 px-4 pt-2 z-50"
           style={{ 
             paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)"
           }}
