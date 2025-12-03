@@ -74,6 +74,7 @@ export function MichelleChatClient() {
   const [currentThinkingIndex, setCurrentThinkingIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isRestoringSession, setIsRestoringSession] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -201,7 +202,8 @@ export function MichelleChatClient() {
     }
     
     hasRestoredSessionRef.current = true;
-    console.log("[Session Restore] Flag set to true");
+    setIsRestoringSession(false);
+    console.log("[Session Restore] Flag set to true, restoration complete");
   }, [isMounted, sessions]);
 
   useEffect(() => {
@@ -469,6 +471,16 @@ export function MichelleChatClient() {
         <div className="rounded-3xl bg-white px-10 py-12 text-center shadow-2xl">
           <p className="text-lg font-semibold text-[#a1315d]">ログインが必要です</p>
           <p className="mt-4 text-sm text-[#8b5269]">ミシェルAIをご利用いただくにはログインしてください。</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isRestoringSession) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-gradient-to-br from-[#fff8fb] via-[#fff2f6] to-[#ffe2ef]">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#ff6ba6]" />
         </div>
       </div>
     );
