@@ -25,6 +25,7 @@ const navItems = [
   ...(MICHELLE_AI_ENABLED
     ? [{ href: "/michelle", label: "ミシェル心理学", en: "Michelle" }]
     : []),
+  { href: "/points", label: "ポイント", en: "Points" },
   { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ", en: "Contact" },
   { href: "/mypage", label: "マイページ", en: "My Page" },
 ];
