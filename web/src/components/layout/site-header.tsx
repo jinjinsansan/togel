@@ -18,16 +18,16 @@ const baseNavItems = [
   { href: "/types", label: "型一覧", en: "Types" },
   { href: "/types/distribution", label: "分布図", en: "Distribution" },
   { href: "/profile/edit", label: "プロフィール", en: "Profile" },
-  { href: "/mypage", label: "マイページ", en: "My Page" },
 ];
 
-const navItems = MICHELLE_AI_ENABLED
-  ? [
-      baseNavItems[0],
-      { href: "/michelle", label: "ミシェル心理学", en: "Michelle" },
-      ...baseNavItems.slice(1),
-    ]
-  : baseNavItems;
+const navItems = [
+  ...baseNavItems,
+  ...(MICHELLE_AI_ENABLED
+    ? [{ href: "/michelle", label: "ミシェル心理学", en: "Michelle" }]
+    : []),
+  { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ", en: "Contact" },
+  { href: "/mypage", label: "マイページ", en: "My Page" },
+];
 
 const ADMIN_EMAILS = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
 
