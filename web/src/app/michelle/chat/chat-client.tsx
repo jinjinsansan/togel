@@ -108,24 +108,38 @@ export function MichelleChatClient() {
 
   const loadMessages = useCallback(
     async (sessionId: string) => {
+      console.log("[loadMessages] Starting to load messages for session:", sessionId);
       setIsLoading((prev) => ({ ...prev, messages: true }));
       try {
         const res = await fetch(`/api/michelle/sessions/${sessionId}/messages`);
+        console.log("[loadMessages] Response status:", res.status);
+        
         if (res.status === 401) {
+          console.log("[loadMessages] Unauthorized - setting needsAuth");
           setNeedsAuth(true);
           return;
         }
         if (res.status === 404) {
+          console.log("[loadMessages] Session not found - clearing activeSessionId");
           setActiveSessionId(null);
           return;
         }
         if (!res.ok) throw new Error("Failed to load messages");
+        
         const data = (await res.json()) as MessagesResponse;
+        console.log("[loadMessages] Received data:", {
+          sessionId: data.session?.id,
+          messagesCount: data.messages?.length ?? 0,
+          firstMessage: data.messages?.[0]?.content?.substring(0, 50)
+        });
+        
         setMessages(data.messages ?? []);
+        console.log("[loadMessages] Messages state updated with", data.messages?.length ?? 0, "messages");
       } catch (err) {
-        console.error(err);
+        console.error("[loadMessages] Error loading messages:", err);
       } finally {
         setIsLoading((prev) => ({ ...prev, messages: false }));
+        console.log("[loadMessages] Loading complete");
       }
     },
     [],
