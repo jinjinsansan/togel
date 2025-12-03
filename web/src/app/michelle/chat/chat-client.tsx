@@ -219,15 +219,15 @@ export function MichelleChatClient() {
       return;
     }
     
+    if (!activeSessionId) {
+      console.log("[Save Session] Skipped - activeSessionId is null (keeping existing localStorage)");
+      return;
+    }
+    
     try {
-      if (activeSessionId) {
-        console.log("[Save Session] Saving to localStorage:", activeSessionId);
-        window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
-        console.log("[Save Session] Saved successfully");
-      } else {
-        console.log("[Save Session] Removing from localStorage (activeSessionId is null)");
-        window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
-      }
+      console.log("[Save Session] Saving to localStorage:", activeSessionId);
+      window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
+      console.log("[Save Session] Saved successfully");
     } catch (error) {
       console.error("[Save Session] Failed to save session:", error);
     }
@@ -305,10 +305,20 @@ export function MichelleChatClient() {
   }, [messages]);
 
   const handleNewChat = () => {
+    console.log("[User Action] New chat clicked - clearing session");
     setActiveSessionId(null);
     setMessages([]);
     setError(null);
     hasRestoredSessionRef.current = false;
+    
+    // 新しいチャットの場合のみlocalStorageを削除
+    try {
+      window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
+      console.log("[User Action] localStorage cleared for new chat");
+    } catch (error) {
+      console.error("[User Action] Failed to clear localStorage:", error);
+    }
+    
     textareaRef.current?.focus();
   };
 
