@@ -229,7 +229,7 @@ export default function ProfileEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-32">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-32 overflow-x-hidden w-full">
       {/* Hero Header */}
       <div className="relative border-b border-slate-100 bg-gradient-to-br from-white to-slate-100 py-12">
         <div className="container max-w-4xl mx-auto px-4">
