@@ -231,17 +231,17 @@ export default function ProfileEditPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-32 overflow-x-hidden w-full">
       {/* Hero Header */}
-      <div className="relative border-b border-slate-100 bg-gradient-to-br from-white to-slate-100 py-12">
+      <div className="relative border-b border-slate-100 bg-gradient-to-br from-white to-slate-100 py-8 md:py-12">
         <div className="container max-w-4xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
             <div>
-              <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-3 uppercase">Settings</p>
-              <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900">
+              <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-2 md:mb-3 uppercase">Settings</p>
+              <h1 className="font-heading text-2xl md:text-4xl font-black text-slate-900">
                 プロフィール編集
               </h1>
             </div>
             {isPublic && (
-              <Button variant="outline" size="sm" asChild className="rounded-full border-2 border-[#E91E63]/20 text-[#E91E63] hover:bg-[#E91E63] hover:text-white font-bold">
+              <Button variant="outline" size="sm" asChild className="self-start md:self-auto rounded-full border-2 border-[#E91E63]/20 text-[#E91E63] hover:bg-[#E91E63] hover:text-white font-bold">
                 <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-2 h-4 w-4" />
                   公開ページを確認
@@ -252,16 +252,16 @@ export default function ProfileEditPage() {
         </div>
       </div>
 
-      <div className="container max-w-4xl mx-auto px-4 -mt-8 relative z-10 space-y-8">
+      <div className="container max-w-4xl mx-auto px-3 md:px-4 mt-6 md:-mt-8 relative z-10 space-y-6 md:space-y-8">
         
         {/* Avatar & Public Status Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           
           {/* Left Col: Avatar */}
           <div className="md:col-span-1">
-            <div className="h-full bg-white rounded-3xl border-2 border-slate-100 p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <div className="relative h-32 w-32 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 shadow-inner">
+                <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 shadow-inner">
                   {avatarUrl ? (
                     <Image src={avatarUrl} alt="Avatar" fill sizes="128px" className="object-cover transition-transform group-hover:scale-105" />
                   ) : (
@@ -283,7 +283,7 @@ export default function ProfileEditPage() {
 
           {/* Right Col: Public Toggle & URL */}
           <div className="md:col-span-2">
-            <div className="h-full bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-8 shadow-sm">
+            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-8 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="font-heading text-lg font-black text-slate-900 flex items-center gap-2">
@@ -298,10 +298,10 @@ export default function ProfileEditPage() {
               </div>
 
               {isPublic && (
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                <div className="bg-slate-50 rounded-xl md:rounded-2xl p-4 border border-slate-200">
                   <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Your Public URL</p>
                   <div className="flex gap-2">
-                    <code className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-600 truncate">
+                    <code className="flex-1 min-w-0 bg-white border border-slate-200 rounded-xl px-3 py-3 text-xs md:text-sm font-mono text-slate-600 truncate">
                       {`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${user?.id}`}
                     </code>
                     <Button onClick={copyPublicLink} className={`shrink-0 rounded-xl font-bold ${copied ? "bg-green-500 hover:bg-green-600 text-white" : "bg-slate-900 text-white hover:bg-slate-800"}`}>
@@ -315,7 +315,7 @@ export default function ProfileEditPage() {
         </div>
 
         {/* Basic Info Form */}
-        <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-10 shadow-sm">
+        <section className="bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-10 shadow-sm">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#E91E63]/10 text-xl">📝</span>
              <h2 className="font-heading text-2xl font-black text-slate-900">基本情報</h2>
@@ -370,7 +370,7 @@ export default function ProfileEditPage() {
         </section>
 
         {/* Details Form */}
-        <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-10 shadow-sm">
+        <section className="bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-10 shadow-sm">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-xl">💡</span>
              <h2 className="font-heading text-2xl font-black text-slate-900">詳細プロフィール</h2>
@@ -393,7 +393,7 @@ export default function ProfileEditPage() {
         </section>
 
         {/* SNS Form */}
-        <section className="bg-white rounded-3xl border-2 border-slate-100 p-6 md:p-10 shadow-sm">
+        <section className="bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-10 shadow-sm">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-green-100 text-xl">🔗</span>
              <div>
