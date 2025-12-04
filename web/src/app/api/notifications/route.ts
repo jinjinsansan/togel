@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   const cookieStore = cookies();
-  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabaseAuth.auth.getSession();
 
   if (!session) {
@@ -48,7 +49,7 @@ export async function GET() {
 export async function POST(request: Request) {
   // Mark as read logic
   const cookieStore = cookies();
-  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabaseAuth.auth.getSession();
 
   if (!session) {

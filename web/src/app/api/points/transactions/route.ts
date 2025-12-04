@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export async function GET(request: Request) {
   const cookieStore = cookies();
-  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const {
     data: { session },
   } = await supabaseAuth.auth.getSession();

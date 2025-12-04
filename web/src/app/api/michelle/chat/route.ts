@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type OpenAI from "openai";
 import { z } from "zod";
@@ -10,6 +9,7 @@ import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 import { fetchLatestProgress, type AttractionSupabase } from "@/lib/michelle-attraction/progress-server";
 import type { MichelleDatabase } from "@/types/michelle-db";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
   const { sessionId: incomingSessionId, message, category } = parsed.data;
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient<MichelleDatabase>({ cookies: () => cookieStore }) as unknown as MichelleSupabase;
+  const supabase = createSupabaseRouteClient<MichelleDatabase>(cookieStore) as unknown as MichelleSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();

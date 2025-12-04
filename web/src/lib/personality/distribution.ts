@@ -25,12 +25,19 @@ export const loadTogelDistribution = async () => {
       if (error) throw error;
 
       const rows = data ?? [];
+      const attemptCounts = new Map<string, number>();
+      let attemptTotal = 0;
+
       rows.forEach((row) => {
         if (!row?.animal_type) return;
         const count = Number(row.total) || 0;
-        counts.set(row.animal_type, count);
-        total += count;
+        attemptCounts.set(row.animal_type, count);
+        attemptTotal += count;
       });
+
+      counts.clear();
+      attemptCounts.forEach((count, label) => counts.set(label, count));
+      total = attemptTotal;
       break;
     } catch (error) {
       if (attempt === maxAttempts) {

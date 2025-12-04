@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import type { User } from "@supabase/supabase-js";
+
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const ALLOWED_ADMIN_EMAILS = [
   "goldbenchan@gmail.com",
@@ -9,7 +10,7 @@ const ALLOWED_ADMIN_EMAILS = [
 
 export const requireAdminUser = async (): Promise<User | null> => {
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabase = createSupabaseRouteClient(cookieStore);
   const {
     data: { session },
   } = await supabase.auth.getSession();

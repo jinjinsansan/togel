@@ -4,10 +4,11 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { loadTogelDistribution } from "@/lib/personality/distribution";
 
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 const DistributionPage = async () => {
   const { total, distribution } = await loadTogelDistribution();
+  const hasLiveData = total > 0 && distribution.some((item) => item.count > 0);
   
   // 多い順にソートして表示（ランキング形式）
   const sortedByCount = [...distribution].sort((a, b) => b.count - a.count);
@@ -41,7 +42,13 @@ const DistributionPage = async () => {
 
       <div className="container mt-12 md:mt-20">
         <div className="mx-auto max-w-5xl">
-          <div className="grid gap-4">
+          {!hasLiveData && (
+            <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800">
+              現在リアルタイムの集計値を取得できませんでした。以下は最新データが反映されていない可能性があります。
+            </div>
+          )}
+
+          <div className="grid gap-4 mt-4">
             {sortedByCount.map((item, index) => (
               <div 
                 key={item.id}

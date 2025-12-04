@@ -1,4 +1,3 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -7,6 +6,7 @@ import { generateMatchingResults, generateMismatchingResults, generateDiagnosisR
 import { getMatchingCacheExpiry } from "@/lib/matching/cache";
 import { getTogelLabel } from "@/lib/personality";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { MatchingResult } from "@/types/diagnosis";
 
 type NotificationPayload = {
@@ -156,7 +156,7 @@ export const POST = async (request: Request) => {
 
   // ログインユーザーの取得
   const cookieStore = cookies();
-  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const { data: { user } } = await supabaseAuth.auth.getUser();
 
   const supabaseAdmin = createSupabaseAdminClient();

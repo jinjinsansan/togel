@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -41,7 +41,7 @@ export default function FeaturedAdminPage() {
   const [targetGender, setTargetGender] = useState("all");
   const [durationDays, setDurationDays] = useState("7");
 
-  const supabase = createClientComponentClient();
+  const supabase = createSupabaseBrowserClient();
 
   const fetchFeatured = useCallback(async () => {
     setLoading(true);

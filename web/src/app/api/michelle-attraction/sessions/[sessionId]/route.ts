@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AttractionSupabase = SupabaseClient<any>;
@@ -16,7 +16,7 @@ export async function DELETE(_: Request, context: { params: { sessionId: string 
   const { sessionId } = context.params;
 
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore }) as unknown as AttractionSupabase;
+  const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();

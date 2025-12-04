@@ -1,8 +1,8 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { generateDiagnosisResult, generateMatchingResults, generateMismatchingResults } from "@/lib/matching/engine";
 import { Answer } from "@/types/diagnosis";
 import { estimateProfileScores } from "@/lib/personality";
@@ -10,7 +10,7 @@ import { getMatchingCacheExpiry, isMatchingCacheValid } from "@/lib/matching/cac
 
 export const GET = async (request: Request) => {
   const cookieStore = cookies();
-  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabaseAuth.auth.getSession();
 
   if (!session) {

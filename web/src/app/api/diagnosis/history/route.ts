@@ -1,4 +1,3 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -6,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateDiagnosisResult } from "@/lib/matching/engine";
 import { Answer, BigFiveScores } from "@/types/diagnosis";
 import { getTogelLabel, personalityTypes } from "@/lib/personality";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const resolveUserIds = async (
   supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
@@ -42,7 +42,7 @@ const resolveUserIds = async (
 
 export const GET = async (request: Request) => {
   const cookieStore = cookies();
-  const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const {
     data: { session },
   } = await supabaseAuth.auth.getSession();

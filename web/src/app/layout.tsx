@@ -1,15 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import "@fontsource/noto-sans-jp/400.css";
+import "@fontsource/noto-sans-jp/500.css";
+import "@fontsource/noto-sans-jp/700.css";
 
 import { ConditionalHeader } from "@/components/layout/conditional-header";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
-
-const notoSansJP = Noto_Sans_JP({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-noto-sans-jp",
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -44,7 +40,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`min-h-screen bg-background text-foreground antialiased ${notoSansJP.className} ${notoSansJP.variable}`}>
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <ConditionalHeader />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
         <ConditionalFooter />

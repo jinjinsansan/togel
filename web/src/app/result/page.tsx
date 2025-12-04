@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef, useCallback, useMemo, SyntheticEvent } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
@@ -262,7 +262,7 @@ const TRAITS: (keyof BigFiveScores)[] = [
 ];
 
 const ResultPage = () => {
-  const supabase = useMemo(() => createClientComponentClient(), []);
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const clearSessionCaches = useCallback(() => {
     if (typeof window === "undefined") return;

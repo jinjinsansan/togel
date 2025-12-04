@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Bell, Coins, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle, Palette } from "lucide-react";
 
@@ -222,7 +222,7 @@ export default function MyPage() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [historyMeta, setHistoryMeta] = useState<DiagnosisHistoryMeta>({ total: 0, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
   
-  const supabase = createClientComponentClient();
+  const supabase = createSupabaseBrowserClient();
 
   const fetchNotifications = useCallback(async () => {
     try {

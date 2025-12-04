@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { broadcastNotification } from "@/lib/mail/sender";
 // import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 // Admin check helper
 const checkAdmin = async () => {
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabase = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabase.auth.getSession();
   
   const allowedEmails = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];

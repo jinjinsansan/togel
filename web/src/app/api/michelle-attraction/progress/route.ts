@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { z } from "zod";
 
 import { MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
@@ -12,6 +11,7 @@ import {
   upsertProgressRecord,
 } from "@/lib/michelle-attraction/progress-server";
 import { type ProgressStatus } from "@/lib/michelle-attraction/sections";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const progressStatusSchema = z.enum(["OK", "IP", "RV"] as const);
 
@@ -29,7 +29,7 @@ export async function GET() {
   }
 
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore }) as unknown as AttractionSupabase;
+  const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore }) as unknown as AttractionSupabase;
+  const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();

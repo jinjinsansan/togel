@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { MapPin, Briefcase, Heart, User, Twitter, Instagram, Facebook, MessageCircle, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -102,7 +102,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   const [diagnosisDetails, setDiagnosisDetails] = useState<DiagnosisDetails | null>(null);
   const [displayName, setDisplayName] = useState<string>(nicknameHint || "このユーザー");
   const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
+  const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
     if (isMockProfile) {

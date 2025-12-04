@@ -19,6 +19,7 @@
   --ring: 340 89% 66%;
   --pop: 267 83% 74%;
   --radius: 1rem;
+  --font-noto-sans-jp: "Noto Sans JP", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
   --font-sans: var(--font-noto-sans-jp), "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
   --font-heading: var(--font-noto-sans-jp), "Inter", "Hiragino Sans", "Helvetica Neue", Arial, sans-serif;
 }

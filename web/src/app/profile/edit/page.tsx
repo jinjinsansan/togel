@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Save, Eye, EyeOff, Copy, Check, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ const SimpleSwitch = ({ checked, onCheckedChange }: { checked: boolean; onChecke
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createSupabaseBrowserClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

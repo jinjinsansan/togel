@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import crypto from "crypto";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const getEnv = (key: string) => {
   const value = process.env[key];
@@ -37,7 +37,7 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/g
 
 export async function POST(request: Request) {
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabase = createSupabaseRouteClient(cookieStore);
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,15 +1,18 @@
 import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 
 import { env } from "@/lib/env";
 
-export const createSupabaseServerClient = () =>
-  createServerComponentClient(
-    {
-      cookies,
+const getServerCookiesAdapter = () => {
+  const cookieStore = cookies();
+  return {
+    getAll() {
+      return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
     },
-    {
-      supabaseKey: env.supabaseAnonKey,
-      supabaseUrl: env.supabaseUrl,
-    }
-  );
+  };
+};
+
+export const createSupabaseServerClient = () =>
+  createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
+    cookies: getServerCookiesAdapter(),
+  });

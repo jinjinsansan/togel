@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,7 +21,7 @@ export async function GET(_: Request, context: { params: { sessionId: string } }
   const { sessionId } = paramsSchema.parse(context.params);
 
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore }) as unknown as AttractionSupabase;
+  const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();

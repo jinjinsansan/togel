@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { z } from "zod";
 
 import { MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
@@ -9,6 +8,7 @@ import {
   fetchProgressNotes,
   type AttractionSupabase,
 } from "@/lib/michelle-attraction/progress-server";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const noteSchema = z.object({
   progressId: z.string().uuid().optional(),
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   }
 
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore }) as unknown as AttractionSupabase;
+  const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();

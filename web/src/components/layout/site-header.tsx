@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X, LogOut } from "lucide-react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 import { LoginButton } from "@/components/auth/login-button";
@@ -42,7 +42,7 @@ export const SiteHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
   const firstNavLinkRef = useRef<HTMLAnchorElement | null>(null);
   const isBrowser = typeof document !== "undefined";
-  const supabase = createClientComponentClient();
+  const supabase = createSupabaseBrowserClient();
   const router = useRouter();
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
 

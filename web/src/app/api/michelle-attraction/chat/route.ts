@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import type OpenAI from "openai";
 import { z } from "zod";
 
@@ -20,6 +19,7 @@ import {
   updateEmotionSnapshot,
 } from "@/lib/michelle-attraction/progress-server";
 import { formatSectionLabel } from "@/lib/michelle-attraction/sections";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
 
   const { sessionId: incomingSessionId, message, category } = parsed.data;
   const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore }) as unknown as AttractionSupabase;
+  const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   const {
     data: { user },
   } = await supabase.auth.getUser();

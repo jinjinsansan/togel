@@ -1,13 +1,13 @@
 "use client";
 
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
 export const LoginButton = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const supabase = createClientComponentClient();
+  const supabase = createSupabaseBrowserClient();
 
   const handleLogin = async () => {
     setIsLoading(true);
