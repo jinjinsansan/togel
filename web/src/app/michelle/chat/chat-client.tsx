@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MichelleAvatar } from "@/components/michelle/avatar";
 
+type PsychologyRecommendationState = "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
+
 type SessionSummary = {
   id: string;
   title: string | null;
@@ -29,6 +31,16 @@ type MessagesResponse = {
 
 type SessionsResponse = {
   sessions: SessionSummary[];
+};
+
+type AttractionBridge = {
+  session_id: string;
+  psychology_recommendation: PsychologyRecommendationState;
+  psychology_recommendation_reason: string | null;
+};
+
+type AttractionProgressResponse = {
+  progress: AttractionBridge | null;
 };
 
 type SSEKnowledge = {
@@ -85,6 +97,8 @@ export function MichelleChatClient() {
   const scrollFrameRef = useRef<number>();
   const [composerHeight, setComposerHeight] = useState(0);
   const hasRestoredSessionRef = useRef(false);
+  const [attractionBridge, setAttractionBridge] = useState<AttractionBridge | null>(null);
+  const [isUpdatingBridge, setIsUpdatingBridge] = useState(false);
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -107,6 +121,26 @@ export function MichelleChatClient() {
     } finally {
       setIsLoading((prev) => ({ ...prev, sessions: false }));
       setHasInitializedSessions(true);
+    }
+  }, []);
+
+  const fetchAttractionBridge = useCallback(async () => {
+    try {
+      const res = await fetch("/api/michelle-attraction/progress");
+      if (!res.ok) {
+        setAttractionBridge(null);
+        return;
+      }
+      const data = (await res.json()) as AttractionProgressResponse;
+      const progress = data.progress;
+      if (progress && progress.psychology_recommendation !== "none") {
+        setAttractionBridge(progress);
+      } else {
+        setAttractionBridge(null);
+      }
+    } catch (err) {
+      console.error("[Psychology] Failed to fetch attraction bridge", err);
+      setAttractionBridge(null);
     }
   }, []);
 
@@ -174,7 +208,8 @@ export function MichelleChatClient() {
   useEffect(() => {
     console.log("[Sessions] Loading sessions...");
     loadSessions();
-  }, [loadSessions]);
+    fetchAttractionBridge();
+  }, [loadSessions, fetchAttractionBridge]);
 
   useEffect(() => {
     console.log(
@@ -354,6 +389,32 @@ export function MichelleChatClient() {
     // モバイルでは自動フォーカスしない（キーボードがURLバーに被る問題を防ぐ）
     if (!isMobile) {
       textareaRef.current?.focus();
+    }
+  };
+
+  const handleBridgeResolved = async () => {
+    if (!attractionBridge?.session_id) {
+      window.location.href = "/michelle/attraction/chat";
+      return;
+    }
+    setIsUpdatingBridge(true);
+    try {
+      const res = await fetch("/api/michelle-attraction/progress/recommendation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: attractionBridge.session_id, action: "resolve" }),
+      });
+      if (!res.ok) {
+        throw new Error("更新に失敗しました");
+      }
+      setAttractionBridge(null);
+      window.location.href = "/michelle/attraction/chat";
+    } catch (err) {
+      console.error("[Psychology] Failed to resolve bridge", err);
+      setError("引き寄せ側の状態更新に失敗しました");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsUpdatingBridge(false);
     }
   };
 
@@ -717,6 +778,44 @@ export function MichelleChatClient() {
             WebkitOverflowScrolling: "touch"
           }}
         >
+          {attractionBridge && (
+            <div className="px-4 pt-4">
+              <div className="rounded-3xl border border-[#facc15] bg-[#fff9db] p-4 text-sm text-[#6d5300] shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b45309]">Michelle Attraction からの依頼</p>
+                <p className="mt-1 text-base font-semibold text-[#8b5e00]">
+                  引き寄せカリキュラムを一時停止し、感情のブロックを癒やしてください。
+                </p>
+                {attractionBridge.psychology_recommendation_reason && (
+                  <p className="mt-2 rounded-2xl bg-white/70 px-3 py-2 text-xs text-[#7c4a00]">
+                    {attractionBridge.psychology_recommendation_reason}
+                  </p>
+                )}
+                <p className="mt-2 text-sm">
+                  心が整ったら「引き寄せに戻る」ボタンで再開できます。焦らずに今は感情の声を丁寧に感じてみましょう。
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="rounded-full bg-[#f97316] text-white hover:bg-[#ea580c]"
+                    onClick={() => {
+                      window.location.href = "/michelle/attraction/chat";
+                    }}
+                  >
+                    引き寄せチャットを開く
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#7c4a00] hover:bg-amber-100"
+                    onClick={handleBridgeResolved}
+                    disabled={isUpdatingBridge}
+                  >
+                    {isUpdatingBridge ? "更新中..." : "感情ケア完了・再開する"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
               <MichelleAvatar size="lg" variant="rose" />

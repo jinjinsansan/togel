@@ -1,13 +1,25 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type OpenAI from "openai";
 import { z } from "zod";
 
 import { MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
 import { getMichelleAttractionAssistantId, getMichelleAttractionOpenAIClient } from "@/lib/michelle-attraction/openai";
 import { retrieveAttractionKnowledgeMatches } from "@/lib/michelle-attraction/rag";
+import { evaluateEmotionState } from "@/lib/michelle-attraction/emotion";
+import {
+  ensureProgressRecord,
+  fetchProgressBySession,
+  fetchProgressNotes,
+  setPsychologyRecommendationState,
+  shouldThrottleRecommendation,
+  type AttractionSupabase,
+  type ProgressRecord,
+  type PsychologyRecommendationState,
+  updateEmotionSnapshot,
+} from "@/lib/michelle-attraction/progress-server";
+import { formatSectionLabel } from "@/lib/michelle-attraction/sections";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -41,8 +53,24 @@ type OpenAIWithBeta = OpenAI & {
   };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AttractionSupabase = SupabaseClient<any>;
+const EMOTIONAL_STATE_LABELS: Record<ProgressRecord["emotional_state"], string> = {
+  stable: "穏やか",
+  concern: "注意",
+  critical: "緊急",
+};
+
+const RECOMMENDATION_LABELS: Record<PsychologyRecommendationState, string> = {
+  none: "通常学習",
+  suggested: "心理学推奨中",
+  acknowledged: "心理学ケアへ移行",
+  dismissed: "提案を保留",
+  resolved: "心理学ケア完了",
+};
+
+const formatRecommendationLabel = (state: PsychologyRecommendationState) => {
+  if (state === "none") return "";
+  return RECOMMENDATION_LABELS[state] ?? "";
+};
 
 export async function POST(request: Request) {
   if (!MICHELLE_ATTRACTION_AI_ENABLED) {
@@ -96,10 +124,99 @@ export async function POST(request: Request) {
       ? `【初回オンボーディング指示】\nこの会話は新しいミシェル引き寄せ講座セッションの初回です。以下の手順を厳守して最初の返信を作成してください。\n1. 温かく挨拶し、講座の概要を1〜2文で伝える。\n2. ユーザーが初めてか/継続かを尋ねる。継続なら進捗コード(MCL-L{n}-S{nn}-{STATUS})の提示を必ず求め、コードから次に進むべきセクションを判断する。\n3. 進捗コードが無い場合は診断質問Q1〜Q3を順番に実施し、回答を踏まえて開始レベル/セクションを決定する。\n4. 決定したセクションを明示し、【導入→本編→理解度チェック→進捗コード発行】の流れで丁寧に進める。\n5. セクション完了ごとに最新の進捗コードを生成し、保存を促す。\nこの直後に続くユーザーメッセージに必ず上記フローを適用して返信文を構築すること。\n\n【ユーザーメッセージ】\n${message}`
       : message;
 
+    let progressContext = "";
+    let psychologyInstruction = "";
+    try {
+      let progressRecord = await fetchProgressBySession(supabase, user.id, sessionId);
+      if (!progressRecord) {
+        await ensureProgressRecord(supabase, user.id, sessionId);
+        progressRecord = await fetchProgressBySession(supabase, user.id, sessionId);
+      }
+
+      if (progressRecord) {
+        const emotionAnalysis = evaluateEmotionState(message);
+        progressRecord = await updateEmotionSnapshot(supabase, {
+          authUserId: user.id,
+          sessionId,
+          emotion: emotionAnalysis,
+        });
+
+        let recommendationTriggered = false;
+        if (emotionAnalysis.state !== "stable") {
+          const throttled = shouldThrottleRecommendation(progressRecord);
+          const existingState = progressRecord.psychology_recommendation;
+          const canRecommend =
+            emotionAnalysis.state === "critical" ||
+            (!throttled && existingState !== "acknowledged" && existingState !== "suggested");
+
+          if (canRecommend) {
+            const reason =
+              progressRecord.psychology_recommendation_reason ??
+              (emotionAnalysis.reasons.slice(0, 2).join(" / ") || "感情の揺らぎ");
+            progressRecord = await setPsychologyRecommendationState(supabase, {
+              authUserId: user.id,
+              sessionId,
+              state: "suggested",
+              reason,
+            });
+            recommendationTriggered = true;
+          }
+        } else if (
+          progressRecord.psychology_recommendation !== "none" &&
+          progressRecord.psychology_recommendation !== "acknowledged"
+        ) {
+          progressRecord = await setPsychologyRecommendationState(supabase, {
+            authUserId: user.id,
+            sessionId,
+            state: "resolved",
+          });
+        }
+
+        const latestNotes = await fetchProgressNotes(supabase, progressRecord.id, 3);
+        const sectionLabel = formatSectionLabel(progressRecord.current_level, progressRecord.current_section);
+        const lines = [
+          `現在の進捗: ${sectionLabel}`,
+          `ステータス: ${progressRecord.progress_status}`,
+          `感情状態: ${EMOTIONAL_STATE_LABELS[progressRecord.emotional_state]} (score ${progressRecord.emotional_score})`,
+        ];
+        if (progressRecord.notes) {
+          lines.push(`メモ: ${progressRecord.notes}`);
+        }
+        const recommendationLabel = formatRecommendationLabel(progressRecord.psychology_recommendation);
+        if (recommendationLabel) {
+          const reason = progressRecord.psychology_recommendation_reason
+            ? ` / ${progressRecord.psychology_recommendation_reason}`
+            : "";
+          lines.push(`心理学推奨状態: ${recommendationLabel}${reason}`);
+        }
+        if (latestNotes.length) {
+          lines.push(
+            `直近の振り返り:\n${latestNotes
+              .map((note) => `- [${note.note_type}] ${note.content}`)
+              .join("\n")}`,
+          );
+        }
+        progressContext = `【進捗コンテキスト】\n${lines.join("\n")}`;
+
+        psychologyInstruction = buildPsychologyGuidance(progressRecord, recommendationTriggered);
+      }
+    } catch (progressError) {
+      console.error("Michelle attraction progress context error", progressError);
+    }
+
+    const userPayload = [onboardingPrimer];
+    if (psychologyInstruction) {
+      userPayload.push(psychologyInstruction);
+    }
+    if (progressContext) {
+      userPayload.push(progressContext);
+    }
+    const userMessageWithContext = userPayload.join("\n\n");
+
     const finalMessage =
       knowledgeMatches.length > 0
-        ? `【ユーザーメッセージ】\n${onboardingPrimer}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下のミシェル引き寄せ知識を参考にして回答を構築してください。\n${knowledgeContext}`
-        : onboardingPrimer;
+        ? `【ユーザーメッセージ】\n${userMessageWithContext}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下のミシェル引き寄せ知識を参考にして回答を構築してください。\n${knowledgeContext}`
+        : userMessageWithContext;
 
     await supabase.from("michelle_attraction_messages").insert({
       session_id: sessionId,
@@ -245,4 +362,28 @@ const ensureThreadId = async (supabase: AttractionSupabase, sessionId: string, c
   const thread = await betaThreads.create();
   await supabase.from("michelle_attraction_sessions").update({ openai_thread_id: thread.id }).eq("id", sessionId);
   return thread.id;
+};
+
+const buildPsychologyGuidance = (record: ProgressRecord, newlyTriggered: boolean) => {
+  if (record.psychology_recommendation === "acknowledged") {
+    return `【心理学優先指示】
+ユーザーは現在ネガティブな感情のケアを優先するためにミシェル心理学へ移行しようとしています。引き寄せカリキュラムを一時停止し、感情解放を優先するよう丁寧に案内してください。もしユーザーがどうしても続けたいと希望した場合のみ、セルフケアの注意事項を添えて進行してください。`;
+  }
+
+  if (record.psychology_recommendation === "suggested" || newlyTriggered) {
+    return `【心理学推奨指示】
+ネガティブ感情の強まりが検知されています。ミシェル心理学で思い込み・感情ブロックを解放すると引き寄せがスムーズになる旨を必ず伝え、「今すぐ心理学に移って整える」か「今回はこのままカリキュラムを進めるか」をユーザー自身に選んでもらってください。`;
+  }
+
+  if (record.psychology_recommendation === "dismissed") {
+    return `【心理学推奨保留指示】
+ユーザーは前回の心理学推奨を見送りました。無理に誘導はせず、必要になったらいつでも心理学チャットで感情を整えられることを一言添えてください。`;
+  }
+
+  if (record.psychology_recommendation === "resolved") {
+    return `【心理学連携報告】
+直近で心理学ケアが完了した状態です。感情が整ったことを労い、必要であれば再度心理学を活用できる旨を軽く触れてからカリキュラムを再開してください。`;
+  }
+
+  return "";
 };

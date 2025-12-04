@@ -6,12 +6,33 @@ import { Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } fro
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MichelleAvatar } from "@/components/michelle/avatar";
+import {
+  ATTRACTION_SECTIONS,
+  sectionsByLevel,
+  formatSectionLabel,
+  PROGRESS_STATUSES,
+  type ProgressStatus,
+} from "@/lib/michelle-attraction/sections";
+
+type PsychologyRecommendationState = "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
+
+type SessionProgressSnapshot = {
+  current_level: number;
+  current_section: number;
+  progress_status: ProgressStatus;
+  progress_code: string | null;
+  updated_at: string;
+  emotional_state: "stable" | "concern" | "critical";
+  emotional_score: number;
+  psychology_recommendation: PsychologyRecommendationState;
+};
 
 type SessionSummary = {
   id: string;
   title: string | null;
   category: string;
   updated_at: string;
+  progress?: SessionProgressSnapshot | null;
 };
 
 type MessageItem = {
@@ -29,6 +50,37 @@ type MessagesResponse = {
 
 type SessionsResponse = {
   sessions: SessionSummary[];
+};
+
+type ProgressEntry = {
+  id: string;
+  session_id: string;
+  current_level: number;
+  current_section: number;
+  progress_status: ProgressStatus;
+  progress_code: string | null;
+  notes: string | null;
+  updated_at: string;
+   emotional_state: "stable" | "concern" | "critical";
+   emotional_score: number;
+   psychology_recommendation: PsychologyRecommendationState;
+   psychology_recommendation_reason: string | null;
+   psychology_prompted_at: string | null;
+   psychology_opt_out_until: string | null;
+};
+
+type ProgressNote = {
+  id: string;
+  note_type: string;
+  content: string;
+  related_level: number | null;
+  related_section: number | null;
+  created_at: string;
+};
+
+type ProgressResponse = {
+  progress: ProgressEntry | null;
+  notes: ProgressNote[];
 };
 
 type SSEKnowledge = {
@@ -62,6 +114,34 @@ const thinkingMessages = [
   "叶うイメージを磨いています...",
 ];
 
+const STATUS_LABELS: Record<ProgressStatus, string> = {
+  OK: "理解済み",
+  IP: "学習中",
+  RV: "要復習",
+};
+
+const EMOTIONAL_STATE_LABELS = {
+  stable: "穏やか",
+  concern: "注意",
+  critical: "緊急",
+} as const;
+
+const PSYCHOLOGY_STATE_LABELS: Record<PsychologyRecommendationState, string> = {
+  none: "通常モード",
+  suggested: "心理学推奨中",
+  acknowledged: "心理学ケアへ移行",
+  dismissed: "ユーザーが継続を選択",
+  resolved: "感情ケア完了",
+};
+
+const noteTypeOptions = [
+  { value: "comprehension", label: "理解の壁" },
+  { value: "emotion", label: "感情の揺らぎ" },
+  { value: "action", label: "行動の詰まり" },
+  { value: "success", label: "引き寄せ成功" },
+  { value: "other", label: "その他" },
+];
+
 export function MichelleAttractionChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -77,6 +157,20 @@ export function MichelleAttractionChatClient() {
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
+  const [progress, setProgress] = useState<ProgressEntry | null>(null);
+  const [progressNotes, setProgressNotes] = useState<ProgressNote[]>([]);
+  const [progressForm, setProgressForm] = useState({
+    level: 1,
+    section: 1,
+    status: "IP" as ProgressStatus,
+    notes: "",
+  });
+  const [noteForm, setNoteForm] = useState({ noteType: "comprehension", content: "" });
+  const [isProgressFormOpen, setIsProgressFormOpen] = useState(false);
+  const [isNoteFormOpen, setIsNoteFormOpen] = useState(false);
+  const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [psychologyActionLoading, setPsychologyActionLoading] = useState<null | "acknowledge" | "dismiss" | "resolve">(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -90,6 +184,9 @@ export function MichelleAttractionChatClient() {
     sessions,
     activeSessionId,
   ]);
+  const sessionFromProgress = progress?.session_id ?? null;
+  const activeRecommendation = progress?.psychology_recommendation ?? "none";
+  const shouldShowPsychologyBanner = activeRecommendation === "suggested" || activeRecommendation === "acknowledged";
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -107,6 +204,34 @@ export function MichelleAttractionChatClient() {
     } finally {
       setIsLoading((prev) => ({ ...prev, sessions: false }));
       setHasInitializedSessions(true);
+    }
+  }, []);
+
+  const fetchProgress = useCallback(async () => {
+    try {
+      const res = await fetch("/api/michelle-attraction/progress");
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        return;
+      }
+      if (!res.ok) {
+        throw new Error("Failed to load progress");
+      }
+      const data = (await res.json()) as ProgressResponse;
+      const progressPayload = data.progress ?? null;
+      setProgress(progressPayload);
+      setProgressNotes(data.notes ?? []);
+      if (progressPayload) {
+        setProgressForm((prev) => ({
+          ...prev,
+          level: progressPayload.current_level,
+          section: progressPayload.current_section,
+          status: progressPayload.progress_status,
+          notes: progressPayload.notes ?? "",
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch progress", err);
     }
   }, []);
 
@@ -152,6 +277,12 @@ export function MichelleAttractionChatClient() {
     [],
   );
 
+  const determineSessionForProgress = useCallback(() => {
+    if (activeSessionId) return activeSessionId;
+    if (sessionFromProgress) return sessionFromProgress;
+    return sessions[0]?.id ?? null;
+  }, [activeSessionId, sessionFromProgress, sessions]);
+
   useEffect(() => {
     console.log("[Mount] Component mounted");
     setIsMounted(true);
@@ -174,7 +305,8 @@ export function MichelleAttractionChatClient() {
   useEffect(() => {
     console.log("[Sessions] Loading sessions...");
     loadSessions();
-  }, [loadSessions]);
+    fetchProgress();
+  }, [loadSessions, fetchProgress]);
 
   useEffect(() => {
     console.log(
@@ -335,6 +467,155 @@ export function MichelleAttractionChatClient() {
     return () => clearInterval(interval);
   }, [messages]);
 
+  const handleSaveProgress = async () => {
+    const targetSessionId = determineSessionForProgress();
+    if (!targetSessionId) {
+      setError("先にチャットを開始してから進捗を登録してください。");
+      return;
+    }
+    setIsSavingProgress(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/michelle-attraction/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: targetSessionId,
+          level: progressForm.level,
+          section: progressForm.section,
+          status: progressForm.status,
+          notes: progressForm.notes?.trim() ? progressForm.notes.trim() : undefined,
+        }),
+      });
+
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        throw new Error("ログインしてください");
+      }
+
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "進捗の保存に失敗しました");
+      }
+
+      await fetchProgress();
+      setIsProgressFormOpen(false);
+      setError("✓ 進捗を更新しました");
+      setTimeout(() => setError(null), 2000);
+    } catch (saveError) {
+      console.error("Progress save error", saveError);
+      setError(saveError instanceof Error ? saveError.message : "進捗の保存に失敗しました");
+    } finally {
+      setIsSavingProgress(false);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    const content = noteForm.content.trim();
+    if (!content) {
+      setError("記録内容を入力してください");
+      return;
+    }
+
+    const targetSessionId = determineSessionForProgress();
+    if (!targetSessionId && !progress?.id) {
+      setError("先に進捗を登録してください");
+      return;
+    }
+
+    setIsSavingNote(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/michelle-attraction/progress/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          progressId: progress?.id,
+          sessionId: targetSessionId ?? undefined,
+          noteType: noteForm.noteType,
+          content,
+          relatedLevel: progressForm.level,
+          relatedSection: progressForm.section,
+        }),
+      });
+
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        throw new Error("ログインしてください");
+      }
+
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "記録の保存に失敗しました");
+      }
+
+      setNoteForm((prev) => ({ ...prev, content: "" }));
+      setIsNoteFormOpen(false);
+      await fetchProgress();
+      setError("✓ 記録しました");
+      setTimeout(() => setError(null), 2000);
+    } catch (noteError) {
+      console.error("Progress note error", noteError);
+      setError(noteError instanceof Error ? noteError.message : "記録の保存に失敗しました");
+    } finally {
+      setIsSavingNote(false);
+    }
+  };
+
+  const handlePsychologyAction = async (action: "acknowledge" | "dismiss" | "resolve") => {
+    const targetSessionId = determineSessionForProgress();
+    if (!targetSessionId) {
+      setError("まずチャットを開始してからご利用ください。");
+      return;
+    }
+
+    setPsychologyActionLoading(action);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/michelle-attraction/progress/recommendation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: targetSessionId, action }),
+      });
+
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        throw new Error("ログインしてください");
+      }
+
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "処理に失敗しました");
+      }
+
+      const data = (await res.json().catch(() => ({ progress: null }))) as { progress: ProgressEntry | null };
+      const updatedProgress = data.progress ?? null;
+      setProgress(updatedProgress);
+      if (updatedProgress) {
+        setProgressForm((prev) => ({
+          ...prev,
+          level: updatedProgress.current_level,
+          section: updatedProgress.current_section,
+          status: updatedProgress.progress_status,
+          notes: updatedProgress.notes ?? "",
+        }));
+      }
+
+      fetchProgress();
+
+      if (action === "acknowledge") {
+        window.location.href = "/michelle/chat?from=attraction";
+      }
+    } catch (actionError) {
+      console.error("Psychology action error", actionError);
+      setError(actionError instanceof Error ? actionError.message : "処理に失敗しました");
+    } finally {
+      setPsychologyActionLoading(null);
+    }
+  };
+
   const handleNewChat = () => {
     console.log("[User Action] New chat clicked - clearing session");
     setActiveSessionId(null);
@@ -433,6 +714,7 @@ export function MichelleAttractionChatClient() {
                 if (!activeSessionId) {
                   setActiveSessionId(payload.sessionId);
                   loadSessions();
+                  fetchProgress();
                 }
               }
             }
@@ -613,7 +895,15 @@ export function MichelleAttractionChatClient() {
             >
               <div className="flex min-w-0 items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                <span className="truncate">{session.title || "新しいチャット"}</span>
+                <div className="min-w-0">
+                  <span className="block truncate">{session.title || "新しいチャット"}</span>
+                  {session.progress && (
+                    <span className="mt-0.5 block text-[11px] text-[#6da6c6]">
+                      {formatSectionLabel(session.progress.current_level, session.progress.current_section)} ・
+                      {STATUS_LABELS[session.progress.progress_status]}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -670,7 +960,15 @@ export function MichelleAttractionChatClient() {
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    <span className="truncate">{session.title || "新しいチャット"}</span>
+                    <div className="min-w-0">
+                      <span className="block truncate">{session.title || "新しいチャット"}</span>
+                      {session.progress && (
+                        <span className="mt-0.5 block text-[11px] text-[#6da6c6]">
+                          {formatSectionLabel(session.progress.current_level, session.progress.current_section)} ・
+                          {STATUS_LABELS[session.progress.progress_status]}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -713,12 +1011,258 @@ export function MichelleAttractionChatClient() {
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto bg-gradient-to-b from-white via-[#e6f4ff] to-[#e5f0ff]"
-          style={{ 
-            WebkitOverflowScrolling: "touch"
-          }}
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
+          <div className="px-4 pt-4">
+            <div className="rounded-3xl border border-[#d1e7ff] bg-white/80 p-4 text-sm shadow-sm">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">現在の進捗</p>
+                  {progress ? (
+                    <>
+                      <p className="mt-1 text-lg font-semibold text-[#0f4c81]">
+                        {formatSectionLabel(progress.current_level, progress.current_section)}
+                      </p>
+                      <p className="text-xs text-[#3c6a92]">
+                        {STATUS_LABELS[progress.progress_status]}
+                        {progress.progress_code ? ` / ${progress.progress_code}` : ""}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-[#386087]">
+                        <span>
+                          感情: {EMOTIONAL_STATE_LABELS[progress.emotional_state]} (score {progress.emotional_score})
+                        </span>
+                        {progress.psychology_recommendation !== "none" && (
+                          <span>
+                            心理学: {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="mt-1 text-sm text-[#417aa8]">まだ進捗が記録されていません。最初の診断が完了すると自動で表示されます。</p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
+                    onClick={() => setIsProgressFormOpen((prev) => !prev)}
+                  >
+                    進捗を編集
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
+                    onClick={() => setIsNoteFormOpen((prev) => !prev)}
+                  >
+                    記録する
+                  </Button>
+                </div>
+              </div>
+              {isProgressFormOpen && (
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs font-semibold text-[#4a7ba3]">レベル</label>
+                    <select
+                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                      value={progressForm.level}
+                      onChange={(event) => {
+                        const nextLevel = Number(event.target.value);
+                        const nextSection = sectionsByLevel[nextLevel]?.[0]?.section ?? progressForm.section;
+                        setProgressForm((prev) => ({ ...prev, level: nextLevel, section: nextSection }));
+                      }}
+                    >
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <option key={level} value={level}>
+                          レベル{level}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-[#4a7ba3]">セクション</label>
+                    <select
+                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                      value={progressForm.section}
+                      onChange={(event) => setProgressForm((prev) => ({ ...prev, section: Number(event.target.value) }))}
+                    >
+                      {(sectionsByLevel[progressForm.level] ?? ATTRACTION_SECTIONS.filter(
+                        (section) => section.level === progressForm.level,
+                      )).map((section) => (
+                        <option key={section.section} value={section.section}>
+                          {section.section}. {section.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-[#4a7ba3]">ステータス</label>
+                    <select
+                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                      value={progressForm.status}
+                      onChange={(event) =>
+                        setProgressForm((prev) => ({ ...prev, status: event.target.value as ProgressStatus }))
+                      }
+                    >
+                      {PROGRESS_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {STATUS_LABELS[status]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs font-semibold text-[#4a7ba3]">補足メモ</label>
+                    <textarea
+                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                      rows={2}
+                      value={progressForm.notes}
+                      onChange={(event) => setProgressForm((prev) => ({ ...prev, notes: event.target.value }))}
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setIsProgressFormOpen(false)}>
+                      キャンセル
+                    </Button>
+                    <Button size="sm" onClick={handleSaveProgress} disabled={isSavingProgress}>
+                      {isSavingProgress ? "保存中..." : "保存"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {isNoteFormOpen && (
+                <div className="mt-4 space-y-3 border-t border-dashed border-[#d2e8ff] pt-4">
+                  <div>
+                    <label className="text-xs font-semibold text-[#4a7ba3]">記録の種類</label>
+                    <select
+                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                      value={noteForm.noteType}
+                      onChange={(event) => setNoteForm((prev) => ({ ...prev, noteType: event.target.value }))}
+                    >
+                      {noteTypeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-[#4a7ba3]">内容</label>
+                    <textarea
+                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                      rows={2}
+                      value={noteForm.content}
+                      onChange={(event) => setNoteForm((prev) => ({ ...prev, content: event.target.value }))}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setIsNoteFormOpen(false)}>
+                      キャンセル
+                    </Button>
+                    <Button size="sm" onClick={handleSaveNote} disabled={isSavingNote}>
+                      {isSavingNote ? "保存中..." : "記録"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {progressNotes.length > 0 && (
+                <div className="mt-4 border-t border-dashed border-[#d2e8ff] pt-4">
+                  <p className="text-xs font-semibold text-[#4a7ba3]">最近のメモ</p>
+                  <ul className="mt-2 space-y-2 text-sm text-[#1f5c82]">
+                    {progressNotes.slice(0, 3).map((note) => (
+                      <li key={note.id} className="rounded-2xl bg-[#f5fbff] px-3 py-2">
+                        <div className="flex items-center justify-between text-xs text-[#4f80aa]">
+                          <span>
+                            {noteTypeOptions.find((option) => option.value === note.note_type)?.label ?? note.note_type}
+                          </span>
+                          <span>
+                            {new Date(note.created_at).toLocaleString("ja-JP", {
+                              month: "numeric",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-[#0f2f4d]">{note.content}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+          {shouldShowPsychologyBanner && progress && (
+            <div className="px-4">
+              <div className="mt-4 rounded-3xl border border-rose-200 bg-rose-50/90 p-4 text-sm text-[#571326] shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b4233b]">感情ケアのご提案</p>
+                <p className="mt-1 text-base font-semibold text-[#7a1531]">
+                  {progress.psychology_recommendation === "acknowledged"
+                    ? "まずはミシェル心理学で整えましょう"
+                    : "ネガティブ感情が強まっています"}
+                </p>
+                <p className="mt-1 text-sm text-[#6b1e33]">
+                  {progress.psychology_recommendation === "acknowledged"
+                    ? "感情のブロックを解放した後に改めて引き寄せを進めると、受け取りたい現実をスムーズに招きやすくなります。"
+                    : "ネガティブが強いまま進めると望まない現実まで引き寄せてしまいます。心理学で心を整えるか、今回は続けるかを一緒に選びましょう。"}
+                </p>
+                {progress.psychology_recommendation_reason && (
+                  <p className="mt-2 rounded-2xl bg-white/70 px-3 py-2 text-xs text-[#7e1f31]">
+                    {progress.psychology_recommendation_reason}
+                  </p>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {progress.psychology_recommendation === "suggested" && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="rounded-full bg-[#e11d48] text-white hover:bg-[#be123c]"
+                        onClick={() => handlePsychologyAction("acknowledge")}
+                        disabled={psychologyActionLoading === "acknowledge"}
+                      >
+                        {psychologyActionLoading === "acknowledge" ? "移動準備中..." : "ミシェル心理学で整える"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[#7a1531] hover:bg-rose-100"
+                        onClick={() => handlePsychologyAction("dismiss")}
+                        disabled={psychologyActionLoading === "dismiss"}
+                      >
+                        {psychologyActionLoading === "dismiss" ? "更新中..." : "今回はこのまま続ける"}
+                      </Button>
+                    </>
+                  )}
+                  {progress.psychology_recommendation === "acknowledged" && (
+                    <>
+                      <Button
+                        size="sm"
+                        className="rounded-full bg-[#e11d48] text-white hover:bg-[#be123c]"
+                        onClick={() => {
+                          window.location.href = "/michelle/chat?from=attraction";
+                        }}
+                      >
+                        心理学チャットを開く
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[#7a1531] hover:bg-rose-100"
+                        onClick={() => handlePsychologyAction("resolve")}
+                        disabled={psychologyActionLoading === "resolve"}
+                      >
+                        {psychologyActionLoading === "resolve" ? "更新中..." : "感情ケア完了・再開する"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-6 px-4 text-center">
+            <div className="flex min-h-[360px] flex-col items-center justify-center gap-6 px-4 text-center">
               <MichelleAvatar size="lg" variant="aqua" />
               <div className="space-y-2">
                 <h2 className="text-2xl font-semibold text-[#0f4c81]">こんにちは、ミシェル引き寄せです</h2>

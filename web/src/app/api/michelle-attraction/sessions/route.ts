@@ -35,5 +35,49 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to load sessions" }, { status: 500 });
   }
 
-  return NextResponse.json({ sessions: data ?? [] });
+  const sessions = data ?? [];
+
+  if (sessions.length === 0) {
+    return NextResponse.json({ sessions: [] });
+  }
+
+  const sessionIds = sessions.map((session) => session.id);
+  const { data: progressRows, error: progressError } = await supabase
+    .from("michelle_attraction_progress")
+    .select(
+      "id, session_id, current_level, current_section, progress_status, progress_code, updated_at, emotional_state, emotional_score, psychology_recommendation",
+    )
+    .in("session_id", sessionIds);
+
+  if (progressError) {
+    console.error("Failed to load michelle attraction progress snapshot", progressError);
+    return NextResponse.json({ error: "Failed to load sessions" }, { status: 500 });
+  }
+
+  type ProgressSnapshot = {
+    id: string;
+    session_id: string;
+    current_level: number;
+    current_section: number;
+    progress_status: "OK" | "IP" | "RV";
+    progress_code: string | null;
+    updated_at: string;
+    emotional_state: "stable" | "concern" | "critical";
+    emotional_score: number;
+    psychology_recommendation: "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
+  };
+
+  const progressBySession = new Map<string, ProgressSnapshot>();
+  (progressRows ?? []).forEach((row) => {
+    if (row?.session_id) {
+      progressBySession.set(row.session_id, row as ProgressSnapshot);
+    }
+  });
+
+  const response = sessions.map((session) => ({
+    ...session,
+    progress: progressBySession.get(session.id) ?? null,
+  }));
+
+  return NextResponse.json({ sessions: response });
 }

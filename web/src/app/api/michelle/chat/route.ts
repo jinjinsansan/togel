@@ -8,6 +8,7 @@ import { z } from "zod";
 import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
 import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/openai";
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
+import { fetchLatestProgress, type AttractionSupabase } from "@/lib/michelle-attraction/progress-server";
 import type { MichelleDatabase } from "@/types/michelle-db";
 
 const requestSchema = z.object({
@@ -44,6 +45,16 @@ type OpenAIWithBeta = OpenAI & {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MichelleSupabase = SupabaseClient<any>;
+
+type PsychologyRecommendationState = "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
+
+const PSYCHOLOGY_BRIDGE_LABELS: Record<PsychologyRecommendationState, string> = {
+  none: "",
+  suggested: "引き寄せ側で心理学ケアを推奨中",
+  acknowledged: "ユーザーが心理学ケアへ移行中",
+  dismissed: "心理学推奨は保留中",
+  resolved: "心理学ケア完了",
+};
 
 export async function POST(request: Request) {
   if (!MICHELLE_AI_ENABLED) {
@@ -87,10 +98,31 @@ export async function POST(request: Request) {
       .map((match, index) => `[参考知識${index + 1}]\n${match.content}`)
       .join("\n\n");
 
+    let attractionBridgeInstruction = "";
+    try {
+      const attractionProgress = await fetchLatestProgress(supabase as unknown as AttractionSupabase, user.id);
+      if (attractionProgress && attractionProgress.psychology_recommendation !== "none") {
+        const label = PSYCHOLOGY_BRIDGE_LABELS[attractionProgress.psychology_recommendation];
+        const reason = attractionProgress.psychology_recommendation_reason
+          ? `理由: ${attractionProgress.psychology_recommendation_reason}`
+          : "";
+        attractionBridgeInstruction = `【ミシェル引き寄せからの依頼】\n${label || "感情ケアを優先してください"}\n${reason}\nユーザーのネガティブな思い込みや感情の滞留を丁寧に解放し、整ったタイミングで引き寄せ学習に戻れるよう伴走してください。`;
+      }
+    } catch (bridgeError) {
+      console.error("Michelle psychology bridge fetch error", bridgeError);
+    }
+
+    const userPayload: string[] = [];
+    if (attractionBridgeInstruction) {
+      userPayload.push(attractionBridgeInstruction);
+    }
+    userPayload.push(message);
+    const userMessageWithBridge = userPayload.join("\n\n");
+
     const finalMessage =
       knowledgeMatches.length > 0
-        ? `【ユーザーメッセージ】\n${message}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下のミシェル心理学知識を参考にして回答を構築してください。\n${knowledgeContext}`
-        : message;
+        ? `【ユーザーメッセージ】\n${userMessageWithBridge}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下のミシェル心理学知識を参考にして回答を構築してください。\n${knowledgeContext}`
+        : userMessageWithBridge;
 
     await supabase.from("michelle_messages").insert({
       session_id: sessionId,
