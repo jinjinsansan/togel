@@ -23,10 +23,10 @@ const baseNavItems = [
 const navItems = [
   ...baseNavItems,
   ...(MICHELLE_AI_ENABLED
-    ? [{ href: "/michelle", label: "ミシェル心理学", en: "Michelle" }]
+    ? [{ href: "/michelle", label: "心理カウンセリング", en: "Counseling" }]
     : []),
   ...(MICHELLE_ATTRACTION_AI_ENABLED
-    ? [{ href: "/michelle/attraction", label: "ミシェル引き寄せ", en: "Michelle Attraction" }]
+    ? [{ href: "/michelle/attraction", label: "引き寄せ講座", en: "Attraction Course" }]
     : []),
   { href: "/points", label: "ポイント", en: "Points" },
   { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ", en: "Contact" },
