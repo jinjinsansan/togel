@@ -17,9 +17,10 @@ import {
   type AttractionSupabase,
   type ProgressRecord,
   type PsychologyRecommendationState,
+  upsertProgressRecord,
   updateEmotionSnapshot,
 } from "@/lib/michelle-attraction/progress-server";
-import { formatSectionLabel } from "@/lib/michelle-attraction/sections";
+import { formatSectionLabel, getNextSection, getPreviousSection } from "@/lib/michelle-attraction/sections";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -72,6 +73,9 @@ const formatRecommendationLabel = (state: PsychologyRecommendationState) => {
   return RECOMMENDATION_LABELS[state] ?? "";
 };
 
+const NEXT_SECTION_PATTERNS = ["次に進みましょう", "次へ進み", "次のセクションに進", "次のステップに進"];
+const PREVIOUS_SECTION_PATTERNS = ["1つ戻", "ひとつ戻", "前のセクションに戻", "復習のために戻", "戻りましょう"];
+
 export async function POST(request: Request) {
   if (!MICHELLE_ATTRACTION_AI_ENABLED) {
     return NextResponse.json({ error: "Michelle Attraction AI is currently disabled" }, { status: 503 });
@@ -121,12 +125,13 @@ export async function POST(request: Request) {
       .join("\n\n");
 
     const onboardingPrimer = isNewSession
-      ? `【初回オンボーディング指示】\nこの会話は新しいミシェル引き寄せ講座セッションの初回です。以下の手順を厳守して最初の返信を作成してください。\n1. 温かく挨拶し、講座の概要を1〜2文で伝える。\n2. ユーザーが初めてか/継続かを尋ねる。継続の場合は「こちらで進捗を自動復元しています」と伝え、コード入力などは絶対に求めないこと。\n3. 進捗が自動復元できない場合のみ診断質問Q1〜Q3を順に行い、開始レベル/セクションを決定する。\n4. 決定したセクションを明示し、【導入→本編→理解度チェック→次の準備】の流れで丁寧に進める。\n5. セクション完了ごとに「進捗は自動保存されました」と伝え、ユーザーに記録作業を依頼しない。\n6. いかなる場合も「進捗コード」「コードを発行/入力」等の表現は使用しないこと。\nこの直後に続くユーザーメッセージに必ず上記フローを適用して返信文を構築すること。\n\n【ユーザーメッセージ】\n${message}`
+      ? `【初回オンボーディング指示】\nこの会話は新しいミシェル引き寄せ講座セッションの初回です。以下の手順を厳守して最初の返信を作成してください。\n1. 温かく挨拶し、講座の概要を1〜2文で伝える。\n2. ユーザーが初めてか/継続かを尋ねる。継続の場合は「こちらで進捗を自動復元しています」と伝え、コード入力などは絶対に求めないこと。\n3. 進捗が自動復元できない場合のみ診断質問Q1〜Q3を順に行い、開始レベル/セクションを決定する。\n4. 決定したセクションを明示し、【導入→本編→理解度チェック→次の準備】の流れで丁寧に進める。\n5. セクション完了ごとに「進捗は自動保存されました」と伝え、ユーザーに記録作業を依頼しない。\n6. 次のセクションに進める際は文章内で必ず「次に進みましょう」を使い、1つ戻して復習する場合は「1つ戻って復習しましょう」と明示する。\n7. いかなる場合も「進捗コード」「コードを発行/入力」等の表現は使用しないこと。\nこの直後に続くユーザーメッセージに必ず上記フローを適用して返信文を構築すること。\n\n【ユーザーメッセージ】\n${message}`
       : `【継続セッション指示】\nユーザーの進捗と感情状態は自動的に保存・復元されています。コード入力を求めたり、進捗コードという言葉を使用せず、現在のコンテキストを前提に会話を続けてください。\n\n【ユーザーメッセージ】\n${message}`
 
     let progressContext = "";
     let psychologyInstruction = "";
     let negativityAlertInstruction = "";
+    let latestProgressRecord: ProgressRecord | null = null;
     try {
       let progressRecord = await fetchProgressBySession(supabase, user.id, sessionId);
       if (!progressRecord) {
@@ -145,6 +150,7 @@ export async function POST(request: Request) {
         let recommendationTriggered = false;
         if (emotionAnalysis.state !== "stable") {
           const severityLabel = emotionAnalysis.state === "critical" ? "緊急" : "注意";
+        latestProgressRecord = progressRecord;
           negativityAlertInstruction = `【感情アラート指示】
 ユーザーの感情スコアは${severityLabel}レベル（${emotionAnalysis.score}）です。感情が荒れたままでは引き寄せの結果も乱れるため、「まずは心を整えてから引き寄せを進めましょう」と明示してください。根性論ではなく呼吸や心理学チャットを案内し、焦らずに整えるよう寄り添ってください。`;
 
@@ -286,6 +292,17 @@ export async function POST(request: Request) {
                   content: fullReply,
                 });
               }
+              if (latestProgressRecord) {
+                try {
+                  await handleAutoProgressUpdate(fullReply, latestProgressRecord, {
+                    supabase,
+                    authUserId: user.id,
+                    sessionId,
+                  });
+                } catch (autoProgressError) {
+                  console.error("Auto progress update error", autoProgressError);
+                }
+              }
               sendEvent({ type: "done" });
               controller.close();
             });
@@ -394,4 +411,49 @@ const buildPsychologyGuidance = (record: ProgressRecord, newlyTriggered: boolean
   }
 
   return "";
+};
+
+const handleAutoProgressUpdate = async (
+  responseText: string,
+  progressRecord: ProgressRecord,
+  params: { supabase: AttractionSupabase; authUserId: string; sessionId: string },
+) => {
+  const action = detectProgressAction(responseText);
+  if (!action) return;
+
+  if (action === "next") {
+    const nextSection = getNextSection(progressRecord.current_section);
+    if (!nextSection) return;
+    await upsertProgressRecord(params.supabase, {
+      authUserId: params.authUserId,
+      sessionId: params.sessionId,
+      level: nextSection.level,
+      section: nextSection.section,
+      status: "IP",
+    });
+    return;
+  }
+
+  if (action === "back") {
+    const previousSection = getPreviousSection(progressRecord.current_section);
+    if (!previousSection) return;
+    await upsertProgressRecord(params.supabase, {
+      authUserId: params.authUserId,
+      sessionId: params.sessionId,
+      level: previousSection.level,
+      section: previousSection.section,
+      status: "RV",
+    });
+  }
+};
+
+const detectProgressAction = (responseText: string): "next" | "back" | null => {
+  const normalized = responseText.replace(/\s+/g, "");
+  if (NEXT_SECTION_PATTERNS.some((pattern) => normalized.includes(pattern))) {
+    return "next";
+  }
+  if (PREVIOUS_SECTION_PATTERNS.some((pattern) => normalized.includes(pattern))) {
+    return "back";
+  }
+  return null;
 };

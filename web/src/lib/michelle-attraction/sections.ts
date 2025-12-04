@@ -40,6 +40,25 @@ export const getSectionByNumber = (sectionNumber: number) =>
 export const findSection = (level: number, sectionNumber: number) =>
   ATTRACTION_SECTIONS.find((section) => section.level === level && section.section === sectionNumber) ?? null;
 
+const getSectionIndex = (sectionNumber: number) =>
+  ATTRACTION_SECTIONS.findIndex((section) => section.section === sectionNumber);
+
+export const getNextSection = (currentSectionNumber: number) => {
+  const index = getSectionIndex(currentSectionNumber);
+  if (index === -1 || index >= ATTRACTION_SECTIONS.length - 1) {
+    return null;
+  }
+  return ATTRACTION_SECTIONS[index + 1];
+};
+
+export const getPreviousSection = (currentSectionNumber: number) => {
+  const index = getSectionIndex(currentSectionNumber);
+  if (index <= 0) {
+    return null;
+  }
+  return ATTRACTION_SECTIONS[index - 1];
+};
+
 export const formatSectionLabel = (level: number, sectionNumber: number) => {
   const section = findSection(level, sectionNumber);
   if (!section) {

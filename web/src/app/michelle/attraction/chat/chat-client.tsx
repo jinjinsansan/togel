@@ -12,6 +12,7 @@ import {
   formatSectionLabel,
   PROGRESS_STATUSES,
   type ProgressStatus,
+  getPreviousSection,
 } from "@/lib/michelle-attraction/sections";
 
 type PsychologyRecommendationState = "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
@@ -178,6 +179,7 @@ export function MichelleAttractionChatClient() {
   const [isNoteFormOpen, setIsNoteFormOpen] = useState(false);
   const [isProgressDetailsOpen, setIsProgressDetailsOpen] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
+  const [isRevertingProgress, setIsRevertingProgress] = useState(false);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [psychologyActionLoading, setPsychologyActionLoading] = useState<null | "acknowledge" | "dismiss" | "resolve">(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -487,6 +489,57 @@ export function MichelleAttractionChatClient() {
     setIsProgressFormOpen(false);
     setIsNoteFormOpen(true);
   }, []);
+
+  const handleRevertProgress = async () => {
+    if (!progress) {
+      setError("戻せる進捗がありません");
+      return;
+    }
+    const previousSection = getPreviousSection(progress.current_section);
+    if (!previousSection) {
+      setError("これ以上戻ることはできません");
+      return;
+    }
+    const targetSessionId = determineSessionForProgress();
+    if (!targetSessionId) {
+      setError("先にチャットを開始してください");
+      return;
+    }
+
+    setIsRevertingProgress(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/michelle-attraction/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: targetSessionId,
+          level: previousSection.level,
+          section: previousSection.section,
+          status: "RV",
+        }),
+      });
+
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        throw new Error("ログインしてください");
+      }
+
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "進捗の更新に失敗しました");
+      }
+
+      await fetchProgress();
+      setError("✓ 1つ前のセクションに戻りました");
+      setTimeout(() => setError(null), 2500);
+    } catch (revertError) {
+      console.error("Progress revert error", revertError);
+      setError(revertError instanceof Error ? revertError.message : "戻す処理に失敗しました");
+    } finally {
+      setIsRevertingProgress(false);
+    }
+  };
 
   const handleSaveProgress = async () => {
     const targetSessionId = determineSessionForProgress();
@@ -1061,6 +1114,15 @@ export function MichelleAttractionChatClient() {
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#a34264]"
+                    onClick={handleRevertProgress}
+                    disabled={isRevertingProgress || !progress || !getPreviousSection(progress.current_section)}
+                  >
+                    {isRevertingProgress ? "戻しています..." : "1つ戻る"}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
