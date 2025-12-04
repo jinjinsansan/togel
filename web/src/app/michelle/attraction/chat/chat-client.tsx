@@ -1095,7 +1095,7 @@ export function MichelleAttractionChatClient() {
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className="px-4 pt-4">
-            <div className="rounded-3xl border border-[#d1e7ff] bg-white/80 p-3 text-sm shadow-sm">
+            <div className="rounded-3xl border border-[#d1e7ff] bg-white/80 p-3 text-sm shadow-sm mb-6">
               <button
                 type="button"
                 className="flex w-full items-center justify-between gap-3 text-left"
