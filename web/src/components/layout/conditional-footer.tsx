@@ -4,7 +4,14 @@ import { usePathname } from "next/navigation";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 
-const EXCLUDE_FOOTER_PATHS = ["/michelle", "/michelle/attraction", "/diagnosis", "/admin"];
+const EXCLUDE_FOOTER_PATHS = [
+  "/michelle",
+  "/michelle/attraction",
+  "/diagnosis",
+  "/admin",
+  "/result",
+  "/result/mismatch",
+];
 
 const MOBILE_ALLOWED_PATHS = ["/"];
 
