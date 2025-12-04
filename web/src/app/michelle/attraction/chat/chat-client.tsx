@@ -134,6 +134,14 @@ const PSYCHOLOGY_STATE_LABELS: Record<PsychologyRecommendationState, string> = {
   resolved: "感情ケア完了",
 };
 
+const PSYCHOLOGY_STATE_DESCRIPTIONS: Record<PsychologyRecommendationState, string> = {
+  none: "必要に応じてこの画面で感情ログを残すと、AIが自動でフォローします。",
+  suggested: "感情の波が大きいため、一度ミシェル心理学で整えることをおすすめしています。",
+  acknowledged: "心理学チャットで感情ケアを優先するフェーズに入っています。完了後に再開しましょう。",
+  dismissed: "今回は引き寄せを続ける選択がされています。必要になればいつでも心理学に切り替えられます。",
+  resolved: "直近で心理学ケアが完了しました。整った心で次のレッスンに進めます。",
+};
+
 const noteTypeOptions = [
   { value: "comprehension", label: "理解の壁" },
   { value: "emotion", label: "感情の揺らぎ" },
@@ -1018,28 +1026,32 @@ export function MichelleAttractionChatClient() {
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">現在の進捗</p>
+                  <p className="mt-1 text-[11px] text-[#4c6b92]">
+                    ミシェルがレッスン内容・感情ログを自動保存し、必要に応じて心理学チャットとも共有します。
+                  </p>
                   {progress ? (
                     <>
-                      <p className="mt-1 text-lg font-semibold text-[#0f4c81]">
+                      <p className="mt-2 text-lg font-semibold text-[#0f4c81]">
                         {formatSectionLabel(progress.current_level, progress.current_section)}
                       </p>
-                      <p className="text-xs text-[#3c6a92]">
-                        {STATUS_LABELS[progress.progress_status]}
-                        {progress.progress_code ? ` / ${progress.progress_code}` : ""}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-[#386087]">
+                      <p className="text-xs text-[#3c6a92]">{STATUS_LABELS[progress.progress_status]}</p>
+                      <div className="mt-3 grid gap-1 text-[11px] text-[#386087]">
                         <span>
-                          感情: {EMOTIONAL_STATE_LABELS[progress.emotional_state]} (score {progress.emotional_score})
+                          📘 レッスン: レベル{progress.current_level} / セクション{progress.current_section}
                         </span>
-                        {progress.psychology_recommendation !== "none" && (
-                          <span>
-                            心理学: {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}
-                          </span>
-                        )}
+                        <span>
+                          🧠 感情: {EMOTIONAL_STATE_LABELS[progress.emotional_state]} (score {progress.emotional_score})
+                        </span>
+                        <span>
+                          🤝 心理学ケア: {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}
+                        </span>
+                        <span className="text-[#55708f]">
+                          {PSYCHOLOGY_STATE_DESCRIPTIONS[progress.psychology_recommendation]}
+                        </span>
                       </div>
                     </>
                   ) : (
-                    <p className="mt-1 text-sm text-[#417aa8]">まだ進捗が記録されていません。最初の診断が完了すると自動で表示されます。</p>
+                    <p className="mt-2 text-sm text-[#417aa8]">最初のセッションが完了すると、進捗がここに自動表示されます。</p>
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -1060,6 +1072,9 @@ export function MichelleAttractionChatClient() {
                     記録する
                   </Button>
                 </div>
+                <p className="text-[11px] text-[#4c6b92]">
+                  ※ ここで編集・記録した内容は、以降のミシェル引き寄せ／心理学の回答にも反映されます。
+                </p>
               </div>
               {isProgressFormOpen && (
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -1134,6 +1149,9 @@ export function MichelleAttractionChatClient() {
               )}
               {isNoteFormOpen && (
                 <div className="mt-4 space-y-3 border-t border-dashed border-[#d2e8ff] pt-4">
+                  <p className="text-[11px] text-[#4c6b92]">
+                    ここで残したメモは、次回以降のアドバイスにも活用されます。感情や気づきを自由に書き留めてください。
+                  </p>
                   <div>
                     <label className="text-xs font-semibold text-[#4a7ba3]">記録の種類</label>
                     <select
@@ -1169,7 +1187,10 @@ export function MichelleAttractionChatClient() {
               )}
               {progressNotes.length > 0 && (
                 <div className="mt-4 border-t border-dashed border-[#d2e8ff] pt-4">
-                  <p className="text-xs font-semibold text-[#4a7ba3]">最近のメモ</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-[#4a7ba3]">最近のメモ</p>
+                    <p className="text-[11px] text-[#4c6b92]">AIにも共有済み</p>
+                  </div>
                   <ul className="mt-2 space-y-2 text-sm text-[#1f5c82]">
                     {progressNotes.slice(0, 3).map((note) => (
                       <li key={note.id} className="rounded-2xl bg-[#f5fbff] px-3 py-2">
