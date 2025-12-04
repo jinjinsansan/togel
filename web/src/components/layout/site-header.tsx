@@ -12,26 +12,30 @@ import { LoginButton } from "@/components/auth/login-button";
 import { Button } from "@/components/ui/button";
 import { MICHELLE_AI_ENABLED, MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
 
-const baseNavItems = [
-  { href: "/diagnosis/select", label: "診断", en: "Diagnosis" },
-  { href: "/result", label: "マッチング結果", en: "Matching" },
-  { href: "/types", label: "型一覧", en: "Types" },
-  { href: "/types/distribution", label: "分布図", en: "Distribution" },
-  { href: "/profile/edit", label: "プロフィール", en: "Profile" },
+const primaryNavItems = [
+  { href: "/diagnosis/select", label: "診断" },
+  { href: "/result", label: "マッチング結果" },
+  { href: "/types", label: "型一覧" },
+  { href: "/types/distribution", label: "分布図" },
+  { href: "/profile/edit", label: "プロフィール" },
 ];
 
-const navItems = [
-  ...baseNavItems,
+const journeyNavItems = [
   ...(MICHELLE_AI_ENABLED
-    ? [{ href: "/michelle", label: "心理カウンセリング", en: "Counseling" }]
+    ? [{ href: "/michelle", label: "心理カウンセリング" }]
     : []),
   ...(MICHELLE_ATTRACTION_AI_ENABLED
-    ? [{ href: "/michelle/attraction", label: "引き寄せ講座", en: "Attraction Course" }]
+    ? [{ href: "/michelle/attraction", label: "引き寄せ講座" }]
     : []),
-  { href: "/points", label: "ポイント", en: "Points" },
-  { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ", en: "Contact" },
-  { href: "/mypage", label: "マイページ", en: "My Page" },
 ];
+
+const utilityNavItems = [
+  { href: "/points", label: "ポイント" },
+  { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ" },
+  { href: "/mypage", label: "マイページ" },
+];
+
+const navItems = [...primaryNavItems, ...journeyNavItems, ...utilityNavItems];
 
 const ADMIN_EMAILS = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
 
@@ -232,13 +236,40 @@ export const SiteHeader = () => {
           </Link>
           
           {/* Desktop Nav */}
-          <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className="text-[#E91E63]/80 transition-colors hover:text-[#E91E63]">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="hidden flex-col gap-1 md:flex">
+            <nav className="flex items-center gap-4 text-[13px] font-semibold text-[#ba2d65]">
+              {primaryNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full px-3 py-1 transition-colors hover:bg-[#ffe4ef] hover:text-[#E91E63]"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <nav className="flex items-center gap-3 text-[12px] text-[#7a4c63]">
+              {journeyNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full border border-[#f3c5d7] px-3 py-0.5 transition-colors hover:border-[#E91E63] hover:text-[#E91E63]"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {journeyNavItems.length > 0 && <span className="h-3 w-px bg-[#f0cada]" aria-hidden="true" />}
+              {utilityNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="px-2 py-0.5 text-[#956477] transition-colors hover:text-[#E91E63]"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
           <div className="flex items-center gap-2">
             {/* Desktop Auth Button */}
