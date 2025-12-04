@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
+import { ChevronDown, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, User, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -1088,85 +1088,94 @@ export function MichelleAttractionChatClient() {
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className="px-4 pt-4">
-            <div className="rounded-3xl border border-[#d1e7ff] bg-white/80 p-4 text-sm shadow-sm">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">現在の進捗</p>
+            <div className="rounded-3xl border border-[#d1e7ff] bg-white/80 p-3 text-sm shadow-sm">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-3 text-left"
+                onClick={() => setIsProgressDetailsOpen((prev) => !prev)}
+                aria-expanded={isProgressDetailsOpen}
+                aria-controls="progress-panel"
+              >
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">現在の進捗</p>
                   {progress ? (
-                    <>
-                      <p className="text-base font-semibold text-[#0f4c81]">
-                        {formatSectionLabel(progress.current_level, progress.current_section)}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[#3c6187]">
-                        <span className="rounded-full bg-[#e6f4ff] px-3 py-1">
-                          📘 レベル{progress.current_level} / セクション{progress.current_section}
-                        </span>
-                        <span className="rounded-full bg-[#f0f7ff] px-3 py-1">
-                          🧠 {EMOTIONAL_STATE_LABELS[progress.emotional_state]}・score {progress.emotional_score}
-                        </span>
-                        <span className="rounded-full bg-[#f5fbff] px-3 py-1">
-                          🤝 {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}
-                        </span>
-                      </div>
-                    </>
+                    <p className="mt-1 text-base font-semibold text-[#0f4c81]">
+                      {formatSectionLabel(progress.current_level, progress.current_section)}
+                    </p>
                   ) : (
-                    <p className="text-sm text-[#417aa8]">最初のセッション完了後に自動で表示されます。</p>
+                    <p className="mt-1 text-sm text-[#417aa8]">最初のセッション完了後に自動で表示されます。</p>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#a34264]"
-                    onClick={handleRevertProgress}
-                    disabled={isRevertingProgress || !progress || !getPreviousSection(progress.current_section)}
-                  >
-                    {isRevertingProgress ? "戻しています..." : "1つ戻る"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#2b6c94]"
-                    onClick={() => setIsProgressDetailsOpen((prev) => !prev)}
-                  >
-                    {isProgressDetailsOpen ? "詳細を閉じる" : "詳細を見る"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
-                    onClick={handleOpenProgressForm}
-                  >
-                    進捗を編集
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
-                    onClick={handleOpenNoteForm}
-                  >
-                    記録する
-                  </Button>
+                <div className="flex items-center gap-2 text-[11px] text-[#a34264]">
+                  {progress && (
+                    <span className="rounded-full border border-[#f3c5d7] px-3 py-1 text-[11px] text-[#a34264]">
+                      {STATUS_LABELS[progress.progress_status]}
+                    </span>
+                  )}
+                  <span className="font-semibold">
+                    {isProgressDetailsOpen ? "詳細を閉じる" : "タップで詳細"}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-5 w-5 text-[#a34264] transition-transform",
+                      isProgressDetailsOpen && "rotate-180",
+                    )}
+                  />
                 </div>
-              </div>
-
+              </button>
+              {progress && !isProgressDetailsOpen && (
+                <p className="mt-2 text-[12px] text-[#6f819b]">タップすると感情ログやメモを確認できます。</p>
+              )}
+              {!progress && (
+                <p className="mt-2 text-[12px] text-[#6f819b]">最初の診断が完了すると進捗がここに表示されます。</p>
+              )}
               {isProgressDetailsOpen && (
-                <div className="mt-4 space-y-4 border-t border-dashed border-[#d2e8ff] pt-4">
-                  <p className="text-[11px] text-[#4c6b92]">
-                    ミシェルがレッスン内容・感情ログを自動保存し、必要に応じて心理学チャットとも共有します。ここで編集・記録した内容は以降の回答にも反映されます。
-                  </p>
-
+                <div id="progress-panel" className="mt-4 space-y-4 border-t border-dashed border-[#d2e8ff] pt-4">
                   {progress ? (
-                    <div className="grid gap-1 text-[11px] text-[#386087]">
-                      <span>📘 レッスン状況: {STATUS_LABELS[progress.progress_status]}</span>
-                      <span>🧠 感情: {EMOTIONAL_STATE_LABELS[progress.emotional_state]} (score {progress.emotional_score})</span>
+                    <div className="grid gap-2 text-[12px] text-[#386087]">
+                      <span>
+                        📘 レッスン: レベル{progress.current_level} / セクション{progress.current_section}
+                      </span>
+                      <span>
+                        🧠 感情: {EMOTIONAL_STATE_LABELS[progress.emotional_state]} (score {progress.emotional_score})
+                      </span>
                       <span>🤝 心理学ケア: {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}</span>
-                      <span className="text-[#55708f]">{PSYCHOLOGY_STATE_DESCRIPTIONS[progress.psychology_recommendation]}</span>
+                      <span className="text-[#55708f]">
+                        {PSYCHOLOGY_STATE_DESCRIPTIONS[progress.psychology_recommendation]}
+                      </span>
                     </div>
                   ) : (
                     <p className="text-sm text-[#417aa8]">最初のセッション完了後に自動で進捗を表示します。</p>
                   )}
-
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#a34264]"
+                      onClick={handleRevertProgress}
+                      disabled={
+                        isRevertingProgress || !progress || !getPreviousSection(progress.current_section)
+                      }
+                    >
+                      {isRevertingProgress ? "戻しています..." : "1つ戻る"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
+                      onClick={handleOpenProgressForm}
+                    >
+                      進捗を編集
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
+                      onClick={handleOpenNoteForm}
+                    >
+                      記録する
+                    </Button>
+                  </div>
                   {isProgressFormOpen && (
                     <div className="grid gap-3 md:grid-cols-2">
                       <div>
@@ -1238,7 +1247,6 @@ export function MichelleAttractionChatClient() {
                       </div>
                     </div>
                   )}
-
                   {isNoteFormOpen && (
                     <div className="space-y-3 border-t border-dashed border-[#d2e8ff] pt-4">
                       <p className="text-[11px] text-[#4c6b92]">
@@ -1277,7 +1285,6 @@ export function MichelleAttractionChatClient() {
                       </div>
                     </div>
                   )}
-
                   {progressNotes.length > 0 && (
                     <div className="border-t border-dashed border-[#d2e8ff] pt-4">
                       <div className="flex items-center justify-between">
@@ -1309,7 +1316,6 @@ export function MichelleAttractionChatClient() {
                 </div>
               )}
             </div>
-          </div>
           {shouldShowPsychologyBanner && progress && (
             <div className="px-4">
               <div className="mt-4 rounded-3xl border border-rose-200 bg-rose-50/90 p-4 text-sm text-[#571326] shadow-sm">
@@ -1450,6 +1456,7 @@ export function MichelleAttractionChatClient() {
               <div ref={messagesEndRef} />
             </div>
           )}
+          </div>
         </div>
 
         <div 
