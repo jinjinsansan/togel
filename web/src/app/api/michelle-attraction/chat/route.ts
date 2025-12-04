@@ -112,6 +112,85 @@ const PREVIOUS_SECTION_REGEXES = [
 
 const MAX_EMOTION_HISTORY = 4;
 
+const USER_NEXT_SECTION_KEYWORDS = [
+  "次に進みます",
+  "次へ進む",
+  "先に進む",
+  "次をお願いします",
+  "次お願いします",
+  "次へ",
+  "次お願いします",
+  "次のセクション",
+  "次のステップ",
+  "次へ行きたい",
+];
+
+const USER_NEXT_SECTION_REGEXES = [
+  /次(?:の|へ)?(?:セクション|章|ステップ)?に?進んで/iu,
+  /次(?:の|へ)?(?:セクション|章|ステップ)?を?お願い/iu,
+  /(?:このまま|それでは)?次(?:へ|に)/iu,
+];
+
+const USER_BACK_SECTION_REGEXES = [
+  /戻(?:りたい|ります|って|ろう)/iu,
+  /前(?:の|へ)?(?:セクション|章|ステップ)/iu,
+  /復習したい/iu,
+];
+
+const USER_DETAIL_KEYWORDS = [
+  "詳しく",
+  "もっと",
+  "深く",
+  "詳細",
+  "教えて",
+  "知りたい",
+  "解説",
+  "説明",
+  "噛み砕いて",
+];
+
+type ProgressIntent = "next" | "back" | "deeper" | "neutral";
+
+const determineUserProgressIntent = (message: string): ProgressIntent => {
+  const normalized = message.replace(/[\s\n\r]+/g, "").toLowerCase();
+  if (USER_BACK_SECTION_REGEXES.some((regex) => regex.test(message))) {
+    return "back";
+  }
+  if (
+    USER_NEXT_SECTION_KEYWORDS.some((keyword) => normalized.includes(keyword.toLowerCase())) ||
+    USER_NEXT_SECTION_REGEXES.some((regex) => regex.test(message))
+  ) {
+    return "next";
+  }
+  if (USER_DETAIL_KEYWORDS.some((keyword) => message.includes(keyword))) {
+    return "deeper";
+  }
+  return "neutral";
+};
+
+const buildProgressIntentInstruction = (intent: ProgressIntent, progressRecord: ProgressRecord | null) => {
+  if (!progressRecord) return "";
+  const sectionLabel = formatSectionLabel(progressRecord.current_level, progressRecord.current_section);
+
+  if (intent === "next") {
+    return `【進行リクエスト】
+ユーザーは「次に進みたい」と表明しました。現在の${sectionLabel}を手短にまとめたうえで、「次に進みましょう」というフレーズを含めて次のセクション名と狙いを宣言してから移動してください。`;
+  }
+
+  if (intent === "back") {
+    return `【進行リクエスト】
+ユーザーは1つ前を復習したい意向です。「1つ戻って復習しましょう」というフレーズを用い、前のセクション内容を優先してください。`;
+  }
+
+  if (intent === "deeper") {
+    return `【進行リクエスト】
+ユーザーは${sectionLabel}をさらに深掘りしたいだけで、次へ進むとは明言していません。次セクションの内容は紹介せず、現在のセクションを噛み砕いて解説してください。`; 
+  }
+
+  return `【進行リクエスト】
+ユーザーから「次に進む」指示はありません。現在の${sectionLabel}を継続し、こちらから先走って次のセクションを提示しないでください。`;
+};
+
 export async function POST(request: Request) {
   if (!MICHELLE_ATTRACTION_AI_ENABLED) {
     return NextResponse.json({ error: "Michelle Attraction AI is currently disabled" }, { status: 503 });
@@ -171,6 +250,7 @@ ${message}`
     let progressContext = "";
     let psychologyInstruction = "";
     let negativityAlertInstruction = "";
+    let progressIntentInstruction = "";
     let latestProgressRecord: ProgressRecord | null = null;
     try {
       let progressRecord = await fetchProgressBySession(supabase, user.id, sessionId);
@@ -249,6 +329,8 @@ ${message}`
         }
         progressContext = `【進捗コンテキスト】\n${lines.join("\n")}`;
 
+        const userProgressIntent = determineUserProgressIntent(message);
+        progressIntentInstruction = buildProgressIntentInstruction(userProgressIntent, progressRecord);
         psychologyInstruction = buildPsychologyGuidance(progressRecord, recommendationTriggered);
         latestProgressRecord = progressRecord;
       }
@@ -262,6 +344,9 @@ ${message}`
     }
     if (psychologyInstruction) {
       userPayload.push(psychologyInstruction);
+    }
+    if (progressIntentInstruction) {
+      userPayload.push(progressIntentInstruction);
     }
     if (progressContext) {
       userPayload.push(progressContext);
