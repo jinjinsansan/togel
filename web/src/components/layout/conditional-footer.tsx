@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 
-import { FooterHighlight } from "@/components/layout/footer-highlight";
 import { SiteFooter } from "@/components/layout/site-footer";
 
 export const ConditionalFooter = () => {
@@ -12,10 +11,5 @@ export const ConditionalFooter = () => {
     return null;
   }
 
-  return (
-    <>
-      <FooterHighlight />
-      <SiteFooter />
-    </>
-  );
+  return <SiteFooter />;
 };
