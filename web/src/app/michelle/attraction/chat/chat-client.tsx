@@ -151,6 +151,13 @@ const noteTypeOptions = [
   { value: "other", label: "その他" },
 ];
 
+const isProduction = process.env.NODE_ENV === "production";
+const debugLog = (...args: unknown[]) => {
+  if (!isProduction) {
+    debugLog(...args);
+  }
+};
+
 export function MichelleAttractionChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -248,20 +255,20 @@ export function MichelleAttractionChatClient() {
 
   const loadMessages = useCallback(
     async (sessionId: string) => {
-      console.log("[loadMessages] Starting to load messages for session:", sessionId);
+      debugLog("[loadMessages] Starting to load messages for session:", sessionId);
       setIsLoading((prev) => ({ ...prev, messages: true }));
       try {
         const res = await fetch(`/api/michelle-attraction/sessions/${sessionId}/messages`);
-        console.log("[loadMessages] Response status:", res.status);
+        debugLog("[loadMessages] Response status:", res.status);
         
         if (res.status === 401) {
-          console.log("[loadMessages] Unauthorized - setting needsAuth");
+          debugLog("[loadMessages] Unauthorized - setting needsAuth");
           setNeedsAuth(true);
           setHasLoadedMessages(true);
           return;
         }
         if (res.status === 404) {
-          console.log("[loadMessages] Session not found - clearing activeSessionId");
+          debugLog("[loadMessages] Session not found - clearing activeSessionId");
           setActiveSessionId(null);
            setHasLoadedMessages(true);
           return;
@@ -269,7 +276,7 @@ export function MichelleAttractionChatClient() {
         if (!res.ok) throw new Error("Failed to load messages");
         
         const data = (await res.json()) as MessagesResponse;
-        console.log("[loadMessages] Received data:", {
+        debugLog("[loadMessages] Received data:", {
           sessionId: data.session?.id,
           messagesCount: data.messages?.length ?? 0,
           firstMessage: data.messages?.[0]?.content?.substring(0, 50)
@@ -277,12 +284,12 @@ export function MichelleAttractionChatClient() {
         
         setMessages(data.messages ?? []);
         setHasLoadedMessages(true);
-        console.log("[loadMessages] Messages state updated with", data.messages?.length ?? 0, "messages");
+        debugLog("[loadMessages] Messages state updated with", data.messages?.length ?? 0, "messages");
       } catch (err) {
         console.error("[loadMessages] Error loading messages:", err);
       } finally {
         setIsLoading((prev) => ({ ...prev, messages: false }));
-        console.log("[loadMessages] Loading complete");
+        debugLog("[loadMessages] Loading complete");
       }
     },
     [],
@@ -295,14 +302,14 @@ export function MichelleAttractionChatClient() {
   }, [activeSessionId, sessionFromProgress, sessions]);
 
   useEffect(() => {
-    console.log("[Mount] Component mounted");
+    debugLog("[Mount] Component mounted");
     setIsMounted(true);
     setIsMobile(window.innerWidth < 768);
     
     // モバイルでは初回ロード時に意図しないフォーカスを防ぐ
     if (window.innerWidth < 768 && textareaRef.current) {
       textareaRef.current.blur();
-      console.log("[Mount] Mobile: textarea blur applied to prevent unwanted keyboard");
+      debugLog("[Mount] Mobile: textarea blur applied to prevent unwanted keyboard");
     }
     
     const handleResize = () => {
@@ -314,13 +321,13 @@ export function MichelleAttractionChatClient() {
   }, []);
 
   useEffect(() => {
-    console.log("[Sessions] Loading sessions...");
+    debugLog("[Sessions] Loading sessions...");
     loadSessions();
     fetchProgress();
   }, [loadSessions, fetchProgress]);
 
   useEffect(() => {
-    console.log(
+    debugLog(
       "[Session Restore] Effect triggered - isMounted:",
       isMounted,
       "hasRestored:",
@@ -332,19 +339,19 @@ export function MichelleAttractionChatClient() {
     );
 
     if (!isMounted) {
-      console.log("[Session Restore] Skipped - not mounted yet");
+      debugLog("[Session Restore] Skipped - not mounted yet");
       return;
     }
     if (hasRestoredSessionRef.current) {
-      console.log("[Session Restore] Skipped - already restored");
+      debugLog("[Session Restore] Skipped - already restored");
       return;
     }
     if (!hasInitializedSessions) {
-      console.log("[Session Restore] Skipped - sessions not initialized yet");
+      debugLog("[Session Restore] Skipped - sessions not initialized yet");
       return;
     }
     if (sessions.length === 0) {
-      console.log("[Session Restore] No sessions available - finishing restore state");
+      debugLog("[Session Restore] No sessions available - finishing restore state");
       hasRestoredSessionRef.current = true;
       setIsRestoringSession(false);
       return;
@@ -352,20 +359,20 @@ export function MichelleAttractionChatClient() {
 
     try {
       const storedSessionId = window.localStorage.getItem(ACTIVE_SESSION_STORAGE_KEY);
-      console.log("[Session Restore] Stored ID:", storedSessionId, "Sessions count:", sessions.length);
+      debugLog("[Session Restore] Stored ID:", storedSessionId, "Sessions count:", sessions.length);
       
       if (storedSessionId) {
         const exists = sessions.some((s) => s.id === storedSessionId);
-        console.log("[Session Restore] Session exists:", exists);
+        debugLog("[Session Restore] Session exists:", exists);
         
         if (exists) {
-          console.log("[Session Restore] Restoring session:", storedSessionId);
+          debugLog("[Session Restore] Restoring session:", storedSessionId);
           setActiveSessionId(storedSessionId);
         } else {
-          console.log("[Session Restore] Session not found in sessions array");
+          debugLog("[Session Restore] Session not found in sessions array");
         }
       } else {
-        console.log("[Session Restore] No stored session ID found");
+        debugLog("[Session Restore] No stored session ID found");
       }
     } catch (error) {
       console.error("[Session Restore] Failed to restore session:", error);
@@ -373,7 +380,7 @@ export function MichelleAttractionChatClient() {
     
     hasRestoredSessionRef.current = true;
     setIsRestoringSession(false);
-    console.log("[Session Restore] Flag set to true, restoration complete");
+    debugLog("[Session Restore] Flag set to true, restoration complete");
   }, [isMounted, sessions, hasInitializedSessions]);
 
   useEffect(() => {
@@ -384,22 +391,22 @@ export function MichelleAttractionChatClient() {
   }, [input]);
 
   useEffect(() => {
-    console.log("[Save Session] Effect triggered - isMounted:", isMounted, "activeSessionId:", activeSessionId);
+    debugLog("[Save Session] Effect triggered - isMounted:", isMounted, "activeSessionId:", activeSessionId);
     
     if (!isMounted) {
-      console.log("[Save Session] Skipped - not mounted yet");
+      debugLog("[Save Session] Skipped - not mounted yet");
       return;
     }
     
     if (!activeSessionId) {
-      console.log("[Save Session] Skipped - activeSessionId is null (keeping existing localStorage)");
+      debugLog("[Save Session] Skipped - activeSessionId is null (keeping existing localStorage)");
       return;
     }
     
     try {
-      console.log("[Save Session] Saving to localStorage:", activeSessionId);
+      debugLog("[Save Session] Saving to localStorage:", activeSessionId);
       window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, activeSessionId);
-      console.log("[Save Session] Saved successfully");
+      debugLog("[Save Session] Saved successfully");
     } catch (error) {
       console.error("[Save Session] Failed to save session:", error);
     }
@@ -452,14 +459,14 @@ export function MichelleAttractionChatClient() {
   useEffect(() => {
     if (isLoading.sending) return;
 
-    console.log("[Load Messages] activeSessionId:", activeSessionId);
+    debugLog("[Load Messages] activeSessionId:", activeSessionId);
 
     if (activeSessionId) {
       setHasLoadedMessages(false);
-      console.log("[Load Messages] Loading messages for:", activeSessionId);
+      debugLog("[Load Messages] Loading messages for:", activeSessionId);
       loadMessages(activeSessionId);
     } else {
-      console.log("[Load Messages] Clearing messages (no active session)");
+      debugLog("[Load Messages] Clearing messages (no active session)");
       setMessages([]);
       setHasLoadedMessages(true);
     }
@@ -691,7 +698,7 @@ export function MichelleAttractionChatClient() {
   };
 
   const handleNewChat = () => {
-    console.log("[User Action] New chat clicked - clearing session");
+    debugLog("[User Action] New chat clicked - clearing session");
     setActiveSessionId(null);
     setMessages([]);
     setError(null);
@@ -701,7 +708,7 @@ export function MichelleAttractionChatClient() {
     // 新しいチャットの場合のみlocalStorageを削除
     try {
       window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
-      console.log("[User Action] localStorage cleared for new chat");
+      debugLog("[User Action] localStorage cleared for new chat");
     } catch (error) {
       console.error("[User Action] Failed to clear localStorage:", error);
     }
@@ -717,7 +724,7 @@ export function MichelleAttractionChatClient() {
     
     // pending メッセージがある場合は送信不可
     if (messages.some((msg) => msg.pending)) {
-      console.log("[Send] Blocked - AI is still responding");
+      debugLog("[Send] Blocked - AI is still responding");
       return;
     }
 
@@ -758,7 +765,7 @@ export function MichelleAttractionChatClient() {
           }
           // 429エラーの場合は特別な処理
           if (res.status === 429) {
-            console.log("[Send] Rate limited - AI still responding");
+            debugLog("[Send] Rate limited - AI still responding");
           }
         } catch (parseError) {
           console.error("Failed to parse error response", parseError);
@@ -798,7 +805,7 @@ export function MichelleAttractionChatClient() {
             }
             if (payload.type === "done") {
               streamCompleted = true;
-              console.log("[Stream] Completed successfully");
+              debugLog("[Stream] Completed successfully");
             }
             if (payload.type === "error") {
               throw new Error(payload.message ?? "AI応答中にエラーが発生しました");
@@ -838,7 +845,7 @@ export function MichelleAttractionChatClient() {
       // ローディング状態を解除する前に少し待機
       setTimeout(() => {
         setIsLoading((prev) => ({ ...prev, sending: false }));
-        console.log("[Send] Loading state released");
+        debugLog("[Send] Loading state released");
       }, 300);
     }
   };
@@ -853,11 +860,11 @@ export function MichelleAttractionChatClient() {
       const res = await fetch(`/api/michelle-attraction/sessions/${sessionId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete session");
       
-      console.log("[Delete] Session deleted:", sessionId);
+      debugLog("[Delete] Session deleted:", sessionId);
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
       
       if (wasActive) {
-        console.log("[Delete] Deleted active session, creating new chat");
+        debugLog("[Delete] Deleted active session, creating new chat");
         handleNewChat();
         // アクティブセッションを削除した場合はモバイルサイドバーも閉じる
         if (isMobile) {
@@ -957,7 +964,7 @@ export function MichelleAttractionChatClient() {
             <button
               key={session.id}
               onClick={() => {
-                console.log("[User Action] Desktop: Clicked on session:", session.id);
+                debugLog("[User Action] Desktop: Clicked on session:", session.id);
                 setActiveSessionId(session.id);
               }}
               className={cn(
@@ -1021,7 +1028,7 @@ export function MichelleAttractionChatClient() {
                 <button
                   key={session.id}
                   onClick={() => {
-                    console.log("[User Action] Mobile: Clicked on session:", session.id);
+                    debugLog("[User Action] Mobile: Clicked on session:", session.id);
                     setActiveSessionId(session.id);
                     setIsSidebarOpen(false);
                   }}
