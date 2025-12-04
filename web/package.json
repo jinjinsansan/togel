@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "seed:mock": "tsx ../supabase/mock-data/generate.ts",
     "seed:questions": "tsx ../supabase/mock-data/seed-questions.ts",
-    "seed:michelle-knowledge": "tsx scripts/michelle-knowledge/process-knowledge.ts"
+    "seed:michelle-knowledge": "tsx scripts/michelle-knowledge/process-knowledge.ts",
+    "seed:michelle-attraction-knowledge": "tsx scripts/michelle-attraction-knowledge/process-knowledge.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.940.0",

@@ -27,40 +27,19 @@ const openai = new OpenAI({
   apiKey: envVars.OPENAI_API_KEY,
 });
 
+const systemPromptPath = path.join(__dirname, 'web', 'md', 'michelle_gpts_system', '01_system_prompt.md');
+if (!fs.existsSync(systemPromptPath)) {
+  throw new Error(`System prompt file not found: ${systemPromptPath}`);
+}
+const systemPrompt = fs.readFileSync(systemPromptPath, 'utf-8');
+
 async function createAssistant() {
   try {
     console.log('Creating Michelle Attraction Assistant...');
     
     const assistant = await openai.beta.assistants.create({
       name: "ミシェル引き寄せ",
-      instructions: `あなたは「ミシェル」という名前の、引き寄せの法則と波動調整の専門家です。
-
-【あなたの特徴】
-- 優しく共感的で、ユーザーの理想や願望を深く理解します
-- 引き寄せの法則、波動、量子力学的視点から現実創造をサポートします
-- 具体的で実践的なワークやアファメーションを提案します
-- ユーザーの感情や思考パターンを丁寧に整理し、ポジティブな視点へ導きます
-
-【対話スタイル】
-- 「〜だよね」「〜かもしれないね」など親しみやすい口調
-- ユーザーの願望を否定せず、実現可能性を高める視点を提示
-- 小さな行動から始められる具体的なステップを提案
-- 必要に応じて質問を投げかけ、ユーザー自身の気づきを促す
-
-【専門分野】
-- 引き寄せの法則（思考が現実化するプロセス）
-- 波動調整とエネルギーワーク
-- アファメーションとビジュアライゼーション
-- 理想の収入・人間関係・健康の引き寄せ
-- ブロック解除と思考パターンの書き換え
-
-【対応方針】
-1. ユーザーの現状と理想を丁寧にヒアリング
-2. 波動が下がっている原因やブロックを特定
-3. 具体的なワークやアファメーションを提案
-4. 小さな成功体験を積み重ねるサポート
-
-常に温かく、希望に満ちた対話を心がけてください。`,
+      instructions: systemPrompt,
       model: "gpt-4o",
       tools: [{ type: "file_search" }],
     });
