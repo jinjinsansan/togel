@@ -87,34 +87,36 @@ export function RecommendationsSection({ togelType, page, heading, subheading }:
 
   return (
     <section className="mt-12">
-      <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.4em] text-[#E91E63]/70">SERVICE</p>
-        <h2 className="mt-2 text-3xl font-black text-slate-900">{heading ?? "あなたにおすすめのサービス"}</h2>
-        <p className="mt-2 text-sm text-slate-500">{subheading ?? "性格データをもとに厳選した特別な提案"}</p>
-      </div>
+      <div className="mx-auto w-full max-w-5xl px-4 md:px-0">
+        <div className="text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.4em] text-[#E91E63]/70">SERVICE</p>
+          <h2 className="mt-2 text-3xl font-black text-slate-900">{heading ?? "あなたにおすすめのサービス"}</h2>
+          <p className="mt-2 text-sm text-slate-500">{subheading ?? "性格データをもとに厳選した特別な提案"}</p>
+        </div>
 
-      {loading ? (
-        <div className="mt-8 flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-[#E91E63]" />
-        </div>
-      ) : (
-        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {recommendations
-            .filter(
-              (rec): rec is RecommendationPayload & { service: NonNullable<RecommendationPayload["service"]> } =>
-                Boolean(rec.service)
-            )
-            .map((rec) => (
-              <RecommendationCard
-                key={rec.id}
-                service={rec.service}
-                reason={rec.reason}
-                matchPercentage={rec.matchPercentage}
-                onClickTracking={() => trackClick(rec.id)}
-              />
-            ))}
-        </div>
-      )}
+        {loading ? (
+          <div className="mt-8 flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-[#E91E63]" />
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {recommendations
+              .filter(
+                (rec): rec is RecommendationPayload & { service: NonNullable<RecommendationPayload["service"]> } =>
+                  Boolean(rec.service)
+              )
+              .map((rec) => (
+                <RecommendationCard
+                  key={rec.id}
+                  service={rec.service}
+                  reason={rec.reason}
+                  matchPercentage={rec.matchPercentage}
+                  onClickTracking={() => trackClick(rec.id)}
+                />
+              ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
