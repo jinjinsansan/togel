@@ -428,6 +428,11 @@ export function MichelleAttractionChatClient() {
 
     updateHeight();
 
+    if (typeof ResizeObserver === "undefined") {
+      const interval = window.setInterval(updateHeight, 500);
+      return () => window.clearInterval(interval);
+    }
+
     const observer = new ResizeObserver(updateHeight);
     observer.observe(composerRef.current);
 
