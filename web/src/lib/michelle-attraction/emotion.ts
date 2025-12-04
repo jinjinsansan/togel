@@ -10,6 +10,7 @@ const CRITICAL_KEYWORDS = [
   "死にたい",
   "消えたい",
   "いなくなりたい",
+  "生きたくない",
   "無価値",
   "最悪",
   "壊れ",
@@ -18,12 +19,27 @@ const CRITICAL_KEYWORDS = [
   "耐えられない",
   "絶望",
   "もう無理",
-  "恐怖",
+  "限界",
+  "気力がない",
+  "価値がない",
+  "疲弊",
+  "詰んだ",
+  "詰み",
+  "無理ゲー",
+  "心が折れた",
+];
+
+const CRITICAL_REGEX: { pattern: RegExp; reason: string }[] = [
+  { pattern: /死に(た|て|たい)/, reason: "強い自己否定" },
+  { pattern: /消え(た|たい)/, reason: "存在を消したいという表現" },
+  { pattern: /生き(て|る)意味がない/, reason: "生きる意味の喪失" },
+  { pattern: /(人生|全部).*(終わった|終わり)/, reason: "人生の終焉を示す表現" },
 ];
 
 const CONCERN_KEYWORDS = [
   "不安",
   "怖い",
+  "恐い",
   "悲しい",
   "つらい",
   "辛い",
@@ -37,6 +53,28 @@ const CONCERN_KEYWORDS = [
   "泣きたい",
   "憂鬱",
   "嫌",
+  "しんど",
+  "やばい",
+  "苦しい",
+  "重い",
+  "孤独",
+  "寂し",
+  "眠れない",
+  "寝れない",
+  "虚無",
+  "ストレス",
+  "疲れた",
+  "疲れすぎ",
+  "心がざわつく",
+  "メンタル",
+];
+
+const CONCERN_REGEX: { pattern: RegExp; reason: string }[] = [
+  { pattern: /(心|メンタル).*(折れ|崩れ|やば)/, reason: "心が折れたという表現" },
+  { pattern: /(気持ち|心).*(重い|痛い|疲れ)/, reason: "心理的な痛みの表現" },
+  { pattern: /(眠れ|寝れ)ない/, reason: "不眠の訴え" },
+  { pattern: /(息|呼吸).*(苦しい|しにくい)/, reason: "呼吸のしづらさ" },
+  { pattern: /(食欲|ごはん).*(ない|減)/, reason: "食欲不振の表現" },
 ];
 
 const POSITIVE_ANCHORS = [
@@ -49,6 +87,23 @@ const POSITIVE_ANCHORS = [
   "落ち着いて",
   "楽",
   "穏やか",
+  "ホッと",
+];
+
+const NEGATIVE_SLANG = [
+  "メンタルやば",
+  "心折れ",
+  "心が折れ",
+  "病む",
+  "病んで",
+  "無理ぽ",
+  "無理ゲー",
+  "オワタ",
+  "終わった",
+  "バグってる",
+  "沼ってる",
+  "詰ん",
+  "しにそう",
 ];
 
 const normalizeText = (input: string) => input.toLowerCase();
@@ -65,10 +120,31 @@ export const evaluateEmotionState = (input: string): EmotionAnalysis => {
     }
   });
 
+  CRITICAL_REGEX.forEach(({ pattern, reason }) => {
+    if (pattern.test(text)) {
+      score += 4;
+      reasons.push(reason);
+    }
+  });
+
   CONCERN_KEYWORDS.forEach((keyword) => {
     if (text.includes(keyword)) {
       score += 2;
       reasons.push(`「${keyword}」というネガティブ感情`);
+    }
+  });
+
+  CONCERN_REGEX.forEach(({ pattern, reason }) => {
+    if (pattern.test(text)) {
+      score += 2;
+      reasons.push(reason);
+    }
+  });
+
+  NEGATIVE_SLANG.forEach((phrase) => {
+    if (text.includes(phrase)) {
+      score += 2;
+      reasons.push(`スラング表現: ${phrase}`);
     }
   });
 
@@ -88,9 +164,30 @@ export const evaluateEmotionState = (input: string): EmotionAnalysis => {
     reasons.push("長文で感情が滞留");
   }
 
-  if (/疲(れた|弊)い/.test(text)) {
+  if (/(疲(れ|弊)(た|すぎ)|燃え尽きた|バーンアウト)/.test(text)) {
     score += 1;
     reasons.push("極度の疲弊表現");
+  }
+
+  const sentences = text.split(/[。！？!?\n\r]+/).map((sentence) => sentence.trim()).filter(Boolean);
+  if (sentences.length > 0) {
+    const heavySentences = sentences.filter((sentence) =>
+      /(無理|最悪|終わり|つら|しんど|絶望|嫌|怖|不安|泣|病む)/.test(sentence),
+    );
+    if (heavySentences.length >= 3) {
+      score += 2;
+      reasons.push("ネガティブな文が連続");
+    }
+  }
+
+  if (/(何をしても|どう頑張っても|全て|全部).*(無駄|意味がない|変わらない)/.test(text)) {
+    score += 2;
+    reasons.push("無力感の表現");
+  }
+
+  if (/(涙|泣き).*(止まらない|止められない)/.test(text)) {
+    score += 1;
+    reasons.push("涙が止まらない状態");
   }
 
   let state: EmotionState = "stable";

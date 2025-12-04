@@ -126,6 +126,7 @@ export async function POST(request: Request) {
 
     let progressContext = "";
     let psychologyInstruction = "";
+    let negativityAlertInstruction = "";
     try {
       let progressRecord = await fetchProgressBySession(supabase, user.id, sessionId);
       if (!progressRecord) {
@@ -143,6 +144,10 @@ export async function POST(request: Request) {
 
         let recommendationTriggered = false;
         if (emotionAnalysis.state !== "stable") {
+          const severityLabel = emotionAnalysis.state === "critical" ? "緊急" : "注意";
+          negativityAlertInstruction = `【感情アラート指示】
+ユーザーの感情スコアは${severityLabel}レベル（${emotionAnalysis.score}）です。感情が荒れたままでは引き寄せの結果も乱れるため、「まずは心を整えてから引き寄せを進めましょう」と明示してください。根性論ではなく呼吸や心理学チャットを案内し、焦らずに整えるよう寄り添ってください。`;
+
           const throttled = shouldThrottleRecommendation(progressRecord);
           const existingState = progressRecord.psychology_recommendation;
           const canRecommend =
@@ -205,6 +210,9 @@ export async function POST(request: Request) {
     }
 
     const userPayload = [onboardingPrimer];
+    if (negativityAlertInstruction) {
+      userPayload.push(negativityAlertInstruction);
+    }
     if (psychologyInstruction) {
       userPayload.push(psychologyInstruction);
     }
@@ -367,12 +375,12 @@ const ensureThreadId = async (supabase: AttractionSupabase, sessionId: string, c
 const buildPsychologyGuidance = (record: ProgressRecord, newlyTriggered: boolean) => {
   if (record.psychology_recommendation === "acknowledged") {
     return `【心理学優先指示】
-ユーザーは現在ネガティブな感情のケアを優先するためにミシェル心理学へ移行しようとしています。引き寄せカリキュラムを一時停止し、感情解放を優先するよう丁寧に案内してください。もしユーザーがどうしても続けたいと希望した場合のみ、セルフケアの注意事項を添えて進行してください。`;
+ユーザーは現在ネガティブな感情のケアを優先するためにミシェル心理学へ移行しようとしています。感情が乱れたままでは引き寄せの結果がブレることを明示し、カリキュラムを一時停止して感情解放を最優先にするよう丁寧に案内してください。もしユーザーがどうしても続けたいと希望した場合のみ、セルフケアの注意事項を添えて進行してください。`;
   }
 
   if (record.psychology_recommendation === "suggested" || newlyTriggered) {
     return `【心理学推奨指示】
-ネガティブ感情の強まりが検知されています。ミシェル心理学で思い込み・感情ブロックを解放すると引き寄せがスムーズになる旨を必ず伝え、「今すぐ心理学に移って整える」か「今回はこのままカリキュラムを進めるか」をユーザー自身に選んでもらってください。`;
+ネガティブ感情の強まりが検知されています。感情が荒れている状態では引き寄せがうまく働かないことを必ず伝え、ミシェル心理学で思い込み・感情ブロックを解放すると再び整う旨を案内してください。「今すぐ心理学に移って整える」か「今回はこのままカリキュラムを進めるか」をユーザー自身に選んでもらいましょう。`;
   }
 
   if (record.psychology_recommendation === "dismissed") {
