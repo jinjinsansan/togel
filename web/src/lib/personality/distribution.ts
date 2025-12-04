@@ -17,20 +17,29 @@ export const loadTogelDistribution = async () => {
   const supabase = createSupabaseAdminClient();
   const counts = new Map<string, number>();
   let total = 0;
+  const maxAttempts = 3;
 
-  try {
-    const { data, error } = await supabase.from("togel_type_counts").select("animal_type, total");
-    if (error) throw error;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const { data, error } = await supabase.from("togel_type_counts").select("animal_type, total");
+      if (error) throw error;
 
-    const rows = data ?? [];
-    rows.forEach((row) => {
-      if (!row?.animal_type) return;
-      const count = Number(row.total) || 0;
-      counts.set(row.animal_type, count);
-      total += count;
-    });
-  } catch (error) {
-    console.error("Failed to load togel distribution", error);
+      const rows = data ?? [];
+      rows.forEach((row) => {
+        if (!row?.animal_type) return;
+        const count = Number(row.total) || 0;
+        counts.set(row.animal_type, count);
+        total += count;
+      });
+      break;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        console.error("Failed to load togel distribution", error);
+        break;
+      }
+      const waitMs = attempt * 500;
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
   }
 
   const distribution: TogelDistributionItem[] = personalityTypes.map((type) => {

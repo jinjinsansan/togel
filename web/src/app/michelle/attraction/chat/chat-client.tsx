@@ -6,6 +6,7 @@ import { ChevronDown, Loader2, Menu, MessageSquare, Plus, Send, Share2, Trash2, 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MichelleAvatar } from "@/components/michelle/avatar";
+import { debugLog } from "@/lib/logger";
 import {
   ATTRACTION_SECTIONS,
   sectionsByLevel,
@@ -151,13 +152,6 @@ const noteTypeOptions = [
   { value: "success", label: "引き寄せ成功" },
   { value: "other", label: "その他" },
 ];
-
-const isProduction = process.env.NODE_ENV === "production";
-const debugLog = (...args: unknown[]) => {
-  if (!isProduction) {
-    debugLog(...args);
-  }
-};
 
 export function MichelleAttractionChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -918,7 +912,7 @@ export function MichelleAttractionChatClient() {
 
       // ストリーム完了を確認
       if (!streamCompleted) {
-        console.warn("[Stream] Ended without 'done' event");
+        debugLog("[Stream] Ended without 'done' event");
       }
 
       setMessages((prev) =>
