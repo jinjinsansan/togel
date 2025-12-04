@@ -176,6 +176,7 @@ export function MichelleAttractionChatClient() {
   const [noteForm, setNoteForm] = useState({ noteType: "comprehension", content: "" });
   const [isProgressFormOpen, setIsProgressFormOpen] = useState(false);
   const [isNoteFormOpen, setIsNoteFormOpen] = useState(false);
+  const [isProgressDetailsOpen, setIsProgressDetailsOpen] = useState(false);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [psychologyActionLoading, setPsychologyActionLoading] = useState<null | "acknowledge" | "dismiss" | "resolve">(null);
@@ -474,6 +475,18 @@ export function MichelleAttractionChatClient() {
     }, 2000);
     return () => clearInterval(interval);
   }, [messages]);
+
+  const handleOpenProgressForm = useCallback(() => {
+    setIsProgressDetailsOpen(true);
+    setIsNoteFormOpen(false);
+    setIsProgressFormOpen(true);
+  }, []);
+
+  const handleOpenNoteForm = useCallback(() => {
+    setIsProgressDetailsOpen(true);
+    setIsProgressFormOpen(false);
+    setIsNoteFormOpen(true);
+  }, []);
 
   const handleSaveProgress = async () => {
     const targetSessionId = determineSessionForProgress();
@@ -1024,42 +1037,43 @@ export function MichelleAttractionChatClient() {
           <div className="px-4 pt-4">
             <div className="rounded-3xl border border-[#d1e7ff] bg-white/80 p-4 text-sm shadow-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
+                <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">現在の進捗</p>
-                  <p className="mt-1 text-[11px] text-[#4c6b92]">
-                    ミシェルがレッスン内容・感情ログを自動保存し、必要に応じて心理学チャットとも共有します。
-                  </p>
                   {progress ? (
                     <>
-                      <p className="mt-2 text-lg font-semibold text-[#0f4c81]">
+                      <p className="text-base font-semibold text-[#0f4c81]">
                         {formatSectionLabel(progress.current_level, progress.current_section)}
                       </p>
-                      <p className="text-xs text-[#3c6a92]">{STATUS_LABELS[progress.progress_status]}</p>
-                      <div className="mt-3 grid gap-1 text-[11px] text-[#386087]">
-                        <span>
-                          📘 レッスン: レベル{progress.current_level} / セクション{progress.current_section}
+                      <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[#3c6187]">
+                        <span className="rounded-full bg-[#e6f4ff] px-3 py-1">
+                          📘 レベル{progress.current_level} / セクション{progress.current_section}
                         </span>
-                        <span>
-                          🧠 感情: {EMOTIONAL_STATE_LABELS[progress.emotional_state]} (score {progress.emotional_score})
+                        <span className="rounded-full bg-[#f0f7ff] px-3 py-1">
+                          🧠 {EMOTIONAL_STATE_LABELS[progress.emotional_state]}・score {progress.emotional_score}
                         </span>
-                        <span>
-                          🤝 心理学ケア: {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}
-                        </span>
-                        <span className="text-[#55708f]">
-                          {PSYCHOLOGY_STATE_DESCRIPTIONS[progress.psychology_recommendation]}
+                        <span className="rounded-full bg-[#f5fbff] px-3 py-1">
+                          🤝 {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}
                         </span>
                       </div>
                     </>
                   ) : (
-                    <p className="mt-2 text-sm text-[#417aa8]">最初のセッションが完了すると、進捗がここに自動表示されます。</p>
+                    <p className="text-sm text-[#417aa8]">最初のセッション完了後に自動で表示されます。</p>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#2b6c94]"
+                    onClick={() => setIsProgressDetailsOpen((prev) => !prev)}
+                  >
+                    {isProgressDetailsOpen ? "詳細を閉じる" : "詳細を見る"}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
-                    onClick={() => setIsProgressFormOpen((prev) => !prev)}
+                    onClick={handleOpenProgressForm}
                   >
                     進捗を編集
                   </Button>
@@ -1067,150 +1081,169 @@ export function MichelleAttractionChatClient() {
                     variant="outline"
                     size="sm"
                     className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
-                    onClick={() => setIsNoteFormOpen((prev) => !prev)}
+                    onClick={handleOpenNoteForm}
                   >
                     記録する
                   </Button>
                 </div>
-                <p className="text-[11px] text-[#4c6b92]">
-                  ※ ここで編集・記録した内容は、以降のミシェル引き寄せ／心理学の回答にも反映されます。
-                </p>
               </div>
-              {isProgressFormOpen && (
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div>
-                    <label className="text-xs font-semibold text-[#4a7ba3]">レベル</label>
-                    <select
-                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
-                      value={progressForm.level}
-                      onChange={(event) => {
-                        const nextLevel = Number(event.target.value);
-                        const nextSection = sectionsByLevel[nextLevel]?.[0]?.section ?? progressForm.section;
-                        setProgressForm((prev) => ({ ...prev, level: nextLevel, section: nextSection }));
-                      }}
-                    >
-                      {[1, 2, 3, 4, 5].map((level) => (
-                        <option key={level} value={level}>
-                          レベル{level}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-[#4a7ba3]">セクション</label>
-                    <select
-                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
-                      value={progressForm.section}
-                      onChange={(event) => setProgressForm((prev) => ({ ...prev, section: Number(event.target.value) }))}
-                    >
-                      {(sectionsByLevel[progressForm.level] ?? ATTRACTION_SECTIONS.filter(
-                        (section) => section.level === progressForm.level,
-                      )).map((section) => (
-                        <option key={section.section} value={section.section}>
-                          {section.section}. {section.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-[#4a7ba3]">ステータス</label>
-                    <select
-                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
-                      value={progressForm.status}
-                      onChange={(event) =>
-                        setProgressForm((prev) => ({ ...prev, status: event.target.value as ProgressStatus }))
-                      }
-                    >
-                      {PROGRESS_STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {STATUS_LABELS[status]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="text-xs font-semibold text-[#4a7ba3]">補足メモ</label>
-                    <textarea
-                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
-                      rows={2}
-                      value={progressForm.notes}
-                      onChange={(event) => setProgressForm((prev) => ({ ...prev, notes: event.target.value }))}
-                    />
-                  </div>
-                  <div className="md:col-span-2 flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setIsProgressFormOpen(false)}>
-                      キャンセル
-                    </Button>
-                    <Button size="sm" onClick={handleSaveProgress} disabled={isSavingProgress}>
-                      {isSavingProgress ? "保存中..." : "保存"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-              {isNoteFormOpen && (
-                <div className="mt-4 space-y-3 border-t border-dashed border-[#d2e8ff] pt-4">
+
+              {isProgressDetailsOpen && (
+                <div className="mt-4 space-y-4 border-t border-dashed border-[#d2e8ff] pt-4">
                   <p className="text-[11px] text-[#4c6b92]">
-                    ここで残したメモは、次回以降のアドバイスにも活用されます。感情や気づきを自由に書き留めてください。
+                    ミシェルがレッスン内容・感情ログを自動保存し、必要に応じて心理学チャットとも共有します。ここで編集・記録した内容は以降の回答にも反映されます。
                   </p>
-                  <div>
-                    <label className="text-xs font-semibold text-[#4a7ba3]">記録の種類</label>
-                    <select
-                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
-                      value={noteForm.noteType}
-                      onChange={(event) => setNoteForm((prev) => ({ ...prev, noteType: event.target.value }))}
-                    >
-                      {noteTypeOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-[#4a7ba3]">内容</label>
-                    <textarea
-                      className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
-                      rows={2}
-                      value={noteForm.content}
-                      onChange={(event) => setNoteForm((prev) => ({ ...prev, content: event.target.value }))}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setIsNoteFormOpen(false)}>
-                      キャンセル
-                    </Button>
-                    <Button size="sm" onClick={handleSaveNote} disabled={isSavingNote}>
-                      {isSavingNote ? "保存中..." : "記録"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-              {progressNotes.length > 0 && (
-                <div className="mt-4 border-t border-dashed border-[#d2e8ff] pt-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-[#4a7ba3]">最近のメモ</p>
-                    <p className="text-[11px] text-[#4c6b92]">AIにも共有済み</p>
-                  </div>
-                  <ul className="mt-2 space-y-2 text-sm text-[#1f5c82]">
-                    {progressNotes.slice(0, 3).map((note) => (
-                      <li key={note.id} className="rounded-2xl bg-[#f5fbff] px-3 py-2">
-                        <div className="flex items-center justify-between text-xs text-[#4f80aa]">
-                          <span>
-                            {noteTypeOptions.find((option) => option.value === note.note_type)?.label ?? note.note_type}
-                          </span>
-                          <span>
-                            {new Date(note.created_at).toLocaleString("ja-JP", {
-                              month: "numeric",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm text-[#0f2f4d]">{note.content}</p>
-                      </li>
-                    ))}
-                  </ul>
+
+                  {progress ? (
+                    <div className="grid gap-1 text-[11px] text-[#386087]">
+                      <span>📘 レッスン状況: {STATUS_LABELS[progress.progress_status]}</span>
+                      <span>🧠 感情: {EMOTIONAL_STATE_LABELS[progress.emotional_state]} (score {progress.emotional_score})</span>
+                      <span>🤝 心理学ケア: {PSYCHOLOGY_STATE_LABELS[progress.psychology_recommendation]}</span>
+                      <span className="text-[#55708f]">{PSYCHOLOGY_STATE_DESCRIPTIONS[progress.psychology_recommendation]}</span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[#417aa8]">最初のセッション完了後に自動で進捗を表示します。</p>
+                  )}
+
+                  {isProgressFormOpen && (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <label className="text-xs font-semibold text-[#4a7ba3]">レベル</label>
+                        <select
+                          className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                          value={progressForm.level}
+                          onChange={(event) => {
+                            const nextLevel = Number(event.target.value);
+                            const nextSection = sectionsByLevel[nextLevel]?.[0]?.section ?? progressForm.section;
+                            setProgressForm((prev) => ({ ...prev, level: nextLevel, section: nextSection }));
+                          }}
+                        >
+                          {[1, 2, 3, 4, 5].map((level) => (
+                            <option key={level} value={level}>
+                              レベル{level}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-[#4a7ba3]">セクション</label>
+                        <select
+                          className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                          value={progressForm.section}
+                          onChange={(event) => setProgressForm((prev) => ({ ...prev, section: Number(event.target.value) }))}
+                        >
+                          {(sectionsByLevel[progressForm.level] ?? ATTRACTION_SECTIONS.filter(
+                            (section) => section.level === progressForm.level,
+                          )).map((section) => (
+                            <option key={section.section} value={section.section}>
+                              {section.section}. {section.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-[#4a7ba3]">ステータス</label>
+                        <select
+                          className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                          value={progressForm.status}
+                          onChange={(event) =>
+                            setProgressForm((prev) => ({ ...prev, status: event.target.value as ProgressStatus }))
+                          }
+                        >
+                          {PROGRESS_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {STATUS_LABELS[status]}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-xs font-semibold text-[#4a7ba3]">補足メモ</label>
+                        <textarea
+                          className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                          rows={2}
+                          value={progressForm.notes}
+                          onChange={(event) => setProgressForm((prev) => ({ ...prev, notes: event.target.value }))}
+                        />
+                      </div>
+                      <div className="md:col-span-2 flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsProgressFormOpen(false)}>
+                          キャンセル
+                        </Button>
+                        <Button size="sm" onClick={handleSaveProgress} disabled={isSavingProgress}>
+                          {isSavingProgress ? "保存中..." : "保存"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isNoteFormOpen && (
+                    <div className="space-y-3 border-t border-dashed border-[#d2e8ff] pt-4">
+                      <p className="text-[11px] text-[#4c6b92]">
+                        ここで残したメモは、次回以降のアドバイスにも活用されます。感情や気づきを自由に書き留めてください。
+                      </p>
+                      <div>
+                        <label className="text-xs font-semibold text-[#4a7ba3]">記録の種類</label>
+                        <select
+                          className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                          value={noteForm.noteType}
+                          onChange={(event) => setNoteForm((prev) => ({ ...prev, noteType: event.target.value }))}
+                        >
+                          {noteTypeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-[#4a7ba3]">内容</label>
+                        <textarea
+                          className="mt-1 w-full rounded-2xl border border-[#d0e6ff] bg-white/60 px-3 py-2 text-sm text-[#0f2f4d] focus:border-[#9ac9ff] focus:outline-none"
+                          rows={2}
+                          value={noteForm.content}
+                          onChange={(event) => setNoteForm((prev) => ({ ...prev, content: event.target.value }))}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsNoteFormOpen(false)}>
+                          キャンセル
+                        </Button>
+                        <Button size="sm" onClick={handleSaveNote} disabled={isSavingNote}>
+                          {isSavingNote ? "保存中..." : "記録"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {progressNotes.length > 0 && (
+                    <div className="border-t border-dashed border-[#d2e8ff] pt-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-[#4a7ba3]">最近のメモ</p>
+                        <p className="text-[11px] text-[#4c6b92]">AIにも共有済み</p>
+                      </div>
+                      <ul className="mt-2 space-y-2 text-sm text-[#1f5c82]">
+                        {progressNotes.slice(0, 3).map((note) => (
+                          <li key={note.id} className="rounded-2xl bg-[#f5fbff] px-3 py-2">
+                            <div className="flex items-center justify-between text-xs text-[#4f80aa]">
+                              <span>
+                                {noteTypeOptions.find((option) => option.value === note.note_type)?.label ?? note.note_type}
+                              </span>
+                              <span>
+                                {new Date(note.created_at).toLocaleString("ja-JP", {
+                                  month: "numeric",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-sm text-[#0f2f4d]">{note.content}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
