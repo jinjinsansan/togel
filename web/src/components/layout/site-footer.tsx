@@ -33,11 +33,11 @@ const footerLinks = [
 
 export const SiteFooter = () => {
   return (
-    <footer className="relative bg-[#070d1b] text-white">
+    <footer className="relative bg-[radial-gradient(circle_at_top,_#13213a,_#070d1b)] text-white">
       <div className="absolute inset-x-0 -top-8 h-8 bg-gradient-to-b from-transparent to-[#070d1b]" aria-hidden />
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="gap-12 pb-10 md:grid md:grid-cols-5">
-          <div className="md:col-span-2">
+        <div className="flex flex-col gap-8 divide-y divide-white/10 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur md:grid md:grid-cols-5 md:gap-12 md:divide-y-0 md:rounded-3xl md:border-white/10 md:bg-white/5 md:p-8">
+          <div className="md:col-span-2 space-y-6">
             <p className="font-heading text-2xl font-semibold text-white">Togel</p>
             <p className="mt-3 text-sm text-white/70">
               あなたの本音と相性が一瞬でわかる<br />24タイプTogel型診断+AIマッチング
@@ -54,7 +54,7 @@ export const SiteFooter = () => {
           </div>
 
           {footerLinks.map((section) => (
-            <div key={section.title}>
+            <div key={section.title} className="pt-6 first:pt-0 md:pt-0">
               <p className="text-sm font-semibold uppercase tracking-[0.4em] text-white/60">{section.title}</p>
               <ul className="mt-4 space-y-2 text-sm text-white/70">
                 {section.links.map((link) => (
@@ -68,7 +68,7 @@ export const SiteFooter = () => {
             </div>
           ))}
 
-          <div className="space-y-4">
+          <div className="space-y-4 pt-6 md:pt-0">
             <p className="text-sm font-semibold uppercase tracking-[0.4em] text-white/60">Contact</p>
             <div className="space-y-3 text-sm text-white/80">
               <a href="mailto:info@to-gel.com" className="flex items-center gap-2 rounded-2xl border border-white/10 px-4 py-2 transition hover:border-white/40">
