@@ -763,8 +763,9 @@ export function MichelleAttractionChatClient() {
           ? "次のセクションに進みたいです。案内をお願いします。"
           : "前のセクションを復習したいです。教えてください。";
 
-      await handleSendMessage(followUpMessage);
-      setError(direction === "next" ? "✓ 次のセクションへ進みます" : "✓ 1つ前のセクションに戻ります");
+      const successMessage = direction === "next" ? "✓ 次のセクションへ進みます" : "✓ 1つ前のセクションに戻ります";
+      setError(successMessage);
+      await handleSendMessage(followUpMessage, { preserveStatus: true });
       setTimeout(() => setError(null), 2000);
     } catch (actionError) {
       console.error("Progress action error", actionError);
@@ -809,7 +810,7 @@ export function MichelleAttractionChatClient() {
     }
   };
 
-  const handleSendMessage = async (overrideText?: string) => {
+  const handleSendMessage = async (overrideText?: string, options?: { preserveStatus?: boolean }) => {
     const textToSend = overrideText ? overrideText.trim() : input.trim();
     if (!textToSend || isLoading.sending) return;
 
@@ -822,7 +823,9 @@ export function MichelleAttractionChatClient() {
     if (!overrideText) {
       setInput("");
     }
-    setError(null);
+    if (!options?.preserveStatus) {
+      setError(null);
+    }
     
     // モバイルでは送信後にキーボードを閉じる
     if (isMobile && textareaRef.current) {
@@ -1070,12 +1073,6 @@ export function MichelleAttractionChatClient() {
                 <MessageSquare className="h-4 w-4" />
                 <div className="min-w-0">
                   <span className="block truncate">{session.title || "新しいチャット"}</span>
-                  {session.progress && (
-                    <span className="mt-0.5 block text-[11px] text-[#6da6c6]">
-                      {formatSectionLabel(session.progress.current_level, session.progress.current_section)} ・
-                      {STATUS_LABELS[session.progress.progress_status]}
-                    </span>
-                  )}
                 </div>
               </div>
               <button
@@ -1135,12 +1132,6 @@ export function MichelleAttractionChatClient() {
                     <MessageSquare className="h-4 w-4" />
                     <div className="min-w-0">
                       <span className="block truncate">{session.title || "新しいチャット"}</span>
-                      {session.progress && (
-                        <span className="mt-0.5 block text-[11px] text-[#6da6c6]">
-                          {formatSectionLabel(session.progress.current_level, session.progress.current_section)} ・
-                          {STATUS_LABELS[session.progress.progress_status]}
-                        </span>
-                      )}
                     </div>
                   </div>
                   <button
