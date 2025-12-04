@@ -5,6 +5,16 @@ import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 
+const GoogleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-6 w-6">
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6 1.54 7.38 2.83l5.35-5.22C33.64 3.64 29.27 1.5 24 1.5 14.96 1.5 6.94 6.94 3.54 15.01l6.62 5.14C11.53 13.12 17.2 9.5 24 9.5z" />
+    <path fill="#4285F4" d="M46.5 24.5c0-1.57-.14-3.09-.4-4.56H24v8.66h12.7c-.55 2.82-2.2 5.2-4.7 6.8l7.4 5.73c4.33-3.99 7.1-9.88 7.1-16.63z" />
+    <path fill="#FBBC05" d="M10.16 27.15A14.5 14.5 0 0 1 9.5 24c0-1.1.18-2.17.49-3.18l-6.6-5.13A23.94 23.94 0 0 0 2 24c0 3.85.92 7.49 2.54 10.68l6.62-5.53z" />
+    <path fill="#34A853" d="M24 46.5c6.27 0 11.53-2.06 15.37-5.62l-7.4-5.73c-2.07 1.39-4.73 2.21-7.97 2.21-6.8 0-12.47-3.62-15.35-9.08l-6.62 5.53C6.94 41.06 14.96 46.5 24 46.5z" />
+    <path fill="none" d="M2 2h44v44H2z" />
+  </svg>
+);
+
 export default function Home() {
   const videos = [
     "https://assets.to-gel.com/hero-movie-optimized.mp4",
@@ -88,8 +98,20 @@ export default function Home() {
               あなたの本音と相性が一瞬でわかる<br />
               24タイプTogel型診断+AIマッチング
             </p>
-            <Button size="lg" className="h-16 px-12 text-xl" onClick={handleLogin} disabled={isLoading}>
-              {isLoading ? "接続中..." : "Googleで始める"}
+            <Button
+              size="lg"
+              className="h-16 rounded-full border border-black/10 bg-white px-10 text-xl font-semibold text-[#0f172a] shadow-xl shadow-black/10 transition hover:-translate-y-0.5"
+              onClick={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                "接続中..."
+              ) : (
+                <span className="flex items-center gap-3">
+                  <GoogleIcon />
+                  Googleで始める
+                </span>
+              )}
             </Button>
           </div>
         </div>
@@ -115,8 +137,20 @@ export default function Home() {
               あなたの本音と相性が一瞬でわかる<br />
               24タイプTogel型診断+AIマッチング
             </p>
-            <Button size="lg" className="h-16 rounded-full px-12 text-xl" onClick={handleLogin} disabled={isLoading}>
-              {isLoading ? "接続中..." : "Googleで始める"}
+            <Button
+              size="lg"
+              className="h-16 rounded-full border border-black/10 bg-white px-10 text-xl font-semibold text-[#0f172a] shadow-xl shadow-black/10"
+              onClick={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                "接続中..."
+              ) : (
+                <span className="flex items-center gap-3">
+                  <GoogleIcon />
+                  Googleで始める
+                </span>
+              )}
             </Button>
           </div>
         </div>
@@ -144,11 +178,18 @@ export default function Home() {
 
             <Button
               size="lg"
-              className="h-16 rounded-full bg-white px-12 text-xl font-bold text-[#E91E63] hover:bg-white/90 shadow-xl transition-all hover:scale-105"
+              className="h-16 rounded-full border border-black/10 bg-white px-10 text-xl font-semibold text-[#0f172a] shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5"
               onClick={handleLogin}
               disabled={isLoading}
             >
-              {isLoading ? "接続中..." : "Googleで始める"}
+              {isLoading ? (
+                "接続中..."
+              ) : (
+                <span className="flex items-center gap-3">
+                  <GoogleIcon />
+                  Googleで始める
+                </span>
+              )}
             </Button>
           </div>
         </div>
