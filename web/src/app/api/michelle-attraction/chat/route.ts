@@ -17,10 +17,9 @@ import {
   type AttractionSupabase,
   type ProgressRecord,
   type PsychologyRecommendationState,
-  upsertProgressRecord,
   updateEmotionSnapshot,
 } from "@/lib/michelle-attraction/progress-server";
-import { formatSectionLabel, getNextSection, getPreviousSection } from "@/lib/michelle-attraction/sections";
+import { formatSectionLabel } from "@/lib/michelle-attraction/sections";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -72,43 +71,6 @@ const formatRecommendationLabel = (state: PsychologyRecommendationState) => {
   if (state === "none") return "";
   return RECOMMENDATION_LABELS[state] ?? "";
 };
-
-const NEXT_SECTION_KEYWORDS = [
-  "次に進みましょう",
-  "次に進みます",
-  "次へ進みましょう",
-  "次へ進みます",
-  "先に進みましょう",
-  "このまま次に進みます",
-  "次のセクションに進みます",
-  "次のセクションへ進みましょう",
-  "次のステップに進みます",
-  "次章に進みます",
-];
-
-const PREVIOUS_SECTION_KEYWORDS = [
-  "1つ戻りましょう",
-  "1つ戻ります",
-  "ひとつ戻りましょう",
-  "ひとつ戻ります",
-  "前のセクションに戻ります",
-  "前のステップに戻りましょう",
-  "復習のために戻ります",
-  "一旦戻りましょう",
-  "いったん戻ります",
-  "前に戻りましょう",
-];
-
-const NEXT_SECTION_REGEXES = [
-  /次(?:の|へ)?(?:セクション|章|レッスン|ステップ)?に?進み(?:ましょう|ます|ましょ|ましょうね|ますね|たい)/iu,
-  /続いて(?:[^。！？\n]*)(?:セクション|章|レッスン|ステップ)[^。！？\n]*(?:進め|進みましょう|進んで)/iu,
-];
-
-const PREVIOUS_SECTION_REGEXES = [
-  /前(?:の|へ)?(?:セクション|章|レッスン|ステップ)?に戻(?:りましょう|ります|って)/iu,
-  /復習(?:のため)?に戻(?:りましょう|ります|って)/iu,
-  /一旦戻(?:りましょう|ります|って)/iu,
-];
 
 const MAX_EMOTION_HISTORY = 4;
 
@@ -240,18 +202,34 @@ export async function POST(request: Request) {
       .join("\n\n");
 
     const onboardingPrimer = isNewSession
-      ? `【初回オンボーディング指示】\nこの会話は新しいミシェル引き寄せ講座セッションの初回です。以下の手順を厳守して最初の返信を作成してください。\n1. 温かく挨拶し、講座の概要を1〜2文で伝える。\n2. ユーザーが初めてか/継続かを尋ねる。継続の場合は「こちらで進捗を自動復元しています」と伝え、コード入力などは絶対に求めないこと。\n3. 進捗が自動復元できない場合のみ診断質問Q1〜Q3を順に行い、開始レベル/セクションを決定する。\n4. 決定したセクションを明示し、【導入→本編→理解度チェック→次の準備】の流れで丁寧に進める。\n5. セクション完了ごとに「進捗は自動保存されました」と伝え、ユーザーに記録作業を依頼しない。\n6. 次のセクションに進める際は文章内で必ず「次に進みましょう」を使い、1つ戻して復習する場合は「1つ戻って復習しましょう」と明示する。\n7. いかなる場合も「進捗コード」「コードを発行/入力」等の表現は使用しないこと。\nこの直後に続くユーザーメッセージに必ず上記フローを適用して返信文を構築すること。\n\n【ユーザーメッセージ】\n${message}`
-      : `【継続セッション指示】
-ユーザーの進捗と感情状態は自動的に保存・復元されています。コード入力を求めたり、進捗コードという言葉を使用せず、現在のコンテキストを前提に会話を続けてください。次のセクションに進める際は文章内で必ず「次に進みましょう」を使い、1つ戻して復習する場合は「1つ戻って復習しましょう」と明示する。
+      ? `【初回オンボーディング指示】
+この会話は新しいミシェル引き寄せ講座セッションの初回です。以下の手順を厳守して最初の返信を作成してください。
+1. 温かく挨拶し、講座の概要を1〜2文で伝える。
+2. ユーザーが初めてか/継続かを尋ねる。継続の場合は「こちらで進捗を自動復元しています」と伝え、コード入力などは絶対に求めないこと。
+3. 進捗が自動復元できない場合のみ診断質問Q1〜Q3を順に行い、開始レベル/セクションを決定する。
+4. 現在扱うセクションを返信冒頭で必ず見出しとして明示する（例：「◉ セクション1『私とソースの関係』」）。
+5. セクションの移動/復習/深掘りは必ずユーザーが画面下部のボタン（「1つ戻る / このセクションを深掘り / 次へ進む」）で指示するまで行わない。AIから独断で次章に移動しないこと。
+6. 決定したセクションでは【導入→本編→理解度チェック→次の準備】の流れで丁寧に進める。
+7. セクション完了ごとに「進捗は自動保存されました」と伝え、ユーザーに記録作業を依頼しない。
+8. 理解度チェック後は必ず「このセクションをもう少し深掘りしますか？それとも次に進みますか？」と確認し、ボタン操作を促す。ユーザーが文章で進行を希望しても「下のボタンで選んでください」と案内する。
+9. いかなる場合も「進捗コード」「コードを発行/入力」等の表現は使用しないこと。
+この直後に続くユーザーメッセージに必ず上記フローを適用して返信文を構築すること。
 
 【ユーザーメッセージ】
 ${message}`
+      : `【継続セッション指示】
+ユーザーの進捗と感情状態は自動的に保存・復元されています。コード入力を求めたり、進捗コードという言葉を使用せず、現在のコンテキストを前提に会話を続けてください。
 
+- 各返信の冒頭で現在扱うセクション名を明示し、ユーザーがカリキュラム位置を直感的に把握できるようにする。
+- セクション移動はユーザーが画面下部のボタンを押した時のみ行われます。AIは勝手に次の章へ進んだり戻ったりせず、必要に応じて「下のボタンで選択してください」と案内してください。
+- 理解度チェックの後は必ず「続けますか？それとも次に進みますか？」と確認し、ボタン操作を促す。
+
+【ユーザーメッセージ】
+${message}`
     let progressContext = "";
     let psychologyInstruction = "";
     let negativityAlertInstruction = "";
     let progressIntentInstruction = "";
-    let latestProgressRecord: ProgressRecord | null = null;
     try {
       let progressRecord = await fetchProgressBySession(supabase, user.id, sessionId);
       if (!progressRecord) {
@@ -332,7 +310,6 @@ ${message}`
         const userProgressIntent = determineUserProgressIntent(message);
         progressIntentInstruction = buildProgressIntentInstruction(userProgressIntent, progressRecord);
         psychologyInstruction = buildPsychologyGuidance(progressRecord, recommendationTriggered);
-        latestProgressRecord = progressRecord;
       }
     } catch (progressError) {
       console.error("Michelle attraction progress context error", progressError);
@@ -417,17 +394,6 @@ ${message}`
                   role: "assistant",
                   content: fullReply,
                 });
-              }
-              if (latestProgressRecord) {
-                try {
-                  await handleAutoProgressUpdate(fullReply, latestProgressRecord, {
-                    supabase,
-                    authUserId: user.id,
-                    sessionId,
-                  });
-                } catch (autoProgressError) {
-                  console.error("Auto progress update error", autoProgressError);
-                }
               }
               sendEvent({ type: "done" });
               controller.close();
@@ -571,57 +537,4 @@ const buildPsychologyGuidance = (record: ProgressRecord, newlyTriggered: boolean
   }
 
   return "";
-};
-
-const handleAutoProgressUpdate = async (
-  responseText: string,
-  progressRecord: ProgressRecord,
-  params: { supabase: AttractionSupabase; authUserId: string; sessionId: string },
-) => {
-  const action = detectProgressAction(responseText);
-  if (!action) return;
-
-  if (action === "next") {
-    const nextSection = getNextSection(progressRecord.current_section);
-    if (!nextSection) return;
-    await upsertProgressRecord(params.supabase, {
-      authUserId: params.authUserId,
-      sessionId: params.sessionId,
-      level: nextSection.level,
-      section: nextSection.section,
-      status: "IP",
-    });
-    return;
-  }
-
-  if (action === "back") {
-    const previousSection = getPreviousSection(progressRecord.current_section);
-    if (!previousSection) return;
-    await upsertProgressRecord(params.supabase, {
-      authUserId: params.authUserId,
-      sessionId: params.sessionId,
-      level: previousSection.level,
-      section: previousSection.section,
-      status: "RV",
-    });
-  }
-};
-
-const detectProgressAction = (responseText: string): "next" | "back" | null => {
-  const normalized = responseText.replace(/\s+/g, "");
-  if (
-    NEXT_SECTION_KEYWORDS.some((keyword) => normalized.includes(keyword)) ||
-    NEXT_SECTION_REGEXES.some((regex) => regex.test(responseText))
-  ) {
-    return "next";
-  }
-
-  if (
-    PREVIOUS_SECTION_KEYWORDS.some((keyword) => normalized.includes(keyword)) ||
-    PREVIOUS_SECTION_REGEXES.some((regex) => regex.test(responseText))
-  ) {
-    return "back";
-  }
-
-  return null;
 };

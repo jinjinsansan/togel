@@ -13,6 +13,7 @@ import {
   PROGRESS_STATUSES,
   type ProgressStatus,
   getPreviousSection,
+  getNextSection,
 } from "@/lib/michelle-attraction/sections";
 
 type PsychologyRecommendationState = "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
@@ -189,6 +190,7 @@ export function MichelleAttractionChatClient() {
   const [isRevertingProgress, setIsRevertingProgress] = useState(false);
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [psychologyActionLoading, setPsychologyActionLoading] = useState<null | "acknowledge" | "dismiss" | "resolve">(null);
+  const [progressActionLoading, setProgressActionLoading] = useState<null | "next" | "back" | "deeper">(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -205,6 +207,9 @@ export function MichelleAttractionChatClient() {
   const sessionFromProgress = progress?.session_id ?? null;
   const activeRecommendation = progress?.psychology_recommendation ?? "none";
   const shouldShowPsychologyBanner = activeRecommendation === "suggested" || activeRecommendation === "acknowledged";
+  const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
+  const previousSectionInfo = progress ? getPreviousSection(progress.current_section) : null;
+  const nextSectionInfo = progress ? getNextSection(progress.current_section) : null;
 
   const loadSessions = useCallback(async () => {
     setIsLoading((prev) => ({ ...prev, sessions: true }));
@@ -478,12 +483,12 @@ export function MichelleAttractionChatClient() {
   }, [messages.length, scheduleScrollToBottom]);
 
   useEffect(() => {
-    if (!messages.some((msg) => msg.pending)) return;
+    if (!hasPendingResponse) return;
     const interval = setInterval(() => {
       setCurrentThinkingIndex((prev) => (prev + 1) % thinkingMessages.length);
     }, 2000);
     return () => clearInterval(interval);
-  }, [messages]);
+  }, [hasPendingResponse]);
 
   const handleOpenProgressForm = useCallback(() => {
     setIsProgressDetailsOpen(true);
@@ -697,6 +702,91 @@ export function MichelleAttractionChatClient() {
     }
   };
 
+  const handleProgressAction = async (direction: "next" | "back") => {
+    const targetSessionId = determineSessionForProgress();
+    if (!targetSessionId) {
+      setError("まずチャットを開始してからご利用ください。");
+      return;
+    }
+
+    if (isLoading.sending || hasPendingResponse || progressActionLoading) {
+      return;
+    }
+
+    if (direction === "back" && !previousSectionInfo) {
+      setError("これ以上戻ることはできません");
+      setTimeout(() => setError(null), 2000);
+      return;
+    }
+
+    if (direction === "next" && !nextSectionInfo) {
+      setError("これ以上進むセクションはありません");
+      setTimeout(() => setError(null), 2000);
+      return;
+    }
+
+    setProgressActionLoading(direction);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/michelle-attraction/progress/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: targetSessionId, action: direction }),
+      });
+
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        throw new Error("ログインしてください");
+      }
+
+      const data = (await res.json().catch(() => null)) as { progress?: ProgressEntry | null; error?: string } | null;
+
+      if (!res.ok) {
+        throw new Error(data?.error ?? "進捗を更新できませんでした");
+      }
+      const updatedProgress = data?.progress ?? null;
+      if (updatedProgress) {
+        setProgress(updatedProgress);
+        setProgressForm((prev) => ({
+          ...prev,
+          level: updatedProgress.current_level,
+          section: updatedProgress.current_section,
+          status: updatedProgress.progress_status,
+          notes: updatedProgress.notes ?? "",
+        }));
+      }
+      await fetchProgress();
+
+      const followUpMessage =
+        direction === "next"
+          ? "次のセクションに進みたいです。案内をお願いします。"
+          : "前のセクションを復習したいです。教えてください。";
+
+      await handleSendMessage(followUpMessage);
+      setError(direction === "next" ? "✓ 次のセクションへ進みます" : "✓ 1つ前のセクションに戻ります");
+      setTimeout(() => setError(null), 2000);
+    } catch (actionError) {
+      console.error("Progress action error", actionError);
+      setError(actionError instanceof Error ? actionError.message : "進捗を更新できませんでした");
+    } finally {
+      setProgressActionLoading(null);
+    }
+  };
+
+  const handleDeepenSection = async () => {
+    if (isLoading.sending || hasPendingResponse || progressActionLoading) {
+      return;
+    }
+    setProgressActionLoading("deeper");
+    setError(null);
+    try {
+      await handleSendMessage("このセクションをさらに深掘りして教えてください。");
+    } finally {
+      setProgressActionLoading(null);
+    }
+  };
+
   const handleNewChat = () => {
     debugLog("[User Action] New chat clicked - clearing session");
     setActiveSessionId(null);
@@ -719,17 +809,19 @@ export function MichelleAttractionChatClient() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading.sending) return;
-    
+  const handleSendMessage = async (overrideText?: string) => {
+    const textToSend = overrideText ? overrideText.trim() : input.trim();
+    if (!textToSend || isLoading.sending) return;
+
     // pending メッセージがある場合は送信不可
-    if (messages.some((msg) => msg.pending)) {
+    if (hasPendingResponse) {
       debugLog("[Send] Blocked - AI is still responding");
       return;
     }
 
-    const text = input.trim();
-    setInput("");
+    if (!overrideText) {
+      setInput("");
+    }
     setError(null);
     
     // モバイルでは送信後にキーボードを閉じる
@@ -743,7 +835,7 @@ export function MichelleAttractionChatClient() {
 
     setMessages((prev) => [
       ...prev,
-      { id: tempUserId, role: "user", content: text, created_at: timestamp },
+      { id: tempUserId, role: "user", content: textToSend, created_at: timestamp },
       { id: tempAiId, role: "assistant", content: "", created_at: timestamp, pending: true },
     ]);
 
@@ -753,7 +845,7 @@ export function MichelleAttractionChatClient() {
       const res = await fetch("/api/michelle-attraction/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: text }),
+        body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
       });
 
       if (!res.ok || !res.body) {
@@ -900,7 +992,7 @@ export function MichelleAttractionChatClient() {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       // AIが応答中は送信不可
-      if (!messages.some((msg) => msg.pending)) {
+      if (!hasPendingResponse) {
         handleSendMessage();
       }
     }
@@ -1404,7 +1496,7 @@ export function MichelleAttractionChatClient() {
                 {initialPrompts.slice(0, isMobile ? 2 : 4).map((prompt) => (
                   <button
                     key={prompt}
-                    disabled={isLoading.sending || messages.some((msg) => msg.pending)}
+                    disabled={isLoading.sending || hasPendingResponse}
                     className="rounded-2xl border border-[#cfe8ff] bg-white px-4 py-3 text-sm text-[#35648a] shadow-sm transition hover:-translate-y-0.5 hover:border-[#cfe9ff] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       setInput(prompt);
@@ -1459,6 +1551,56 @@ export function MichelleAttractionChatClient() {
                   )}
                 </div>
               ))}
+              {progress && (
+                <div className="rounded-3xl border border-[#cfe9ff] bg-white/80 p-4 text-sm text-[#1f5c82] shadow-sm">
+                  <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">セクション操作</p>
+                      <p className="text-sm text-[#3a5f83]">ボタンで指示しない限りセクションは移動しません。</p>
+                    </div>
+                    <p className="text-xs text-[#6f819b]">現在: {formatSectionLabel(progress.current_level, progress.current_section)}</p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
+                      onClick={() => handleProgressAction("back")}
+                      disabled={
+                        progressActionLoading !== null ||
+                        !previousSectionInfo ||
+                        isLoading.sending ||
+                        hasPendingResponse
+                      }
+                    >
+                      {progressActionLoading === "back" ? "戻しています..." : "1つ前へ戻る"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-[#cde2ff] bg-[#e6f3ff] text-[#0f4c81] hover:bg-[#d0e8fb]"
+                      onClick={handleDeepenSection}
+                      disabled={progressActionLoading !== null || isLoading.sending || hasPendingResponse}
+                    >
+                      {progressActionLoading === "deeper" ? "リクエスト中..." : "このセクションを深掘り"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="rounded-full bg-gradient-to-r from-[#38bdf8] to-[#4cc9ff] text-white hover:brightness-105"
+                      onClick={() => handleProgressAction("next")}
+                      disabled={
+                        progressActionLoading !== null ||
+                        !nextSectionInfo ||
+                        isLoading.sending ||
+                        hasPendingResponse
+                      }
+                    >
+                      {progressActionLoading === "next" ? "進行準備中..." : "次のセクションへ"}
+                    </Button>
+                  </div>
+                  <p className="mt-2 text-[11px] text-[#6f819b]">※ ボタン操作後にAIが次の手順を案内します。</p>
+                </div>
+              )}
               <div className="h-12 md:h-20" />
               <div ref={messagesEndRef} />
             </div>
@@ -1510,17 +1652,17 @@ export function MichelleAttractionChatClient() {
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              disabled={isLoading.sending || messages.some((msg) => msg.pending)}
+              disabled={isLoading.sending || hasPendingResponse}
               className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#0f2f4d] placeholder:text-[#6a9fc2] focus:outline-none disabled:opacity-60 md:text-sm"
               rows={1}
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!input.trim() || isLoading.sending || messages.some((msg) => msg.pending)}
+              disabled={!input.trim() || isLoading.sending || hasPendingResponse}
               className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#38bdf8] to-[#4cc9ff] text-white shadow-lg hover:brightness-105 disabled:opacity-50"
             >
-              {isLoading.sending || messages.some((msg) => msg.pending) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {isLoading.sending || hasPendingResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
           <p className="mt-2 text-center text-[10px] text-[#6fb2d4]">ミシェル引き寄せAIは誤った情報を生成する場合があります。</p>
