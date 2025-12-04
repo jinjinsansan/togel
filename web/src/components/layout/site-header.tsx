@@ -35,8 +35,6 @@ const utilityNavItems = [
   { href: "/mypage", label: "マイページ" },
 ];
 
-const navItems = [...primaryNavItems, ...journeyNavItems, ...utilityNavItems];
-
 const ADMIN_EMAILS = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
 
 export const SiteHeader = () => {
@@ -141,51 +139,135 @@ export const SiteHeader = () => {
             />
 
             {/* メニュー本体 */}
-            <div className="absolute top-16 right-0 bottom-0 w-[85vw] max-w-sm bg-zinc-950/90 backdrop-blur-xl border-l border-white/10 shadow-2xl animate-slide-in-right flex flex-col">
-              {/* 装飾的な背景グラデーション */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[20%] -right-[20%] w-[150%] h-[50%] bg-gradient-to-b from-[#E91E63]/20 to-transparent blur-3xl rounded-full" />
-                <div className="absolute bottom-0 left-0 w-full h-1/3 bg-gradient-to-t from-[#E91E63]/10 to-transparent" />
-              </div>
-
-              <div className="relative z-10 flex flex-col h-full px-6 pt-8 pb-10">
-                <nav
-                  id="mobile-nav-panel"
-                  className="flex flex-col gap-2"
-                >
-                  <p className="text-xs font-bold text-white/40 tracking-widest mb-4 px-4">MENU</p>
-                  {navItems.map((item, index) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      ref={index === 0 ? firstNavLinkRef : undefined}
-                      className="group relative flex items-center py-4 px-4 rounded-xl hover:bg-white/5 transition-all active:scale-[0.98]"
-                      onClick={closeMenu}
-                      style={{
-                        animation: `fade-in-up 0.5s ease-out ${index * 0.05}s backwards`
-                      }}
-                    >
-                      <span className="text-lg font-bold text-white group-hover:text-[#E91E63] transition-colors">
-                        {item.label}
-                      </span>
-                      <span className="ml-auto text-white/30 group-hover:text-[#E91E63] group-hover:translate-x-1 transition-all">
-                        →
-                      </span>
-                    </Link>
-                  ))}
-                </nav>
-
-                <div className="mt-auto space-y-6">
-                  <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <div className="absolute top-16 right-0 bottom-0 w-[85vw] max-w-sm bg-[#0a0a0a] backdrop-blur-xl border-l border-white/10 shadow-2xl animate-slide-in-right flex flex-col overflow-y-auto">
+              <div className="relative flex flex-col h-full">
+                {/* ブランディングエリア */}
+                <div className="relative bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] px-6 pt-8 pb-6 border-b border-white/10">
+                  <div className="absolute inset-0 overflow-hidden">
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#E91E63]/20 rounded-full blur-3xl" />
+                  </div>
                   
-                  <div className="px-2">
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E91E63] to-[#C2185B] shadow-lg shadow-[#E91E63]/30">
+                        <span className="font-heading text-2xl font-bold text-white">T</span>
+                      </div>
+                      <div>
+                        <h2 className="font-heading text-2xl font-bold text-white">Togel</h2>
+                        <p className="text-xs text-white/50">24タイプ性格診断AI</p>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm leading-relaxed text-white/70">
+                      あなたの本音と相性が一瞬でわかる<br />
+                      24タイプTogel型診断+AIマッチング
+                    </p>
+
+                    <a
+                      href="https://lin.ee/T7OYAGQ"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#06C755] to-[#00B900] py-3 px-4 text-sm font-bold text-white shadow-lg shadow-[#06C755]/20 hover:shadow-xl hover:shadow-[#06C755]/30 transition-all active:scale-[0.98]"
+                      onClick={closeMenu}
+                    >
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314" />
+                      </svg>
+                      LINEでお問い合わせ
+                    </a>
+                  </div>
+                </div>
+
+                {/* ナビゲーションエリア */}
+                <div className="flex-1 px-6 py-6">
+                  <nav id="mobile-nav-panel" className="space-y-8">
+                    {/* プロダクト */}
+                    <div>
+                      <h3 className="text-xs font-bold text-white/40 tracking-widest mb-3 px-2">プロダクト</h3>
+                      <div className="space-y-1">
+                        {primaryNavItems.map((item, index) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            ref={index === 0 ? firstNavLinkRef : undefined}
+                            className="group flex items-center py-3 px-2 rounded-lg hover:bg-white/5 transition-all active:scale-[0.98]"
+                            onClick={closeMenu}
+                          >
+                            <span className="text-base font-medium text-white/90 group-hover:text-white transition-colors">
+                              {item.label}
+                            </span>
+                            <span className="ml-auto text-white/20 group-hover:text-[#E91E63] group-hover:translate-x-1 transition-all">
+                              →
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* サポート */}
+                    {journeyNavItems.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-bold text-white/40 tracking-widest mb-3 px-2">サポート</h3>
+                        <div className="space-y-1">
+                          {journeyNavItems.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className="group flex items-center py-3 px-2 rounded-lg hover:bg-white/5 transition-all active:scale-[0.98]"
+                              onClick={closeMenu}
+                            >
+                              <span className="text-base font-medium text-white/90 group-hover:text-white transition-colors">
+                                {item.label}
+                              </span>
+                              <span className="ml-auto text-white/20 group-hover:text-[#E91E63] group-hover:translate-x-1 transition-all">
+                                →
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* その他 */}
+                    <div>
+                      <h3 className="text-xs font-bold text-white/40 tracking-widest mb-3 px-2">その他</h3>
+                      <div className="space-y-1">
+                        {utilityNavItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className="group flex items-center py-3 px-2 rounded-lg hover:bg-white/5 transition-all active:scale-[0.98]"
+                            onClick={closeMenu}
+                            target={item.href.startsWith("http") ? "_blank" : undefined}
+                          >
+                            <span className="text-base font-medium text-white/90 group-hover:text-white transition-colors">
+                              {item.label}
+                            </span>
+                            <span className="ml-auto text-white/20 group-hover:text-[#E91E63] group-hover:translate-x-1 transition-all">
+                              →
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </nav>
+                </div>
+
+                {/* フッターエリア */}
+                <div className="border-t border-white/10 px-6 py-6 bg-[#0a0a0a]">
+                  <div className="space-y-4">
                     {!user ? (
-                      <LoginButton />
+                      <>
+                        <LoginButton />
+                        <p className="text-center text-xs text-white/40">
+                          ログインして診断結果を保存
+                        </p>
+                      </>
                     ) : (
-                      <div className="flex flex-col gap-3">
+                      <div className="space-y-3">
                         {isAdmin && (
                           <Button
-                            className="h-14 w-full rounded-xl border-2 border-slate-800 bg-transparent text-lg font-bold text-slate-800 shadow-none hover:bg-slate-100"
+                            className="h-12 w-full rounded-xl border border-white/20 bg-white/5 text-sm font-semibold text-white shadow-none hover:bg-white/10"
                             asChild
                           >
                             <Link href="/admin" onClick={closeMenu}>
@@ -194,7 +276,7 @@ export const SiteHeader = () => {
                           </Button>
                         )}
                         <Button
-                          className="h-14 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-lg font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
+                          className="h-12 w-full rounded-xl bg-gradient-to-r from-[#E91E63] to-[#C2185B] text-sm font-bold text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-xl hover:shadow-[#E91E63]/40 hover:-translate-y-0.5 transition-all"
                           asChild
                         >
                           <Link href="/mypage" onClick={closeMenu}>
@@ -203,7 +285,7 @@ export const SiteHeader = () => {
                         </Button>
                         <Button
                           variant="outline"
-                          className="h-12 w-full rounded-xl border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          className="h-10 w-full rounded-xl border-red-900/50 bg-red-950/20 text-red-400 hover:bg-red-900/30 hover:text-red-300"
                           onClick={() => {
                             handleLogout();
                             closeMenu();
@@ -213,11 +295,17 @@ export const SiteHeader = () => {
                         </Button>
                       </div>
                     )}
-                    {!user && (
-                      <p className="mt-3 text-center text-xs text-white/40">
-                        ログインして診断結果を保存
+
+                    <div className="pt-4 border-t border-white/5">
+                      <p className="text-xs text-white/30 text-center">
+                        © {new Date().getFullYear()} Togel. All rights reserved.
                       </p>
-                    )}
+                      <div className="mt-2 flex items-center justify-center gap-2 text-xs text-white/40">
+                        <span>D-powerAIチーム</span>
+                        <span className="h-1 w-1 rounded-full bg-white/20" />
+                        <span>全てのサービスにAIを</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
