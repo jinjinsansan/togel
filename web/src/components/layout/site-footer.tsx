@@ -36,8 +36,9 @@ export const SiteFooter = () => {
     <footer className="relative bg-[radial-gradient(circle_at_top,_#0f1c30,_#050811)] text-white">
       <div className="absolute inset-x-0 -top-8 h-8 bg-gradient-to-b from-transparent to-[#050811]" aria-hidden />
       <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-4 lg:gap-8">
-          <div className="space-y-4 sm:space-y-6 rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6 backdrop-blur">
+        <div className="flex flex-col gap-10 sm:gap-12 lg:grid lg:grid-cols-4 lg:gap-8">
+          {/* ブランディングエリア */}
+          <div className="space-y-4 sm:space-y-5">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#E91E63] to-[#C2185B] shadow-lg shadow-[#E91E63]/30">
                 <span className="font-heading text-xl sm:text-2xl font-bold text-white">T</span>
@@ -59,35 +60,29 @@ export const SiteFooter = () => {
                 <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4" /> SLA 99.9%
               </span>
             </div>
-            <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4 text-xs sm:text-sm text-white/80">
-              <p className="font-semibold text-white">無料サポート</p>
-              <p className="mt-2 text-white/70">LINE公式で24h AIが応答、担当者が翌営業日以内にフォローします。</p>
-              <a
-                href="https://lin.ee/T7OYAGQ"
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 sm:mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#06C755] to-[#00B900] py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-[#06C755]/20 hover:shadow-xl hover:shadow-[#06C755]/30 transition-all active:scale-[0.98]"
-              >
-                <MessageCircle className="h-4 w-4" /> LINEでお問い合わせ
-              </a>
-            </div>
+            <a
+              href="https://lin.ee/T7OYAGQ"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#06C755] to-[#00B900] px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-[#06C755]/20 hover:shadow-xl hover:shadow-[#06C755]/30 transition-all active:scale-[0.98]"
+            >
+              <MessageCircle className="h-4 w-4" /> LINEでお問い合わせ
+            </a>
           </div>
 
+          {/* ナビゲーションリンク */}
           {footerLinks.map((section) => (
-            <div key={section.title} className="rounded-2xl sm:rounded-3xl border border-white/5 bg-white/5 p-4 sm:p-5 backdrop-blur">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] sm:tracking-[0.5em] text-white/60">{section.title}</p>
-              <ul className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/80">
+            <div key={section.title}>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/50 mb-4">{section.title}</p>
+              <ul className="space-y-3 text-sm text-white/70">
                 {section.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="hover:text-white transition-colors inline-flex items-center gap-1 group"
+                      className="hover:text-white transition-colors"
                       target={link.href.startsWith("http") ? "_blank" : undefined}
                     >
                       {link.label}
-                      {link.href.startsWith("http") && (
-                        <span className="text-white/20 group-hover:text-white/40 transition-colors">↗</span>
-                      )}
                     </Link>
                   </li>
                 ))}
@@ -95,20 +90,21 @@ export const SiteFooter = () => {
             </div>
           ))}
 
-          <div className="rounded-2xl sm:rounded-3xl border border-white/5 bg-white/5 p-4 sm:p-5 backdrop-blur">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] sm:tracking-[0.5em] text-white/60">Contact</p>
-            <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/80">
-              <a href="mailto:info@to-gel.com" className="flex items-center gap-2 rounded-xl sm:rounded-2xl border border-white/10 px-3 sm:px-4 py-2 transition hover:border-white/40 active:scale-[0.98]">
-                <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" /> 
+          {/* コンタクト */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/50 mb-4">Contact</p>
+            <div className="space-y-3 text-sm text-white/70">
+              <a href="mailto:info@to-gel.com" className="flex items-center gap-2 hover:text-white transition-colors">
+                <Mail className="h-4 w-4 flex-shrink-0" /> 
                 <span className="truncate">info@to-gel.com</span>
               </a>
               <a
                 href="https://lin.ee/T7OYAGQ"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 rounded-xl sm:rounded-2xl border border-white/10 px-3 sm:px-4 py-2 transition hover:border-white/40 active:scale-[0.98]"
+                className="flex items-center gap-2 hover:text-white transition-colors"
               >
-                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" /> LINEで相談
+                <MessageCircle className="h-4 w-4 flex-shrink-0" /> LINEで相談
               </a>
             </div>
           </div>
