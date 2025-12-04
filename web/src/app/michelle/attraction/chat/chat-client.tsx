@@ -1552,19 +1552,16 @@ export function MichelleAttractionChatClient() {
                 </div>
               ))}
               {progress && (
-                <div className="rounded-3xl border border-[#cfe9ff] bg-white/80 p-4 text-sm text-[#1f5c82] shadow-sm">
-                  <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#5ba4d8]">セクション操作</p>
-                      <p className="text-sm text-[#3a5f83]">ボタンで指示しない限りセクションは移動しません。</p>
-                    </div>
-                    <p className="text-xs text-[#6f819b]">現在: {formatSectionLabel(progress.current_level, progress.current_section)}</p>
+                <div className="rounded-2xl border border-[#dceeff] bg-white/70 px-3 py-2 text-xs text-[#1f4a6a] shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold text-[#0f4c81]">セクション操作</span>
+                    <span className="text-[11px] text-[#6585a5]">現在: {formatSectionLabel(progress.current_level, progress.current_section)}</span>
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-1.5">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-full border-[#cde2ff] text-[#0f4c81] hover:bg-[#f0f7ff]"
+                      className="rounded-full border-[#cde2ff] px-3 py-1 text-xs text-[#0f4c81] hover:bg-[#eef6ff]"
                       onClick={() => handleProgressAction("back")}
                       disabled={
                         progressActionLoading !== null ||
@@ -1573,20 +1570,20 @@ export function MichelleAttractionChatClient() {
                         hasPendingResponse
                       }
                     >
-                      {progressActionLoading === "back" ? "戻しています..." : "1つ前へ戻る"}
+                      {progressActionLoading === "back" ? "戻し中..." : "1つ前へ戻る"}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="rounded-full border-[#cde2ff] bg-[#e6f3ff] text-[#0f4c81] hover:bg-[#d0e8fb]"
+                      className="rounded-full border-[#cde2ff] bg-[#eef7ff] px-3 py-1 text-xs text-[#0f4c81] hover:bg-[#e1efff]"
                       onClick={handleDeepenSection}
                       disabled={progressActionLoading !== null || isLoading.sending || hasPendingResponse}
                     >
-                      {progressActionLoading === "deeper" ? "リクエスト中..." : "このセクションを深掘り"}
+                      {progressActionLoading === "deeper" ? "準備中..." : "このセクションを深掘り"}
                     </Button>
                     <Button
                       size="sm"
-                      className="rounded-full bg-gradient-to-r from-[#38bdf8] to-[#4cc9ff] text-white hover:brightness-105"
+                      className="rounded-full bg-gradient-to-r from-[#38bdf8] to-[#4cc9ff] px-3 py-1 text-xs text-white hover:brightness-105"
                       onClick={() => handleProgressAction("next")}
                       disabled={
                         progressActionLoading !== null ||
@@ -1595,10 +1592,10 @@ export function MichelleAttractionChatClient() {
                         hasPendingResponse
                       }
                     >
-                      {progressActionLoading === "next" ? "進行準備中..." : "次のセクションへ"}
+                      {progressActionLoading === "next" ? "進行中..." : "次のセクションへ"}
                     </Button>
                   </div>
-                  <p className="mt-2 text-[11px] text-[#6f819b]">※ ボタン操作後にAIが次の手順を案内します。</p>
+                  <p className="mt-1 text-[10px] text-[#6f819b]">ボタン操作後にAIが手順を案内します。</p>
                 </div>
               )}
               <div className="h-12 md:h-20" />
