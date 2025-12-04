@@ -59,6 +59,7 @@ type StreamPayload = {
 };
 
 type GuidedAction = "back" | "deeper" | "next";
+type GuidedPhase = "explore" | "deepen" | "release";
 
 const ACTIVE_SESSION_STORAGE_KEY = "michelle-active-session-id";
 
@@ -92,6 +93,24 @@ const GUIDED_ACTION_PRESETS: Record<GuidedAction, { prompt: string; success: str
   },
 };
 
+const GUIDED_ACTION_NOTES: Record<GuidedAction, string> = {
+  back: "ユーザー操作: 直前のテーマ整理をリクエスト",
+  deeper: "ユーザー操作: 現在のテーマを深掘り",
+  next: "ユーザー操作: 次のセルフケア案内をリクエスト",
+};
+
+const GUIDED_PHASE_SEQUENCE: GuidedPhase[] = ["explore", "deepen", "release"];
+const GUIDED_PHASE_LABELS: Record<GuidedPhase, string> = {
+  explore: "気持ちの整理",
+  deepen: "深掘り・核心探索",
+  release: "リリース＆ケア",
+};
+const GUIDED_PHASE_DESCRIPTIONS: Record<GuidedPhase, string> = {
+  explore: "今感じている感情やテーマを整理しています",
+  deepen: "感情の芯や思い込みを深掘り中",
+  release: "感情のリリースとセルフケアへ移行中",
+};
+
 export function MichelleChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -119,6 +138,7 @@ export function MichelleChatClient() {
   const [isUpdatingBridge, setIsUpdatingBridge] = useState(false);
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
   const [guidedActionLoading, setGuidedActionLoading] = useState<null | "back" | "deeper" | "next">(null);
+  const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -377,6 +397,10 @@ export function MichelleChatClient() {
     }
   }, [activeSessionId, isLoading.sending, loadMessages]);
 
+  useEffect(() => {
+    setCurrentPhase("explore");
+  }, [activeSessionId]);
+
   useLayoutEffect(() => {
     if (messages.length === 0) return;
     scheduleScrollToBottom();
@@ -396,6 +420,7 @@ export function MichelleChatClient() {
     setMessages([]);
     setError(null);
     setHasLoadedMessages(true);
+    setCurrentPhase("explore");
     hasRestoredSessionRef.current = false;
     
     // 新しいチャットの場合のみlocalStorageを削除
@@ -438,6 +463,37 @@ export function MichelleChatClient() {
     }
   };
 
+  const appendGuidedSystemNote = (action: GuidedAction) => {
+    const note = GUIDED_ACTION_NOTES[action];
+    if (!note) return;
+    const timestamp = new Date().toISOString();
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `system-${action}-${timestamp}`,
+        role: "system",
+        content: note,
+        created_at: timestamp,
+      },
+    ]);
+  };
+
+  const transitionPhase = (action: GuidedAction) => {
+    setCurrentPhase((prev) => {
+      const currentIndex = GUIDED_PHASE_SEQUENCE.indexOf(prev);
+      if (currentIndex === -1) return prev;
+      if (action === "back") {
+        const nextIndex = Math.max(0, currentIndex - 1);
+        return GUIDED_PHASE_SEQUENCE[nextIndex];
+      }
+      if (action === "next") {
+        const nextIndex = Math.min(GUIDED_PHASE_SEQUENCE.length - 1, currentIndex + 1);
+        return GUIDED_PHASE_SEQUENCE[nextIndex];
+      }
+      return prev;
+    });
+  };
+
   const handleGuidedAction = async (action: GuidedAction) => {
     if (isLoading.sending || hasPendingResponse || guidedActionLoading) {
       return;
@@ -448,6 +504,8 @@ export function MichelleChatClient() {
 
     setGuidedActionLoading(action);
     setError(preset.success);
+    appendGuidedSystemNote(action);
+    transitionPhase(action);
 
     try {
       await handleSendMessage(preset.prompt, { preserveStatus: true });
@@ -895,44 +953,61 @@ export function MichelleChatClient() {
               className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-8"
               style={{ paddingBottom: `${Math.max(composerHeight + 16, 128)}px` }}
             >
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
-                >
-                  {message.role === "assistant" && <MichelleAvatar size="sm" variant="rose" className="mt-1" />}
-                  <div
-                    className={cn(
-                      "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
-                      message.role === "user"
-                        ? "rounded-tr-sm bg-gradient-to-r from-[#ff77b3] via-[#ff94c3] to-[#ffb8d6] text-white"
-                        : "rounded-tl-sm border border-[#e4e9fb] bg-white text-[#4c5368]",
-                    )}
-                  >
-                    {message.pending && !message.content ? (
-                      <div className="flex items-center gap-2 text-xs text-[#6f7ba5]">
-                        <span className="inline-flex gap-1">
-                          <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" />
-                          <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" style={{ animationDelay: "300ms" }} />
+              {messages.map((message) => {
+                if (message.role === "system") {
+                  return (
+                    <div key={message.id} className="flex justify-center">
+                      <p className="text-[11px] text-[#a0657f]">
+                        <span className="rounded-full bg-[#fff4f8] px-3 py-1 text-[#b23462]">
+                          {message.content}
                         </span>
-                        {thinkingMessages[currentThinkingIndex]}
-                      </div>
-                    ) : (
-                      <p className="whitespace-pre-wrap">{cleanContent(message.content)}</p>
-                    )}
-                    {message.pending && message.content && <span className="ml-1 inline-block h-4 w-1.5 animate-pulse bg-current" />}
-                  </div>
-                  {message.role === "user" && (
-                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffd7e8] bg-white text-[#b1637d]">
-                      <User className="h-4 w-4" />
+                      </p>
                     </div>
-                  )}
-                </div>
-              ))}
+                  );
+                }
+
+                return (
+                  <div
+                    key={message.id}
+                    className={cn("flex gap-3", message.role === "user" ? "justify-end" : "justify-start")}
+                  >
+                    {message.role === "assistant" && <MichelleAvatar size="sm" variant="rose" className="mt-1" />}
+                    <div
+                      className={cn(
+                        "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
+                        message.role === "user"
+                          ? "rounded-tr-sm bg-gradient-to-r from-[#ff77b3] via-[#ff94c3] to-[#ffb8d6] text-white"
+                          : "rounded-tl-sm border border-[#e4e9fb] bg-white text-[#4c5368]",
+                      )}
+                    >
+                      {message.pending && !message.content ? (
+                        <div className="flex items-center gap-2 text-xs text-[#6f7ba5]">
+                          <span className="inline-flex gap-1">
+                            <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" />
+                            <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <span className="h-2 w-2 rounded-full bg-[#4a6bf2] animate-bounce" style={{ animationDelay: "300ms" }} />
+                          </span>
+                          {thinkingMessages[currentThinkingIndex]}
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{cleanContent(message.content)}</p>
+                      )}
+                      {message.pending && message.content && <span className="ml-1 inline-block h-4 w-1.5 animate-pulse bg-current" />}
+                    </div>
+                    {message.role === "user" && (
+                      <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#ffd7e8] bg-white text-[#b1637d]">
+                        <User className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#7a4f63]">
                 <span className="font-semibold text-[#b23462]">感情ケア操作</span>
-                <span className="text-[#c08ba5]">/ ユーザー操作でのみ進行します</span>
+                <span className="rounded-full border border-[#ffd1e4] bg-[#fff5f9] px-3 py-1 text-[#b23462]">
+                  現在: {GUIDED_PHASE_LABELS[currentPhase]}
+                </span>
+                <span className="text-[#c08ba5]">{GUIDED_PHASE_DESCRIPTIONS[currentPhase]}</span>
                 <div className="flex flex-wrap gap-1">
                   <Button
                     variant="ghost"
