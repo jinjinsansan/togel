@@ -110,6 +110,8 @@ const PREVIOUS_SECTION_REGEXES = [
   /一旦戻(?:りましょう|ります|って)/iu,
 ];
 
+const MAX_EMOTION_HISTORY = 4;
+
 export async function POST(request: Request) {
   if (!MICHELLE_ATTRACTION_AI_ENABLED) {
     return NextResponse.json({ error: "Michelle Attraction AI is currently disabled" }, { status: 503 });
@@ -178,7 +180,8 @@ ${message}`
       }
 
       if (progressRecord) {
-        const emotionAnalysis = evaluateEmotionState(message);
+        const emotionInput = await buildEmotionEvaluationInput(supabase, sessionId, message);
+        const emotionAnalysis = evaluateEmotionState(emotionInput, { latestUtterance: message });
         progressRecord = await updateEmotionSnapshot(supabase, {
           authUserId: user.id,
           sessionId,
@@ -425,6 +428,40 @@ const ensureThreadId = async (supabase: AttractionSupabase, sessionId: string, c
   const thread = await betaThreads.create();
   await supabase.from("michelle_attraction_sessions").update({ openai_thread_id: thread.id }).eq("id", sessionId);
   return thread.id;
+};
+
+const buildEmotionEvaluationInput = async (
+  supabase: AttractionSupabase,
+  sessionId: string,
+  latestMessage: string,
+) => {
+  try {
+    const { data, error } = await supabase
+      .from("michelle_attraction_messages")
+      .select("content, role")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    if (error) {
+      throw error;
+    }
+
+    const previousUserTurns = (data ?? [])
+      .filter((entry) => entry.role === "user" && typeof entry.content === "string")
+      .slice(0, MAX_EMOTION_HISTORY - 1)
+      .map((entry) => (entry.content ?? "").trim())
+      .filter(Boolean)
+      .reverse();
+
+    const segments = previousUserTurns.map((text, index) => `【これまで${index + 1}】${text}`);
+    segments.push(`【最新】${latestMessage}`);
+
+    return segments.join("\n\n");
+  } catch (error) {
+    console.error("Michelle attraction emotion history fetch error", error);
+    return latestMessage;
+  }
 };
 
 const buildPsychologyGuidance = (record: ProgressRecord, newlyTriggered: boolean) => {

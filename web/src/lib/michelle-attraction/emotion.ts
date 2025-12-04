@@ -15,7 +15,6 @@ const CRITICAL_KEYWORDS = [
   "最悪",
   "壊れ",
   "どうでもいい",
-  "終わり",
   "耐えられない",
   "絶望",
   "もう無理",
@@ -34,6 +33,11 @@ const CRITICAL_REGEX: { pattern: RegExp; reason: string }[] = [
   { pattern: /消え(た|たい)/, reason: "存在を消したいという表現" },
   { pattern: /生き(て|る)意味がない/, reason: "生きる意味の喪失" },
   { pattern: /(人生|全部).*(終わった|終わり)/, reason: "人生の終焉を示す表現" },
+  { pattern: /(終わり|終わら)たい/, reason: "終わらせたいという危険な願望" },
+  {
+    pattern: /(もう|本当|ほんと|マジ|完全に)[^。！？!?\n\r]{0,12}終わり(だ|です(?!か)|たい)/,
+    reason: "自己の終焉宣言",
+  },
 ];
 
 const CONCERN_KEYWORDS = [
@@ -106,17 +110,46 @@ const NEGATIVE_SLANG = [
   "しにそう",
 ];
 
+const QUESTION_RELIEF_PATTERNS = [
+  /ですか[?？]?$/,
+  /でしょうか[?？]?$/,
+  /ますか[?？]?$/,
+  /ましたか[?？]?$/,
+  /でしたか[?？]?$/,
+  /かな[?？]?$/,
+  /かしら[?？]?$/,
+  /\?\s*$/,
+  /？\s*$/,
+];
+
 const normalizeText = (input: string) => input.toLowerCase();
 
-export const evaluateEmotionState = (input: string): EmotionAnalysis => {
+const applyQuestionRelief = (score: number, latestUtterance: string, hasCritical: boolean) => {
+  if (!latestUtterance || hasCritical || score <= 0) {
+    return score;
+  }
+
+  const trimmed = latestUtterance.trim();
+  const isQuestion = QUESTION_RELIEF_PATTERNS.some((pattern) => pattern.test(trimmed));
+  if (!isQuestion) {
+    return score;
+  }
+
+  return Math.max(0, score - 2);
+};
+
+export const evaluateEmotionState = (input: string, options?: { latestUtterance?: string }): EmotionAnalysis => {
   const text = normalizeText(input);
+  const latestNormalized = options?.latestUtterance ? normalizeText(options.latestUtterance) : "";
   let score = 0;
   const reasons: string[] = [];
+  let criticalTriggered = false;
 
   CRITICAL_KEYWORDS.forEach((keyword) => {
     if (text.includes(keyword)) {
       score += 4;
       reasons.push(`「${keyword}」という強い表現`);
+      criticalTriggered = true;
     }
   });
 
@@ -124,6 +157,7 @@ export const evaluateEmotionState = (input: string): EmotionAnalysis => {
     if (pattern.test(text)) {
       score += 4;
       reasons.push(reason);
+      criticalTriggered = true;
     }
   });
 
@@ -189,6 +223,8 @@ export const evaluateEmotionState = (input: string): EmotionAnalysis => {
     score += 1;
     reasons.push("涙が止まらない状態");
   }
+
+  score = applyQuestionRelief(score, latestNormalized || text, criticalTriggered);
 
   let state: EmotionState = "stable";
 
