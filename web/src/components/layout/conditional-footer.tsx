@@ -13,27 +13,26 @@ const EXCLUDE_FOOTER_PATHS = [
   "/result/mismatch",
 ];
 
-const MOBILE_ALLOWED_PATHS = ["/"];
+const FOOTER_ALLOWED_PATHS = ["/"];
 
 export const ConditionalFooter = () => {
   const pathname = usePathname();
 
-  if (EXCLUDE_FOOTER_PATHS.some((path) => pathname.startsWith(path))) {
+  if (
+    EXCLUDE_FOOTER_PATHS.some((path) => pathname.startsWith(path)) ||
+    !FOOTER_ALLOWED_PATHS.includes(pathname)
+  ) {
     return null;
   }
-
-  const allowMobileFooter = MOBILE_ALLOWED_PATHS.includes(pathname);
 
   return (
     <>
       <div className="hidden md:block">
         <SiteFooter />
       </div>
-      {allowMobileFooter && (
-        <div className="block md:hidden">
-          <SiteFooter />
-        </div>
-      )}
+      <div className="block md:hidden">
+        <SiteFooter />
+      </div>
     </>
   );
 };
