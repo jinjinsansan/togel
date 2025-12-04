@@ -25,8 +25,8 @@ const footerLinks = [
     links: [
       { label: "型分布図", href: "/types/distribution" },
       { label: "FAQ", href: "/about" },
-      { label: "利用規約", href: "/about#terms" },
-      { label: "プライバシー", href: "/about#privacy" },
+      { label: "利用規約", href: "/terms" },
+      { label: "プライバシー", href: "/privacy" },
     ],
   },
 ];
