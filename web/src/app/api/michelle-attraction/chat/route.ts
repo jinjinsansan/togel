@@ -67,7 +67,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { sessionId, threadId } = await resolveSession(supabase, user.id, incomingSessionId, message, category);
+    const { sessionId, threadId, isNewSession } = await resolveSession(
+      supabase,
+      user.id,
+      incomingSessionId,
+      message,
+      category,
+    );
 
     const openai = getMichelleAttractionOpenAIClient();
     const assistantId = getMichelleAttractionAssistantId();
@@ -86,10 +92,14 @@ export async function POST(request: Request) {
       .map((match, index) => `[参考知識${index + 1}]\n${match.content}`)
       .join("\n\n");
 
+    const onboardingPrimer = isNewSession
+      ? `【初回オンボーディング指示】\nこの会話は新しいミシェル引き寄せ講座セッションの初回です。以下の手順を厳守して最初の返信を作成してください。\n1. 温かく挨拶し、講座の概要を1〜2文で伝える。\n2. ユーザーが初めてか/継続かを尋ねる。継続なら進捗コード(MCL-L{n}-S{nn}-{STATUS})の提示を必ず求め、コードから次に進むべきセクションを判断する。\n3. 進捗コードが無い場合は診断質問Q1〜Q3を順番に実施し、回答を踏まえて開始レベル/セクションを決定する。\n4. 決定したセクションを明示し、【導入→本編→理解度チェック→進捗コード発行】の流れで丁寧に進める。\n5. セクション完了ごとに最新の進捗コードを生成し、保存を促す。\nこの直後に続くユーザーメッセージに必ず上記フローを適用して返信文を構築すること。\n\n【ユーザーメッセージ】\n${message}`
+      : message;
+
     const finalMessage =
       knowledgeMatches.length > 0
-        ? `【ユーザーメッセージ】\n${message}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下のミシェル引き寄せ知識を参考にして回答を構築してください。\n${knowledgeContext}`
-        : message;
+        ? `【ユーザーメッセージ】\n${onboardingPrimer}\n\n---\n内部参考情報（ユーザーには見せないこと）：\n以下のミシェル引き寄せ知識を参考にして回答を構築してください。\n${knowledgeContext}`
+        : onboardingPrimer;
 
     await supabase.from("michelle_attraction_messages").insert({
       session_id: sessionId,
@@ -196,7 +206,7 @@ const resolveSession = async (
     }
 
     const threadId = await ensureThreadId(supabase, data.id, data.openai_thread_id);
-    return { sessionId: data.id, threadId };
+    return { sessionId: data.id, threadId, isNewSession: false };
   }
 
   const derivedCategory = category ?? "life";
@@ -217,7 +227,7 @@ const resolveSession = async (
   }
 
   const threadId = await ensureThreadId(supabase, data.id, null);
-  return { sessionId: data.id, threadId };
+  return { sessionId: data.id, threadId, isNewSession: true };
 };
 
 const ensureThreadId = async (supabase: AttractionSupabase, sessionId: string, current: string | null) => {
