@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useRef, useCallback, SyntheticEvent } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, SyntheticEvent } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 import { Button } from "@/components/ui/button";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
@@ -261,6 +262,19 @@ const TRAITS: (keyof BigFiveScores)[] = [
 ];
 
 const ResultPage = () => {
+  const supabase = useMemo(() => createClientComponentClient(), []);
+
+  const clearSessionCaches = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.removeItem("latestMatching");
+      sessionStorage.removeItem("latestDiagnosis");
+      sessionStorage.removeItem("latestMismatch");
+      sessionStorage.removeItem("latestFeatured");
+    } catch (err) {
+      console.warn("Failed to clear session caches", err);
+    }
+  }, []);
   const [results, setResults] = useState<MatchingResult[]>(() => {
     if (typeof window === "undefined") return [];
     const raw = sessionStorage.getItem("latestMatching");
@@ -378,6 +392,29 @@ const ResultPage = () => {
     const hasCachedData = results.length > 0 && Boolean(diagnosis);
     fetchLatest({ skipLoading: hasCachedData });
   }, [fetchLatest, results.length, diagnosis]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        clearSessionCaches();
+        setResults([]);
+        setDiagnosis(null);
+        setFeaturedResult(null);
+        setHasPrank(false);
+      }
+
+      if (event === "SIGNED_IN" && session?.user) {
+        setIsRefreshing(true);
+        fetchLatest({ skipLoading: true, forceFresh: true })
+          .catch((error) => console.error("Retry fetch after sign-in failed", error))
+          .finally(() => setIsRefreshing(false));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, fetchLatest, clearSessionCaches]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
