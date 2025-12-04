@@ -3,8 +3,7 @@ import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
 import { ConditionalHeader } from "@/components/layout/conditional-header";
-import { FooterHighlight } from "@/components/layout/footer-highlight";
-import { SiteFooter } from "@/components/layout/site-footer";
+import { ConditionalFooter } from "@/components/layout/conditional-footer";
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
@@ -47,8 +46,7 @@ export default function RootLayout({
       <body className={`min-h-screen bg-background text-foreground antialiased ${notoSansJP.className} ${notoSansJP.variable}`}>
         <ConditionalHeader />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
-        <FooterHighlight />
-        <SiteFooter />
+        <ConditionalFooter />
       </body>
     </html>
   );
