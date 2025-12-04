@@ -1,5 +1,4 @@
-const getEnvVar = (key: string) => {
-  const value = process.env[key];
+const getEnvVar = (value: string | undefined, key: string) => {
   if (!value) {
     throw new Error(`Missing environment variable: ${key}`);
   }
@@ -7,6 +6,6 @@ const getEnvVar = (key: string) => {
 };
 
 export const env = {
-  supabaseUrl: getEnvVar("NEXT_PUBLIC_SUPABASE_URL"),
-  supabaseAnonKey: getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  supabaseUrl: getEnvVar(process.env.NEXT_PUBLIC_SUPABASE_URL, "NEXT_PUBLIC_SUPABASE_URL"),
+  supabaseAnonKey: getEnvVar(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, "NEXT_PUBLIC_SUPABASE_ANON_KEY"),
 };
