@@ -58,6 +58,8 @@ type StreamPayload = {
   knowledge?: SSEKnowledge[];
 };
 
+type GuidedAction = "back" | "deeper" | "next";
+
 const ACTIVE_SESSION_STORAGE_KEY = "michelle-active-session-id";
 
 const initialPrompts = [
@@ -73,6 +75,22 @@ const thinkingMessages = [
   "思考を整えています...",
   "寄り添いながら考えています...",
 ];
+
+const GUIDED_ACTION_PRESETS: Record<GuidedAction, { prompt: string; success: string }> = {
+  back: {
+    prompt: "直前に扱っていたテーマをもう一度整理したいです。さっきの内容を別の視点でもう少し丁寧に解説してください。",
+    success: "✓ 直前のテーマをもう一度整理します",
+  },
+  deeper: {
+    prompt:
+      "今取り組んでいる心のテーマをさらに深掘りしたいです。感情の芯や根底にある思い込みまで一緒に探ってください。",
+    success: "✓ 同じテーマをさらに深掘りします",
+  },
+  next: {
+    prompt: "このテーマはいったん区切って、次に進むためのセルフケアや新しい視点を案内してください。",
+    success: "✓ 次のステップへ進みます",
+  },
+};
 
 export function MichelleChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -99,6 +117,8 @@ export function MichelleChatClient() {
   const hasRestoredSessionRef = useRef(false);
   const [attractionBridge, setAttractionBridge] = useState<AttractionBridge | null>(null);
   const [isUpdatingBridge, setIsUpdatingBridge] = useState(false);
+  const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
+  const [guidedActionLoading, setGuidedActionLoading] = useState<null | "back" | "deeper" | "next">(null);
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -363,12 +383,12 @@ export function MichelleChatClient() {
   }, [messages.length, scheduleScrollToBottom]);
 
   useEffect(() => {
-    if (!messages.some((msg) => msg.pending)) return;
+    if (!hasPendingResponse) return;
     const interval = setInterval(() => {
       setCurrentThinkingIndex((prev) => (prev + 1) % thinkingMessages.length);
     }, 2000);
     return () => clearInterval(interval);
-  }, [messages]);
+  }, [hasPendingResponse]);
 
   const handleNewChat = () => {
     console.log("[User Action] New chat clicked - clearing session");
@@ -418,18 +438,43 @@ export function MichelleChatClient() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading.sending) return;
-    
-    // pending メッセージがある場合は送信不可
-    if (messages.some((msg) => msg.pending)) {
+  const handleGuidedAction = async (action: GuidedAction) => {
+    if (isLoading.sending || hasPendingResponse || guidedActionLoading) {
+      return;
+    }
+
+    const preset = GUIDED_ACTION_PRESETS[action];
+    if (!preset) return;
+
+    setGuidedActionLoading(action);
+    setError(preset.success);
+
+    try {
+      await handleSendMessage(preset.prompt, { preserveStatus: true });
+      setTimeout(() => setError(null), 2000);
+    } catch (actionError) {
+      console.error("Guided action error", actionError);
+      setError(actionError instanceof Error ? actionError.message : "送信に失敗しました");
+    } finally {
+      setGuidedActionLoading(null);
+    }
+  };
+
+  const handleSendMessage = async (overrideText?: string, options?: { preserveStatus?: boolean }) => {
+    const textToSend = overrideText ? overrideText.trim() : input.trim();
+    if (!textToSend || isLoading.sending) return;
+
+    if (hasPendingResponse) {
       console.log("[Send] Blocked - AI is still responding");
       return;
     }
 
-    const text = input.trim();
-    setInput("");
-    setError(null);
+    if (!overrideText) {
+      setInput("");
+    }
+    if (!options?.preserveStatus) {
+      setError(null);
+    }
     
     // モバイルでは送信後にキーボードを閉じる
     if (isMobile && textareaRef.current) {
@@ -442,7 +487,7 @@ export function MichelleChatClient() {
 
     setMessages((prev) => [
       ...prev,
-      { id: tempUserId, role: "user", content: text, created_at: timestamp },
+      { id: tempUserId, role: "user", content: textToSend, created_at: timestamp },
       { id: tempAiId, role: "assistant", content: "", created_at: timestamp, pending: true },
     ]);
 
@@ -452,7 +497,7 @@ export function MichelleChatClient() {
       const res = await fetch("/api/michelle/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: text }),
+        body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
       });
 
       if (!res.ok || !res.body) {
@@ -598,7 +643,7 @@ export function MichelleChatClient() {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       // AIが応答中は送信不可
-      if (!messages.some((msg) => msg.pending)) {
+      if (!hasPendingResponse) {
         handleSendMessage();
       }
     }
@@ -830,7 +875,7 @@ export function MichelleChatClient() {
                 {initialPrompts.slice(0, isMobile ? 2 : 4).map((prompt) => (
                   <button
                     key={prompt}
-                    disabled={isLoading.sending || messages.some((msg) => msg.pending)}
+                    disabled={isLoading.sending || hasPendingResponse}
                     className="rounded-2xl border border-[#ffd7e8] bg-white px-4 py-3 text-sm text-[#7a4f63] shadow-sm transition hover:-translate-y-0.5 hover:border-[#ffc8de] disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       setInput(prompt);
@@ -885,6 +930,39 @@ export function MichelleChatClient() {
                   )}
                 </div>
               ))}
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#7a4f63]">
+                <span className="font-semibold text-[#b23462]">感情ケア操作</span>
+                <span className="text-[#c08ba5]">/ ユーザー操作でのみ進行します</span>
+                <div className="flex flex-wrap gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] text-[#b23462] hover:bg-[#ffe6ef]"
+                    onClick={() => handleGuidedAction("back")}
+                    disabled={guidedActionLoading !== null || hasPendingResponse || isLoading.sending}
+                  >
+                    {guidedActionLoading === "back" ? "整理中..." : "◀ 前のテーマ"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] text-[#b23462] hover:bg-[#ffe6ef]"
+                    onClick={() => handleGuidedAction("deeper")}
+                    disabled={guidedActionLoading !== null || hasPendingResponse || isLoading.sending}
+                  >
+                    {guidedActionLoading === "deeper" ? "準備中..." : "◎ 深掘り"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[11px] text-[#b23462] hover:bg-[#ffe6ef]"
+                    onClick={() => handleGuidedAction("next")}
+                    disabled={guidedActionLoading !== null || hasPendingResponse || isLoading.sending}
+                  >
+                    {guidedActionLoading === "next" ? "案内中..." : "次へ ▶"}
+                  </Button>
+                </div>
+              </div>
               <div className="h-12 md:h-20" />
               <div ref={messagesEndRef} />
             </div>
@@ -935,17 +1013,17 @@ export function MichelleChatClient() {
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              disabled={isLoading.sending || messages.some((msg) => msg.pending)}
+              disabled={isLoading.sending || hasPendingResponse}
               className="max-h-40 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-[#2c122a] placeholder:text-[#c18aa0] focus:outline-none disabled:opacity-60 md:text-sm"
               rows={1}
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!input.trim() || isLoading.sending || messages.some((msg) => msg.pending)}
+              disabled={!input.trim() || isLoading.sending || hasPendingResponse}
               className="h-12 w-12 rounded-full bg-gradient-to-tr from-[#ff6ba6] to-[#ff8ac0] text-white shadow-lg hover:brightness-105 disabled:opacity-50"
             >
-              {isLoading.sending || messages.some((msg) => msg.pending) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {isLoading.sending || hasPendingResponse ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
           <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。</p>
