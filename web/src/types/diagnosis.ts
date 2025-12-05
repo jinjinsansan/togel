@@ -27,6 +27,7 @@ export type DiagnosisPayload = {
   diagnosisType: DiagnosisType;
   userGender: "male" | "female";
   answers: Answer[];
+  userId?: string;
 };
 
 export type PersonalityTypeDefinition = {

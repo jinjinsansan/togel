@@ -240,7 +240,7 @@ export const POST = async (request: Request) => {
       return NextResponse.json({ message: "Failed to store diagnosis result" }, { status: 500 });
     }
 
-    const results = await generateMatchingResults(parsed.data);
+    const results = await generateMatchingResults({ ...parsed.data, userId });
     const mismatchResults = await generateMismatchingResults(parsed.data);
     
     let featuredResult: MatchingResult | null = null;
@@ -263,7 +263,7 @@ export const POST = async (request: Request) => {
       if (featured && featured.users) {
          // 単体マッチング生成 (engine.tsに新規追加する関数を使用)
          // Note: generateSingleMatchingResultの実装が必要
-         const result = await generateSingleMatchingResult(parsed.data, featured.users);
+        const result = await generateSingleMatchingResult({ ...parsed.data, userId }, featured.users);
          if (result) {
            featuredResult = { ...result, isFeatured: true };
          }

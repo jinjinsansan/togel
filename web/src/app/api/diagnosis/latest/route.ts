@@ -84,6 +84,7 @@ export const GET = async (request: Request) => {
       diagnosisType: latestDiagnosis.diagnosis_type as "light" | "full",
       userGender: "male" as "male" | "female",
       answers: latestDiagnosis.answers as Answer[],
+      userId: userData.id,
     };
 
     // プロフィールから性別を取得

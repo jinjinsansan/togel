@@ -195,7 +195,7 @@ const mapUserRowToProfile = (row: UserRow, index: number): MatchingProfile => {
   } satisfies MatchingProfile;
 };
 
-const loadRealProfiles = async (gender: Gender): Promise<MatchingProfile[]> => {
+const loadRealProfiles = async (gender: Gender, excludeUserId?: string): Promise<MatchingProfile[]> => {
   try {
     const supabase = createSupabaseAdminClient();
     
@@ -270,7 +270,9 @@ const loadRealProfiles = async (gender: Gender): Promise<MatchingProfile[]> => {
       }
     }
 
-    return data.map((row, index) => mapUserRowToProfile(row as UserRow, index));
+    const filteredData = excludeUserId ? data.filter((row) => row.id !== excludeUserId) : data;
+
+    return filteredData.map((row, index) => mapUserRowToProfile(row as UserRow, index));
   } catch (error) {
     console.error("Unexpected error loading real profiles", error);
     return [];
@@ -1049,7 +1051,7 @@ export const generateMatchingResults = async (
   const userType = determinePersonalityType(userScores);
 
   const targetGender = options?.targetGender ?? (payload.userGender === "male" ? "female" : "male");
-  const realProfiles = await loadRealProfiles(targetGender);
+  const realProfiles = await loadRealProfiles(targetGender, payload.userId);
   const filteredMockProfiles = mockProfiles
     .filter((profile) => profile.gender === targetGender)
     .filter((profile) => hasValidAvatar(profile)) // 画像が有効なもののみ
