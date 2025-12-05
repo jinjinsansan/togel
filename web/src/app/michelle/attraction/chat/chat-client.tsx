@@ -543,7 +543,7 @@ export function MichelleAttractionChatClient() {
 
       await fetchProgress();
       setError("✓ 1つ前のセクションに戻りました");
-      setTimeout(() => setError(null), 2500);
+      setTimeout(() => setError(null), 1500);
     } catch (revertError) {
       console.error("Progress revert error", revertError);
       setError(revertError instanceof Error ? revertError.message : "戻す処理に失敗しました");
@@ -586,7 +586,7 @@ export function MichelleAttractionChatClient() {
       await fetchProgress();
       setIsProgressFormOpen(false);
       setError("✓ 進捗を更新しました");
-      setTimeout(() => setError(null), 2000);
+      setTimeout(() => setError(null), 1500);
     } catch (saveError) {
       console.error("Progress save error", saveError);
       setError(saveError instanceof Error ? saveError.message : "進捗の保存に失敗しました");
@@ -639,7 +639,7 @@ export function MichelleAttractionChatClient() {
       setIsNoteFormOpen(false);
       await fetchProgress();
       setError("✓ 記録しました");
-      setTimeout(() => setError(null), 2000);
+      setTimeout(() => setError(null), 1500);
     } catch (noteError) {
       console.error("Progress note error", noteError);
       setError(noteError instanceof Error ? noteError.message : "記録の保存に失敗しました");
@@ -764,8 +764,12 @@ export function MichelleAttractionChatClient() {
 
       const successMessage = direction === "next" ? "✓ 次のセクションへ進みます" : "✓ 1つ前のセクションに戻ります";
       setError(successMessage);
+      
+      // Show message briefly before sending
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setError(null);
+      
       await handleSendMessage(followUpMessage, { preserveStatus: true });
-      setTimeout(() => setError(null), 2000);
     } catch (actionError) {
       console.error("Progress action error", actionError);
       setError(actionError instanceof Error ? actionError.message : "進捗を更新できませんでした");
@@ -872,14 +876,21 @@ export function MichelleAttractionChatClient() {
       let aiContent = "";
       let resolvedSessionId = activeSessionId;
       let streamCompleted = false;
+      let buffer = ""; // Buffer for incomplete SSE events
 
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const events = chunk.split("\n\n").filter(Boolean);
+        
+        // Append to buffer
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Split by SSE delimiter, but keep the last incomplete event in buffer
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || ""; // Keep incomplete event for next iteration
 
         for (const event of events) {
+          if (!event.trim()) continue;
           if (!event.startsWith("data:")) continue;
           try {
             const payload = JSON.parse(event.slice(5)) as StreamPayload;

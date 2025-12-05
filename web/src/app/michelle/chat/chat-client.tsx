@@ -514,8 +514,11 @@ export function MichelleChatClient() {
     transitionPhase(action);
 
     try {
+      // Show message briefly before sending
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setError(null);
+      
       await handleSendMessage(preset.prompt, { preserveStatus: true });
-      setTimeout(() => setError(null), 2000);
     } catch (actionError) {
       console.error("Guided action error", actionError);
       setError(actionError instanceof Error ? actionError.message : "送信に失敗しました");
@@ -586,14 +589,21 @@ export function MichelleChatClient() {
       let aiContent = "";
       let resolvedSessionId = activeSessionId;
       let streamCompleted = false;
+      let buffer = ""; // Buffer for incomplete SSE events
 
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const events = chunk.split("\n\n").filter(Boolean);
+        
+        // Append to buffer
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Split by SSE delimiter, but keep the last incomplete event in buffer
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || ""; // Keep incomplete event for next iteration
 
         for (const event of events) {
+          if (!event.trim()) continue;
           if (!event.startsWith("data:")) continue;
           try {
             const payload = JSON.parse(event.slice(5)) as StreamPayload;
