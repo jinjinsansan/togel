@@ -189,6 +189,8 @@ export async function POST(request: Request) {
           });
       });
 
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       return NextResponse.json({
         sessionId,
         message: fullReply,

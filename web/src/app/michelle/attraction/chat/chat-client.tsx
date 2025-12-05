@@ -922,7 +922,8 @@ export function MichelleAttractionChatClient() {
     
     let hasError = false;
     let retryCount = 0;
-    const maxRetries = 2;
+    const shouldUseBufferedTransport = useBufferedTransport && Boolean(activeSessionId);
+    const maxRetries = shouldUseBufferedTransport ? 0 : 2;
     let res: Response | null = null;
     let resolvedSessionId: string | null = activeSessionId;
     let streamStartedForRecovery = false;
@@ -997,7 +998,7 @@ export function MichelleAttractionChatClient() {
           });
           
           const headers: Record<string, string> = { "Content-Type": "application/json" };
-          if (useBufferedTransport) {
+          if (shouldUseBufferedTransport) {
             headers["X-Buffered-Response"] = "1";
           }
 
@@ -1016,24 +1017,38 @@ export function MichelleAttractionChatClient() {
           break; // 成功したらループを抜ける
           
         } catch (fetchError) {
+          const isRecoverable = isRecoverableStreamError(fetchError);
+
+          if (shouldUseBufferedTransport && isRecoverable) {
+            const fallbackSessionId = resolveSessionIdForRecovery();
+            mobileLog.warn("Buffered transport failed, attempting recovery", {
+              sessionId: fallbackSessionId,
+              message: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            });
+            const recovered = await waitForAssistantRecovery(fallbackSessionId);
+            if (recovered) {
+              return;
+            }
+          }
+
           retryCount++;
-          mobileLog.error("Network error", { 
+          const willRetry = retryCount <= maxRetries;
+          mobileLog.error("Network error", {
             error: fetchError,
             message: fetchError instanceof Error ? fetchError.message : "Unknown",
             attempt: retryCount,
-            willRetry: retryCount <= maxRetries
+            willRetry,
           });
           
           if (retryCount > maxRetries) {
-            throw new Error(
-              "ネットワークエラーが発生しました。接続を確認してもう一度お試しください。"
-            );
+            throw new Error("ネットワークエラーが発生しました。接続を確認してもう一度お試しください。");
           }
-          
-          // exponential backoff: 2秒、4秒（長めに待つ）
-          const delay = Math.min(2000 * retryCount, 4000);
-          mobileLog.info("Retrying after delay", { delayMs: delay, attempt: retryCount });
-          await new Promise(resolve => setTimeout(resolve, delay));
+
+          if (willRetry) {
+            const delay = Math.min(2000 * retryCount, 4000);
+            mobileLog.info("Retrying after delay", { delayMs: delay, attempt: retryCount });
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
         }
       }
       
@@ -1041,7 +1056,7 @@ export function MichelleAttractionChatClient() {
         throw new Error("Failed to get response after retries");
       }
 
-      if (useBufferedTransport) {
+      if (shouldUseBufferedTransport) {
         if (!res.ok) {
           let serverMessage = "ネットワークエラーが発生しました";
           try {
