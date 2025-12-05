@@ -214,6 +214,53 @@ export function MichelleAttractionChatClient() {
   const hasRestoredSessionRef = useRef(false);
   const lastRequestTimeRef = useRef<number>(0);
 
+  const clearBufferedAnimation = useCallback((messageId: string) => {
+    const handle = bufferedAnimationsRef.current[messageId];
+    if (handle) {
+      window.clearTimeout(handle);
+      delete bufferedAnimationsRef.current[messageId];
+    }
+  }, []);
+
+  const runBufferedAnimation = useCallback(
+    (messageId: string, fullContent: string) => {
+      clearBufferedAnimation(messageId);
+
+      if (!fullContent) {
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === messageId ? { ...msg, content: "", pending: false } : msg)),
+        );
+        return;
+      }
+
+      let index = 0;
+      const total = fullContent.length;
+      const interval = 28;
+      const steps = Math.min(80, Math.max(24, Math.ceil(total / 6)));
+      const chunk = Math.max(3, Math.ceil(total / steps));
+
+      const step = () => {
+        index = Math.min(total, index + chunk);
+        const nextContent = fullContent.slice(0, index);
+        setMessages((prev) =>
+          prev.map((msg) => (msg.id === messageId ? { ...msg, content: nextContent } : msg)),
+        );
+
+        if (index < total) {
+          bufferedAnimationsRef.current[messageId] = window.setTimeout(step, interval);
+        } else {
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === messageId ? { ...msg, content: fullContent, pending: false } : msg)),
+          );
+          clearBufferedAnimation(messageId);
+        }
+      };
+
+      step();
+    },
+    [clearBufferedAnimation],
+  );
+
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
     activeSessionId,
@@ -928,53 +975,6 @@ export function MichelleAttractionChatClient() {
     setIsLoading((prev) => ({ ...prev, sending: true }));
     mobileLog.info("Loading state set to true");
     
-    const clearBufferedAnimation = useCallback((messageId: string) => {
-      const handle = bufferedAnimationsRef.current[messageId];
-      if (handle) {
-        window.clearTimeout(handle);
-        delete bufferedAnimationsRef.current[messageId];
-      }
-    }, []);
-
-    const runBufferedAnimation = useCallback(
-      (messageId: string, fullContent: string) => {
-        clearBufferedAnimation(messageId);
-
-        if (!fullContent) {
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === messageId ? { ...msg, content: "", pending: false } : msg)),
-          );
-          return;
-        }
-
-        let index = 0;
-        const total = fullContent.length;
-        const interval = 28;
-        const steps = Math.min(80, Math.max(24, Math.ceil(total / 6)));
-        const chunk = Math.max(3, Math.ceil(total / steps));
-
-        const step = () => {
-          index = Math.min(total, index + chunk);
-          const nextContent = fullContent.slice(0, index);
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === messageId ? { ...msg, content: nextContent } : msg)),
-          );
-
-          if (index < total) {
-            bufferedAnimationsRef.current[messageId] = window.setTimeout(step, interval);
-          } else {
-            setMessages((prev) =>
-              prev.map((msg) => (msg.id === messageId ? { ...msg, content: fullContent, pending: false } : msg)),
-            );
-            clearBufferedAnimation(messageId);
-          }
-        };
-
-        step();
-      },
-      [clearBufferedAnimation],
-    );
-
     let hasError = false;
     let retryCount = 0;
     const shouldUseBufferedTransport = useBufferedTransport;
