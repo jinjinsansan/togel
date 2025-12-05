@@ -33,18 +33,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [videos.length]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const ua = navigator.userAgent || "";
-    if (!ua.toLowerCase().includes("line")) return;
-
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("openExternalBrowser") === "1") return;
-
-    url.searchParams.set("openExternalBrowser", "1");
-    window.location.replace(url.toString());
-  }, []);
-
   const handleLogin = async () => {
     setIsLoading(true);
     try {
