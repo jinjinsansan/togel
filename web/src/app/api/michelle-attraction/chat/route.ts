@@ -383,7 +383,13 @@ ${message}`
               }
             })
             .on("error", (error: unknown) => {
-              console.error("Michelle Attraction AI stream error", error);
+              console.error("Michelle Attraction AI stream error - Full details:", {
+                error,
+                errorString: String(error),
+                errorMessage: error instanceof Error ? error.message : "Unknown error",
+                threadId,
+                sessionId,
+              });
               sendEvent({ type: "error", message: "AI応答中にエラーが発生しました" });
               controller.close();
             })

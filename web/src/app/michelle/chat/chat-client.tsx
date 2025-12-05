@@ -626,12 +626,13 @@ export function MichelleChatClient() {
       // ストリーム完了を確認
       if (!streamCompleted) {
         debugLog("[Stream] Ended without 'done' event");
+        throw new Error("ストリームが正常に完了しませんでした。もう一度お試しください。");
       }
 
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === tempAiId
-            ? { ...msg, content: aiContent || "少し時間をおいてもう一度お試しください。", pending: false }
+            ? { ...msg, content: aiContent, pending: false }
             : msg,
         ),
       );
