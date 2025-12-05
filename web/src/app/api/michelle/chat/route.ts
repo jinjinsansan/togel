@@ -57,6 +57,8 @@ const PSYCHOLOGY_BRIDGE_LABELS: Record<PsychologyRecommendationState, string> = 
   resolved: "心理学ケア完了",
 };
 
+const RUN_COMPLETION_DELAY_MS = 900;
+
 export async function POST(request: Request) {
   if (!MICHELLE_AI_ENABLED) {
     return NextResponse.json({ error: "Michelle AI is currently disabled" }, { status: 503 });
@@ -189,7 +191,7 @@ export async function POST(request: Request) {
           });
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, RUN_COMPLETION_DELAY_MS));
 
       return NextResponse.json({
         sessionId,
@@ -241,7 +243,7 @@ export async function POST(request: Request) {
                 });
               }
               
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, RUN_COMPLETION_DELAY_MS));
               
               sendEvent({ type: "done" });
               controller.close();

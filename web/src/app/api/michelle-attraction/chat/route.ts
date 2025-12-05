@@ -112,6 +112,8 @@ const USER_DETAIL_KEYWORDS = [
   "噛み砕いて",
 ];
 
+const RUN_COMPLETION_DELAY_MS = 900;
+
 type ProgressIntent = "next" | "back" | "deeper" | "neutral";
 
 const determineUserProgressIntent = (message: string): ProgressIntent => {
@@ -399,7 +401,7 @@ ${message}`
           });
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, RUN_COMPLETION_DELAY_MS));
 
       return NextResponse.json({
         sessionId,
@@ -451,7 +453,7 @@ ${message}`
                 });
               }
               
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, RUN_COMPLETION_DELAY_MS));
               
               sendEvent({ type: "done" });
               controller.close();

@@ -118,6 +118,24 @@ const thinkingMessages = [
   "叶うイメージを磨いています...",
 ];
 
+const THINKING_MESSAGE_INTERVAL_MS = 1400;
+
+const getBufferedAnimationSettings = (length: number) => {
+  if (length <= 80) {
+    return { interval: 14, chunk: 4 };
+  }
+  if (length <= 200) {
+    return { interval: 16, chunk: 5 };
+  }
+  if (length <= 420) {
+    return { interval: 18, chunk: 6 };
+  }
+  if (length <= 800) {
+    return { interval: 20, chunk: 8 };
+  }
+  return { interval: 22, chunk: 12 };
+};
+
 const STATUS_LABELS: Record<ProgressStatus, string> = {
   OK: "理解済み",
   IP: "学習中",
@@ -235,9 +253,7 @@ export function MichelleAttractionChatClient() {
 
       let index = 0;
       const total = fullContent.length;
-      const interval = 28;
-      const steps = Math.min(80, Math.max(24, Math.ceil(total / 6)));
-      const chunk = Math.max(3, Math.ceil(total / steps));
+      const { interval, chunk } = getBufferedAnimationSettings(total);
 
       const step = () => {
         index = Math.min(total, index + chunk);
@@ -570,7 +586,7 @@ export function MichelleAttractionChatClient() {
     if (!hasPendingResponse) return;
     const interval = setInterval(() => {
       setCurrentThinkingIndex((prev) => (prev + 1) % thinkingMessages.length);
-    }, 2000);
+    }, THINKING_MESSAGE_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [hasPendingResponse]);
 

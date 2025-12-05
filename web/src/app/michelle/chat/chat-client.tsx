@@ -79,6 +79,24 @@ const thinkingMessages = [
   "寄り添いながら考えています...",
 ];
 
+const THINKING_MESSAGE_INTERVAL_MS = 1400;
+
+const getBufferedAnimationSettings = (length: number) => {
+  if (length <= 80) {
+    return { interval: 14, chunk: 4 };
+  }
+  if (length <= 200) {
+    return { interval: 16, chunk: 5 };
+  }
+  if (length <= 420) {
+    return { interval: 18, chunk: 6 };
+  }
+  if (length <= 800) {
+    return { interval: 20, chunk: 8 };
+  }
+  return { interval: 22, chunk: 12 };
+};
+
 const GUIDED_ACTION_PRESETS: Record<GuidedAction, { prompt: string; success: string }> = {
   back: {
     prompt: "直前に扱っていたテーマをもう一度整理したいです。さっきの内容を別の視点でもう少し丁寧に解説してください。",
@@ -454,7 +472,7 @@ export function MichelleChatClient() {
     if (!hasPendingResponse) return;
     const interval = setInterval(() => {
       setCurrentThinkingIndex((prev) => (prev + 1) % thinkingMessages.length);
-    }, 2000);
+    }, THINKING_MESSAGE_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [hasPendingResponse]);
 
@@ -586,9 +604,7 @@ export function MichelleChatClient() {
 
         let index = 0;
         const total = fullContent.length;
-        const interval = 28;
-        const steps = Math.min(80, Math.max(24, Math.ceil(total / 6)));
-        const chunk = Math.max(3, Math.ceil(total / steps));
+        const { interval, chunk } = getBufferedAnimationSettings(total);
 
         const step = () => {
           index = Math.min(total, index + chunk);
