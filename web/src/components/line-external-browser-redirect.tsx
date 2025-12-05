@@ -28,14 +28,6 @@ export const LineExternalBrowserRedirect = () => {
     return window.location.href;
   }, [needsRedirect]);
 
-  const handleOpenExternal = useCallback(() => {
-    try {
-      window.open(currentUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      console.error("Failed to open external browser", error);
-    }
-  }, [currentUrl]);
-
   const handleCopyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(currentUrl);
@@ -69,23 +61,16 @@ export const LineExternalBrowserRedirect = () => {
             <p>画面右上 ⋮ → 「Chromeで開く」</p>
           </div>
         </div>
-        <div className="mt-6 flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={handleOpenExternal}
-            className="w-full rounded-2xl bg-rose-500 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-rose-600"
-          >
-            外部ブラウザで開く
-          </button>
+        <div className="mt-6">
           <button
             type="button"
             onClick={handleCopyLink}
-            className="w-full rounded-2xl border border-rose-200 py-3 text-sm font-semibold text-rose-600"
+            className="w-full rounded-2xl border border-rose-200 bg-rose-50 py-3 text-sm font-semibold text-rose-600"
           >
             {copied ? "URLをコピーしました" : "URLをコピー"}
           </button>
         </div>
-        <p className="mt-4 text-xs text-rose-500">※ この画面はLINEブラウザでは閉じられません。外部ブラウザで開き直すと診断が進められます。</p>
+        <p className="mt-4 text-xs text-rose-500">この画面はLINEブラウザで閲覧時に現れます。SafariやChromeでは正常にサービスをご利用いただけます。</p>
       </div>
     </div>
   );
