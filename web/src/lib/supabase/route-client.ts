@@ -5,6 +5,10 @@ import { env } from "@/lib/env";
 
 type CookieStore = ReturnType<typeof cookies>;
 
+type WritableRequestCookies = CookieStore & {
+  set?: (name: string, value: string, options?: Record<string, unknown>) => void;
+};
+
 const adaptRouteCookies = (cookieStore: CookieStore) => {
   const base = {
     getAll() {
@@ -12,16 +16,14 @@ const adaptRouteCookies = (cookieStore: CookieStore) => {
     },
   };
 
-  const store = cookieStore as unknown as {
-    set?: (options: { name: string; value: string } & Record<string, unknown>) => void;
-  };
+  const writableStore = cookieStore as WritableRequestCookies;
 
-  if (typeof store.set === "function") {
+  if (typeof writableStore.set === "function") {
     return {
       ...base,
       setAll(cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[]) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          store.set?.({ name, value, ...options });
+          writableStore.set?.(name, value, options);
         });
       },
     };
