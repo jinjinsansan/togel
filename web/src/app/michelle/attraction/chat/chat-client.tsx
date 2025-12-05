@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MichelleAvatar } from "@/components/michelle/avatar";
 import { debugLog } from "@/lib/logger";
+import { MobileLogger, mobileLog } from "@/components/debug/mobile-logger";
 import {
   ATTRACTION_SECTIONS,
   sectionsByLevel,
@@ -815,10 +816,21 @@ export function MichelleAttractionChatClient() {
 
   const handleSendMessage = async (overrideText?: string, options?: { preserveStatus?: boolean }) => {
     const textToSend = overrideText ? overrideText.trim() : input.trim();
-    if (!textToSend || isLoading.sending) return;
+    
+    mobileLog.info("handleSendMessage called", { 
+      textLength: textToSend.length, 
+      isLoading: isLoading.sending,
+      hasPending: hasPendingResponse 
+    });
+    
+    if (!textToSend || isLoading.sending) {
+      mobileLog.warn("Send blocked: empty text or already sending");
+      return;
+    }
 
     // pending メッセージがある場合は送信不可
     if (hasPendingResponse) {
+      mobileLog.warn("Send blocked: AI is still responding");
       debugLog("[Send] Blocked - AI is still responding");
       setError("前の応答を待っています...");
       setTimeout(() => setError(null), 2000);
@@ -848,15 +860,19 @@ export function MichelleAttractionChatClient() {
     ]);
 
     setIsLoading((prev) => ({ ...prev, sending: true }));
+    mobileLog.info("Loading state set to true");
     
     let hasError = false;
 
     try {
+      mobileLog.info("Starting API call", { sessionId: activeSessionId });
       const res = await fetch("/api/michelle-attraction/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
       });
+      
+      mobileLog.info("API response received", { status: res.status, ok: res.ok });
 
       if (!res.ok || !res.body) {
         let serverMessage = "ネットワークエラーが発生しました";
@@ -867,17 +883,21 @@ export function MichelleAttractionChatClient() {
           }
           // 429エラーの場合は特別な処理
           if (res.status === 429) {
+            mobileLog.warn("Rate limited - AI still responding", { status: 429 });
             debugLog("[Send] Rate limited - AI still responding");
             serverMessage = "前の応答がまだ処理中です。少しお待ちください。";
           }
           // ステータスコードをログ
+          mobileLog.error("API error response", { status: res.status, message: serverMessage });
           debugLog("[Send] Error response:", { status: res.status, message: serverMessage });
         } catch (parseError) {
+          mobileLog.error("Failed to parse error response", parseError);
           console.error("Failed to parse error response", parseError);
         }
         throw new Error(serverMessage);
       }
 
+      mobileLog.info("Starting SSE stream reading");
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let aiContent = "";
@@ -887,6 +907,7 @@ export function MichelleAttractionChatClient() {
 
       const TIMEOUT_MS = 60000; // 60秒タイムアウト
       const startTime = Date.now();
+      mobileLog.info("Timeout set", { timeoutMs: TIMEOUT_MS });
 
       try {
         while (true) {
@@ -905,9 +926,11 @@ export function MichelleAttractionChatClient() {
             readResult = await Promise.race([reader.read(), timeoutPromise]);
           } catch (err) {
             if (err instanceof Error && err.message === "TIMEOUT") {
+              mobileLog.error("Stream timeout after 60s");
               try {
                 await reader.cancel();
               } catch (cancelErr) {
+                mobileLog.error("Failed to cancel reader", cancelErr);
                 console.error("Failed to cancel reader:", cancelErr);
               }
               throw new Error(
@@ -948,9 +971,11 @@ export function MichelleAttractionChatClient() {
               }
               if (payload.type === "done") {
                 streamCompleted = true;
+                mobileLog.info("Stream completed successfully");
                 debugLog("[Stream] Completed successfully");
               }
               if (payload.type === "error") {
+                mobileLog.error("Stream error payload", { message: payload.message });
                 throw new Error(payload.message ?? "AI応答中にエラーが発生しました");
               }
             } catch (err) {
@@ -969,10 +994,12 @@ export function MichelleAttractionChatClient() {
 
       // ストリーム完了を確認
       if (!streamCompleted) {
+        mobileLog.error("Stream ended without 'done' event");
         debugLog("[Stream] Ended without 'done' event");
         throw new Error("ストリームが正常に完了しませんでした。もう一度お試しください。");
       }
 
+      mobileLog.info("Setting final message state", { contentLength: aiContent.length });
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === tempAiId
@@ -986,11 +1013,13 @@ export function MichelleAttractionChatClient() {
       }
     } catch (err) {
       hasError = true;
+      mobileLog.error("Send message error", { error: err, message: err instanceof Error ? err.message : "Unknown" });
       console.error(err);
       const friendlyError = err instanceof Error ? err.message : "送信に失敗しました";
       setError(friendlyError);
       
       // エラー時は必ずpendingメッセージを削除
+      mobileLog.info("Clearing pending message due to error");
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === tempAiId ? { ...msg, content: "申し訳ありません。もう一度送ってみてください。", pending: false } : msg,
@@ -999,9 +1028,11 @@ export function MichelleAttractionChatClient() {
     } finally {
       // エラー時は即座にリセット、成功時は短い遅延
       if (hasError) {
+        mobileLog.info("Loading state reset (error - immediate)");
         setIsLoading((prev) => ({ ...prev, sending: false }));
         debugLog("[Send] Loading state released (error)");
       } else {
+        mobileLog.info("Loading state reset (success - 100ms delay)");
         setTimeout(() => {
           setIsLoading((prev) => ({ ...prev, sending: false }));
           debugLog("[Send] Loading state released (success)");
@@ -1722,6 +1753,7 @@ export function MichelleAttractionChatClient() {
           <p className="mt-2 text-center text-[10px] text-[#6fb2d4]">ミシェル引き寄せAIは誤った情報を生成する場合があります。</p>
         </div>
       </main>
+      <MobileLogger />
     </div>
   );
 }
