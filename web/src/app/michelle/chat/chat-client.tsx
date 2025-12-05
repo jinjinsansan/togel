@@ -113,6 +113,22 @@ const GUIDED_PHASE_DESCRIPTIONS: Record<GuidedPhase, string> = {
   release: "感情のリリースとセルフケアへ移行中",
 };
 
+const SSE_RECOVERY_MAX_WAIT_MS = 45000;
+const SSE_RECOVERY_POLL_INTERVAL_MS = 1500;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRecoverableStreamError = (error: unknown) => {
+  if (typeof DOMException !== "undefined" && error instanceof DOMException) {
+    return true;
+  }
+  if (error instanceof TypeError) {
+    const message = (error.message ?? "").toLowerCase();
+    return message.length === 0 || message.includes("load failed") || message.includes("network");
+  }
+  return false;
+};
+
 export function MichelleChatClient() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -531,6 +547,15 @@ export function MichelleChatClient() {
 
   const handleSendMessage = async (overrideText?: string, options?: { preserveStatus?: boolean }) => {
     const textToSend = overrideText ? overrideText.trim() : input.trim();
+    const previousAssistantTimestamp = (() => {
+      for (let i = messages.length - 1; i >= 0; i -= 1) {
+        const entry = messages[i];
+        if (entry.role === "assistant" && !entry.pending) {
+          return entry.created_at;
+        }
+      }
+      return null;
+    })();
     
     // スロットリング: 前のリクエストから3秒以内は送信しない
     const now = Date.now();
@@ -593,10 +618,69 @@ export function MichelleChatClient() {
     let hasError = false;
     let retryCount = 0;
     const maxRetries = 2;
+    let res: Response | null = null;
+    let resolvedSessionId: string | null = activeSessionId;
+    let streamStartedForRecovery = false;
+
+    const resolveSessionIdForRecovery = () => resolvedSessionId ?? res?.headers.get("x-session-id") ?? activeSessionId ?? null;
+
+    const waitForAssistantRecovery = async (sessionId: string | null) => {
+      if (!sessionId) {
+        mobileLog.warn("Recovery skipped - missing sessionId");
+        return false;
+      }
+
+      const previousAssistantTime = previousAssistantTimestamp ? new Date(previousAssistantTimestamp).getTime() : null;
+      const start = Date.now();
+      mobileLog.info("SSE recovery polling started", {
+        sessionId,
+        previousAssistantTime,
+      });
+
+      while (Date.now() - start < SSE_RECOVERY_MAX_WAIT_MS) {
+        try {
+          const response = await fetch(`/api/michelle/sessions/${sessionId}/messages`);
+          if (response.status === 401) {
+            setNeedsAuth(true);
+            return false;
+          }
+
+          if (response.ok) {
+            const data = (await response.json()) as MessagesResponse;
+            const latestAssistant = [...(data.messages ?? [])]
+              .reverse()
+              .find((msg) => msg.role === "assistant");
+
+            if (latestAssistant) {
+              const latestTime = new Date(latestAssistant.created_at).getTime();
+              const isNew =
+                !previousAssistantTime ||
+                Number.isNaN(previousAssistantTime) ||
+                latestTime > previousAssistantTime;
+
+              if (isNew) {
+                mobileLog.info("SSE recovery succeeded", {
+                  recoveredAt: latestAssistant.created_at,
+                  waitedMs: Date.now() - start,
+                });
+                setMessages(data.messages ?? []);
+                setHasLoadedMessages(true);
+                return true;
+              }
+            }
+          }
+        } catch (pollError) {
+          mobileLog.error("SSE recovery poll error", pollError);
+        }
+
+        await sleep(SSE_RECOVERY_POLL_INTERVAL_MS);
+      }
+
+      mobileLog.error("SSE recovery timed out", { waitedMs: SSE_RECOVERY_MAX_WAIT_MS });
+      return false;
+    };
 
     try {
-      let res: Response | null = null;
-      
       // リトライループ
       while (retryCount <= maxRetries) {
         try {
@@ -677,10 +761,15 @@ export function MichelleChatClient() {
         throw new Error(serverMessage);
       }
 
+      const sessionIdHeader = res.headers.get("x-session-id");
+      if (sessionIdHeader) {
+        resolvedSessionId = sessionIdHeader;
+      }
+
       const reader = res.body.getReader();
+      streamStartedForRecovery = true;
       const decoder = new TextDecoder();
       let aiContent = "";
-      let resolvedSessionId = activeSessionId;
       let streamCompleted = false;
       let buffer = ""; // Buffer for incomplete SSE events
 
@@ -785,32 +874,56 @@ export function MichelleChatClient() {
         setActiveSessionId(resolvedSessionId);
       }
     } catch (err) {
-      hasError = true;
-      const errorMessage = err instanceof Error ? err.message : "Unknown";
-      mobileLog.error("Send message error", { 
-        error: err, 
-        message: errorMessage,
-        isLoadFailed: errorMessage === "Load failed"
-      });
-      console.error(err);
-      
-      let friendlyError = errorMessage;
-      
-      // "Load failed"は接続切断なので、ユーザーフレンドリーなメッセージに変換
-      if (errorMessage === "Load failed") {
-        friendlyError = "接続が切断されました。画面を操作してもう一度お試しください。";
-        mobileLog.warn("Connection lost during stream, ask user to retry");
+      let fallbackRecovered = false;
+
+      const canAttemptRecovery = streamStartedForRecovery || isRecoverableStreamError(err);
+
+      if (canAttemptRecovery) {
+        const fallbackSessionId = resolveSessionIdForRecovery();
+        mobileLog.warn("Stream error detected, attempting recovery", {
+          sessionId: fallbackSessionId,
+          message: err instanceof Error ? err.message : String(err),
+        });
+
+        fallbackRecovered = await waitForAssistantRecovery(fallbackSessionId);
+
+        if (fallbackRecovered && fallbackSessionId && !activeSessionId) {
+          setActiveSessionId(fallbackSessionId);
+        }
+        if (fallbackRecovered) {
+          void loadSessions();
+        }
       }
-      
-      setError(friendlyError);
-      
-      // エラー時は必ずpendingメッセージを削除
-      mobileLog.info("Clearing pending message due to error");
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempAiId ? { ...msg, content: "申し訳ありません。もう一度送ってみてください。", pending: false } : msg,
-        ),
-      );
+
+      if (!fallbackRecovered) {
+        hasError = true;
+        const errorMessage = err instanceof Error ? err.message : "Unknown";
+        mobileLog.error("Send message error", {
+          error: err,
+          message: errorMessage,
+          isLoadFailed: errorMessage === "Load failed",
+        });
+        console.error(err);
+
+        let friendlyError = errorMessage;
+
+        if (errorMessage === "Load failed") {
+          friendlyError = "接続が切断されました。画面を操作してもう一度お試しください。";
+          mobileLog.warn("Connection lost during stream, ask user to retry");
+        }
+
+        setError(friendlyError);
+
+        mobileLog.info("Clearing pending message due to error");
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === tempAiId ? { ...msg, content: "申し訳ありません。もう一度送ってみてください。", pending: false } : msg,
+          ),
+        );
+      } else {
+        hasError = false;
+        setError(null);
+      }
     } finally {
       // エラー時は即座にリセット、成功時は短い遅延
       if (hasError) {
