@@ -401,6 +401,12 @@ ${message}`
                   content: fullReply,
                 });
               }
+              
+              // CRITICAL FIX: runが完全に終了するまで待機
+              // ストリーミング終了 ≠ run完了
+              // 2秒待機してからdoneを送ることで、OpenAI側のrunが確実に完了する
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              
               sendEvent({ type: "done" });
               controller.close();
             });

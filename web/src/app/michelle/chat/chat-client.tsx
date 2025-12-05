@@ -760,6 +760,8 @@ export function MichelleChatClient() {
         try {
           await reader.cancel();
         } catch (cancelErr) {
+          // reader.cancel()の失敗は無視（既に切断済みの場合がある）
+          mobileLog.warn("Failed to cancel reader (connection already closed)", cancelErr);
           console.error("Failed to cancel reader after error:", cancelErr);
         }
         throw streamError;
@@ -784,9 +786,22 @@ export function MichelleChatClient() {
       }
     } catch (err) {
       hasError = true;
-      mobileLog.error("Send message error", { error: err, message: err instanceof Error ? err.message : "Unknown" });
+      const errorMessage = err instanceof Error ? err.message : "Unknown";
+      mobileLog.error("Send message error", { 
+        error: err, 
+        message: errorMessage,
+        isLoadFailed: errorMessage === "Load failed"
+      });
       console.error(err);
-      const friendlyError = err instanceof Error ? err.message : "送信に失敗しました";
+      
+      let friendlyError = errorMessage;
+      
+      // "Load failed"は接続切断なので、ユーザーフレンドリーなメッセージに変換
+      if (errorMessage === "Load failed") {
+        friendlyError = "接続が切断されました。画面を操作してもう一度お試しください。";
+        mobileLog.warn("Connection lost during stream, ask user to retry");
+      }
+      
       setError(friendlyError);
       
       // エラー時は必ずpendingメッセージを削除
