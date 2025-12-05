@@ -128,6 +128,26 @@ const pickFallbackAvatar = (gender: Gender, index: number) => {
   return pool[index % pool.length];
 };
 
+type ProfileDetailsRecord = {
+  favoriteThings?: string;
+  hobbies?: string;
+  specialSkills?: string;
+  values?: string;
+  communication?: string;
+};
+
+type ProfileRow = {
+  id: string;
+  full_name?: string | null;
+  gender?: Gender | null;
+  age?: number | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  job?: string | null;
+  city?: string | null;
+  details?: ProfileDetailsRecord | null;
+};
+
 type UserRow = {
   id: string;
   nickname: string;
@@ -142,6 +162,7 @@ type UserRow = {
   auth_user_id?: string | null;
   updated_at?: string | null;
   last_viewed_results_at?: string | null;
+  profileOverride?: ProfileRow;
 };
 
 const isValidHttpsUrl = (candidate: string): boolean => {
@@ -173,25 +194,47 @@ const buildDicebearAvatar = (seed: string, gender: Gender): string => {
   return `https://api.dicebear.com/8.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=ffdfbf,bee3db&scale=90&accessoriesProbability=40&hairColor=4a312c,2f1b0f&skinColor=f2d3b1,eac9a1&shapeColor=${palette}`;
 };
 
+const extractDetails = (details?: ProfileDetailsRecord | null) => {
+  if (!details) {
+    return {
+      favoriteThings: "",
+      hobbies: "",
+      specialSkills: "",
+      values: null,
+      communication: null,
+    };
+  }
+  return {
+    favoriteThings: details.favoriteThings ?? "",
+    hobbies: details.hobbies ?? "",
+    specialSkills: details.specialSkills ?? "",
+    values: details.values ?? null,
+    communication: details.communication ?? null,
+  };
+};
+
 const mapUserRowToProfile = (row: UserRow, index: number): MatchingProfile => {
-  const age = row.age ?? 29;
-  const avatarCandidate = normalizeAvatarUrl(row.avatar_url);
-  const fallbackAvatar = buildDicebearAvatar(`${row.id}-${index}`, row.gender);
+  const override = row.profileOverride;
+  const mergedGender = override?.gender ?? row.gender;
+  const age = override?.age ?? row.age ?? 29;
+  const avatarCandidate = normalizeAvatarUrl(override?.avatar_url ?? row.avatar_url);
+  const fallbackAvatar = buildDicebearAvatar(`${row.id}-${index}`, mergedGender);
+  const details = extractDetails(override?.details);
   return {
     id: row.id,
-    nickname: row.nickname,
+    nickname: override?.full_name ?? row.nickname,
     age: age < 18 ? 18 : age,
-    gender: row.gender,
-    avatarUrl: avatarCandidate ?? pickFallbackAvatar(row.gender, index) ?? fallbackAvatar,
-    bio: row.bio,
-    job: row.job,
-    favoriteThings: row.favorite_things,
-    hobbies: row.hobbies,
-    specialSkills: row.special_skills,
-    values: deriveValuesFromFavorite(row.favorite_things, row.bio),
-    communication: deriveCommunicationStyle(row.bio),
-    interests: parseInterestsFromText(row.hobbies),
-    city: "オンライン",
+    gender: mergedGender,
+    avatarUrl: avatarCandidate ?? pickFallbackAvatar(mergedGender, index) ?? fallbackAvatar,
+    bio: override?.bio ?? row.bio,
+    job: override?.job ?? row.job,
+    favoriteThings: details.favoriteThings || row.favorite_things,
+    hobbies: details.hobbies || row.hobbies,
+    specialSkills: details.specialSkills || row.special_skills,
+    values: details.values ?? deriveValuesFromFavorite(details.favoriteThings || row.favorite_things, override?.bio ?? row.bio),
+    communication: details.communication ?? deriveCommunicationStyle(override?.bio ?? row.bio),
+    interests: parseInterestsFromText(details.hobbies || row.hobbies),
+    city: override?.city ?? "オンライン",
   } satisfies MatchingProfile;
 };
 
@@ -272,7 +315,23 @@ const loadRealProfiles = async (gender: Gender, excludeUserId?: string): Promise
 
     const filteredData = excludeUserId ? data.filter((row) => row.id !== excludeUserId) : data;
 
-    return filteredData.map((row, index) => mapUserRowToProfile(row as UserRow, index));
+    const profileIds = filteredData.map((row) => row.id);
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, full_name, gender, age, avatar_url, bio, job, city, details")
+      .in("id", profileIds);
+
+    const profileMap = new Map<string, ProfileRow>();
+    profileRows?.forEach((profile) => {
+      profileMap.set(profile.id, profile);
+    });
+
+    const enrichedRows = filteredData.map((row) => ({
+      ...(row as UserRow),
+      profileOverride: profileMap.get(row.id),
+    }));
+
+    return enrichedRows.map((row, index) => mapUserRowToProfile(row, index));
   } catch (error) {
     console.error("Unexpected error loading real profiles", error);
     return [];
