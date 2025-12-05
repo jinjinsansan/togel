@@ -610,9 +610,9 @@ export function MichelleChatClient() {
             );
           }
           
-          // exponential backoff: 1秒、2秒
-          const delay = Math.min(1000 * retryCount, 2000);
-          mobileLog.info("Retrying after delay", { delayMs: delay });
+          // exponential backoff: 2秒、4秒（長めに待つ）
+          const delay = Math.min(2000 * retryCount, 4000);
+          mobileLog.info("Retrying after delay", { delayMs: delay, attempt: retryCount });
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -623,19 +623,27 @@ export function MichelleChatClient() {
 
       if (!res.ok || !res.body) {
         let serverMessage = "ネットワークエラーが発生しました";
+        let shouldRetry = true;
+        
         try {
           const errorBody = (await res.json()) as { error?: string };
           if (errorBody?.error) {
             serverMessage = errorBody.error;
           }
-          // 429エラーの場合は特別な処理
+          // 429エラーの場合はリトライしない
           if (res.status === 429) {
-            mobileLog.warn("Rate limited - AI still responding", { status: 429 });
+            shouldRetry = false;
+            retryCount = maxRetries + 1; // リトライループを抜ける
+            mobileLog.warn("Rate limited - AI still responding, skip retry", { status: 429 });
             debugLog("[Send] Rate limited - AI still responding");
             serverMessage = "前の応答がまだ処理中です。少しお待ちください。";
           }
           // ステータスコードをログ
-          mobileLog.error("API error response", { status: res.status, message: serverMessage });
+          mobileLog.error("API error response", { 
+            status: res.status, 
+            message: serverMessage,
+            shouldRetry 
+          });
           debugLog("[Send] Error response:", { status: res.status, message: serverMessage });
         } catch (parseError) {
           mobileLog.error("Failed to parse error response", parseError);
