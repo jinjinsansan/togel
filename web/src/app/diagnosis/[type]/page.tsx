@@ -156,13 +156,13 @@ const DiagnosisPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 md:py-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 md:py-16">
       <div className="container px-4 md:px-6">
         <div className="mx-auto max-w-2xl">
           
           {/* Progress Header */}
-          <div className="mb-8 rounded-[2rem] border-2 border-white bg-white/80 backdrop-blur-sm p-6 shadow-lg shadow-slate-200/50">
-            <div className="flex items-center justify-between text-sm mb-4">
+          <div className="mb-6 rounded-2xl border border-white bg-white/80 backdrop-blur-sm p-4 shadow-lg shadow-slate-200/50 md:mb-8 md:rounded-[2rem] md:border-2 md:p-6">
+            <div className="flex flex-col gap-2 text-xs mb-3 md:flex-row md:items-center md:justify-between md:text-sm md:mb-4">
               <div className="flex items-center gap-2">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                   diagnosisType === "light" 
@@ -175,9 +175,9 @@ const DiagnosisPage = () => {
                   Q.{currentIndex + 1} <span className="text-xs font-normal text-slate-300">/ {questions.length}</span>
                 </span>
               </div>
-              <span className="text-xs font-bold text-slate-400">{progress}% COMPLETE</span>
+              <span className="text-[11px] font-bold text-slate-400 md:text-xs">{progress}% COMPLETE</span>
             </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 md:h-3">
               <div 
                 className="h-full bg-gradient-to-r from-[#E91E63] to-pink-500 transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
@@ -186,14 +186,14 @@ const DiagnosisPage = () => {
           </div>
 
           {questionsLoading && (
-            <div className="mt-8 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white/50 p-12 text-center">
+            <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-white/60 p-6 text-center md:mt-8 md:rounded-[2.5rem] md:border-2 md:p-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-pink-500 mb-4"></div>
               <p className="text-sm font-bold text-slate-400">質問データを読み込んでいます...</p>
             </div>
           )}
 
           {!questionsLoading && !currentQuestion && (
-            <div className="mt-8 rounded-[2.5rem] border-2 border-dashed border-red-200 bg-red-50/50 p-8 text-center">
+            <div className="mt-6 rounded-2xl border border-dashed border-red-200 bg-red-50/50 p-6 text-center md:mt-8 md:rounded-[2.5rem] md:border-2 md:p-8">
               <p className="text-sm font-bold text-red-500">データの取得に失敗しました</p>
               <Button onClick={() => window.location.reload()} variant="ghost" className="text-red-600 mt-2 hover:text-red-700 hover:bg-red-100 underline">
                 再読み込みする
@@ -222,13 +222,13 @@ const DiagnosisPage = () => {
             </div>
           )}
 
-          <div className="mt-10 flex items-center gap-4">
+          <div className="mt-8 flex flex-col gap-3 md:mt-10 md:flex-row md:items-center md:gap-4">
             <Button
               variant="ghost"
               size="lg"
               onClick={handlePrev}
               disabled={currentIndex === 0 || questionsLoading}
-              className="flex-1 h-14 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              className="h-12 rounded-xl text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 md:flex-1 md:h-14 md:text-base"
             >
               ← 前へ
             </Button>
@@ -238,7 +238,7 @@ const DiagnosisPage = () => {
                 size="lg"
                 onClick={handleSubmit} 
                 disabled={submitting || questionsLoading || !currentQuestion}
-                className="flex-[2] h-14 rounded-xl bg-gradient-to-r from-[#E91E63] to-pink-600 text-lg font-bold text-white shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 hover:scale-[1.02] transition-all"
+                className="h-12 rounded-xl bg-gradient-to-r from-[#E91E63] to-pink-600 text-base font-bold text-white shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 hover:scale-[1.02] transition-all md:flex-[2] md:h-14 md:text-lg"
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">
@@ -254,7 +254,7 @@ const DiagnosisPage = () => {
                 size="lg"
                 onClick={handleNext} 
                 disabled={questionsLoading || !currentQuestion}
-                className="flex-[2] h-14 rounded-xl bg-slate-900 text-lg font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800 hover:shadow-xl hover:scale-[1.02] transition-all"
+                className="h-12 rounded-xl bg-slate-900 text-base font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800 hover:shadow-xl hover:scale-[1.02] transition-all md:flex-[2] md:h-14 md:text-lg"
               >
                 次へ →
               </Button>

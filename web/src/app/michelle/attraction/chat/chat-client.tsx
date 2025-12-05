@@ -1195,13 +1195,13 @@ export function MichelleAttractionChatClient() {
                     <p className="mt-1 text-sm text-[#417aa8]">最初のセッション完了後に自動で表示されます。</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-[#a34264]">
+                <div className="flex flex-col items-end gap-1 text-right text-[10px] text-[#a34264] md:flex-row md:items-center md:gap-2 md:text-[11px]">
                   {progress && (
-                    <span className="rounded-full border border-[#f3c5d7] px-3 py-1 text-[11px] text-[#a34264]">
+                    <span className="rounded-md bg-[#fbe7ef] px-2 py-1 text-[10px] font-semibold text-[#a34264] whitespace-nowrap md:px-3 md:text-[11px]">
                       {STATUS_LABELS[progress.progress_status]}
                     </span>
                   )}
-                  <span className="font-semibold">
+                  <span className="font-semibold whitespace-nowrap">
                     {isProgressDetailsOpen ? "詳細を閉じる" : "タップで詳細"}
                   </span>
                   <ChevronDown

@@ -10,12 +10,12 @@ type Props = {
 
 export const QuestionCard = ({ question, currentValue, onSelect }: Props) => {
   return (
-    <div className="rounded-[2.5rem] border-2 border-white bg-white/80 backdrop-blur-sm p-8 shadow-xl shadow-slate-200/50">
+    <div className="rounded-2xl border border-white bg-white/80 backdrop-blur-sm p-5 shadow-xl shadow-slate-200/50 md:rounded-[2.5rem] md:border-2 md:p-8">
       <div className="text-center mb-8">
         <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-3">
           QUESTION {question.number}
         </p>
-        <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight">
+        <h2 className="text-xl md:text-3xl font-black text-slate-900 leading-tight">
           {question.text}
         </h2>
         {question.helper && (
@@ -31,13 +31,13 @@ export const QuestionCard = ({ question, currentValue, onSelect }: Props) => {
               key={option.value}
               type="button"
               onClick={() => onSelect(option.value)}
-              className={`group relative flex items-center p-4 rounded-2xl border-2 transition-all duration-300 ease-out hover:scale-[1.01] ${
+              className={`group relative flex items-center p-3 rounded-2xl border transition-all duration-300 ease-out hover:scale-[1.01] md:p-4 md:border-2 ${
                 isSelected
                   ? "border-[#E91E63] bg-[#E91E63]/5 shadow-lg shadow-[#E91E63]/10"
                   : "border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors md:h-10 md:w-10 ${
                 isSelected
                   ? "border-[#E91E63] bg-[#E91E63] text-white"
                   : "border-slate-200 bg-slate-50 text-slate-400 group-hover:border-slate-300"
@@ -48,7 +48,7 @@ export const QuestionCard = ({ question, currentValue, onSelect }: Props) => {
                   </svg>
                 )}
               </div>
-              <span className={`ml-4 text-lg font-bold transition-colors ${
+              <span className={`ml-4 text-base font-bold transition-colors md:text-lg ${
                 isSelected ? "text-[#E91E63]" : "text-slate-700 group-hover:text-slate-900"
               }`}>
                 {option.label}
