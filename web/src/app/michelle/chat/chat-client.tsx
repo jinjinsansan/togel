@@ -136,6 +136,7 @@ export function MichelleChatClient() {
   const scrollFrameRef = useRef<number>();
   const [composerHeight, setComposerHeight] = useState(0);
   const hasRestoredSessionRef = useRef(false);
+  const lastRequestTimeRef = useRef<number>(0);
   const [attractionBridge, setAttractionBridge] = useState<AttractionBridge | null>(null);
   const [isUpdatingBridge, setIsUpdatingBridge] = useState(false);
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
@@ -530,6 +531,27 @@ export function MichelleChatClient() {
 
   const handleSendMessage = async (overrideText?: string, options?: { preserveStatus?: boolean }) => {
     const textToSend = overrideText ? overrideText.trim() : input.trim();
+    
+    // スロットリング: 前のリクエストから3秒以内は送信しない
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTimeRef.current;
+    const MIN_REQUEST_INTERVAL = 3000; // 3秒
+    
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL && lastRequestTimeRef.current > 0) {
+      const remainingTime = Math.ceil((MIN_REQUEST_INTERVAL - timeSinceLastRequest) / 1000);
+      mobileLog.warn("Request throttled", { 
+        timeSinceLastMs: timeSinceLastRequest,
+        remainingSec: remainingTime
+      });
+      setError(`${remainingTime}秒お待ちください...`);
+      setTimeout(() => setError(null), 1000);
+      return;
+    }
+    
+    mobileLog.info("handleSendMessage called", {
+      timeSinceLastMs: timeSinceLastRequest
+    });
+    
     if (!textToSend || isLoading.sending) return;
 
     if (hasPendingResponse) {
@@ -539,6 +561,9 @@ export function MichelleChatClient() {
       setTimeout(() => setError(null), 1000);
       return;
     }
+    
+    // リクエスト時刻を記録
+    lastRequestTimeRef.current = now;
 
     if (!overrideText) {
       setInput("");
