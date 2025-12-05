@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MichelleAvatar } from "@/components/michelle/avatar";
 import { debugLog } from "@/lib/logger";
-import { MobileLogger, mobileLog } from "@/components/debug/mobile-logger";
+import { mobileLog } from "@/components/debug/mobile-logger";
 
 type PsychologyRecommendationState = "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
 
@@ -178,6 +178,8 @@ export function MichelleChatClient() {
   const hasPendingResponse = useMemo(() => messages.some((msg) => msg.pending), [messages]);
   const [guidedActionLoading, setGuidedActionLoading] = useState<null | "back" | "deeper" | "next">(null);
   const [currentPhase, setCurrentPhase] = useState<GuidedPhase>("explore");
+  const [phaseInsight, setPhaseInsight] = useState<{ phase: GuidedPhase; summary: string } | null>(null);
+  const [isPhaseInsightLoading, setIsPhaseInsightLoading] = useState(false);
 
   const activeSession = useMemo(() => sessions.find((session) => session.id === activeSessionId) ?? null, [
     sessions,
@@ -461,6 +463,7 @@ export function MichelleChatClient() {
 
   useEffect(() => {
     setCurrentPhase("explore");
+    setPhaseInsight(null);
   }, [activeSessionId]);
 
   useLayoutEffect(() => {
@@ -580,6 +583,60 @@ export function MichelleChatClient() {
       setError(actionError instanceof Error ? actionError.message : "送信に失敗しました");
     } finally {
       setGuidedActionLoading(null);
+    }
+  };
+
+  const handlePhaseInsightRequest = async () => {
+    if (!activeSessionId) {
+      setError("まずチャットを開始してください");
+      setTimeout(() => setError(null), 1500);
+      return;
+    }
+
+    if (isPhaseInsightLoading) {
+      return;
+    }
+
+    setIsPhaseInsightLoading(true);
+    try {
+      const res = await fetch("/api/michelle/phase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: activeSessionId }),
+      });
+
+      if (res.status === 401) {
+        setNeedsAuth(true);
+        return;
+      }
+
+      if (!res.ok) {
+        let serverMessage = "フェーズ診断に失敗しました";
+        try {
+          const errorBody = (await res.json()) as { error?: string };
+          if (errorBody?.error) {
+            serverMessage = errorBody.error;
+          }
+        } catch {}
+        throw new Error(serverMessage);
+      }
+
+      const data = (await res.json()) as { phase?: string; summary?: string };
+      const allowedPhases: GuidedPhase[] = ["explore", "deepen", "release"];
+      const normalized = (data.phase ?? "explore").toLowerCase() as GuidedPhase;
+      const nextPhase = allowedPhases.includes(normalized) ? normalized : "explore";
+
+      setCurrentPhase(nextPhase);
+      setPhaseInsight({
+        phase: nextPhase,
+        summary: data.summary?.trim() || `現在は${GUIDED_PHASE_LABELS[nextPhase]}にいます。`,
+      });
+    } catch (phaseError) {
+      const message = phaseError instanceof Error ? phaseError.message : "フェーズ診断に失敗しました";
+      setError(message);
+      setTimeout(() => setError(null), 2000);
+    } finally {
+      setIsPhaseInsightLoading(false);
     }
   };
 
@@ -1419,12 +1476,26 @@ export function MichelleChatClient() {
                   </div>
                 );
               })}
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#7a4f63]">
-                <span className="font-semibold text-[#b23462]">感情ケア操作</span>
-                <span className="rounded-full border border-[#ffd1e4] bg-[#fff5f9] px-3 py-1 text-[#b23462]">
-                  現在: {GUIDED_PHASE_LABELS[currentPhase]}
-                </span>
-                <span className="text-[#c08ba5]">{GUIDED_PHASE_DESCRIPTIONS[currentPhase]}</span>
+              <div className="flex flex-col gap-1 text-[11px] text-[#7a4f63]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-[#b23462]">感情ケア操作</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-[11px] text-[#b23462] hover:bg-[#ffe6ef]"
+                      onClick={handlePhaseInsightRequest}
+                      disabled={isPhaseInsightLoading || !activeSessionId}
+                    >
+                      {isPhaseInsightLoading && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                      現在のフェーズ
+                    </Button>
+                  </div>
+                  <span className="rounded-full border border-[#ffd1e4] bg-[#fff5f9] px-3 py-1 text-[#b23462]">
+                    現在: {GUIDED_PHASE_LABELS[currentPhase]}
+                  </span>
+                  <span className="text-[#c08ba5]">{GUIDED_PHASE_DESCRIPTIONS[currentPhase]}</span>
+                </div>
                 <div className="flex flex-wrap gap-1">
                   <Button
                     variant="ghost"
@@ -1454,6 +1525,11 @@ export function MichelleChatClient() {
                     {guidedActionLoading === "next" ? "案内中..." : "次へ ▶"}
                   </Button>
                 </div>
+                {phaseInsight && (
+                  <p className="text-[11px] text-[#b1637d]">
+                    最新診断: <span className="font-semibold">{GUIDED_PHASE_LABELS[phaseInsight.phase]}</span> — {phaseInsight.summary}
+                  </p>
+                )}
               </div>
               <div className="h-12 md:h-20" />
               <div ref={messagesEndRef} />
@@ -1521,7 +1597,6 @@ export function MichelleChatClient() {
           <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。</p>
         </div>
       </main>
-      <MobileLogger />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MichelleAvatar } from "@/components/michelle/avatar";
 import { debugLog } from "@/lib/logger";
-import { MobileLogger, mobileLog } from "@/components/debug/mobile-logger";
+import { mobileLog } from "@/components/debug/mobile-logger";
 import {
   ATTRACTION_SECTIONS,
   sectionsByLevel,
@@ -2071,7 +2071,6 @@ export function MichelleAttractionChatClient() {
           <p className="mt-2 text-center text-[10px] text-[#6fb2d4]">ミシェル引き寄せAIは誤った情報を生成する場合があります。</p>
         </div>
       </main>
-      <MobileLogger />
     </div>
   );
 }
