@@ -185,6 +185,7 @@ export function MichelleAttractionChatClient() {
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
   const [useBufferedTransport, setUseBufferedTransport] = useState(false);
+  const bufferedAnimationsRef = useRef<Record<string, number>>({});
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [progress, setProgress] = useState<ProgressEntry | null>(null);
   const [progressNotes, setProgressNotes] = useState<ProgressNote[]>([]);
@@ -353,6 +354,13 @@ export function MichelleAttractionChatClient() {
       setUseBufferedTransport(true);
       mobileLog.info("Buffered transport enabled for Mobile Safari");
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      Object.values(bufferedAnimationsRef.current).forEach((handle) => window.clearTimeout(handle));
+      bufferedAnimationsRef.current = {};
+    };
   }, []);
 
   useEffect(() => {
@@ -920,9 +928,56 @@ export function MichelleAttractionChatClient() {
     setIsLoading((prev) => ({ ...prev, sending: true }));
     mobileLog.info("Loading state set to true");
     
+    const clearBufferedAnimation = useCallback((messageId: string) => {
+      const handle = bufferedAnimationsRef.current[messageId];
+      if (handle) {
+        window.clearTimeout(handle);
+        delete bufferedAnimationsRef.current[messageId];
+      }
+    }, []);
+
+    const runBufferedAnimation = useCallback(
+      (messageId: string, fullContent: string) => {
+        clearBufferedAnimation(messageId);
+
+        if (!fullContent) {
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === messageId ? { ...msg, content: "", pending: false } : msg)),
+          );
+          return;
+        }
+
+        let index = 0;
+        const total = fullContent.length;
+        const interval = 28;
+        const steps = Math.min(80, Math.max(24, Math.ceil(total / 6)));
+        const chunk = Math.max(3, Math.ceil(total / steps));
+
+        const step = () => {
+          index = Math.min(total, index + chunk);
+          const nextContent = fullContent.slice(0, index);
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === messageId ? { ...msg, content: nextContent } : msg)),
+          );
+
+          if (index < total) {
+            bufferedAnimationsRef.current[messageId] = window.setTimeout(step, interval);
+          } else {
+            setMessages((prev) =>
+              prev.map((msg) => (msg.id === messageId ? { ...msg, content: fullContent, pending: false } : msg)),
+            );
+            clearBufferedAnimation(messageId);
+          }
+        };
+
+        step();
+      },
+      [clearBufferedAnimation],
+    );
+
     let hasError = false;
     let retryCount = 0;
-    const shouldUseBufferedTransport = useBufferedTransport && Boolean(activeSessionId);
+    const shouldUseBufferedTransport = useBufferedTransport;
     const maxRetries = shouldUseBufferedTransport ? 0 : 2;
     let res: Response | null = null;
     let resolvedSessionId: string | null = activeSessionId;
@@ -1077,11 +1132,7 @@ export function MichelleAttractionChatClient() {
           setActiveSessionId(payload.sessionId);
         }
 
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === tempAiId ? { ...msg, content: aiContent || "", pending: false } : msg,
-          ),
-        );
+        runBufferedAnimation(tempAiId, aiContent);
         return;
       }
 
