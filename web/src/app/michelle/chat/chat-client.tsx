@@ -577,7 +577,10 @@ export function MichelleChatClient() {
           // 429エラーの場合は特別な処理
           if (res.status === 429) {
             debugLog("[Send] Rate limited - AI still responding");
+            serverMessage = "前の応答がまだ処理中です。少しお待ちください。";
           }
+          // ステータスコードをログ
+          debugLog("[Send] Error response:", { status: res.status, message: serverMessage });
         } catch (parseError) {
           console.error("Failed to parse error response", parseError);
         }
