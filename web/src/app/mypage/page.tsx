@@ -511,12 +511,14 @@ export default function MyPage() {
   const memberSince = certificateDateDisplay;
 
   const handleCopyLink = () => {
-    if (!user) return;
+    if (typeof window === "undefined" || !user) return;
     // シンプルなBase64エンコードでIDを隠蔽 (完全な暗号化ではないが、パッと見でIDとは分からない)
     // 復号時は atob() を使用
     const encodedId = btoa(user.id);
-    const referralLink = `${window.location.origin}?c=${encodedId}`;
-    navigator.clipboard.writeText(referralLink);
+    const referralUrl = new URL(window.location.origin);
+    referralUrl.searchParams.set("c", encodedId);
+    referralUrl.searchParams.set("openExternalBrowser", "1");
+    navigator.clipboard.writeText(referralUrl.toString());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
