@@ -1,3 +1,11 @@
 {
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "functions": {
+    "src/app/api/michelle/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/michelle-attraction/chat/route.ts": {
+      "maxDuration": 60
+    }
+  }
 }

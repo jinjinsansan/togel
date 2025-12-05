@@ -533,6 +533,8 @@ export function MichelleChatClient() {
 
     if (hasPendingResponse) {
       debugLog("[Send] Blocked - AI is still responding");
+      setError("前の応答を待っています...");
+      setTimeout(() => setError(null), 2000);
       return;
     }
 
@@ -559,6 +561,8 @@ export function MichelleChatClient() {
     ]);
 
     setIsLoading((prev) => ({ ...prev, sending: true }));
+    
+    let hasError = false;
 
     try {
       const res = await fetch("/api/michelle/chat", {
@@ -594,46 +598,85 @@ export function MichelleChatClient() {
       let streamCompleted = false;
       let buffer = ""; // Buffer for incomplete SSE events
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        
-        // Append to buffer
-        buffer += decoder.decode(value, { stream: true });
-        
-        // Split by SSE delimiter, but keep the last incomplete event in buffer
-        const events = buffer.split("\n\n");
-        buffer = events.pop() || ""; // Keep incomplete event for next iteration
+      const TIMEOUT_MS = 60000; // 60秒タイムアウト
+      const startTime = Date.now();
 
-        for (const event of events) {
-          if (!event.trim()) continue;
-          if (!event.startsWith("data:")) continue;
+      try {
+        while (true) {
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            const elapsed = Date.now() - startTime;
+            const remaining = TIMEOUT_MS - elapsed;
+            if (remaining <= 0) {
+              reject(new Error("TIMEOUT"));
+            } else {
+              setTimeout(() => reject(new Error("TIMEOUT")), remaining);
+            }
+          });
+
+          let readResult;
           try {
-            const payload = JSON.parse(event.slice(5)) as StreamPayload;
-            if (payload.type === "meta") {
-              if (payload.sessionId) {
-                resolvedSessionId = payload.sessionId;
-                if (!activeSessionId) {
-                  setActiveSessionId(payload.sessionId);
-                  loadSessions();
+            readResult = await Promise.race([reader.read(), timeoutPromise]);
+          } catch (err) {
+            if (err instanceof Error && err.message === "TIMEOUT") {
+              try {
+                await reader.cancel();
+              } catch (cancelErr) {
+                console.error("Failed to cancel reader:", cancelErr);
+              }
+              throw new Error(
+                "応答に時間がかかりすぎています。ネットワークが不安定な可能性があります。もう一度お試しください。",
+              );
+            }
+            throw err;
+          }
+
+          const { value, done } = readResult;
+          if (done) break;
+
+          // Append to buffer
+          buffer += decoder.decode(value, { stream: true });
+
+          // Split by SSE delimiter, but keep the last incomplete event in buffer
+          const events = buffer.split("\n\n");
+          buffer = events.pop() || ""; // Keep incomplete event for next iteration
+
+          for (const event of events) {
+            if (!event.trim()) continue;
+            if (!event.startsWith("data:")) continue;
+            try {
+              const payload = JSON.parse(event.slice(5)) as StreamPayload;
+              if (payload.type === "meta") {
+                if (payload.sessionId) {
+                  resolvedSessionId = payload.sessionId;
+                  if (!activeSessionId) {
+                    setActiveSessionId(payload.sessionId);
+                    loadSessions();
+                  }
                 }
               }
+              if (payload.type === "delta" && payload.content) {
+                aiContent += payload.content;
+                setMessages((prev) => prev.map((msg) => (msg.id === tempAiId ? { ...msg, content: aiContent } : msg)));
+              }
+              if (payload.type === "done") {
+                streamCompleted = true;
+                debugLog("[Stream] Completed successfully");
+              }
+              if (payload.type === "error") {
+                throw new Error(payload.message ?? "AI応答中にエラーが発生しました");
+              }
+            } catch (err) {
+              console.error("Failed to parse stream payload", err);
             }
-            if (payload.type === "delta" && payload.content) {
-              aiContent += payload.content;
-              setMessages((prev) => prev.map((msg) => (msg.id === tempAiId ? { ...msg, content: aiContent } : msg)));
-            }
-            if (payload.type === "done") {
-              streamCompleted = true;
-              debugLog("[Stream] Completed successfully");
-            }
-            if (payload.type === "error") {
-              throw new Error(payload.message ?? "AI応答中にエラーが発生しました");
-            }
-          } catch (err) {
-            console.error("Failed to parse stream payload", err);
           }
         }
+      } catch (streamError) {
+        try {
+          await reader.cancel();
+        } catch (cancelErr) {
+          console.error("Failed to cancel reader after error:", cancelErr);
+        }
+        throw streamError;
       }
 
       // ストリーム完了を確認
@@ -654,20 +697,28 @@ export function MichelleChatClient() {
         setActiveSessionId(resolvedSessionId);
       }
     } catch (err) {
+      hasError = true;
       console.error(err);
       const friendlyError = err instanceof Error ? err.message : "送信に失敗しました";
       setError(friendlyError);
+      
+      // エラー時は必ずpendingメッセージを削除
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === tempAiId ? { ...msg, content: "申し訳ありません。もう一度送ってみてください。", pending: false } : msg,
         ),
       );
     } finally {
-      // ローディング状態を解除する前に少し待機
-      setTimeout(() => {
+      // エラー時は即座にリセット、成功時は短い遅延
+      if (hasError) {
         setIsLoading((prev) => ({ ...prev, sending: false }));
-        debugLog("[Send] Loading state released");
-      }, 300);
+        debugLog("[Send] Loading state released (error)");
+      } else {
+        setTimeout(() => {
+          setIsLoading((prev) => ({ ...prev, sending: false }));
+          debugLog("[Send] Loading state released (success)");
+        }, 100);
+      }
     }
   };
 
