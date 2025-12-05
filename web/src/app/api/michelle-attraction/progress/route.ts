@@ -11,6 +11,7 @@ import {
   upsertProgressRecord,
 } from "@/lib/michelle-attraction/progress-server";
 import { type ProgressStatus } from "@/lib/michelle-attraction/sections";
+import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const progressStatusSchema = z.enum(["OK", "IP", "RV"] as const);
@@ -30,9 +31,18 @@ export async function GET() {
 
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabase, "Michelle attraction progress GET");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json(
+        { error: "Authentication service is temporarily unavailable. Please try again later." },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -55,9 +65,18 @@ export async function POST(request: Request) {
 
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabase, "Michelle attraction progress POST");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json(
+        { error: "Authentication service is temporarily unavailable. Please try again later." },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

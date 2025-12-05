@@ -7,6 +7,7 @@ import { getMatchingCacheExpiry } from "@/lib/matching/cache";
 import { getTogelLabel } from "@/lib/personality";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { MatchingResult } from "@/types/diagnosis";
 
 type NotificationPayload = {
@@ -157,7 +158,15 @@ export const POST = async (request: Request) => {
   // ログインユーザーの取得
   const cookieStore = cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const { data: { user } } = await supabaseAuth.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabaseAuth, "Diagnosis submit");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json({ message: "Authentication is temporarily unavailable. Please try again." }, { status: 503 });
+    }
+    throw error;
+  }
 
   const supabaseAdmin = createSupabaseAdminClient();
 

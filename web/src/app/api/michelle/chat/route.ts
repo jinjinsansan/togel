@@ -9,6 +9,7 @@ import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 import { fetchLatestProgress, type AttractionSupabase } from "@/lib/michelle-attraction/progress-server";
 import type { MichelleDatabase } from "@/types/michelle-db";
+import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const requestSchema = z.object({
@@ -70,9 +71,18 @@ export async function POST(request: Request) {
   const { sessionId: incomingSessionId, message, category } = parsed.data;
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient<MichelleDatabase>(cookieStore) as unknown as MichelleSupabase;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabase, "Michelle chat");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json(
+        { error: "Authentication service is temporarily unavailable. Please try again later." },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

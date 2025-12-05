@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { MICHELLE_AI_ENABLED } from "@/lib/feature-flags";
+import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,9 +16,15 @@ export async function GET() {
 
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient<MichelleSupabase>(cookieStore) as unknown as MichelleSupabase;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabase, "Michelle sessions list");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json({ error: "Authentication service is temporarily unavailable. Please try again later." }, { status: 503 });
+    }
+    throw error;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

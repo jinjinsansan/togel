@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 
 const getEnv = (key: string) => {
   const value = process.env[key];
@@ -38,9 +39,18 @@ const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/g
 export async function POST(request: Request) {
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient(cookieStore);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabase, "Avatar upload");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json(
+        { error: "認証サービスに接続できません。しばらくしてからもう一度お試しください。" },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

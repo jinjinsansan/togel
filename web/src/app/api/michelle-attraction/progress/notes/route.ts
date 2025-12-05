@@ -8,6 +8,7 @@ import {
   fetchProgressNotes,
   type AttractionSupabase,
 } from "@/lib/michelle-attraction/progress-server";
+import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const noteSchema = z.object({
@@ -26,9 +27,18 @@ export async function POST(request: Request) {
 
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabase, "Michelle attraction progress notes");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json(
+        { error: "Authentication service is temporarily unavailable. Please try again later." },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

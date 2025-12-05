@@ -10,6 +10,7 @@ import {
   upsertProgressRecord,
 } from "@/lib/michelle-attraction/progress-server";
 import { getNextSection, getPreviousSection } from "@/lib/michelle-attraction/sections";
+import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const requestSchema = z.object({
@@ -27,9 +28,18 @@ export async function POST(request: Request) {
   const { sessionId, action } = parsed.data;
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
+  try {
+    user = await getRouteUser(supabase, "Michelle attraction progress action");
+  } catch (error) {
+    if (error instanceof SupabaseAuthUnavailableError) {
+      return NextResponse.json(
+        { error: "Authentication service is temporarily unavailable. Please try again later." },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
