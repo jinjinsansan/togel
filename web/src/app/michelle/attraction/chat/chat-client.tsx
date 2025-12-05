@@ -715,13 +715,13 @@ export function MichelleAttractionChatClient() {
 
     if (direction === "back" && !previousSectionInfo) {
       setError("これ以上戻ることはできません");
-      setTimeout(() => setError(null), 2000);
+      setTimeout(() => setError(null), 1000);
       return;
     }
 
     if (direction === "next" && !nextSectionInfo) {
       setError("これ以上進むセクションはありません");
-      setTimeout(() => setError(null), 2000);
+      setTimeout(() => setError(null), 1000);
       return;
     }
 
@@ -833,7 +833,7 @@ export function MichelleAttractionChatClient() {
       mobileLog.warn("Send blocked: AI is still responding");
       debugLog("[Send] Blocked - AI is still responding");
       setError("前の応答を待っています...");
-      setTimeout(() => setError(null), 2000);
+      setTimeout(() => setError(null), 1000);
       return;
     }
 
@@ -863,16 +863,60 @@ export function MichelleAttractionChatClient() {
     mobileLog.info("Loading state set to true");
     
     let hasError = false;
+    let retryCount = 0;
+    const maxRetries = 2;
 
     try {
-      mobileLog.info("Starting API call", { sessionId: activeSessionId });
-      const res = await fetch("/api/michelle-attraction/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
-      });
+      let res: Response | null = null;
       
-      mobileLog.info("API response received", { status: res.status, ok: res.ok });
+      // リトライループ
+      while (retryCount <= maxRetries) {
+        try {
+          mobileLog.info("Starting API call", { 
+            sessionId: activeSessionId, 
+            attempt: retryCount + 1,
+            maxRetries: maxRetries + 1
+          });
+          
+          res = await fetch("/api/michelle-attraction/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
+          });
+          
+          mobileLog.info("API response received", { 
+            status: res.status, 
+            ok: res.ok,
+            attempt: retryCount + 1
+          });
+          
+          break; // 成功したらループを抜ける
+          
+        } catch (fetchError) {
+          retryCount++;
+          mobileLog.error("Network error", { 
+            error: fetchError,
+            message: fetchError instanceof Error ? fetchError.message : "Unknown",
+            attempt: retryCount,
+            willRetry: retryCount <= maxRetries
+          });
+          
+          if (retryCount > maxRetries) {
+            throw new Error(
+              "ネットワークエラーが発生しました。接続を確認してもう一度お試しください。"
+            );
+          }
+          
+          // exponential backoff: 1秒、2秒
+          const delay = Math.min(1000 * retryCount, 2000);
+          mobileLog.info("Retrying after delay", { delayMs: delay });
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+      
+      if (!res) {
+        throw new Error("Failed to get response after retries");
+      }
 
       if (!res.ok || !res.body) {
         let serverMessage = "ネットワークエラーが発生しました";
@@ -1065,7 +1109,7 @@ export function MichelleAttractionChatClient() {
     } catch (err) {
       console.error("[Delete] Failed to delete session:", err);
       setError("削除に失敗しました。もう一度お試しください。");
-      setTimeout(() => setError(null), 3000);
+      setTimeout(() => setError(null), 1000);
     }
   };
 
@@ -1079,11 +1123,11 @@ export function MichelleAttractionChatClient() {
       await navigator.clipboard.writeText(text);
       // Toast通知の代わりに一時的なメッセージを表示
       setError("✓ 会話内容をコピーしました");
-      setTimeout(() => setError(null), 2000);
+      setTimeout(() => setError(null), 1000);
     } catch (err) {
       console.error("Failed to copy:", err);
       setError("コピーに失敗しました");
-      setTimeout(() => setError(null), 3000);
+      setTimeout(() => setError(null), 1000);
     }
   };
 
