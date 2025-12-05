@@ -184,6 +184,7 @@ export function MichelleAttractionChatClient() {
   const [isMobile, setIsMobile] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [hasInitializedSessions, setHasInitializedSessions] = useState(false);
+  const [useBufferedTransport, setUseBufferedTransport] = useState(false);
   const [hasLoadedMessages, setHasLoadedMessages] = useState(false);
   const [progress, setProgress] = useState<ProgressEntry | null>(null);
   const [progressNotes, setProgressNotes] = useState<ProgressNote[]>([]);
@@ -342,6 +343,17 @@ export function MichelleAttractionChatClient() {
     loadSessions();
     fetchProgress();
   }, [loadSessions, fetchProgress]);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    const ua = navigator.userAgent;
+    const isIOS = /iP(hone|od|ad)/i.test(ua);
+    const isMobileSafari = isIOS && /Safari/.test(ua) && !/(CriOS|FxiOS|OPiOS|EdgiOS)/.test(ua);
+    if (isMobileSafari) {
+      setUseBufferedTransport(true);
+      mobileLog.info("Buffered transport enabled for Mobile Safari");
+    }
+  }, []);
 
   useEffect(() => {
     debugLog(
@@ -984,9 +996,14 @@ export function MichelleAttractionChatClient() {
             maxRetries: maxRetries + 1
           });
           
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          if (useBufferedTransport) {
+            headers["X-Buffered-Response"] = "1";
+          }
+
           res = await fetch("/api/michelle-attraction/chat", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
           });
           
@@ -1022,6 +1039,35 @@ export function MichelleAttractionChatClient() {
       
       if (!res) {
         throw new Error("Failed to get response after retries");
+      }
+
+      if (useBufferedTransport) {
+        if (!res.ok) {
+          let serverMessage = "ネットワークエラーが発生しました";
+          try {
+            const errorBody = (await res.json()) as { error?: string };
+            if (errorBody?.error) {
+              serverMessage = errorBody.error;
+            }
+          } catch (parseError) {
+            mobileLog.error("Failed to parse buffered error response", parseError);
+          }
+          throw new Error(serverMessage);
+        }
+
+        const payload = (await res.json()) as { sessionId?: string; message?: string };
+        const aiContent = payload.message ?? "";
+
+        if (payload.sessionId && !activeSessionId) {
+          setActiveSessionId(payload.sessionId);
+        }
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === tempAiId ? { ...msg, content: aiContent || "", pending: false } : msg,
+          ),
+        );
+        return;
       }
 
       if (!res.ok || !res.body) {

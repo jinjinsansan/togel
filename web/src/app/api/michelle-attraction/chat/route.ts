@@ -166,6 +166,7 @@ export async function POST(request: Request) {
   }
 
   const { sessionId: incomingSessionId, message, category } = parsed.data;
+  const prefersBufferedResponse = request.headers.get("x-buffered-response") === "1";
   const cookieStore = cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   let user;
@@ -369,6 +370,42 @@ ${message}`
       throw openaiError;
     }
 
+    if (prefersBufferedResponse) {
+      let fullReply = "";
+
+      await new Promise<void>((resolve, reject) => {
+        const runStream = betaThreads.runs.stream(threadId, {
+          assistant_id: assistantId,
+        });
+
+        runStream
+          .on("textDelta", (delta: { value?: string }) => {
+            if (delta.value) {
+              fullReply += delta.value;
+            }
+          })
+          .on("error", (error: unknown) => {
+            reject(error);
+          })
+          .on("end", async () => {
+            if (fullReply.trim()) {
+              await supabase.from("michelle_attraction_messages").insert({
+                session_id: sessionId,
+                role: "assistant",
+                content: fullReply,
+              });
+            }
+            resolve();
+          });
+      });
+
+      return NextResponse.json({
+        sessionId,
+        message: fullReply,
+        knowledge: knowledgeMatches.slice(0, 4),
+      });
+    }
+
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
@@ -412,9 +449,6 @@ ${message}`
                 });
               }
               
-              // CRITICAL FIX: runが完全に終了するまで待機
-              // ストリーミング終了 ≠ run完了
-              // 2秒待機してからdoneを送ることで、OpenAI側のrunが確実に完了する
               await new Promise(resolve => setTimeout(resolve, 2000));
               
               sendEvent({ type: "done" });
