@@ -52,6 +52,7 @@ export default function ProfileEditPage() {
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
   const [gender, setGender] = useState<GenderOption>("male");
+  const [initialGender, setInitialGender] = useState<GenderOption | null>(null);
   const [age, setAge] = useState("");
   const [job, setJob] = useState("");
   const [city, setCity] = useState("");
@@ -92,7 +93,13 @@ export default function ProfileEditPage() {
       if (profile) {
         setFullName(profile.full_name || "");
         setBio(profile.bio || "");
-        setGender(profile.gender || "male");
+        const profileGender = (profile.gender as GenderOption | null) || null;
+        if (profileGender) {
+          setInitialGender(profileGender);
+          setGender(profileGender);
+        } else {
+          setGender("male");
+        }
         setAge(profile.age?.toString() || "");
         setJob(profile.job || "");
         setCity(profile.city || "");
@@ -171,11 +178,13 @@ export default function ProfileEditPage() {
         return acc;
       }, {} as Partial<SocialLinks>);
 
+      const genderToPersist = initialGender ?? gender;
+
       const updates = {
         id: user.id,
         full_name: trimmedFullName,
         bio,
-        gender,
+        gender: genderToPersist,
         age: age ? parseInt(age) : null,
         job,
         city,
@@ -189,6 +198,10 @@ export default function ProfileEditPage() {
       const { error } = await supabase.from("profiles").upsert(updates);
       if (error) throw error;
       
+      if (!initialGender && genderToPersist) {
+        setInitialGender(genderToPersist);
+      }
+
       if (primaryUserId || user.id) {
         const userUpdateQuery = supabase.from("users").update({ nickname: trimmedFullName });
         const targetedQuery = primaryUserId
@@ -328,13 +341,17 @@ export default function ProfileEditPage() {
                 <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Togel太郎" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
+                  <div className="space-y-2">
                   <Label htmlFor="gender" className="text-sm font-bold text-slate-700">性別</Label>
                   <div className="relative">
                     <select 
                       id="gender" 
                       value={gender} 
-                      onChange={(e) => setGender(e.target.value as GenderOption)} 
+                      onChange={(e) => {
+                        if (initialGender) return;
+                        setGender(e.target.value as GenderOption);
+                      }} 
+                      disabled={Boolean(initialGender)}
                       className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-base focus:outline-none focus:ring-2 focus:ring-[#E91E63] appearance-none"
                     >
                       <option value="male">男性</option>
@@ -343,6 +360,11 @@ export default function ProfileEditPage() {
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
                   </div>
+                  <p className="text-xs text-slate-500">
+                    {initialGender
+                      ? "性別は登録時の情報から変更できません"
+                      : "一度保存すると性別は変更できません"}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="age" className="text-sm font-bold text-slate-700">年齢</Label>
