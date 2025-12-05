@@ -261,6 +261,13 @@ const TRAITS: (keyof BigFiveScores)[] = [
   "neuroticism",
 ];
 
+type MatchMode = "opposite" | "same";
+
+const MATCH_STORAGE_KEYS: Record<MatchMode, string> = {
+  opposite: "latestMatching:opposite",
+  same: "latestMatching:same",
+};
+
 const ResultPage = () => {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
@@ -268,6 +275,8 @@ const ResultPage = () => {
     if (typeof window === "undefined") return;
     try {
       sessionStorage.removeItem("latestMatching");
+      sessionStorage.removeItem(MATCH_STORAGE_KEYS.opposite);
+      sessionStorage.removeItem(MATCH_STORAGE_KEYS.same);
       sessionStorage.removeItem("latestDiagnosis");
       sessionStorage.removeItem("latestMismatch");
       sessionStorage.removeItem("latestFeatured");
@@ -275,9 +284,9 @@ const ResultPage = () => {
       console.warn("Failed to clear session caches", err);
     }
   }, []);
-  const [results, setResults] = useState<MatchingResult[]>(() => {
+  const getStoredResults = useCallback((mode: MatchMode): MatchingResult[] => {
     if (typeof window === "undefined") return [];
-    const raw = sessionStorage.getItem("latestMatching");
+    const raw = sessionStorage.getItem(MATCH_STORAGE_KEYS[mode]) ?? (mode === "opposite" ? sessionStorage.getItem("latestMatching") : null);
     if (!raw) return [];
     try {
       return JSON.parse(raw) as MatchingResult[];
@@ -285,7 +294,10 @@ const ResultPage = () => {
       console.error("Failed to parse matching results", error);
       return [];
     }
-  });
+  }, []);
+
+  const [matchMode, setMatchMode] = useState<MatchMode>("opposite");
+  const [results, setResults] = useState<MatchingResult[]>(() => getStoredResults("opposite"));
 
   const [diagnosis, setDiagnosis] = useState<LatestDiagnosis | null>(() => {
     if (typeof window === "undefined") return null;
@@ -321,24 +333,26 @@ const ResultPage = () => {
     diagnosis?: LatestDiagnosis | null;
     mismatchResults?: unknown;
     featuredResult?: MatchingResult | null;
+    mode?: MatchMode;
   }) => {
     if (typeof window === "undefined") return;
     if (payload.results) {
-      sessionStorage.setItem("latestMatching", JSON.stringify(payload.results));
+      const mode = payload.mode ?? "opposite";
+      sessionStorage.setItem(MATCH_STORAGE_KEYS[mode], JSON.stringify(payload.results));
     }
     if (payload.diagnosis) {
       sessionStorage.setItem("latestDiagnosis", JSON.stringify(payload.diagnosis));
     }
-    if (payload.mismatchResults) {
+    if (payload.mode !== "same" && payload.mismatchResults) {
       sessionStorage.setItem("latestMismatch", JSON.stringify(payload.mismatchResults));
     }
-    if (payload.featuredResult) {
+    if (payload.mode !== "same" && payload.featuredResult) {
       sessionStorage.setItem("latestFeatured", JSON.stringify(payload.featuredResult));
     }
   }, []);
 
   const fetchLatest = useCallback(
-    async ({ skipLoading = false, forceFresh = false } = {}) => {
+    async ({ skipLoading = false, forceFresh = false, mode = "opposite" as MatchMode } = {}) => {
       if (skipLoading) {
         setIsRefreshing(true);
       } else {
@@ -348,6 +362,9 @@ const ResultPage = () => {
       try {
         const params = new URLSearchParams();
         params.set(forceFresh ? "fresh" : "revalidate", "1");
+        if (mode === "same") {
+          params.set("targetGender", "same");
+        }
         const res = await fetch(`/api/diagnosis/latest?${params.toString()}`, { cache: "no-store" });
         if (!res.ok) {
           return;
@@ -356,15 +373,18 @@ const ResultPage = () => {
 
         if (data.results && data.diagnosis) {
           setResults(data.results);
-          setDiagnosis(data.diagnosis);
-          if (data.featuredResult) {
-            setFeaturedResult(data.featuredResult);
+          if (mode === "opposite") {
+            setFeaturedResult(data.featuredResult ?? null);
+          } else {
+            setFeaturedResult(null);
           }
+          setDiagnosis(data.diagnosis);
           persistSessionPayload({
             results: data.results,
             diagnosis: data.diagnosis,
             mismatchResults: data.mismatchResults,
             featuredResult: data.featuredResult,
+            mode,
           });
           if (Array.isArray(data.results)) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -390,7 +410,7 @@ const ResultPage = () => {
     if (initialFetchTriggered.current) return;
     initialFetchTriggered.current = true;
     const hasCachedData = results.length > 0 && Boolean(diagnosis);
-    fetchLatest({ skipLoading: hasCachedData });
+    fetchLatest({ skipLoading: hasCachedData, mode: "opposite" });
   }, [fetchLatest, results.length, diagnosis]);
 
   useEffect(() => {
@@ -405,7 +425,7 @@ const ResultPage = () => {
 
       if (event === "SIGNED_IN" && session?.user) {
         setIsRefreshing(true);
-        fetchLatest({ skipLoading: true, forceFresh: true })
+        fetchLatest({ skipLoading: true, forceFresh: true, mode: matchMode })
           .catch((error) => console.error("Retry fetch after sign-in failed", error))
           .finally(() => setIsRefreshing(false));
       }
@@ -414,7 +434,7 @@ const ResultPage = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, fetchLatest, clearSessionCaches]);
+  }, [supabase, fetchLatest, clearSessionCaches, matchMode]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -424,7 +444,32 @@ const ResultPage = () => {
 
   const handleManualRefresh = () => {
     const hasCachedData = results.length > 0 && Boolean(diagnosis);
-    fetchLatest({ skipLoading: hasCachedData, forceFresh: true });
+    fetchLatest({ skipLoading: hasCachedData, forceFresh: true, mode: matchMode });
+  };
+
+  const handleMatchModeToggle = () => {
+    const nextMode: MatchMode = matchMode === "opposite" ? "same" : "opposite";
+    setMatchMode(nextMode);
+    const cached = getStoredResults(nextMode);
+    if (cached.length > 0) {
+      setResults(cached);
+      if (nextMode === "opposite") {
+        const featuredRaw = typeof window !== "undefined" ? sessionStorage.getItem("latestFeatured") : null;
+        if (featuredRaw) {
+          try {
+            setFeaturedResult(JSON.parse(featuredRaw) as MatchingResult);
+          } catch {
+            setFeaturedResult(null);
+          }
+        } else {
+          setFeaturedResult(null);
+        }
+      } else {
+        setFeaturedResult(null);
+      }
+      return;
+    }
+    fetchLatest({ skipLoading: results.length > 0, forceFresh: true, mode: nextMode });
   };
 
   if (isInitialLoading) {
@@ -480,12 +525,23 @@ const ResultPage = () => {
             </div>
           )}
 
-          <div className="mt-4">
-            <Button asChild variant="outline" size="sm" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
-              <Link href="/result/mismatch">
-                <span className="text-lg">💀</span>
-                ミスマッチランキングも見る
-              </Link>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            {matchMode === "opposite" && (
+              <Button asChild variant="outline" size="sm" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
+                <Link href="/result/mismatch">
+                  <span className="text-lg">💀</span>
+                  ミスマッチランキングも見る
+                </Link>
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleMatchModeToggle}
+            >
+              {matchMode === "opposite" ? "同性のマッチング結果も見る" : "異性マッチングに戻る"}
             </Button>
           </div>
         </div>
@@ -637,7 +693,7 @@ const ResultPage = () => {
         />
 
         {/* 下部ミスマッチ結果リンク */}
-        {results.length > 0 && (
+        {matchMode === "opposite" && results.length > 0 && (
           <div className="mt-12 text-center px-4">
             <p className="mb-4 text-muted-foreground">
               相性の悪い相手も知っておくと、失敗を避けられるかも...？

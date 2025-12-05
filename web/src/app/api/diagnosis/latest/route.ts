@@ -20,6 +20,7 @@ export const GET = async (request: Request) => {
   const url = new URL(request.url);
   const forceFresh = url.searchParams.get("fresh") === "1";
   const revalidate = url.searchParams.get("revalidate") === "1";
+  const targetGenderMode = url.searchParams.get("targetGender") === "same" ? "same" : "opposite";
 
   const supabaseAdmin = createSupabaseAdminClient();
 
@@ -98,6 +99,18 @@ export const GET = async (request: Request) => {
 
     // 自己診断結果の生成（計算コストは低いので毎回実行でOK）
     const diagnosisResult = generateDiagnosisResult(inputData);
+
+    if (targetGenderMode === "same") {
+      const sameResults = await generateMatchingResults(inputData, { targetGender: inputData.userGender });
+
+      return NextResponse.json({
+        results: sameResults,
+        mismatchResults: null,
+        featuredResult: null,
+        diagnosis: diagnosisResult,
+        stale: false,
+      });
+    }
 
     const cacheMatchesLatest =
       Boolean(

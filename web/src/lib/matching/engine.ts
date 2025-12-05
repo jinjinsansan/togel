@@ -1043,14 +1043,15 @@ export const generateSingleMatchingResult = async (
 
 export const generateMatchingResults = async (
   payload: DiagnosisPayload,
+  options?: { targetGender?: Gender },
 ): Promise<MatchingResult[]> => {
   const userScores = calculateBigFiveScores(payload.answers);
   const userType = determinePersonalityType(userScores);
 
-  const oppositeGender = payload.userGender === "male" ? "female" : "male";
-  const realProfiles = await loadRealProfiles(oppositeGender);
+  const targetGender = options?.targetGender ?? (payload.userGender === "male" ? "female" : "male");
+  const realProfiles = await loadRealProfiles(targetGender);
   const filteredMockProfiles = mockProfiles
-    .filter((profile) => profile.gender === oppositeGender)
+    .filter((profile) => profile.gender === targetGender)
     .filter((profile) => hasValidAvatar(profile)) // 画像が有効なもののみ
     .slice(0, MAX_MOCK_PROFILES_PER_GENDER);
   const mockQuota = Math.max(MAX_MOCK_PROFILES_PER_GENDER - realProfiles.length, 0);
