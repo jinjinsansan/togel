@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MichelleAvatar } from "@/components/michelle/avatar";
 import { debugLog } from "@/lib/logger";
+import { MobileLogger, mobileLog } from "@/components/debug/mobile-logger";
 
 type PsychologyRecommendationState = "none" | "suggested" | "acknowledged" | "dismissed" | "resolved";
 
@@ -532,9 +533,10 @@ export function MichelleChatClient() {
     if (!textToSend || isLoading.sending) return;
 
     if (hasPendingResponse) {
+      mobileLog.warn("Send blocked: AI is still responding");
       debugLog("[Send] Blocked - AI is still responding");
       setError("前の応答を待っています...");
-      setTimeout(() => setError(null), 2000);
+      setTimeout(() => setError(null), 1000);
       return;
     }
 
@@ -561,15 +563,63 @@ export function MichelleChatClient() {
     ]);
 
     setIsLoading((prev) => ({ ...prev, sending: true }));
+    mobileLog.info("Loading state set to true");
     
     let hasError = false;
+    let retryCount = 0;
+    const maxRetries = 2;
 
     try {
-      const res = await fetch("/api/michelle/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
-      });
+      let res: Response | null = null;
+      
+      // リトライループ
+      while (retryCount <= maxRetries) {
+        try {
+          mobileLog.info("Starting API call", { 
+            sessionId: activeSessionId, 
+            attempt: retryCount + 1,
+            maxRetries: maxRetries + 1
+          });
+          
+          res = await fetch("/api/michelle/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: activeSessionId ?? undefined, message: textToSend }),
+          });
+          
+          mobileLog.info("API response received", { 
+            status: res.status, 
+            ok: res.ok,
+            attempt: retryCount + 1
+          });
+          
+          break; // 成功したらループを抜ける
+          
+        } catch (fetchError) {
+          retryCount++;
+          mobileLog.error("Network error", { 
+            error: fetchError,
+            message: fetchError instanceof Error ? fetchError.message : "Unknown",
+            attempt: retryCount,
+            willRetry: retryCount <= maxRetries
+          });
+          
+          if (retryCount > maxRetries) {
+            throw new Error(
+              "ネットワークエラーが発生しました。接続を確認してもう一度お試しください。"
+            );
+          }
+          
+          // exponential backoff: 1秒、2秒
+          const delay = Math.min(1000 * retryCount, 2000);
+          mobileLog.info("Retrying after delay", { delayMs: delay });
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+      
+      if (!res) {
+        throw new Error("Failed to get response after retries");
+      }
 
       if (!res.ok || !res.body) {
         let serverMessage = "ネットワークエラーが発生しました";
@@ -580,12 +630,15 @@ export function MichelleChatClient() {
           }
           // 429エラーの場合は特別な処理
           if (res.status === 429) {
+            mobileLog.warn("Rate limited - AI still responding", { status: 429 });
             debugLog("[Send] Rate limited - AI still responding");
             serverMessage = "前の応答がまだ処理中です。少しお待ちください。";
           }
           // ステータスコードをログ
+          mobileLog.error("API error response", { status: res.status, message: serverMessage });
           debugLog("[Send] Error response:", { status: res.status, message: serverMessage });
         } catch (parseError) {
+          mobileLog.error("Failed to parse error response", parseError);
           console.error("Failed to parse error response", parseError);
         }
         throw new Error(serverMessage);
@@ -698,11 +751,13 @@ export function MichelleChatClient() {
       }
     } catch (err) {
       hasError = true;
+      mobileLog.error("Send message error", { error: err, message: err instanceof Error ? err.message : "Unknown" });
       console.error(err);
       const friendlyError = err instanceof Error ? err.message : "送信に失敗しました";
       setError(friendlyError);
       
       // エラー時は必ずpendingメッセージを削除
+      mobileLog.info("Clearing pending message due to error");
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === tempAiId ? { ...msg, content: "申し訳ありません。もう一度送ってみてください。", pending: false } : msg,
@@ -711,9 +766,11 @@ export function MichelleChatClient() {
     } finally {
       // エラー時は即座にリセット、成功時は短い遅延
       if (hasError) {
+        mobileLog.info("Loading state reset (error - immediate)");
         setIsLoading((prev) => ({ ...prev, sending: false }));
         debugLog("[Send] Loading state released (error)");
       } else {
+        mobileLog.info("Loading state reset (success - 100ms delay)");
         setTimeout(() => {
           setIsLoading((prev) => ({ ...prev, sending: false }));
           debugLog("[Send] Loading state released (success)");
@@ -1175,6 +1232,7 @@ export function MichelleChatClient() {
           <p className="mt-2 text-center text-[10px] text-[#c896a8]">ミシェルAIは誤った情報を生成する場合があります。</p>
         </div>
       </main>
+      <MobileLogger />
     </div>
   );
 }
