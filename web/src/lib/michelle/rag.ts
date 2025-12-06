@@ -16,16 +16,25 @@ export type KnowledgeMatch = {
 export async function embedText(text: string) {
   const normalized = text.trim();
   if (!normalized) {
+    console.log("[RAG] Empty text, skipping embedding");
     return [] as number[];
   }
 
-  const openai = getMichelleOpenAIClient();
-  const response = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
-    input: normalized,
-  });
+  try {
+    console.log(`[RAG] Generating embedding for: "${normalized.slice(0, 50)}..."`);
+    const openai = getMichelleOpenAIClient();
+    const response = await openai.embeddings.create({
+      model: EMBEDDING_MODEL,
+      input: normalized,
+    });
 
-  return response.data[0]?.embedding ?? [];
+    const embedding = response.data[0]?.embedding ?? [];
+    console.log(`[RAG] Embedding generated: ${embedding.length} dimensions`);
+    return embedding;
+  } catch (error) {
+    console.error("[RAG] Embedding generation failed:", error);
+    return [];
+  }
 }
 
 type RetrieveOptions = {
@@ -36,11 +45,14 @@ type RetrieveOptions = {
 export async function retrieveKnowledgeMatches(text: string, options: RetrieveOptions = {}): Promise<KnowledgeMatch[]> {
   const embedding = await embedText(text);
   if (!embedding.length) {
+    console.log("[RAG] No embedding generated, returning empty matches");
     return [];
   }
 
+  console.log(`[RAG] Embedding ready (${embedding.length} dims), starting search`);
   const supabase = createSupabaseAdminClient();
   const attempt = async (threshold: number) => {
+    console.log(`[RAG] Attempting RPC with threshold: ${threshold}`);
     const rpcArgs = {
       query_embedding: embedding,
       match_count: options.matchCount ?? 8,
@@ -49,10 +61,11 @@ export async function retrieveKnowledgeMatches(text: string, options: RetrieveOp
 
     const { data, error } = await supabase.rpc("match_michelle_knowledge", rpcArgs as never);
     if (error) {
-      console.error("match_michelle_knowledge error", error);
+      console.error("[RAG] RPC error:", error);
       return [] as KnowledgeMatch[];
     }
 
+    console.log(`[RAG] RPC returned ${(data ?? []).length} matches at threshold ${threshold}`);
     return (data ?? []) as KnowledgeMatch[];
   };
 
