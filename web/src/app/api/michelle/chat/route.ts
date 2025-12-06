@@ -107,6 +107,14 @@ export async function POST(request: Request) {
       similarityThreshold: 0.45,
     });
 
+    console.log(`[Michelle Chat] User message: "${message.slice(0, 50)}..."`);
+    console.log(`[Michelle Chat] RAG matches: ${knowledgeMatches.length}`);
+    if (knowledgeMatches.length > 0) {
+      console.log(`[Michelle Chat] Top 3 similarities:`, 
+        knowledgeMatches.slice(0, 3).map(m => m.similarity.toFixed(3)).join(", ")
+      );
+    }
+
     const knowledgeContext = knowledgeMatches
       .map((match, index) => `[参考知識${index + 1}]\n${match.content}`)
       .join("\n\n");
