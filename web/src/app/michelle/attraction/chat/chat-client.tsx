@@ -412,10 +412,12 @@ export function MichelleAttractionChatClient() {
     if (typeof navigator === "undefined") return;
     const ua = navigator.userAgent;
     const isIOS = /iP(hone|od|ad)/i.test(ua);
-    const isMobileSafari = isIOS && /Safari/.test(ua) && !/(CriOS|FxiOS|OPiOS|EdgiOS)/.test(ua);
-    if (isMobileSafari) {
+    const isAndroid = /Android/i.test(ua);
+    const isMobileDevice = isIOS || isAndroid || window.innerWidth < 768;
+    
+    if (isMobileDevice) {
       setUseBufferedTransport(true);
-      mobileLog.info("Buffered transport enabled for Mobile Safari");
+      mobileLog.info("Buffered transport enabled for mobile device", { isIOS, isAndroid, width: window.innerWidth });
     }
   }, []);
 
