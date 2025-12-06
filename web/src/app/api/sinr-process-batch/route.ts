@@ -51,7 +51,11 @@ async function listMarkdownFiles(dir: string): Promise<string[]> {
   return files.flat();
 }
 
-async function processFile(filename: string) {
+type ProcessResult = 
+  | { filename: string; parents: number; children: number; skipped: boolean; error?: never }
+  | { filename: string; error: string; parents?: never; children?: never; skipped?: never };
+
+async function processFile(filename: string): Promise<ProcessResult> {
   const filePath = path.join(KNOWLEDGE_DIR, filename);
   const relativeSource = sanitizeUnicode(filename);
   
@@ -147,7 +151,7 @@ export async function POST(request: Request) {
 
     console.log(`[SINR Batch] Processing ${batch.length} files (${startIndex}-${endIndex}/${totalFiles})`);
 
-    const results = [];
+    const results: ProcessResult[] = [];
     
     for (const filename of batch) {
       try {

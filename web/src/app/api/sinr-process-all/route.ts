@@ -56,10 +56,14 @@ async function listMarkdownFiles(dir: string): Promise<string[]> {
   return files.flat();
 }
 
+type ProcessResult = 
+  | { filename: string; parents: number; children: number; skipped: boolean; error?: never }
+  | { filename: string; error: string; parents?: never; children?: never; skipped?: never };
+
 async function processFile(
   filename: string,
   sendEvent: (data: unknown) => void,
-) {
+): Promise<ProcessResult> {
   const filePath = path.join(KNOWLEDGE_DIR, filename);
   const relativeSource = sanitizeUnicode(filename);
 
@@ -161,7 +165,7 @@ export async function GET() {
 
         sendEvent({ type: "files_found", count: totalFiles });
 
-        const results = [];
+        const results: ProcessResult[] = [];
         
         for (let i = 0; i < allFiles.length; i++) {
           const filename = allFiles[i];
