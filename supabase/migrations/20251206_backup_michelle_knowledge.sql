@@ -14,10 +14,6 @@ SELECT * FROM michelle_knowledge;
 CREATE INDEX michelle_knowledge_backup_embedding_idx
   ON michelle_knowledge_backup USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
--- バックアップ日時を記録
-COMMENT ON TABLE michelle_knowledge_backup IS 
-  'Backup created at ' || NOW()::text || ' before SINR implementation';
-
 COMMIT;
 
 -- 確認用
