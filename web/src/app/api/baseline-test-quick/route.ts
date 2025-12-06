@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 
+export const dynamic = 'force-dynamic';
+
 const TEST_QUESTIONS = [
   "恐怖を感じる時はどうすればいい？",
   "怒りの下にある感情は何ですか？",

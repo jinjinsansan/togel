@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/openai";
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+
 const BASELINE_QUESTIONS = [
   "恐怖を感じる時はどうすればいい？",
   "怒りの下にある感情は何ですか？",
