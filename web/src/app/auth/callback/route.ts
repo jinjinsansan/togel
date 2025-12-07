@@ -7,16 +7,41 @@ import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const error = requestUrl.searchParams.get("error");
+  const errorDescription = requestUrl.searchParams.get("error_description");
   const origin = requestUrl.origin;
+
+  // 全パラメータをログ出力（デバッグ用）
+  const allParams: Record<string, string> = {};
+  requestUrl.searchParams.forEach((value, key) => {
+    allParams[key] = value;
+  });
 
   console.log("[Auth Callback] Start", {
     hasCode: !!code,
+    hasError: !!error,
+    error,
+    errorDescription,
+    allParams,
     origin,
     userAgent: request.headers.get("user-agent"),
+    fullUrl: requestUrl.toString(),
   });
 
+  // Googleからのエラーレスポンス処理
+  if (error) {
+    console.error("[Auth Callback] OAuth error from provider", {
+      error,
+      errorDescription,
+      allParams,
+    });
+    return NextResponse.redirect(
+      new URL(`/?error=oauth_error&details=${encodeURIComponent(error + ": " + (errorDescription || ""))}`, requestUrl)
+    );
+  }
+
   if (!code) {
-    console.error("[Auth Callback] No code provided");
+    console.error("[Auth Callback] No code provided and no error param");
     return NextResponse.redirect(new URL("/?error=no_code", requestUrl));
   }
 
