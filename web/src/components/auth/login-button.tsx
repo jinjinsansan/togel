@@ -11,11 +11,20 @@ export const LoginButton = () => {
 
   const handleLogin = async () => {
     setIsLoading(true);
+    
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    
+    console.log("[Login] Starting OAuth flow", {
+      redirectTo,
+      origin: window.location.origin,
+      userAgent: navigator.userAgent,
+    });
+    
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
@@ -24,11 +33,13 @@ export const LoginButton = () => {
       });
 
       if (error) {
-        console.error("Login error:", error);
+        console.error("[Login] OAuth error:", error);
         alert("ログインに失敗しました");
+      } else {
+        console.log("[Login] OAuth initiated successfully");
       }
     } catch (err) {
-      console.error("Unexpected error:", err);
+      console.error("[Login] Unexpected error:", err);
       alert("エラーが発生しました");
     } finally {
       setIsLoading(false);

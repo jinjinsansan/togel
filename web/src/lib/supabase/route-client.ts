@@ -23,7 +23,23 @@ const adaptRouteCookies = (cookieStore: CookieStore) => {
       ...base,
       setAll(cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[]) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          writableStore.set?.(name, value, options);
+          // iOS Safari互換性のため、Cookie設定を明示的に指定
+          const cookieOptions = {
+            ...options,
+            path: options.path || "/",
+            sameSite: (options.sameSite as "lax" | "strict" | "none" | undefined) || "lax",
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: options.httpOnly !== false,
+            maxAge: options.maxAge || 60 * 60 * 24 * 7, // 7 days default
+          };
+          
+          console.log("[Cookie Set]", { 
+            name, 
+            hasValue: !!value,
+            options: cookieOptions 
+          });
+          
+          writableStore.set?.(name, value, cookieOptions);
         });
       },
     };

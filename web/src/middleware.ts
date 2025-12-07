@@ -12,8 +12,18 @@ const createSupabaseMiddlewareClient = (req: NextRequest, res: NextResponse) =>
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {
+          // iOS Safari互換性のため、Cookie設定を明示的に指定
+          const cookieOptions = {
+            ...options,
+            path: options?.path || "/",
+            sameSite: (options?.sameSite as "lax" | "strict" | "none" | undefined) || "lax",
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: options?.httpOnly !== false,
+            maxAge: options?.maxAge || 60 * 60 * 24 * 7, // 7 days default
+          };
+
           req.cookies.set(name, value);
-          res.cookies.set({ name, value, ...options });
+          res.cookies.set({ name, value, ...cookieOptions });
         });
       },
     },
@@ -28,13 +38,18 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Protected routes
-  const protectedRoutes = ["/mypage", "/admin"];
+  const protectedRoutes = ["/mypage", "/admin", "/michelle"];
   const isProtectedRoute = protectedRoutes.some((route) =>
     req.nextUrl.pathname.startsWith(route)
   );
 
   // If accessing a protected route without a session, redirect to login (or home)
   if (isProtectedRoute && !session) {
+    console.log("[Middleware] Protected route access denied", {
+      path: req.nextUrl.pathname,
+      hasSession: !!session,
+      userAgent: req.headers.get("user-agent"),
+    });
     const redirectUrl = new URL("/", req.url);
     // redirectUrl.searchParams.set("login", "true"); // Optional: open login modal
     return NextResponse.redirect(redirectUrl);
