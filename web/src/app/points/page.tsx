@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Coins, CreditCard, History, Loader2, ShieldCheck } from "lucide-react";
 
@@ -71,6 +72,31 @@ const fetchJson = async (input: RequestInfo, init?: RequestInit) => {
 };
 
 export default function PointsPage() {
+  const isPointsEnabled = false;
+
+  if (!isPointsEnabled) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="max-w-xl w-full rounded-3xl bg-white border border-slate-100 shadow-sm p-8 space-y-4 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Coming Soon</p>
+          <h1 className="text-2xl font-black text-slate-900">ポイント機能は準備中です</h1>
+          <p className="text-sm text-slate-500">
+            現在ポイント決済の提供に向けて準備を進めています。リリースまでしばらくお待ちください。
+          </p>
+          <div className="flex justify-center pt-2">
+            <Button asChild>
+              <Link href="/">トップに戻る</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <PointsEnabledPage />;
+}
+
+function PointsEnabledPage() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [packages, setPackages] = useState<PointPackage[]>([]);
   const [orders, setOrders] = useState<PointOrder[]>([]);
