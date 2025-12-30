@@ -64,8 +64,7 @@ export async function middleware(req: NextRequest) {
       hasSession: !!session,
       userAgent: req.headers.get("user-agent"),
     });
-    const redirectUrl = new URL("/", req.url);
-    // redirectUrl.searchParams.set("login", "true"); // Optional: open login modal
+    const redirectUrl = new URL("/login", req.url);
     return NextResponse.redirect(redirectUrl);
   }
 
