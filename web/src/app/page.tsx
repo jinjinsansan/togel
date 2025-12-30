@@ -35,11 +35,19 @@ export default function Home() {
 
   const handleLogin = async () => {
     setIsLoading(true);
+    const redirectTo = `${window.location.origin}/auth/callback`;
+
+    console.log("[Landing Login] Starting OAuth flow", {
+      redirectTo,
+      origin: window.location.origin,
+      userAgent: navigator.userAgent,
+    });
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo,
           queryParams: {
             access_type: "offline",
             prompt: "consent",

@@ -10,11 +10,13 @@ export async function GET(request: NextRequest) {
   const error = requestUrl.searchParams.get("error");
   const errorDescription = requestUrl.searchParams.get("error_description");
   const origin = requestUrl.origin;
+  const cookieStore = cookies();
+  const cookieNames = cookieStore.getAll().map(({ name }) => name);
 
-  // 全パラメータをログ出力（デバッグ用）
-  const allParams: Record<string, string> = {};
+  // 全パラメータをログ出力（デバッグ用）※センシティブな値はマスク
+  const paramSummary: Record<string, string> = {};
   requestUrl.searchParams.forEach((value, key) => {
-    allParams[key] = value;
+    paramSummary[key] = key === "code" ? `[redacted:${value.length}]` : value;
   });
 
   console.log("[Auth Callback] Start", {
@@ -22,10 +24,15 @@ export async function GET(request: NextRequest) {
     hasError: !!error,
     error,
     errorDescription,
-    allParams,
+    params: paramSummary,
     origin,
+    referer: request.headers.get("referer"),
     userAgent: request.headers.get("user-agent"),
-    fullUrl: requestUrl.toString(),
+    url: {
+      pathname: requestUrl.pathname,
+      searchLength: requestUrl.search.length,
+    },
+    cookieNames,
   });
 
   // Googleからのエラーレスポンス処理
@@ -33,7 +40,8 @@ export async function GET(request: NextRequest) {
     console.error("[Auth Callback] OAuth error from provider", {
       error,
       errorDescription,
-      allParams,
+      params: paramSummary,
+      referer: request.headers.get("referer"),
     });
     return NextResponse.redirect(
       new URL(`/?error=oauth_error&details=${encodeURIComponent(error + ": " + (errorDescription || ""))}`, requestUrl)
@@ -41,12 +49,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (!code) {
-    console.error("[Auth Callback] No code provided and no error param");
+    console.error("[Auth Callback] No code provided and no error param", {
+      params: paramSummary,
+      referer: request.headers.get("referer"),
+      cookieNames,
+    });
     return NextResponse.redirect(new URL("/?error=no_code", requestUrl));
   }
 
   try {
-    const cookieStore = cookies();
     const supabase = createSupabaseRouteClient(cookieStore);
 
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);

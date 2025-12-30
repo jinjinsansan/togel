@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Mail, MessageCircle, ShieldCheck } from "lucide-react";
 
+import { MICHELLE_AI_ENABLED, MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
+
 const footerLinks = [
   {
     title: "プロダクト",
@@ -14,8 +16,10 @@ const footerLinks = [
   {
     title: "サポート",
     links: [
-      { label: "心理カウンセリング", href: "/michelle" },
-      { label: "引き寄せ講座", href: "/michelle/attraction" },
+      ...(MICHELLE_AI_ENABLED ? [{ label: "心理カウンセリング", href: "/michelle" }] : []),
+      ...(MICHELLE_ATTRACTION_AI_ENABLED
+        ? [{ label: "引き寄せ講座", href: "/michelle/attraction" }]
+        : []),
       { label: "プロフィール編集", href: "/profile/edit" },
       { label: "お問い合わせ", href: "https://lin.ee/T7OYAGQ" },
     ],

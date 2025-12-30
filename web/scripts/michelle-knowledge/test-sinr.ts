@@ -51,7 +51,7 @@ async function main() {
     const first = parents[0];
     console.log(`   Parent [${first.index}]: "${first.content.slice(0, 100)}..."`);
     console.log(`   Children: ${first.children.length}`);
-    first.children.forEach((child, idx) => {
+    first.children.forEach((child) => {
       console.log(`     Child [${child.index}]: "${child.content.slice(0, 60)}..."`);
     });
   }

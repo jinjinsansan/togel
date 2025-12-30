@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const isLineInAppBrowser = () => {
   if (typeof navigator === "undefined") return false;
@@ -13,20 +13,18 @@ export const LineExternalBrowserRedirect = () => {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (isLineInAppBrowser()) {
-      setNeedsRedirect(true);
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
+    if (!isLineInAppBrowser()) {
+      return undefined;
     }
-    return undefined;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNeedsRedirect(true);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, []);
 
-  const currentUrl = useMemo(() => {
-    if (typeof window === "undefined") return "https://www.to-gel.com";
-    return window.location.href;
-  }, [needsRedirect]);
+  const currentUrl = typeof window === "undefined" ? "https://www.to-gel.com" : window.location.href;
 
   const handleCopyLink = useCallback(async () => {
     try {
