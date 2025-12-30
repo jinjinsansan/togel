@@ -41,7 +41,6 @@ export default function LoginPage() {
             <div className="space-y-3 text-sm text-slate-600">
               <p>・診断結果を保存して後から見返せます</p>
               <p>・マッチング結果を継続的にアップデート</p>
-              <p>・ミシェルAIとの連携でカウンセリング体験</p>
             </div>
             <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-xs text-slate-500 leading-relaxed">
               ログインできない場合は、ブラウザのシークレットモードや別ブラウザをお試しください。<br />
