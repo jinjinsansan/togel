@@ -29,6 +29,7 @@ const schema = z.object({
       })
     )
     .min(1),
+  lineUserId: z.string().optional(),
 });
 
 const ensureUserRecord = async (
@@ -327,6 +328,35 @@ export const POST = async (request: Request) => {
           }
         } catch (bgError) {
           console.error("Background notification error:", bgError);
+        }
+      })();
+    }
+
+    // LINE Bot経由の診断の場合、結果をLINEに通知
+    if (parsed.data.lineUserId) {
+      (async () => {
+        try {
+          const { updateLineUserDiagnosis } = await import("@/lib/line/db");
+          const { pushMessage } = await import("@/lib/line/client");
+          const { diagnosisCompleteMessage } = await import("@/lib/line/messages");
+
+          await updateLineUserDiagnosis({
+            lineUserId: parsed.data.lineUserId!,
+            gender: parsed.data.userGender,
+            togelType: diagnosisResult.personalityType.id,
+            diagnosisResult: diagnosisResult as unknown as Record<string, unknown>,
+            bigFiveScores: diagnosisResult.bigFiveScores as unknown as Record<string, number>,
+          });
+
+          await pushMessage(parsed.data.lineUserId!, [
+            diagnosisCompleteMessage(
+              diagnosisResult.personalityType.id,
+              diagnosisResult.personalityType.typeName,
+              diagnosisResult.personalityType.emoji,
+            ),
+          ]);
+        } catch (lineError) {
+          console.error("[LINE Notify] Failed to send diagnosis result:", lineError);
         }
       })();
     }

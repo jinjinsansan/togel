@@ -6,8 +6,8 @@ import { SiteHeader } from "./site-header";
 export const ConditionalHeader = () => {
   const pathname = usePathname();
   
-  // 管理者パネルではSiteHeaderを表示しない
-  if (pathname.startsWith("/admin")) {
+  // 管理者パネル・LIFFではSiteHeaderを表示しない
+  if (pathname.startsWith("/admin") || pathname.startsWith("/liff")) {
     return null;
   }
   

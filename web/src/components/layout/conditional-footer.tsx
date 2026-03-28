@@ -11,6 +11,7 @@ const EXCLUDE_FOOTER_PATHS = [
   "/admin",
   "/result",
   "/result/mismatch",
+  "/liff",
 ];
 
 const FOOTER_ALLOWED_PATHS = ["/"];
