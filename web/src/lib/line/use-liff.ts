@@ -24,6 +24,30 @@ type LiffState = {
 
 let liffModule: LiffModule | null = null;
 
+function loadLiffSdk(): Promise<LiffModule> {
+  return new Promise((resolve, reject) => {
+    // Already loaded via CDN
+    const win = window as unknown as Record<string, unknown>;
+    if (win.liff) {
+      resolve(win.liff as LiffModule);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
+    script.charset = "utf-8";
+    script.onload = () => {
+      if (win.liff) {
+        resolve(win.liff as LiffModule);
+      } else {
+        reject(new Error("LIFF SDK failed to load"));
+      }
+    };
+    script.onerror = () => reject(new Error("Failed to load LIFF SDK script"));
+    document.head.appendChild(script);
+  });
+}
+
 export function useLiff(): LiffState {
   const [isReady, setIsReady] = useState(false);
   const [isInClient, setIsInClient] = useState(false);
@@ -42,12 +66,10 @@ export function useLiff(): LiffState {
     const initLiff = async () => {
       try {
         if (!liffModule) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const liff = await import("@line/liff" as any) as any;
-          liffModule = (liff.default ?? liff) as LiffModule;
+          liffModule = await loadLiffSdk();
         }
 
-        const liff = liffModule!;
+        const liff = liffModule;
         await liff.init({ liffId });
         setIsInClient(liff.isInClient());
 
