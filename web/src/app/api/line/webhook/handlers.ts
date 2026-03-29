@@ -5,7 +5,7 @@ import {
   diagnosisTypeSelectMessage,
   questionMessage,
   analyzingMessage,
-  diagnosisResultMessage,
+  diagnosisResultMessages,
   alreadyDiagnosedMessage,
   helpMessage,
 } from "@/lib/line/messages";
@@ -21,7 +21,7 @@ import {
 } from "@/lib/line/db";
 import { getQuestionsByType } from "@/data/questions";
 import { generateDiagnosisResult } from "@/lib/matching/engine";
-import type { DiagnosisType } from "@/types/diagnosis";
+import type { DiagnosisType, BigFiveScores, PersonalityTypeDefinition } from "@/types/diagnosis";
 
 // --- Text Message Handler ---
 
@@ -36,7 +36,7 @@ export async function handleTextMessage(
   if (matchCommand(normalizedText, ["診断", "しんだん", "診断する", "start"])) {
     if (user?.togel_type) {
       await replyMessage(replyToken, [
-        alreadyDiagnosedMessage(user.togel_type, ""),
+        alreadyDiagnosedMessage(user.togel_type),
       ]);
     } else {
       await replyMessage(replyToken, [genderSelectMessage()]);
@@ -55,23 +55,10 @@ export async function handleTextMessage(
   if (matchCommand(normalizedText, ["結果", "けっか", "マイ結果", "result"])) {
     if (user?.togel_type && user.diagnosis_result) {
       const dr = user.diagnosis_result as Record<string, unknown>;
-      const pt = dr.personalityType as Record<string, unknown>;
-      const chars = pt?.characteristics as Record<string, unknown>;
-      const scores = user.big_five_scores ?? {};
+      const pt = dr.personalityType as PersonalityTypeDefinition;
+      const scores = (user.big_five_scores ?? {}) as unknown as BigFiveScores;
 
-      await replyMessage(replyToken, [
-        diagnosisResultMessage(
-          user.togel_type,
-          (pt?.typeName as string) ?? "",
-          (pt?.emoji as string) ?? "🔮",
-          (pt?.catchphrase as string) ?? "",
-          scores as Record<string, number>,
-          (chars?.strengths as string[]) ?? [],
-          (chars?.growthAreas as string[]) ?? [],
-          (chars?.communication as string) ?? "",
-          (chars?.relationships as string) ?? "",
-        ),
-      ]);
+      await replyMessage(replyToken, diagnosisResultMessages(scores, pt));
     } else {
       await replyMessage(replyToken, [
         { type: "text", text: "まだ診断が完了していません。" },
@@ -146,7 +133,7 @@ async function handleStartDiagnosis(userId: string, replyToken: string) {
   const user = await getOrCreateLineUser(userId);
   if (user?.togel_type) {
     await replyMessage(replyToken, [
-      alreadyDiagnosedMessage(user.togel_type, ""),
+      alreadyDiagnosedMessage(user.togel_type),
     ]);
     return;
   }
@@ -229,19 +216,8 @@ async function handleAnswer(
     });
 
     const { pushMessage } = await import("@/lib/line/client");
-    await pushMessage(userId, [
-      diagnosisResultMessage(
-        pt.id,
-        pt.typeName,
-        pt.emoji,
-        pt.catchphrase,
-        result.bigFiveScores as unknown as Record<string, number>,
-        pt.characteristics.strengths,
-        pt.characteristics.growthAreas,
-        pt.characteristics.communication,
-        pt.characteristics.relationships,
-      ),
-    ]);
+    const resultMsgs = diagnosisResultMessages(result.bigFiveScores, pt);
+    await pushMessage(userId, resultMsgs);
   } catch (err) {
     console.error("[LINE Diagnosis] Error generating result:", err);
     const { pushMessage } = await import("@/lib/line/client");

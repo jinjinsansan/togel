@@ -338,7 +338,7 @@ export const POST = async (request: Request) => {
         try {
           const { updateLineUserDiagnosis } = await import("@/lib/line/db");
           const { pushMessage } = await import("@/lib/line/client");
-          const { diagnosisResultMessage } = await import("@/lib/line/messages");
+          const { diagnosisResultMessages } = await import("@/lib/line/messages");
 
           await updateLineUserDiagnosis({
             lineUserId: parsed.data.lineUserId!,
@@ -348,20 +348,11 @@ export const POST = async (request: Request) => {
             bigFiveScores: diagnosisResult.bigFiveScores as unknown as Record<string, number>,
           });
 
-          const pt = diagnosisResult.personalityType;
-          await pushMessage(parsed.data.lineUserId!, [
-            diagnosisResultMessage(
-              pt.id,
-              pt.typeName,
-              pt.emoji,
-              pt.catchphrase,
-              diagnosisResult.bigFiveScores as unknown as Record<string, number>,
-              pt.characteristics.strengths,
-              pt.characteristics.growthAreas,
-              pt.characteristics.communication,
-              pt.characteristics.relationships,
-            ),
-          ]);
+          const resultMsgs = diagnosisResultMessages(
+            diagnosisResult.bigFiveScores,
+            diagnosisResult.personalityType,
+          );
+          await pushMessage(parsed.data.lineUserId!, resultMsgs);
         } catch (lineError) {
           console.error("[LINE Notify] Failed to send diagnosis result:", lineError);
         }
