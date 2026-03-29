@@ -35,6 +35,12 @@ export async function getLineUser(lineUserId: string): Promise<LineUserRecord | 
   return data;
 }
 
+export async function getOrCreateLineUser(lineUserId: string): Promise<LineUserRecord | null> {
+  const existing = await getLineUser(lineUserId);
+  if (existing) return existing;
+  return upsertLineUser({ lineUserId });
+}
+
 export async function upsertLineUser(params: {
   lineUserId: string;
   displayName?: string;

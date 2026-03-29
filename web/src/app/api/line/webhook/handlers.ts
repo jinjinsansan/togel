@@ -10,6 +10,7 @@ import {
   helpMessage,
 } from "@/lib/line/messages";
 import {
+  getOrCreateLineUser,
   getLineUser,
   saveConversation,
   startDiagnosis,
@@ -30,7 +31,7 @@ export async function handleTextMessage(
   replyToken: string,
 ) {
   const normalizedText = text.trim().toLowerCase();
-  const user = await getLineUser(userId);
+  const user = await getOrCreateLineUser(userId);
 
   if (matchCommand(normalizedText, ["診断", "しんだん", "診断する", "start"])) {
     if (user?.togel_type) {
@@ -142,7 +143,7 @@ export async function handlePostback(
 // --- Postback sub-handlers ---
 
 async function handleStartDiagnosis(userId: string, replyToken: string) {
-  const user = await getLineUser(userId);
+  const user = await getOrCreateLineUser(userId);
   if (user?.togel_type) {
     await replyMessage(replyToken, [
       alreadyDiagnosedMessage(user.togel_type, ""),
@@ -154,12 +155,14 @@ async function handleStartDiagnosis(userId: string, replyToken: string) {
 
 async function handleSelectGender(userId: string, gender: "male" | "female", replyToken: string) {
   if (!gender) return;
+  await getOrCreateLineUser(userId);
   await setGender(userId, gender);
   await replyMessage(replyToken, [diagnosisTypeSelectMessage()]);
 }
 
 async function handleSelectType(userId: string, type: "light" | "full", replyToken: string) {
   if (!type) return;
+  await getOrCreateLineUser(userId);
   await startDiagnosis(userId, type);
 
   const questions = getQuestionsByType(type);
