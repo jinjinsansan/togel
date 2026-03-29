@@ -13,6 +13,9 @@ export type LineUserRecord = {
   sns_accounts: Record<string, string>;
   sns_public: boolean;
   user_id: string | null;
+  diagnosis_type: string | null;
+  diagnosis_answers: Array<{ questionId: string; value: number }>;
+  current_question_index: number;
   created_at: string;
   updated_at: string;
 };
@@ -95,6 +98,69 @@ export async function updateConversationState(
   if (error) {
     console.error("[LINE DB] updateConversationState error:", error);
   }
+}
+
+export async function startDiagnosis(
+  lineUserId: string,
+  diagnosisType: string,
+): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("line_users")
+    .update({
+      conversation_state: "diagnosing",
+      diagnosis_type: diagnosisType,
+      diagnosis_answers: [],
+      current_question_index: 0,
+    })
+    .eq("line_user_id", lineUserId);
+
+  if (error) console.error("[LINE DB] startDiagnosis error:", error);
+}
+
+export async function saveAnswer(
+  lineUserId: string,
+  questionId: string,
+  value: number,
+  nextIndex: number,
+): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+  const user = await getLineUser(lineUserId);
+  if (!user) return;
+
+  const answers = [...(user.diagnosis_answers || [])];
+  const existing = answers.findIndex((a) => a.questionId === questionId);
+  if (existing >= 0) {
+    answers[existing] = { questionId, value };
+  } else {
+    answers.push({ questionId, value });
+  }
+
+  const { error } = await supabase
+    .from("line_users")
+    .update({
+      diagnosis_answers: answers,
+      current_question_index: nextIndex,
+    })
+    .eq("line_user_id", lineUserId);
+
+  if (error) console.error("[LINE DB] saveAnswer error:", error);
+}
+
+export async function setGender(
+  lineUserId: string,
+  gender: "male" | "female",
+): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("line_users")
+    .update({
+      gender,
+      conversation_state: "selecting_type",
+    })
+    .eq("line_user_id", lineUserId);
+
+  if (error) console.error("[LINE DB] setGender error:", error);
 }
 
 export async function saveConversation(params: {

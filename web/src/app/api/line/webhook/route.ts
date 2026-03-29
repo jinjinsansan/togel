@@ -8,13 +8,9 @@ import {
   type LineEvent,
   type LineWebhookBody,
 } from "@/lib/line/client";
-import {
-  welcomeMessage,
-  alreadyDiagnosedMessage,
-  helpMessage,
-} from "@/lib/line/messages";
-import { getLineUser, upsertLineUser } from "@/lib/line/db";
-import { handleTextMessage } from "./handlers";
+import { welcomeMessage } from "@/lib/line/messages";
+import { upsertLineUser } from "@/lib/line/db";
+import { handleTextMessage, handlePostback } from "./handlers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,7 +24,6 @@ export async function POST(req: NextRequest) {
 
     const parsed: LineWebhookBody = JSON.parse(body);
 
-    // Process events asynchronously (LINE expects 200 quickly)
     for (const event of parsed.events) {
       try {
         await processEvent(event);
@@ -81,30 +76,4 @@ async function handleFollow(userId: string, replyToken?: string) {
   }
 
   console.log("[LINE Webhook] New follower:", profile.displayName);
-}
-
-async function handlePostback(userId: string, data: string, replyToken: string) {
-  const params = new URLSearchParams(data);
-  const action = params.get("action");
-
-  switch (action) {
-    case "start_diagnosis": {
-      const user = await getLineUser(userId);
-      if (user?.togel_type) {
-        await replyMessage(replyToken, [
-          alreadyDiagnosedMessage(user.togel_type, ""),
-        ]);
-      } else {
-        await replyMessage(replyToken, [welcomeMessage()]);
-      }
-      break;
-    }
-
-    case "help":
-      await replyMessage(replyToken, [helpMessage()]);
-      break;
-
-    default:
-      console.log("[LINE Webhook] Unknown postback action:", action);
-  }
 }
