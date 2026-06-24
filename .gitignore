@@ -33,3 +33,7 @@ create-test-user*.js
 get-session-token.js
 create_test_user.sql
 fix_and_create_user.sql
+
+# redesign deliverable (not committed)
+/redesign_extract/
+/Togel*.zip

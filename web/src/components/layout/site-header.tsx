@@ -10,6 +10,7 @@ import { User } from "@supabase/supabase-js";
 
 import { LoginButton } from "@/components/auth/login-button";
 import { Button } from "@/components/ui/button";
+import { TogelMark } from "@/components/brand/togel-mark";
 import { MICHELLE_AI_ENABLED, MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
 
 const primaryNavItems = [
@@ -149,9 +150,8 @@ export const SiteHeader = () => {
                   
                   <div className="relative z-10 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#E91E63] to-[#C2185B] shadow-lg shadow-[#E91E63]/30">
-                        <span className="font-heading text-2xl font-bold text-white">T</span>
-                      </div>
+                      <TogelMark size={48} className="shadow-lg shadow-[#E91E63]/30 rounded-2xl" />
+
                       <div>
                         <h2 className="font-heading text-2xl font-bold text-white">Togel</h2>
                         <p className="text-xs text-white/50">24タイプ性格診断AI</p>
@@ -319,7 +319,8 @@ export const SiteHeader = () => {
     <>
       <header className="sticky top-0 z-[15000] bg-white backdrop-blur border-b border-[#E91E63]/10">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="font-heading text-xl font-semibold text-[#E91E63]" onClick={closeMenu}>
+          <Link href="/" className="flex items-center gap-2 font-heading text-xl font-semibold text-[#E91E63]" onClick={closeMenu}>
+            <TogelMark size={28} />
             Togel
           </Link>
           

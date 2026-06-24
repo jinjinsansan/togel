@@ -27,11 +27,13 @@ export const metadata: Metadata = {
     siteName: "Togel",
     locale: "ja_JP",
     type: "website",
+    images: [{ url: "/og.png", width: 1024, height: 1024, alt: "Togel" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Togel型AI性格診断によるマッチングサービス",
     description: "Togel型AI性格診断によるマッチングサービス。あなたの性格を分析し、相性の良い異性をご紹介します。",
+    images: ["/og.png"],
   },
 };
 

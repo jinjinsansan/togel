@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#E91E63" rx="20"/>
-  <text x="50" y="75" font-family="Arial, sans-serif" font-size="70" font-weight="bold" fill="white" text-anchor="middle">T</text>
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tgLogo" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff6fa5"/>
+      <stop offset="1" stop-color="#E91E63"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="38" height="38" rx="11" fill="#0b1f3a"/>
+  <path d="M9 13.5h13M15.5 13.5V27" fill="none" stroke="url(#tgLogo)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M25 20l6-5m-6 5l6 5" fill="none" stroke="url(#tgLogo)" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
