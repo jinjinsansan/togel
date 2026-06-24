@@ -156,30 +156,21 @@ const DiagnosisPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 md:py-16">
+    <div className="min-h-screen bg-[#fdeef4] py-8 md:py-14">
       <div className="container px-4 md:px-6">
         <div className="mx-auto max-w-2xl">
-          
+
           {/* Progress Header */}
-          <div className="mb-6 rounded-2xl border border-white bg-white/80 backdrop-blur-sm p-4 shadow-lg shadow-slate-200/50 md:mb-8 md:rounded-[2rem] md:border-2 md:p-6">
-            <div className="flex flex-col gap-2 text-xs mb-3 md:flex-row md:items-center md:justify-between md:text-sm md:mb-4">
-              <div className="flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                  diagnosisType === "light" 
-                    ? "bg-blue-50 text-blue-600 border-blue-100" 
-                    : "bg-pink-50 text-pink-600 border-pink-100"
-                }`}>
-                {diagnosisType === "light" ? "LIGHT MODE" : "STANDARD MODE"}
-                </span>
-                <span className="font-bold text-slate-400">
-                  Q.{currentIndex + 1} <span className="text-xs font-normal text-slate-300">/ {questions.length}</span>
-                </span>
-              </div>
-              <span className="text-[11px] font-bold text-slate-400 md:text-xs">{progress}% COMPLETE</span>
+          <div className="mb-7">
+            <div className="mb-2.5 flex items-center justify-between">
+              <span className="text-xs font-extrabold text-[#E91E63]">
+                Q{currentIndex + 1} / {questions.length}
+              </span>
+              <span className="text-xs font-bold text-[#6b7280]">{progress}%</span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 md:h-3">
-              <div 
-                className="h-full bg-gradient-to-r from-[#E91E63] to-pink-500 transition-all duration-500 ease-out"
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[#e6e9ef]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#ff7caa] to-[#E91E63] transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>

@@ -102,11 +102,11 @@ const TypeListPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12">
+    <div className="min-h-screen bg-[#fdeef4] py-12">
       <div className="container px-4 md:px-6">
         {/* ヘッダー */}
         <div className="mx-auto max-w-3xl text-center mb-12">
-          <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-2">Togel Types</p>
+          <p className="text-xs font-extrabold tracking-[0.3em] text-[#E91E63] mb-2">24 TYPES</p>
           <h1 className="font-heading text-3xl md:text-5xl font-black text-slate-900 mb-4">
             24の<span className="text-[#E91E63]">本性</span>図鑑
           </h1>

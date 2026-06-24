@@ -495,10 +495,10 @@ const ResultPage = () => {
   }));
 
   return (
-    <div className="w-full md:container py-6 md:py-10">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen w-full bg-[#fdeef4] py-6 md:py-10">
+      <div className="mx-auto max-w-5xl px-0 md:px-6">
         <div className="text-center px-4 md:px-0">
-          <p className="text-sm font-semibold text-primary">STEP 2</p>
+          <p className="text-xs font-extrabold tracking-[0.2em] text-primary">STEP 2 · RESULT</p>
           <h1 className="mt-2 font-heading text-3xl md:text-4xl">マッチング結果</h1>
           <p className="mt-3 text-sm md:text-base text-muted-foreground">
             あなたの回答データから相性の良い5名を抽出しました

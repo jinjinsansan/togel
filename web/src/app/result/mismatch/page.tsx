@@ -72,7 +72,7 @@ const MismatchResultPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-[linear-gradient(170deg,#15181f,#0d0f14_60%,#1a0e12)]">
       <div className="w-full md:container py-8 md:py-10">
         <div className="mx-auto max-w-5xl">
           {/* ヘッダー */}

@@ -542,7 +542,7 @@ export default function MyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 md:py-20 overflow-x-hidden">
+    <div className="min-h-screen bg-[#fdeef4] py-12 md:py-20 overflow-x-hidden">
       <div className="container px-4 md:px-6 max-w-4xl">
         
         {/* Header Section */}
