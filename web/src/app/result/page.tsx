@@ -51,7 +51,7 @@ const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; 
               alt={result.profile.nickname}
               fill
               sizes="96px"
-              className={`rounded-full border-4 ${isFeatured ? "border-yellow-400" : "border-primary/20"} object-cover`}
+              className={`rounded-full border-4 ${isFeatured ? "border-yellow-400" : "border-[#FFD1DC]"} object-cover`}
               onError={(e: SyntheticEvent<HTMLImageElement>) => {
                 const target = e.currentTarget;
                 if (!target.src.includes("dicebear.com")) {
@@ -92,8 +92,8 @@ const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; 
       </div>
 
       {/* キャッチフレーズ */}
-      <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20">
-        <p className="text-base font-semibold text-foreground text-center">
+      <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-[#ffe9f0] to-[#eef4ff] border border-primary/20">
+        <p className="text-base font-extrabold text-foreground text-center">
           {result.catchphrase}
         </p>
       </div>

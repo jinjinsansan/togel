@@ -128,7 +128,7 @@ const MismatchResultPage = () => {
             {results.map((result) => (
               <div
                 key={result.profile.id}
-                className="rounded-none md:rounded-3xl border-0 md:border-2 md:border-red-900/50 bg-gradient-to-br from-gray-800/80 via-gray-900/80 to-gray-900 px-4 py-6 md:px-6 md:py-6 shadow-none md:shadow-2xl hover:shadow-red-900/20 transition-shadow"
+                className="rounded-none md:rounded-3xl border-0 md:border-2 md:border-red-900/40 bg-[linear-gradient(135deg,rgba(40,20,24,0.7),rgba(13,15,20,0.9))] px-4 py-6 md:px-6 md:py-6 shadow-none md:shadow-2xl hover:shadow-red-900/20 transition-shadow"
               >
                 {/* ヘッダー */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-4 md:border-b md:border-gray-700">

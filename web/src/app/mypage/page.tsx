@@ -545,35 +545,31 @@ export default function MyPage() {
     <div className="min-h-screen bg-[#fdeef4] py-12 md:py-20 overflow-x-hidden">
       <div className="container px-4 md:px-6 max-w-4xl">
         
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row items-center gap-6 mb-12">
-          <div className="relative h-24 w-24 md:h-32 md:w-32 shrink-0">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E91E63] to-purple-600 opacity-20 blur-lg"></div>
-            {user?.user_metadata?.avatar_url ? (
-              <div className="relative h-full w-full">
+        {/* Header Section - グラデーションバナー */}
+        <div className="relative mb-10 overflow-hidden rounded-[20px] bg-[linear-gradient(135deg,#ff5e93,#E91E63_55%,#a86bff)] p-6 text-white shadow-[0_18px_40px_-20px_rgba(233,30,99,0.6)]">
+          <div className="pointer-events-none absolute -right-3 -top-3 text-[90px] opacity-20">🐯</div>
+          <div className="relative flex items-center gap-4">
+            <div className="relative h-16 w-16 shrink-0 md:h-20 md:w-20">
+              {user?.user_metadata?.avatar_url ? (
                 <Image
                   src={user.user_metadata.avatar_url}
                   alt={user.user_metadata.name || "User"}
                   fill
-                  sizes="128px"
-                  className="rounded-full border-4 border-white object-cover shadow-lg"
+                  sizes="80px"
+                  className="rounded-full border-[3px] border-white/60 object-cover"
                 />
-              </div>
-            ) : (
-              <div className="relative h-full w-full rounded-full border-4 border-white bg-slate-200 flex items-center justify-center shadow-lg">
-                <span className="text-4xl">👤</span>
-              </div>
-            )}
-          </div>
-          <div className="text-center md:text-left">
-            <h1 className="font-heading text-3xl font-black text-slate-900 mb-2">
-              {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "ゲスト"}
-            </h1>
-            <p className="text-slate-500 text-sm font-medium">
-              {user?.email}
-            </p>
-            <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-2">
-              <span className="inline-flex items-center rounded-full bg-[#E91E63]/10 px-3 py-1 text-xs font-bold text-[#E91E63]">
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-white/60 bg-white/20 text-3xl">
+                  👤
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-heading text-xl font-black md:text-2xl">
+                {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "ゲスト"}
+              </h1>
+              <p className="truncate text-xs text-white/85">{user?.email}</p>
+              <span className="mt-2 inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold">
                 無料会員
               </span>
             </div>
