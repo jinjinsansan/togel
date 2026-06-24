@@ -7,11 +7,12 @@ import "@fontsource/noto-sans-jp/700.css";
 import { ConditionalHeader } from "@/components/layout/conditional-header";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
 import { LineExternalBrowserRedirect } from "@/components/line-external-browser-redirect";
+import { AgeGate } from "@/components/age-gate";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // ピンチズームを許可（WCAG 1.4.4 アクセシビリティ対応のため maximumScale 制限を撤廃）
   viewportFit: "cover",
 };
 
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="ja">
       <body className="min-h-screen bg-background text-foreground antialiased">
         <LineExternalBrowserRedirect />
+        <AgeGate />
         <ConditionalHeader />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
         <ConditionalFooter />

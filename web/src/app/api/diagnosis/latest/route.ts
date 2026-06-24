@@ -7,6 +7,7 @@ import { generateDiagnosisResult, generateMatchingResults, generateMismatchingRe
 import { Answer } from "@/types/diagnosis";
 import { estimateProfileScores } from "@/lib/personality";
 import { getMatchingCacheExpiry, isMatchingCacheValid } from "@/lib/matching/cache";
+import { verifyInviteCode } from "@/lib/invite/code";
 
 export const GET = async (request: Request) => {
   const cookieStore = cookies();
@@ -187,11 +188,10 @@ export const GET = async (request: Request) => {
     
     if (inputData.userGender === "female") {
       const refCode = cookieStore.get("ref_code")?.value;
-      if (refCode) {
+      // HMAC署名付き招待コードを検証（偽造・任意ユーザー指定を防止）
+      const referrerId = verifyInviteCode(refCode);
+      if (referrerId) {
         try {
-          // ref_codeは暗号化(Base64)されたID
-          const referrerId = atob(refCode);
-          
           // 招待者の情報を取得
           const { data: referrerProfile } = await supabaseAdmin
             .from("profiles")

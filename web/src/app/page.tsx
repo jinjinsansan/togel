@@ -23,6 +23,7 @@ export default function Home() {
   ];
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -32,6 +33,22 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [videos.length]);
+
+  // OAuthコールバックからのエラーをユーザーに表示する（従来は無言で失敗していた）
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (!err) return;
+    const messages: Record<string, string> = {
+      oauth_error: "ログインに失敗しました。もう一度お試しください。",
+      session_error: "セッションの作成に失敗しました。もう一度お試しください。",
+      no_code: "認証情報が取得できませんでした。もう一度お試しください。",
+    };
+    setAuthError(messages[err] ?? "ログイン中にエラーが発生しました。もう一度お試しください。");
+    // URLからエラーパラメータを除去
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -69,6 +86,24 @@ export default function Home() {
 
   return (
     <>
+      {authError && (
+        <div className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
+          <div
+            role="alert"
+            className="flex w-full max-w-md items-start gap-2 rounded-lg bg-red-600 px-4 py-3 text-sm text-white shadow-lg"
+          >
+            <span className="flex-1">{authError}</span>
+            <button
+              type="button"
+              onClick={() => setAuthError(null)}
+              aria-label="閉じる"
+              className="shrink-0 font-bold"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFD1DC]">
         {/* 1. Video Background (Carousel) */}
         {videos.map((src, index) => (

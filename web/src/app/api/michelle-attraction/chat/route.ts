@@ -21,6 +21,7 @@ import {
 import { formatSectionLabel } from "@/lib/michelle-attraction/sections";
 import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
@@ -186,6 +187,15 @@ export async function POST(request: Request) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // レート制限: 1ユーザーあたり 60秒で20リクエストまで（OpenAIコスト濫用対策）
+  const { allowed } = await enforceRateLimit("michelle-attraction-chat", user.id, 20, 60);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "リクエストが多すぎます。しばらく待ってから再度お試しください。" },
+      { status: 429 },
+    );
   }
 
   try {
@@ -476,8 +486,8 @@ ${message}`
     });
   } catch (error) {
     console.error("Michelle attraction chat error", error);
-    const message = error instanceof Error ? error.message : "Internal Server Error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // 内部エラーの詳細はクライアントに返さない
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 

@@ -510,17 +510,27 @@ export default function MyPage() {
   const certificateDateDisplay = formatRegistrationDate(registeredAt);
   const memberSince = certificateDateDisplay;
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     if (typeof window === "undefined" || !user) return;
-    // シンプルなBase64エンコードでIDを隠蔽 (完全な暗号化ではないが、パッと見でIDとは分からない)
-    // 復号時は atob() を使用
-    const encodedId = btoa(user.id);
-    const referralUrl = new URL(window.location.origin);
-    referralUrl.searchParams.set("c", encodedId);
-    referralUrl.searchParams.set("openExternalBrowser", "1");
-    navigator.clipboard.writeText(referralUrl.toString());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // サーバーで HMAC 署名された招待コードを取得（偽造不可・自分専用）
+    try {
+      const res = await fetch("/api/invite/generate");
+      if (!res.ok) throw new Error("failed to generate invite code");
+      const { code, enabled } = await res.json();
+      if (!enabled || !code) {
+        alert("招待リンク機能は現在利用できません。");
+        return;
+      }
+      const referralUrl = new URL(window.location.origin);
+      referralUrl.searchParams.set("c", code);
+      referralUrl.searchParams.set("openExternalBrowser", "1");
+      await navigator.clipboard.writeText(referralUrl.toString());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error("Failed to copy invite link", e);
+      alert("招待リンクの生成に失敗しました。");
+    }
   };
 
   if (loading) {

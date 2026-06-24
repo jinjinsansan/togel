@@ -34,28 +34,31 @@ export async function POST(request: Request) {
 
   const supabaseAdmin = createSupabaseAdminClient();
 
-  let insertLog: { data: { id: string } | null } | null = null;
-  try {
-    insertLog = await supabaseAdmin
-      .from("point_webhook_events")
-      .insert({
-        event_id: body.id,
-        event_type: body.event_type,
-        entity_type: body.entity_type,
-        entity_id: body.entity_id,
-        payload: body,
-      })
-      .select("id")
-      .single();
-  } catch (error) {
-    const message = (error as Error).message ?? "";
-    if (!message.includes("duplicate")) {
-      console.error("Failed to log webhook", error);
+  // イベントレベルの冪等性: event_id は unique。挿入できなければ再送なので処理を打ち切る。
+  const insertLog = await supabaseAdmin
+    .from("point_webhook_events")
+    .insert({
+      event_id: body.id,
+      event_type: body.event_type,
+      entity_type: body.entity_type,
+      entity_id: body.entity_id,
+      payload: body,
+    })
+    .select("id")
+    .single();
+
+  if (insertLog.error) {
+    // 23505 = unique_violation（同一イベントを処理済み）
+    if (insertLog.error.code === "23505") {
+      return NextResponse.json({ ok: true, duplicate: true });
     }
+    console.error("Failed to log webhook", insertLog.error);
+    // ログに残せない場合は二重付与を避けるため処理しない
+    return NextResponse.json({ error: "Logging failed" }, { status: 500 });
   }
 
   if (body.entity_type !== "PAYMENT_ORDER") {
-    return NextResponse.json({ ok: true, logged: Boolean(insertLog?.data) });
+    return NextResponse.json({ ok: true, logged: true });
   }
 
   try {
@@ -114,7 +117,7 @@ export async function POST(request: Request) {
     const hasRefundDebit = existingTransactions?.some((tx) => tx.reason === "refund" && tx.transaction_type === "debit");
 
     if (mappedStatus === "closed" && !hasPurchaseCredit) {
-      await supabaseAdmin.rpc("apply_point_transaction", {
+      const { error: creditError } = await supabaseAdmin.rpc("apply_point_transaction", {
         p_user_id: orderRow.user_id,
         p_points: orderRow.points,
         p_type: "credit",
@@ -122,10 +125,14 @@ export async function POST(request: Request) {
         p_order_id: orderRow.id,
         p_metadata: { source: "one.lat", payment_order_id: paymentOrder.id },
       });
+      // 23505: 部分ユニークインデックスにより並行リクエストの二重付与を阻止（=既に付与済み）
+      if (creditError && creditError.code !== "23505") {
+        throw creditError;
+      }
     }
 
     if (mappedStatus === "refunded" && !hasRefundDebit) {
-      await supabaseAdmin.rpc("apply_point_transaction", {
+      const { error: refundError } = await supabaseAdmin.rpc("apply_point_transaction", {
         p_user_id: orderRow.user_id,
         p_points: orderRow.points,
         p_type: "debit",
@@ -133,6 +140,9 @@ export async function POST(request: Request) {
         p_order_id: orderRow.id,
         p_metadata: { source: "one.lat", payment_order_id: paymentOrder.id },
       });
+      if (refundError && refundError.code !== "23505") {
+        throw refundError;
+      }
     }
 
     return NextResponse.json({ ok: true });

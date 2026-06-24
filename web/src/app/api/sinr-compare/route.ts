@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getMichelleOpenAIClient } from "@/lib/michelle/openai";
+import { denyUnlessInternal } from "@/lib/auth/internal";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,9 @@ async function embedText(text: string): Promise<number[]> {
 }
 
 export async function POST(request: Request) {
+  const denied = await denyUnlessInternal(request);
+  if (denied) return NextResponse.json({ error: denied }, { status: 401 });
+
   try {
     const { question } = await request.json();
     

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
 import { getMichelleAssistantId, getMichelleOpenAIClient } from "@/lib/michelle/openai";
+import { denyUnlessInternal } from "@/lib/auth/internal";
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -24,7 +25,10 @@ type BaselineResult = {
   answer: string;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
+  const denied = await denyUnlessInternal(req);
+  if (denied) return NextResponse.json({ error: denied }, { status: 401 });
+
   const results: BaselineResult[] = [];
 
   try {

@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { generateDiagnosisResult } from "@/lib/matching/engine";
 import { Answer, BigFiveScores } from "@/types/diagnosis";
 import { personalityTypes } from "@/lib/personality";
@@ -11,6 +13,13 @@ export const GET = async (
   { params }: { params: { id: string } }
 ) => {
   const supabaseAdmin = createSupabaseAdminClient();
+
+  // ログインユーザーを特定（本人なら非公開でも閲覧可）
+  const cookieStore = cookies();
+  const supabaseAuth = createSupabaseRouteClient(cookieStore);
+  const {
+    data: { user },
+  } = await supabaseAuth.auth.getUser();
 
   try {
     // プロフィールの公開設定を確認
@@ -24,9 +33,21 @@ export const GET = async (
       return NextResponse.json({ message: "Profile not found" }, { status: 404 });
     }
 
-    // プロフィールが非公開の場合はエラー（本人確認は省略、フロントで制御）
-    // 注: is_publicチェックはフロント側で行うので、ここではデータを返す
-    // （プロフィールページで既にアクセス制御済み）
+    // 非公開プロフィールは本人のみ閲覧可。サーバー側で強制する。
+    if (profile.is_public === false) {
+      let isOwner = false;
+      if (user) {
+        const { data: ownRow } = await supabaseAdmin
+          .from("users")
+          .select("id")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+        isOwner = ownRow?.id === params.id || user.id === params.id;
+      }
+      if (!isOwner) {
+        return NextResponse.json({ message: "This profile is private" }, { status: 403 });
+      }
+    }
 
     // 最新の診断結果を取得
     const { data: diagnosisData, error } = await supabaseAdmin

@@ -4,6 +4,7 @@ import path from "node:path";
 import { getMichelleOpenAIClient } from "@/lib/michelle/openai";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { chunkTextSinr, getChunkStats } from "@/lib/michelle/chunk-sinr";
+import { denyUnlessInternal } from "@/lib/auth/internal";
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5分
@@ -136,6 +137,9 @@ async function processFile(filename: string): Promise<ProcessResult> {
 }
 
 export async function POST(request: Request) {
+  const denied = await denyUnlessInternal(request);
+  if (denied) return NextResponse.json({ error: denied }, { status: 401 });
+
   try {
     const { startIndex = 0, batchSize = 10 } = await request.json().catch(() => ({}));
 

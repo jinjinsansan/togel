@@ -9,6 +9,7 @@ import path from "node:path";
 import { getMichelleOpenAIClient } from "@/lib/michelle/openai";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { chunkTextSinr, getChunkStats } from "@/lib/michelle/chunk-sinr";
+import { denyUnlessInternal } from "@/lib/auth/internal";
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -148,7 +149,15 @@ async function processFile(
   };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const denied = await denyUnlessInternal(req);
+  if (denied) {
+    return new Response(JSON.stringify({ error: denied }), {
+      status: 401,
+      headers: { "content-type": "application/json" },
+    });
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({

@@ -165,31 +165,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Step 4: Mismatch (Warning) */}
-      <section className="relative py-24 md:py-32 bg-red-950/20 border-y border-red-900/20">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-red-900/30 px-6 py-2 text-sm font-bold text-red-500 border border-red-900/50">
-              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-              WARNING FEATURE
-            </div>
-            <h2 className="text-4xl font-black md:text-7xl">
-              <span className="text-red-600">地獄</span>を<br />
-              回避せよ。
-            </h2>
-            <p className="text-xl text-red-200/80 leading-relaxed">
-              このサイトの最大の特徴は「ミスマッチランキング」。<br />
-              あなたと絶対に合わない、付き合うと不幸になる相手も教えます。<br />
-              失敗しない恋愛のために、これも必ずチェックしてください。
-            </p>
-            <div className="pt-8">
-              <div className="text-6xl md:text-8xl animate-bounce">💀</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="relative py-32 text-center overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-pink-900/40 via-black to-black"></div>

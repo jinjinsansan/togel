@@ -113,14 +113,17 @@ export async function handlePostback(
       await handleSelectType(userId, params.get("type") as "light" | "full", replyToken);
       break;
 
-    case "answer":
-      await handleAnswer(
-        userId,
-        params.get("qid")!,
-        parseInt(params.get("value")!, 10),
-        replyToken,
-      );
+    case "answer": {
+      const qid = params.get("qid");
+      const rawValue = params.get("value");
+      const value = rawValue !== null ? parseInt(rawValue, 10) : NaN;
+      if (!qid || Number.isNaN(value)) {
+        console.warn("[LINE Webhook] Invalid answer postback:", data);
+        break;
+      }
+      await handleAnswer(userId, qid, value, replyToken);
       break;
+    }
 
     default:
       console.log("[LINE Webhook] Unknown postback action:", action);
@@ -180,6 +183,16 @@ async function handleAnswer(
   const questions = getQuestionsByType(diagnosisType);
   const currentIndex = user.current_question_index ?? 0;
   const nextIndex = currentIndex + 1;
+
+  // 冪等性ガード: 現在の質問に対する回答のみ受け付ける。
+  // LINEのWebhook再送や古いボタンの再タップによる二重進行・回答重複を防ぐ。
+  const expectedQuestion = questions[currentIndex];
+  if (!expectedQuestion || expectedQuestion.id !== questionId) {
+    console.warn(
+      `[LINE Diagnosis] Stale/duplicate answer ignored (expected ${expectedQuestion?.id}, got ${questionId})`,
+    );
+    return;
+  }
 
   await saveAnswer(userId, questionId, value, nextIndex);
 

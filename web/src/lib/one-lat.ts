@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "node:crypto";
+
 type OneLatConfig = {
   apiKey: string;
   apiSecret: string;
@@ -123,8 +125,15 @@ export const getPaymentOrder = async (paymentOrderId: string) =>
 
 export const verifyWebhookSecret = (token?: string | null) => {
   const { webhookSecret } = getOneLatConfig();
+  // フェイルクローズ: シークレット未設定なら全て拒否（旧実装は true を返していた）
   if (!webhookSecret) {
-    return true;
+    console.error("[One.lat] ONE_LAT_WEBHOOK_SECRET is not configured; rejecting webhook");
+    return false;
   }
-  return token === webhookSecret;
+  if (!token) return false;
+  // 定数時間比較
+  const a = Buffer.from(token, "utf8");
+  const b = Buffer.from(webhookSecret, "utf8");
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
 };

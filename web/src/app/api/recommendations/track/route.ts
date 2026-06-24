@@ -4,6 +4,7 @@ import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const ALLOWED_SOURCES = new Set(["result_page", "mypage"]);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function POST(request: Request) {
   let payload: { recommendationId?: string; source?: string };
@@ -13,7 +14,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  if (!payload.recommendationId || !ALLOWED_SOURCES.has(payload.source ?? "")) {
+  if (
+    !payload.recommendationId ||
+    !UUID_RE.test(payload.recommendationId) ||
+    !ALLOWED_SOURCES.has(payload.source ?? "")
+  ) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 

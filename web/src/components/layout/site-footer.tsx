@@ -31,6 +31,7 @@ const footerLinks = [
       { label: "FAQ", href: "/about" },
       { label: "利用規約", href: "/terms" },
       { label: "プライバシー", href: "/privacy" },
+      { label: "特定商取引法に基づく表記", href: "/tokushoho" },
     ],
   },
 ];

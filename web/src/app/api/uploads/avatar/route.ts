@@ -69,11 +69,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
   }
 
+  if (!Number.isFinite(fileSize) || fileSize <= 0) {
+    return NextResponse.json({ error: "Invalid file size" }, { status: 400 });
+  }
+
   if (fileSize > MAX_FILE_SIZE) {
     return NextResponse.json({ error: "File is too large" }, { status: 413 });
   }
 
-  const safeExtension = fileName.split(".").pop()?.toLowerCase() || "jpg";
+  const rawExt = fileName.split(".").pop()?.toLowerCase() ?? "";
+  const safeExtension = /^(jpg|jpeg|png|webp|gif)$/.test(rawExt) ? rawExt : "jpg";
   const objectKey = `avatars/${user.id}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
 
   const bucketName = getEnv("R2_BUCKET_NAME");
@@ -82,6 +87,8 @@ export async function POST(request: Request) {
     Bucket: bucketName,
     Key: objectKey,
     ContentType: fileType,
+    // 署名にバイト長を含めることで、宣言と異なるサイズのアップロードを拒否する
+    ContentLength: fileSize,
     CacheControl: "public, max-age=31536000, immutable",
   });
 

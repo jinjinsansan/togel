@@ -39,8 +39,15 @@ export const determinePersonalityType = (scores: BigFiveScores): PersonalityType
   if (scores.neuroticism <= 2) low.push("N");
 
   if (high.includes("E") && high.includes("O")) {
-    if (high.includes("A")) return getPersonalityTypeById("social-innovator");
+    if (high.includes("A")) {
+      // 外向×開放×協調 に加えて計画性も高ければ「外交官」タイプ
+      return high.includes("C")
+        ? getPersonalityTypeById("relational-ambassador")
+        : getPersonalityTypeById("social-innovator");
+    }
     if (high.includes("C")) return getPersonalityTypeById("visionary-executor");
+    // 外向×開放×自由奔放（計画性が低い）＝エンタメ創造タイプ
+    if (low.includes("C")) return getPersonalityTypeById("entertaining-creator");
     if (low.includes("N")) return getPersonalityTypeById("exploratory-connector");
     if (high.includes("N")) return getPersonalityTypeById("charismatic-enthusiast");
     return getPersonalityTypeById("creative-leader");

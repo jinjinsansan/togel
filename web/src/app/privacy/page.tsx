@@ -35,6 +35,11 @@ export default function PrivacyPage() {
       body:
         "本ポリシーの内容を変更する場合は、当社ウェブサイト上で告知します。重要な変更を行う際は、合理的な方法で個別に通知する場合があります。改定後もサービスを利用された場合、変更に同意したものとみなします。",
     },
+    {
+      title: "8. 個人情報取扱事業者・お問い合わせ窓口",
+      body:
+        "個人情報取扱事業者：【運営者名（会社名）を記載】／所在地：【所在地を記載】／個人情報保護管理者：【担当者名を記載】。個人情報の取扱いに関するお問い合わせ・開示等のご請求は、support@to-gel.com までご連絡ください。",
+    },
   ];
 
   return (
@@ -43,7 +48,7 @@ export default function PrivacyPage() {
         <header className="text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#38bdf8]">Privacy Policy</p>
           <h1 className="mt-3 text-3xl font-bold text-[#0f2f4d]">プライバシーポリシー</h1>
-          <p className="mt-2 text-sm text-[#4a6076]">最終更新日: {new Date().toLocaleDateString("ja-JP")}</p>
+          <p className="mt-2 text-sm text-[#4a6076]">最終更新日: 2026年6月24日</p>
         </header>
 
         <section className="mt-10 space-y-8 rounded-3xl bg-white/95 p-8 shadow-lg shadow-[#0f2f4d]/5">

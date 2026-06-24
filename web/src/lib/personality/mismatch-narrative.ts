@@ -323,7 +323,14 @@ export function generateMismatchCatchphrase(
     catchphrases.push("エネルギーレベルが異次元。会話が成立しない");
   }
 
-  return catchphrases[Math.floor(Math.random() * catchphrases.length)];
+  // スコアから決定的に選択（同じペアなら常に同じ＝再現性を担保）
+  const seed = `${profileScores.extraversion}${profileScores.openness}${profileScores.agreeableness}${mismatchScore}`;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return catchphrases[Math.abs(hash) % catchphrases.length];
 }
 
 // 絶対にやってはいけないこと

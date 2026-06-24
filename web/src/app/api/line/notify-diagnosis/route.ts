@@ -4,9 +4,15 @@ import type { NextRequest } from "next/server";
 import { pushMessage } from "@/lib/line/client";
 import { diagnosisResultMessages } from "@/lib/line/messages";
 import { updateLineUserDiagnosis } from "@/lib/line/db";
+import { denyUnlessInternal } from "@/lib/auth/internal";
 import type { BigFiveScores, PersonalityTypeDefinition } from "@/types/diagnosis";
 
 export async function POST(req: NextRequest) {
+  const denied = await denyUnlessInternal(req);
+  if (denied) {
+    return NextResponse.json({ error: denied }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { lineUserId, gender, togelType, diagnosisResult, bigFiveScores } = body;

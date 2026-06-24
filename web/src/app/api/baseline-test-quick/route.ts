@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { retrieveKnowledgeMatches } from "@/lib/michelle/rag";
+import { denyUnlessInternal } from "@/lib/auth/internal";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,10 @@ type QuickResult = {
   }>;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
+  const denied = await denyUnlessInternal(req);
+  if (denied) return NextResponse.json({ error: denied }, { status: 401 });
+
   const results: QuickResult[] = [];
 
   try {

@@ -861,13 +861,23 @@ function generateCatchphrase(
     catchphrases.push("思いやりを大切にし合える優しい関係");
   }
 
-  // ランダムに選択（毎回違う印象）
+  // プロフィールIDで決定的に選択（同じ診断なら常に同じ＝キャッシュと一致）
   if (catchphrases.length > 0) {
-    const index = Math.floor(Math.random() * catchphrases.length);
-    return catchphrases[index];
+    return catchphrases[seededIndex(profile.id + "catch", catchphrases.length)];
   }
-  
+
   return `${profile.values}という価値観でつながる相性`;
+}
+
+// 文字列シードから決定的なインデックスを返す（Math.random の非決定性を排除）
+function seededIndex(seed: string, length: number): number {
+  if (length <= 0) return 0;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash) % length;
 }
 
 function generateDateIdea(
@@ -934,7 +944,7 @@ function generateDateIdea(
     }
   }
 
-  return ideas[Math.floor(Math.random() * ideas.length)];
+  return ideas[seededIndex(profile.id + "date", ideas.length)];
 }
 
 function generateCommonalities(

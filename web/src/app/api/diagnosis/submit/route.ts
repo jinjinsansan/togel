@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateMatchingResults, generateMismatchingResults, generateDiagnosisResult, generateSingleMatchingResult } from "@/lib/matching/engine";
 import { getMatchingCacheExpiry } from "@/lib/matching/cache";
 import { getTogelLabel } from "@/lib/personality";
+import { getQuestionsByType } from "@/data/questions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
@@ -154,6 +155,16 @@ export const POST = async (request: Request) => {
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ message: "invalid payload", issues: parsed.error.issues }, { status: 400 });
+  }
+
+  // 回答数が診断タイプの設問数と一致することをサーバー側で検証する。
+  // （回答1件だけでも診断が成立してしまう問題を防ぐ）
+  const expectedCount = getQuestionsByType(parsed.data.diagnosisType).length;
+  if (parsed.data.answers.length < expectedCount) {
+    return NextResponse.json(
+      { message: "診断の回答が不足しています。すべての質問に回答してください。" },
+      { status: 400 },
+    );
   }
 
   // ログインユーザーの取得
