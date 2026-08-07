@@ -1,7 +1,7 @@
 "use client";
 
 import { notFound, useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { QuestionCard } from "@/components/diagnosis/question-card";
 import { DiagnosisAnalysisOverlay } from "@/components/diagnosis/analysis-overlay";
@@ -28,6 +28,7 @@ const DiagnosisPage = () => {
     setDiagnosisType,
     loadFromStorage,
     answerQuestion,
+    reset,
   } = useDiagnosisStore();
 
   useEffect(() => {
@@ -62,6 +63,17 @@ const DiagnosisPage = () => {
     setDiagnosisType(diagnosisType);
     loadFromStorage();
   }, [diagnosisType, setDiagnosisType, loadFromStorage]);
+
+  // 途中保存から再開した場合、最初の未回答質問へ移動する（毎回Q1に戻さない）
+  const resumeApplied = useRef(false);
+  useEffect(() => {
+    if (resumeApplied.current || questions.length === 0) return;
+    resumeApplied.current = true;
+    if (answers.length === 0) return;
+    const answeredIds = new Set(answers.map((answer) => answer.questionId));
+    const firstUnanswered = questions.findIndex((question) => !answeredIds.has(question.id));
+    setCurrentIndex(firstUnanswered === -1 ? questions.length - 1 : firstUnanswered);
+  }, [questions, answers]);
 
   if (!diagnosisType) {
     notFound();
@@ -256,7 +268,11 @@ const DiagnosisPage = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => clearSession()}
+              onClick={() => {
+                clearSession();
+                reset();
+                setCurrentIndex(0);
+              }}
               className="text-slate-300 hover:text-slate-500 text-xs underline"
             >
               保存データをリセットして最初から

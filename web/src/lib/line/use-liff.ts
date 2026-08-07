@@ -59,6 +59,7 @@ export function useLiff(): LiffState {
   useEffect(() => {
     const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
     if (!liffId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 環境変数欠落時の一度きりのエラー表示
       setError("LIFF ID is not configured");
       return;
     }

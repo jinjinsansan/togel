@@ -10,7 +10,6 @@ const footerLinks = [
       { label: "AI診断", href: "/diagnosis/select" },
       { label: "型一覧", href: "/types" },
       { label: "マッチング結果", href: "/result" },
-      { label: "ポイント", href: "/points" },
     ],
   },
   {

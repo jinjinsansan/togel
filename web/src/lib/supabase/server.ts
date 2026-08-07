@@ -7,7 +7,9 @@ const getServerCookiesAdapter = () => {
   const cookieStore = cookies();
   return {
     getAll() {
-      return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
+      return cookieStore
+        .getAll()
+        .map(({ name, value }: { name: string; value: string }) => ({ name, value }));
     },
   };
 };

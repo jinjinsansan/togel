@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, SyntheticEvent } from "react";
+import { useEffect, useState, SyntheticEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { getTogelLabel } from "@/lib/personality";
@@ -47,7 +47,7 @@ const TRAITS: (keyof BigFiveScores)[] = [
 ];
 
 const MismatchResultPage = () => {
-  const [results] = useState<MismatchResult[]>(() => {
+  const [results, setResults] = useState<MismatchResult[]>(() => {
     if (typeof window === "undefined") return [];
     const raw = sessionStorage.getItem("latestMismatch");
     if (!raw) return [];
@@ -59,7 +59,7 @@ const MismatchResultPage = () => {
     }
   });
 
-  const [diagnosis] = useState<LatestDiagnosis | null>(() => {
+  const [diagnosis, setDiagnosis] = useState<LatestDiagnosis | null>(() => {
     if (typeof window === "undefined") return null;
     const raw = sessionStorage.getItem("latestDiagnosis");
     if (!raw) return null;
@@ -70,6 +70,39 @@ const MismatchResultPage = () => {
       return null;
     }
   });
+
+  // sessionStorage が空（直リンク・リロード・別タブ）の場合はAPIから復元する
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    if (results.length > 0) return;
+    let cancelled = false;
+    const restoreFromApi = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/diagnosis/latest?revalidate=1", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        if (Array.isArray(data.mismatchResults) && data.mismatchResults.length > 0) {
+          setResults(data.mismatchResults as MismatchResult[]);
+          sessionStorage.setItem("latestMismatch", JSON.stringify(data.mismatchResults));
+        }
+        if (data.diagnosis) {
+          setDiagnosis(data.diagnosis as LatestDiagnosis);
+          sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
+        }
+      } catch (error) {
+        console.error("Failed to fetch mismatch results", error);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    void restoreFromApi();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-[linear-gradient(170deg,#15181f,#0d0f14_60%,#1a0e12)]">
@@ -116,7 +149,13 @@ const MismatchResultPage = () => {
 
           {/* ミスマッチランキング */}
           <div className="mt-8 space-y-0 md:space-y-8">
-            {results.length === 0 && (
+            {results.length === 0 && isLoading && (
+              <div className="rounded-none md:rounded-3xl border border-dashed border-gray-600 bg-gray-800/50 px-6 py-12 text-center">
+                <p className="text-gray-400">診断結果を読み込み中...</p>
+              </div>
+            )}
+
+            {results.length === 0 && !isLoading && (
               <div className="rounded-none md:rounded-3xl border border-dashed border-gray-600 bg-gray-800/50 px-6 py-12 text-center">
                 <p className="text-gray-400">まだ診断結果がありません。</p>
                 <Button asChild className="mt-4">

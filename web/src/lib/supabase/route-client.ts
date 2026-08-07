@@ -12,7 +12,9 @@ type WritableRequestCookies = CookieStore & {
 const adaptRouteCookies = (cookieStore: CookieStore) => {
   const base = {
     getAll() {
-      return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
+      return cookieStore
+        .getAll()
+        .map(({ name, value }: { name: string; value: string }) => ({ name, value }));
     },
   };
 

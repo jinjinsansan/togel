@@ -17,6 +17,7 @@ export function AgeGate() {
     // 法務・情報ページは年齢確認なしで閲覧可能にする
     const exemptPaths = ["/terms", "/privacy", "/tokushoho", "/about"];
     if (exemptPaths.some((p) => window.location.pathname.startsWith(p))) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSRとのhydration差異を避けるためクライアント側でのみ判定する
       setVerified(true);
       return;
     }

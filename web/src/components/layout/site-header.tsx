@@ -31,7 +31,6 @@ const journeyNavItems = [
 ];
 
 const utilityNavItems = [
-  { href: "/points", label: "ポイント" },
   { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ" },
   { href: "/mypage", label: "マイページ" },
 ];

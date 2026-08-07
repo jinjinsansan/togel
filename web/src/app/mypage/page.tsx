@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { Bell, Coins, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle, Palette } from "lucide-react";
+import { Bell, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle, Palette } from "lucide-react";
 
 import { TogelCertificateCard } from "@/components/certificate/togel-certificate-card";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
@@ -845,25 +845,6 @@ export default function MyPage() {
                 </Button>
               </div>
             )}
-          </div>
-
-          <div className="md:col-span-2 rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-yellow-100 text-yellow-700">
-                <Coins size={24} />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Point Wallet</p>
-                <h2 className="text-xl font-bold text-slate-900">ポイントの購入・履歴はこちら</h2>
-                <p className="text-sm text-slate-500 mt-1">専用ページで残高確認から決済まで完結できます。</p>
-              </div>
-            </div>
-            <Button asChild className="gap-2 shrink-0">
-              <Link href="/points">
-                ポイント管理ページへ
-                <History size={18} />
-              </Link>
-            </Button>
           </div>
 
         </div>

@@ -13,7 +13,7 @@ type Answer = { questionId: string; value: number };
 
 export default function LiffDiagnosisPage() {
   const router = useRouter();
-  const { isReady, lineUserId, error: liffError, closeLiff } = useLiff();
+  const { isReady, lineUserId, error: liffError } = useLiff();
 
   const [step, setStep] = useState<"type" | "gender" | "questions" | "submitting">("type");
   const [diagnosisType, setDiagnosisType] = useState<DiagnosisType>("light");

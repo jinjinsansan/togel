@@ -16,9 +16,11 @@ export default function LiffResultPage() {
     const matchingRaw = sessionStorage.getItem("latestMatching");
     const mismatchRaw = sessionStorage.getItem("latestMismatch");
 
+    /* eslint-disable react-hooks/set-state-in-effect -- sessionStorageはクライアントでしか読めない */
     if (diagnosisRaw) setDiagnosis(JSON.parse(diagnosisRaw));
     if (matchingRaw) setMatchingResults(JSON.parse(matchingRaw));
     if (mismatchRaw) setMismatchResults(JSON.parse(mismatchRaw));
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   if (!isReady && !liffError) {

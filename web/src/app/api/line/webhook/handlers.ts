@@ -1,6 +1,5 @@
 import { replyMessage } from "@/lib/line/client";
 import {
-  welcomeMessage,
   genderSelectMessage,
   diagnosisTypeSelectMessage,
   questionMessage,

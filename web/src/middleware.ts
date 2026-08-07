@@ -33,20 +33,6 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const supabase = createSupabaseMiddlewareClient(req, res);
 
-  if (req.nextUrl.pathname.startsWith("/auth/callback")) {
-    const searchParams = req.nextUrl.searchParams;
-    console.log("[Middleware][Auth Callback] Request", {
-      timestamp: new Date().toISOString(),
-      hasCode: searchParams.has("code"),
-      queryKeys: Array.from(searchParams.keys()),
-      searchLength: req.nextUrl.search.length,
-      referer: req.headers.get("referer"),
-      userAgent: req.headers.get("user-agent"),
-      host: req.headers.get("host"),
-      cookieNames: req.cookies.getAll().map(({ name }) => name),
-    });
-  }
-
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -64,11 +50,6 @@ export async function middleware(req: NextRequest) {
 
   // If accessing a protected route without a session, redirect to login (or home)
   if (isProtectedRoute && !session) {
-    console.log("[Middleware] Protected route access denied", {
-      path: req.nextUrl.pathname,
-      hasSession: !!session,
-      userAgent: req.headers.get("user-agent"),
-    });
     const redirectUrl = new URL("/login", req.url);
     return NextResponse.redirect(redirectUrl);
   }
