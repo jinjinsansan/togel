@@ -7,10 +7,8 @@ const ALLOWED_STATUSES = ["pending", "opened", "closed", "rejected", "expired", 
 
 type AllowedStatus = (typeof ALLOWED_STATUSES)[number];
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { orderId: string } }
-) {
+export async function PATCH(request: Request, props: { params: Promise<{ orderId: string }> }) {
+  const params = await props.params;
   const adminUser = await requireAdminUser();
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

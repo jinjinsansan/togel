@@ -8,14 +8,12 @@ import { Answer, BigFiveScores } from "@/types/diagnosis";
 import { personalityTypes } from "@/lib/personality";
 import { generatePersonalityNarrative } from "@/lib/personality/narrative";
 
-export const GET = async (
-  request: Request,
-  { params }: { params: { id: string } }
-) => {
+export const GET = async (request: Request, props: { params: Promise<{ id: string }> }) => {
+  const params = await props.params;
   const supabaseAdmin = createSupabaseAdminClient();
 
   // ログインユーザーを特定（本人なら非公開でも閲覧可）
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const {
     data: { user },

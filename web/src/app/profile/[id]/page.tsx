@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode, use } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { MapPin, Briefcase, Heart, User, Twitter, Instagram, Facebook, MessageCircle, Lock } from "lucide-react";
@@ -91,7 +91,8 @@ type DiagnosisDetails = {
   };
 };
 
-const ProfileDetailPage = ({ params }: { params: Params }) => {
+const ProfileDetailPage = (props: { params: Promise<Params> }) => {
+  const params = use(props.params);
   const searchParams = useSearchParams();
   const nicknameHint = searchParams.get("nickname") ?? "";
   const isMockProfile = params.id.startsWith("mock-");
@@ -191,7 +192,7 @@ const ProfileDetailPage = ({ params }: { params: Params }) => {
   // 診断結果の表示ロジック（推定ロジックは廃止）
   const diagnosisTypeId = profile.diagnosis_type_id;
   const togelLabel = diagnosisTypeId ? getTogelLabel(diagnosisTypeId) : "未診断";
-  
+
   // 一人称の設定（自分なら「私」、他人ならニックネーム）
   const isOwner = viewerId === profile.id;
   const subjectName = isOwner ? "私" : profile.full_name;

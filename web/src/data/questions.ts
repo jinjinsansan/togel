@@ -395,10 +395,8 @@ const fullQuestions: DiagnosisQuestion[] = [
 
 export const questions: DiagnosisQuestion[] = [...baseQuestions, ...fullQuestions];
 
-// light: 基礎10問のみ / full: 基礎10問 + 追加30問 = 40問
-// （fullQuestions の number が11から始まるのは基礎10問の続きであるため）
+// light: 基礎10問 / full: 基礎10問（full用に再タグ付け済み）+ 追加30問 = 40問
 export const getQuestionsByType = (type: "light" | "full") =>
-  (type === "full"
-    ? questions
-    : questions.filter((question) => question.diagnosisType === "light")
-  ).sort((a, b) => a.number - b.number);
+  questions
+    .filter((question) => question.diagnosisType === type)
+    .sort((a, b) => a.number - b.number);

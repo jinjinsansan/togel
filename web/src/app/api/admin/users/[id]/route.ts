@@ -10,7 +10,8 @@ type ActionPayload =
   | { action: "restore" }
   | { action: "notes"; notes: string };
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const adminUser = await requireAdminUser();
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

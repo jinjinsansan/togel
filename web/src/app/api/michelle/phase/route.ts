@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   }
 
   const { sessionId } = parsed.data;
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient(cookieStore) as unknown as MichelleSupabase;
 
   let user;

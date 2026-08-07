@@ -12,7 +12,8 @@ import {
   type RecommendationRow,
 } from "../helpers";
 
-export async function GET(_: Request, { params }: { params: { identifier: string } }) {
+export async function GET(_: Request, props: { params: Promise<{ identifier: string }> }) {
+  const params = await props.params;
   const adminUser = await requireAdminUser();
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,7 +36,8 @@ export async function GET(_: Request, { params }: { params: { identifier: string
   return NextResponse.json({ recommendations: rows.map(serializeRecommendation) });
 }
 
-export async function PUT(request: Request, { params }: { params: { identifier: string } }) {
+export async function PUT(request: Request, props: { params: Promise<{ identifier: string }> }) {
+  const params = await props.params;
   const adminUser = await requireAdminUser();
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -84,7 +86,8 @@ export async function PUT(request: Request, { params }: { params: { identifier: 
   return NextResponse.json({ recommendation: serializeRecommendation(data as unknown as RecommendationRow) });
 }
 
-export async function DELETE(_: Request, { params }: { params: { identifier: string } }) {
+export async function DELETE(_: Request, props: { params: Promise<{ identifier: string }> }) {
+  const params = await props.params;
   const adminUser = await requireAdminUser();
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

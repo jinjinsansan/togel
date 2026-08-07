@@ -6,7 +6,7 @@ import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 // Admin check helper
 const checkAdmin = async () => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabase.auth.getSession();
   

@@ -9,7 +9,7 @@ const ALLOWED_ADMIN_EMAILS = [
 ];
 
 export const requireAdminUser = async (): Promise<User | null> => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient(cookieStore);
   // getUser() は Auth サーバーで JWT を検証する（getSession() はcookieを復号するだけ）
   const {

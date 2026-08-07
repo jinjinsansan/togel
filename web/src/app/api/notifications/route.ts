@@ -5,7 +5,7 @@ import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabaseAuth.auth.getSession();
 
@@ -48,7 +48,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   // Mark as read logic
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabaseAuth.auth.getSession();
 

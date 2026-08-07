@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
 
   let userId: string | null = null;
   try {
-    const supabase = createSupabaseRouteClient();
+    const supabase = createSupabaseRouteClient(await cookies());
     const {
       data: { session },
     } = await supabase.auth.getSession();

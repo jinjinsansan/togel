@@ -32,7 +32,8 @@ const serialize = (row: PublicRecommendationRow) => ({
     : null,
 });
 
-export async function GET(request: Request, { params }: { params: { togelType: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ togelType: string }> }) {
+  const params = await props.params;
   const url = new URL(request.url);
   const page = url.searchParams.get("page") === "mypage" ? "mypage" : "result";
   const showColumn = page === "mypage" ? "show_on_mypage" : "show_on_result_page";

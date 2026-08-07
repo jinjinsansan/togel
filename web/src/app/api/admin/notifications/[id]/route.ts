@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 const checkAdmin = async () => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabase.auth.getSession();
   
@@ -16,10 +16,8 @@ const checkAdmin = async () => {
   return true;
 };
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   if (!(await checkAdmin())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

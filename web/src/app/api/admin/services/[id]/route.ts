@@ -30,7 +30,8 @@ const serializeService = (row: ServiceRow) => ({
   updatedAt: row.updated_at,
 });
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const adminUser = await requireAdminUser();
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -72,7 +73,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   return NextResponse.json({ service: serializeService(data as ServiceRow) });
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const adminUser = await requireAdminUser();
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

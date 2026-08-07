@@ -37,7 +37,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 export async function POST(request: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient(cookieStore);
   let user;
   try {

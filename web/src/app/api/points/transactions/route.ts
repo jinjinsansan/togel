@@ -7,7 +7,7 @@ import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export async function GET(request: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const {
     data: { session },

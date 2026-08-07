@@ -41,7 +41,7 @@ const resolveUserIds = async (
 };
 
 export const GET = async (request: Request) => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const {
     data: { session },

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   }
 
   const { sessionId, action } = parsed.data;
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   let user;
   try {

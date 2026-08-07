@@ -14,7 +14,7 @@ export async function GET() {
     return NextResponse.json({ error: "Michelle AI is currently disabled" }, { status: 503 });
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient<MichelleSupabase>(cookieStore) as unknown as MichelleSupabase;
   let user;
   try {

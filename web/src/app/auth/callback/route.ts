@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const error = requestUrl.searchParams.get("error");
   const errorDescription = requestUrl.searchParams.get("error_description");
   const origin = requestUrl.origin;
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookieNames = cookieStore.getAll().map(({ name }: { name: string }) => name);
 
   // 全パラメータをログ出力（デバッグ用）※センシティブな値はマスク

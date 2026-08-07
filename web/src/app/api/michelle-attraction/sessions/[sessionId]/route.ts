@@ -9,14 +9,14 @@ import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AttractionSupabase = SupabaseClient<any>;
 
-export async function DELETE(_: Request, context: { params: { sessionId: string } }) {
+export async function DELETE(_: Request, context: { params: Promise<{ sessionId: string }> }) {
   if (!MICHELLE_ATTRACTION_AI_ENABLED) {
     return NextResponse.json({ error: "Michelle Attraction AI is currently disabled" }, { status: 503 });
   }
 
-  const { sessionId } = context.params;
+  const { sessionId } = (await context.params);
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   let user;
   try {

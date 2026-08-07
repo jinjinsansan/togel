@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 import { env } from "@/lib/env";
 
-type CookieStore = ReturnType<typeof cookies>;
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
 type WritableRequestCookies = CookieStore & {
   set?: (name: string, value: string, options?: Record<string, unknown>) => void;
@@ -50,7 +50,7 @@ const adaptRouteCookies = (cookieStore: CookieStore) => {
   return base;
 };
 
-export const createSupabaseRouteClient = <Database = unknown>(cookieStore: CookieStore = cookies()) =>
+export const createSupabaseRouteClient = <Database = unknown>(cookieStore: CookieStore) =>
   createServerClient<Database>(env.supabaseUrl, env.supabaseAnonKey, {
     cookies: adaptRouteCookies(cookieStore),
   });

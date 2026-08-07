@@ -168,7 +168,7 @@ export const POST = async (request: Request) => {
   }
 
   // ログインユーザーの取得
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   let user;
   try {

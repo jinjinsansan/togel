@@ -10,7 +10,7 @@ import { getMatchingCacheExpiry, isMatchingCacheValid } from "@/lib/matching/cac
 import { verifyInviteCode } from "@/lib/invite/code";
 
 export const GET = async (request: Request) => {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const { data: { session } } = await supabaseAuth.auth.getSession();
 

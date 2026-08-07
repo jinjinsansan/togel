@@ -7,7 +7,7 @@ import { getAppBaseUrl } from "@/lib/url";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 export async function POST(request: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
   const {
     data: { session },

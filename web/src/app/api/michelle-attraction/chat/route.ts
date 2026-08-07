@@ -170,7 +170,7 @@ export async function POST(request: Request) {
 
   const { sessionId: incomingSessionId, message, category } = parsed.data;
   const prefersBufferedResponse = request.headers.get("x-buffered-response") === "1";
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   let user;
   try {

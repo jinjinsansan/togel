@@ -14,7 +14,7 @@ export async function GET() {
     return NextResponse.json({ error: "Michelle Attraction AI is currently disabled" }, { status: 503 });
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient<AttractionSupabase>(cookieStore) as unknown as AttractionSupabase;
   let user;
   try {

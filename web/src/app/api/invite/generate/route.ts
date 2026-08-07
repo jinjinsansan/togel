@@ -10,7 +10,7 @@ import { signInviteCode } from "@/lib/invite/code";
  * 自分のコードしか発行できないため、他人を対象にしたリンクは作れない。
  */
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createSupabaseRouteClient(cookieStore);
   const {
     data: { user },
