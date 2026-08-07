@@ -4,12 +4,18 @@ export const metadata = {
 };
 
 export default function TokushohoPage() {
-  // ※【】内は運営者の実情報に置き換えてください（公開前に必須）。
   const rows: { label: string; value: string }[] = [
-    { label: "販売事業者", value: "【運営者名（会社名／個人事業主名）を記載】" },
-    { label: "運営統括責任者", value: "【代表者名を記載】" },
-    { label: "所在地", value: "【所在地（都道府県・市区町村・番地）を記載】" },
-    { label: "電話番号", value: "【電話番号を記載】（受付時間：平日10:00〜18:00）" },
+    { label: "販売事業者", value: "DLLC" },
+    {
+      label: "運営統括責任者",
+      value: "お客様からの請求があった場合、遅滞なく開示いたします。",
+    },
+    { label: "所在地", value: "東京都港区赤坂4丁目8番19号 赤坂フロントタウン3階" },
+    {
+      label: "電話番号",
+      value:
+        "お客様からの請求があった場合、遅滞なく開示いたします。お問い合わせは下記メールアドレスまでお願いいたします。",
+    },
     { label: "メールアドレス", value: "support@to-gel.com" },
     { label: "販売価格", value: "各ポイントパッケージの購入ページに表示する価格（税込）によります。" },
     {
@@ -44,7 +50,7 @@ export default function TokushohoPage() {
           <h1 className="mt-3 text-3xl font-bold text-[#0f2f4d]">
             特定商取引法に基づく表記
           </h1>
-          <p className="mt-2 text-sm text-[#4a6076]">最終更新日: 2026年6月24日</p>
+          <p className="mt-2 text-sm text-[#4a6076]">最終更新日: 2026年8月7日</p>
         </header>
 
         <section className="mt-10 overflow-hidden rounded-3xl bg-white/95 shadow-lg shadow-[#0f2f4d]/5">
