@@ -15,11 +15,11 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center">
-      <div className="text-5xl">😢</div>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-7 bg-base px-6 text-center text-white">
+      <div className="text-[64px] font-black leading-none text-primary">500</div>
       <div>
-        <h1 className="text-xl font-bold text-slate-800">予期しないエラーが発生しました</h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <h1 className="text-xl font-black">こちらの不手際です。珍しく謝ります。</h1>
+        <p className="mt-3 text-[13px] leading-relaxed text-txt-muted">
           時間をおいて、もう一度お試しください。
         </p>
       </div>
@@ -27,15 +27,15 @@ export default function Error({
         <button
           type="button"
           onClick={reset}
-          className="rounded-full bg-[#E91E63] px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+          className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-hazard px-8 text-sm font-black text-ink shadow-cta transition-transform hover:scale-[1.02] active:scale-[0.98]"
         >
           再試行
         </button>
         <Link
           href="/"
-          className="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-100"
+          className="flex min-h-[52px] items-center justify-center rounded-[14px] border border-line px-8 text-sm font-bold text-txt-muted transition-colors hover:bg-white/5 hover:text-white"
         >
-          トップへ戻る
+          トップへ
         </Link>
       </div>
     </div>

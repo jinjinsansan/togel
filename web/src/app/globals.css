@@ -73,4 +73,24 @@
   /* Removed !important background rules to allow backdrop-blur to work */
 }
 
-/* Removed pseudo-elements that were forcing opaque white background */
+/* ===== Togel 2026.08 リニューアル（デザイナー納品 globals 追記分） ===== */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-flash,
+  .animate-sheen {
+    animation: none !important;
+  }
+  .animate-rise {
+    animation-duration: 1ms !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* LINE内WebView対策: 100vh ではなく 100dvh を使う */
+.h-screen-safe {
+  height: 100dvh;
+}

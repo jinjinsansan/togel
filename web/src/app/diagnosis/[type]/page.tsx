@@ -1,14 +1,45 @@
 "use client";
 
+import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { QuestionCard } from "@/components/diagnosis/question-card";
-import { DiagnosisAnalysisOverlay } from "@/components/diagnosis/analysis-overlay";
-import { Button } from "@/components/ui/button";
 import { DiagnosisQuestion } from "@/types/diagnosis";
 import { clearSession, saveSession } from "@/lib/diagnosis/session";
+import { personalityTypes } from "@/lib/personality";
 import { useDiagnosisStore } from "@/store/diagnosis-store";
+
+const TRAIT_LABELS: Record<string, string> = {
+  openness: "開放性",
+  conscientiousness: "誠実性",
+  extraversion: "外向性",
+  agreeableness: "協調性",
+  neuroticism: "神経症傾向",
+};
+
+/** 選択肢の値ごとのドット色（ピンク=あてはまる ↔ イエロー=あてはまらない） */
+const DOT_COLORS: Record<number, string> = {
+  5: "#FF2E74",
+  4: "rgba(255,46,116,.6)",
+  3: "#39415a",
+  2: "rgba(255,224,61,.6)",
+  1: "#FFE03D",
+};
+
+/** 進捗に応じてフッターの煽り文を強くする */
+const teaseForProgress = (pct: number): string => {
+  if (pct >= 90) return "もう逃げられません";
+  if (pct >= 60) return "だんだん見えてきました";
+  if (pct >= 30) return "半分すぎました";
+  return "まだ余裕ですね";
+};
+
+type Phase = "quiz" | "warn" | "reveal";
+
+type WorstReveal = {
+  typeName: string;
+  catchphrase: string;
+};
 
 const DiagnosisPage = () => {
   const params = useParams<{ type: string }>();
@@ -17,9 +48,13 @@ const DiagnosisPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [questions, setQuestions] = useState<DiagnosisQuestion[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showOverlay, setShowOverlay] = useState(false);
+  const [phase, setPhase] = useState<Phase>("quiz");
+  const [count, setCount] = useState(3);
+  const [worst, setWorst] = useState<WorstReveal | null>(null);
+  const [submitFailed, setSubmitFailed] = useState(false);
+  const submitStateRef = useRef<"idle" | "pending" | "done" | "error">("idle");
+  const countTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const {
     answers,
@@ -75,50 +110,26 @@ const DiagnosisPage = () => {
     setCurrentIndex(firstUnanswered === -1 ? questions.length - 1 : firstUnanswered);
   }, [questions, answers]);
 
+  useEffect(() => {
+    return () => {
+      if (countTimerRef.current) clearInterval(countTimerRef.current);
+    };
+  }, []);
+
   if (!diagnosisType) {
     notFound();
   }
 
   const currentQuestion = questions[currentIndex];
+  const totalQuestions = questions.length;
+  const displayProgress = totalQuestions
+    ? Math.round(((currentIndex + 1) / totalQuestions) * 100)
+    : 0;
 
-  const handleSelect = (value: number) => {
-    if (!currentQuestion) return;
-    answerQuestion({ questionId: currentQuestion.id, value });
-  };
-
-  const handleNext = () => {
-    setError(null);
-    if (!currentQuestion) return;
-    const hasAnswer = answers.some((answer) => answer.questionId === currentQuestion.id);
-    if (!hasAnswer) {
-      setError("回答を選択してください");
-      return;
-    }
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    setError(null);
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (answers.length < questions.length) {
-      setError("未回答の質問があります");
-      return;
-    }
-    if (!userGender) {
-      setError("性別が選択されていません");
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    
-    // まずAPIリクエストを開始（裏側で実行）
+  const submitDiagnosis = async () => {
+    if (!userGender || submitStateRef.current === "pending") return;
+    submitStateRef.current = "pending";
+    setSubmitFailed(false);
     try {
       const payload = {
         diagnosisType,
@@ -128,9 +139,7 @@ const DiagnosisPage = () => {
       saveSession(payload);
       const response = await fetch("/api/diagnosis/submit", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
@@ -142,143 +151,282 @@ const DiagnosisPage = () => {
       }
       if (data.mismatchResults) {
         sessionStorage.setItem("latestMismatch", JSON.stringify(data.mismatchResults));
+        const first = Array.isArray(data.mismatchResults) ? data.mismatchResults[0] : null;
+        const typeId: string | undefined = first?.personalityTypes?.profile?.id;
+        const extended = typeId ? personalityTypes.find((t) => t.id === typeId) : null;
+        if (extended) {
+          setWorst({ typeName: extended.typeName, catchphrase: extended.catchphrase });
+        } else if (first?.personalityTypes?.profile?.typeName) {
+          setWorst({ typeName: first.personalityTypes.profile.typeName, catchphrase: "" });
+        }
       }
       if (data.diagnosis) {
         sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
       }
-      
-      // API成功後、オーバーレイを表示して演出開始
-      setShowOverlay(true);
-      
+      submitStateRef.current = "done";
     } catch (err) {
-      setError("診断結果の生成に失敗しました。時間を置いて再実行してください。");
       console.error(err);
-      setSubmitting(false);
+      submitStateRef.current = "error";
+      setSubmitFailed(true);
     }
   };
 
-  const handleOverlayComplete = () => {
-    router.push("/result");
+  const startReveal = () => {
+    setPhase("reveal");
+    setCount(3);
+    void submitDiagnosis();
+    if (countTimerRef.current) clearInterval(countTimerRef.current);
+    countTimerRef.current = setInterval(() => {
+      setCount((prev) => {
+        if (prev <= 1) {
+          if (countTimerRef.current) clearInterval(countTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 900);
+  };
+
+  const handleSelect = (value: number) => {
+    if (!currentQuestion) return;
+    answerQuestion({ questionId: currentQuestion.id, value });
+    setError(null);
+    // 1問1画面・タップで即次へ（確定ボタンなし）
+    if (currentIndex < totalQuestions - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      setPhase("warn");
+    }
+  };
+
+  const handlePrev = () => {
+    setError(null);
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    }
   };
 
   const currentValue = answers.find((answer) => answer.questionId === currentQuestion?.id)?.value;
 
-  if (showOverlay) {
-    return <DiagnosisAnalysisOverlay onComplete={handleOverlayComplete} />;
+  /* ===== 警告フルスクリーン ===== */
+  if (phase === "warn") {
+    return (
+      <div className="animate-flash relative flex min-h-[100dvh] flex-col items-center justify-center bg-dangerbg px-[26px] py-[34px] text-center text-white">
+        <div className="absolute inset-x-0 top-0 h-[10px] bg-hazard" aria-hidden="true" />
+        <div className="flex h-[82px] w-[82px] items-center justify-center rounded-hero bg-hazard text-[40px] font-black text-ink">
+          ▲
+        </div>
+        <div className="mt-6 text-[11px] font-black tracking-[0.34em] text-hazard">WARNING</div>
+        <h2 className="mt-3.5 text-[30px] font-black leading-[1.45] tracking-[-0.02em]">
+          この先、
+          <br />
+          けっこう言います。
+        </h2>
+        <p className="mt-4 max-w-[22em] text-[13px] leading-8 text-txt-muted">
+          {totalQuestions}問の回答から、あなたと絶対に合わない
+          {diagnosisType === "light" ? "タイプ" : "5タイプ"}
+          を特定しました。読んだあと、笑える人だけ進んでください。
+        </p>
+        {submitFailed && (
+          <p className="mt-4 rounded-input bg-error/15 px-4 py-2 text-xs font-bold text-errortext">
+            診断結果の生成に失敗しました。もう一度お試しください。
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={startReveal}
+          className="mt-[30px] min-h-[58px] w-full max-w-sm rounded-card bg-primary text-base font-black text-white shadow-danger transition-colors hover:bg-primary-hover"
+        >
+          覚悟して開ける
+        </button>
+        <button
+          type="button"
+          onClick={() => setPhase("quiz")}
+          className="mt-3 text-xs font-bold text-txt-subtle transition-colors hover:text-white"
+        >
+          やっぱりやめる
+        </button>
+        <div className="absolute inset-x-0 bottom-0 h-[10px] bg-hazard" aria-hidden="true" />
+      </div>
+    );
   }
 
-  return (
-    <div className="min-h-screen bg-[#fdeef4] py-8 md:py-14">
-      <div className="container px-4 md:px-6">
-        <div className="mx-auto max-w-2xl">
-
-          {/* Progress Header */}
-          <div className="mb-7">
-            <div className="mb-2.5 flex items-center justify-between">
-              <span className="text-xs font-extrabold text-[#E91E63]">
-                Q{currentIndex + 1} / {questions.length}
-              </span>
-              <span className="text-xs font-bold text-[#6b7280]">{progress}%</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[#e6e9ef]">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#ff7caa] to-[#E91E63] transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-
-          {questionsLoading && (
-            <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-white/60 p-6 text-center md:mt-8 md:rounded-[2.5rem] md:border-2 md:p-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-pink-500 mb-4"></div>
-              <p className="text-sm font-bold text-slate-400">質問データを読み込んでいます...</p>
-            </div>
-          )}
-
-          {!questionsLoading && !currentQuestion && (
-            <div className="mt-6 rounded-2xl border border-dashed border-red-200 bg-red-50/50 p-6 text-center md:mt-8 md:rounded-[2.5rem] md:border-2 md:p-8">
-              <p className="text-sm font-bold text-red-500">データの取得に失敗しました</p>
-              <Button onClick={() => window.location.reload()} variant="ghost" className="text-red-600 mt-2 hover:text-red-700 hover:bg-red-100 underline">
-                再読み込みする
-              </Button>
-            </div>
-          )}
-
-          {currentQuestion && !questionsLoading && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <QuestionCard
-                question={currentQuestion}
-                currentValue={currentValue}
-                onSelect={handleSelect}
-              />
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-center animate-in fade-in zoom-in duration-300">
-              <p className="text-sm font-bold text-red-500 flex items-center justify-center gap-2">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                {error}
-              </p>
-            </div>
-          )}
-
-          <div className="mt-8 flex flex-col gap-3 md:mt-10 md:flex-row md:items-center md:gap-4">
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={handlePrev}
-              disabled={currentIndex === 0 || questionsLoading}
-              className="h-12 rounded-xl text-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 md:flex-1 md:h-14 md:text-base"
-            >
-              ← 前へ
-            </Button>
-            
-            {currentIndex === questions.length - 1 ? (
-              <Button 
-                size="lg"
-                onClick={handleSubmit} 
-                disabled={submitting || questionsLoading || !currentQuestion}
-                className="h-12 rounded-xl bg-gradient-to-r from-[#E91E63] to-pink-600 text-base font-bold text-white shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-300 hover:scale-[1.02] transition-all md:flex-[2] md:h-14 md:text-lg"
-              >
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    AI分析中...
-                  </span>
-                ) : (
-                  "診断結果を見る →"
-                )}
-              </Button>
-            ) : (
-              <Button 
-                size="lg"
-                onClick={handleNext} 
-                disabled={questionsLoading || !currentQuestion}
-                className="h-12 rounded-xl bg-slate-900 text-base font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800 hover:shadow-xl hover:scale-[1.02] transition-all md:flex-[2] md:h-14 md:text-lg"
-              >
-                次へ →
-              </Button>
-            )}
-          </div>
-          
-          <div className="mt-8 text-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => {
-                clearSession();
-                reset();
-                setCurrentIndex(0);
-              }}
-              className="text-slate-300 hover:text-slate-500 text-xs underline"
-            >
-              保存データをリセットして最初から
-            </Button>
+  /* ===== カウントダウン開封 ===== */
+  if (phase === "reveal") {
+    const running = count > 0;
+    const waitingForResult = !running && !worst && !submitFailed;
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[radial-gradient(90%_60%_at_50%_40%,rgba(255,46,116,.3),#07090F_70%)] px-[26px] py-[34px] text-center text-white">
+        <div className="text-[11px] font-black tracking-[0.3em] text-hazard">
+          WORST 1 を発表します
+        </div>
+        <div className="relative mt-[30px] flex h-[190px] w-[190px] items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-2 border-line" aria-hidden="true" />
+          <div
+            className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-primary"
+            aria-hidden="true"
+          />
+          <div className="text-[74px] font-black leading-none tracking-[-0.05em]">
+            {running ? count : "!"}
           </div>
         </div>
+        <p className="mt-7 animate-pulse text-[13px] leading-8 text-txt-muted">
+          {running
+            ? "心の準備をしてください"
+            : waitingForResult
+              ? "言い方を選んでいます…"
+              : submitFailed
+                ? "診断結果の生成に失敗しました"
+                : "あなたと絶対に合わないのは"}
+        </p>
+
+        {!running && worst && (
+          <div className="animate-rise mt-[26px] w-full max-w-sm">
+            <div className="rounded-[18px] border border-primary bg-surface p-5 text-left">
+              <div className="text-[10px] font-black tracking-[0.22em] text-primary">WORST 1</div>
+              <div className="mt-2 text-[26px] font-black tracking-[-0.02em]">{worst.typeName}</div>
+              {worst.catchphrase && (
+                <div className="mt-1 text-xs font-bold text-txt-muted">{worst.catchphrase}</div>
+              )}
+            </div>
+            <Link
+              href="/result/mismatch"
+              className="mt-3 flex min-h-[56px] items-center justify-center rounded-card bg-hazard text-[15px] font-black text-ink shadow-cta transition-colors hover:bg-white"
+            >
+              ワースト{diagnosisType === "light" ? "3" : "5"}をすべて見る
+            </Link>
+          </div>
+        )}
+
+        {!running && submitFailed && (
+          <button
+            type="button"
+            onClick={() => setPhase("warn")}
+            className="mt-6 min-h-[48px] rounded-full border border-line px-6 text-sm font-bold text-txt-muted transition-colors hover:text-white"
+          >
+            戻ってやり直す
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  /* ===== 設問画面 ===== */
+  return (
+    <div className="flex min-h-[100dvh] flex-col bg-ink text-white">
+      {/* 進捗ヘッダー */}
+      <div className="px-5 pt-4">
+        <div className="flex items-center justify-between text-[11px] font-black">
+          <span className="text-txt-muted">
+            Q{currentIndex + 1} <span className="text-txt-disabled">/ {totalQuestions || "-"}</span>
+          </span>
+          <span className="tracking-[0.14em] text-hazard">
+            {currentQuestion ? (TRAIT_LABELS[currentQuestion.trait] ?? "") : ""}
+          </span>
+        </div>
+        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-alt">
+          <div
+            className="h-full rounded-full bg-progress transition-all duration-300 ease-togel"
+            style={{ width: `${displayProgress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* 設問本体 */}
+      <div className="flex-1 overflow-y-auto px-5.5 pb-6 pt-[34px]">
+        {questionsLoading && (
+          <div className="flex flex-col items-center gap-5 pt-16">
+            <div className="w-[160px] overflow-hidden rounded-full">
+              <div className="animate-marquee h-2 w-[400%] bg-hazard-sm" />
+            </div>
+            <p className="text-xs font-bold text-txt-subtle">質問を用意しています…</p>
+          </div>
+        )}
+
+        {!questionsLoading && !currentQuestion && (
+          <div className="rounded-[18px] border border-dashed border-dangerline bg-dangerbg p-6 text-center">
+            <p className="text-sm font-bold text-errortext">データの取得に失敗しました</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-3 text-xs font-bold text-txt-muted underline hover:text-white"
+            >
+              再読み込みする
+            </button>
+          </div>
+        )}
+
+        {currentQuestion && !questionsLoading && (
+          <div key={currentQuestion.id} className="animate-rise">
+            <div className="text-[11px] font-black tracking-[0.2em] text-txt-disabled">QUESTION</div>
+            <h2
+              className="mt-3.5 text-[25px] font-black leading-relaxed tracking-[-0.01em]"
+              style={{ textWrap: "pretty" }}
+            >
+              {currentQuestion.text}
+            </h2>
+            <p className="mt-3.5 text-xs leading-[1.9] text-txt-subtle">
+              直感で。考え込むほど当たらなくなります。
+            </p>
+
+            <div className="mt-[26px] flex flex-col gap-[9px]">
+              {[...currentQuestion.options]
+                .sort((a, b) => b.value - a.value)
+                .map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleSelect(option.value)}
+                    className={`flex min-h-[56px] items-center gap-3 rounded-[14px] border px-[18px] text-left text-sm font-bold transition-colors ${
+                      currentValue === option.value
+                        ? "border-primary bg-dangerbg text-white"
+                        : "border-line bg-surface text-[#e2e7f0] hover:border-primary hover:bg-dangerbg"
+                    }`}
+                  >
+                    <span
+                      className="h-[9px] w-[9px] flex-none rounded-full"
+                      style={{ background: DOT_COLORS[option.value] ?? "#39415a" }}
+                      aria-hidden="true"
+                    />
+                    {option.label}
+                  </button>
+                ))}
+            </div>
+
+            {error && (
+              <p className="mt-4 rounded-input bg-error/15 px-4 py-2 text-xs font-bold text-errortext">
+                {error}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* フッター */}
+      <div className="flex items-center justify-between border-t border-line-soft px-5.5 pb-5.5 pt-3.5">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={handlePrev}
+            disabled={currentIndex === 0 || questionsLoading}
+            className="text-xs font-bold text-txt-subtle transition-colors hover:text-white disabled:opacity-40"
+          >
+            ← 前の質問
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              clearSession();
+              reset();
+              setCurrentIndex(0);
+              router.push("/diagnosis/select");
+            }}
+            className="text-[10px] font-bold text-txt-disabled underline transition-colors hover:text-txt-subtle"
+          >
+            最初から
+          </button>
+        </div>
+        <span className="text-[11px] text-txt-disabled">{teaseForProgress(progress)}</span>
       </div>
     </div>
   );

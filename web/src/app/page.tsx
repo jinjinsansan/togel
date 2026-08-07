@@ -1,38 +1,130 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
-const GoogleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-6 w-6">
-    <path fill="#EA4335" d="M24 9.5c3.54 0 6 1.54 7.38 2.83l5.35-5.22C33.64 3.64 29.27 1.5 24 1.5 14.96 1.5 6.94 6.94 3.54 15.01l6.62 5.14C11.53 13.12 17.2 9.5 24 9.5z" />
-    <path fill="#4285F4" d="M46.5 24.5c0-1.57-.14-3.09-.4-4.56H24v8.66h12.7c-.55 2.82-2.2 5.2-4.7 6.8l7.4 5.73c4.33-3.99 7.1-9.88 7.1-16.63z" />
-    <path fill="#FBBC05" d="M10.16 27.15A14.5 14.5 0 0 1 9.5 24c0-1.1.18-2.17.49-3.18l-6.6-5.13A23.94 23.94 0 0 0 2 24c0 3.85.92 7.49 2.54 10.68l6.62-5.53z" />
-    <path fill="#34A853" d="M24 46.5c6.27 0 11.53-2.06 15.37-5.62l-7.4-5.73c-2.07 1.39-4.73 2.21-7.97 2.21-6.8 0-12.47-3.62-15.35-9.08l-6.62 5.53C6.94 41.06 14.96 46.5 24 46.5z" />
-    <path fill="none" d="M2 2h44v44H2z" />
-  </svg>
+import { TogelMark } from "@/components/brand/togel-mark";
+
+const marqueeItems = [
+  { text: "取扱注意", className: "text-hazard" },
+  { text: "DANGER", className: "text-txt-disabled" },
+  { text: "相性より、非相性。", className: "text-primary" },
+  { text: "MISMATCH FIRST", className: "text-txt-disabled" },
+  { text: "取扱注意", className: "text-hazard" },
+  { text: "DANGER", className: "text-txt-disabled" },
+];
+
+const Marquee = () => (
+  <div className="overflow-hidden border-b border-line-soft bg-panel py-[7px]">
+    <div className="animate-marquee flex w-[200%]">
+      {[false, true].map((hidden) => (
+        <div
+          key={String(hidden)}
+          className="flex w-1/2 flex-none gap-[26px] pr-[26px]"
+          aria-hidden={hidden || undefined}
+        >
+          {marqueeItems.map((item, i) => (
+            <span
+              key={i}
+              className={`whitespace-nowrap text-[10px] font-black tracking-[0.32em] ${item.className}`}
+            >
+              {item.text}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
 );
 
+/** ヒーロー横の「封印カード」: 開封するとミスマッチ結果のプレビューが見える */
+const SealedCard = () => {
+  const [sealed, setSealed] = useState(true);
+
+  return (
+    <div className="w-full max-w-[360px] overflow-hidden rounded-hero border border-line bg-surface shadow-[0_40px_80px_-30px_rgba(0,0,0,.9)]">
+      <div className="h-1.5 bg-hazard-sm" aria-hidden="true" />
+      <div className="flex items-center justify-between border-b border-line-soft px-[18px] py-3.5">
+        <span className="text-[10px] font-black tracking-[0.24em] text-hazard">
+          MISMATCH / WORST 1
+        </span>
+        <span className="text-[10px] font-black tracking-[0.14em] text-txt-disabled">
+          {sealed ? "封印中" : "開封済"}
+        </span>
+      </div>
+
+      {sealed ? (
+        <div className="px-5 pb-6 pt-[26px] text-center">
+          <div className="text-[11px] font-bold tracking-[0.1em] text-txt-muted">
+            あなたと絶対に合わないのは
+          </div>
+          <div className="mx-auto mt-4 w-fit select-none rounded-[10px] bg-surface-alt px-[18px] py-2.5 text-[26px] font-black text-txt-disabled blur-[6px]">
+            ██████タイプ
+          </div>
+          <p className="mx-auto mt-[18px] max-w-[24em] text-xs leading-[1.95] text-txt-subtle">
+            この先には、あなたの人格ではなく「相性」への容赦ない指摘が含まれます。笑える人だけどうぞ。
+          </p>
+          <button
+            type="button"
+            onClick={() => setSealed(false)}
+            className="mt-5 min-h-[52px] w-full rounded-[14px] bg-primary text-[15px] font-black tracking-[0.04em] text-white shadow-danger transition-colors hover:bg-primary-hover"
+          >
+            封を切る
+          </button>
+          <div className="mt-2.5 animate-pulse text-[10px] text-txt-disabled">
+            タップで開封プレビュー
+          </div>
+        </div>
+      ) : (
+        <div className="animate-rise px-5 pb-6 pt-[22px]">
+          <div className="text-[11px] font-bold tracking-[0.1em] text-txt-muted">
+            あなたと絶対に合わないのは
+          </div>
+          <div className="mt-2 text-[27px] font-black leading-[1.3] tracking-[-0.02em] text-primary">
+            情熱先行リーダー型
+          </div>
+          <div className="mt-1.5 text-[13px] font-bold text-white/90">
+            「主語がデカい人」と「細かい事務作業で死ぬ人」の全面戦争
+          </div>
+
+          <div className="mt-[18px] rounded-input border border-dangerline bg-dangerbg px-[15px] py-3.5">
+            <div className="text-[10px] font-black tracking-[0.2em] text-primary">
+              付き合ったら起こる地獄
+            </div>
+            <p className="mt-2 text-xs leading-[1.9] text-txt-muted">
+              3ヶ月目、相手の「とりあえずやってみよう」であなたの予定表が焼け野原になる。
+            </p>
+          </div>
+
+          <div className="mt-2.5 rounded-input border border-line bg-panel px-[15px] py-3.5">
+            <div className="text-[10px] font-black tracking-[0.2em] text-hazard">
+              絶対にやってはいけないこと
+            </div>
+            <p className="mt-2 text-xs leading-[1.9] text-txt-muted">
+              「で、それ誰がやるの？」と正論で返す。刺さりますが、燃えます。
+            </p>
+          </div>
+
+          <div className="mt-3.5 border-t border-dashed border-line pt-3.5 text-xs leading-[1.9] text-txt-muted">
+            <span className="font-black text-relief">救い：</span>
+            相手の勢いを止めず、締切だけ握る。それだけで、この関係は成立します。
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setSealed(true)}
+            className="mt-4 min-h-[44px] w-full rounded-input border border-line bg-transparent text-xs font-bold text-txt-muted transition-colors hover:border-primary hover:text-white"
+          >
+            封をしなおす
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function Home() {
-  const videos = [
-    "https://assets.to-gel.com/hero-movie-optimized.mp4",
-    "https://assets.to-gel.com/hero-movie-v3-optimized.mp4",
-    "https://assets.to-gel.com/hero-movie-v4-optimized.mp4",
-  ];
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const supabase = createSupabaseBrowserClient();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % videos.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [videos.length]);
 
   // OAuthコールバックからのエラーをユーザーに表示する（従来は無言で失敗していた）
   useEffect(() => {
@@ -45,46 +137,19 @@ export default function Home() {
       session_error: "セッションの作成に失敗しました。もう一度お試しください。",
       no_code: "認証情報が取得できませんでした。もう一度お試しください。",
     };
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- URLクエリはクライアントでしか読めない
     setAuthError(messages[err] ?? "ログイン中にエラーが発生しました。もう一度お試しください。");
     // URLからエラーパラメータを除去
     window.history.replaceState({}, "", window.location.pathname);
   }, []);
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    const redirectTo = `${window.location.origin}/auth/callback`;
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-        },
-      });
-
-      if (error) {
-        console.error("Login error:", error);
-        alert("ログインに失敗しました");
-      }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("エラーが発生しました");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <>
+    <div className="bg-ink text-white">
       {authError && (
         <div className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
           <div
             role="alert"
-            className="flex w-full max-w-md items-start gap-2 rounded-lg bg-red-600 px-4 py-3 text-sm text-white shadow-lg"
+            className="flex w-full max-w-md items-start gap-2 rounded-input bg-error px-4 py-3 text-sm text-white shadow-lg"
           >
             <span className="flex-1">{authError}</span>
             <button
@@ -98,238 +163,258 @@ export default function Home() {
           </div>
         </div>
       )}
-      <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#FFD1DC]">
-        {/* 1. Video Background (Carousel) */}
-        {videos.map((src, index) => (
-          <video
-            key={src}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-              index === currentVideoIndex ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <source src={src} type="video/mp4" />
-          </video>
-        ))}
 
-      {/* 2. Pink Background Layer (Screen Blend) */}
-      {/* This creates the base pink tint over the video where text isn't present */}
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#FFD1DC] mix-blend-screen">
-        <div className="container flex flex-col items-center gap-12 py-24 text-center">
-          {/* Title Block (VISIBLE) - Determines layout */}
-          <div className="flex flex-col items-center">
-            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-black">
-              Togel
+      <Marquee />
+
+      {/* ヒーロー */}
+      <section className="relative overflow-hidden bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(255,46,116,.22),transparent_62%)] px-5.5 pb-13 pt-11">
+        <div className="mx-auto grid max-w-[1120px] items-center gap-11 md:grid-cols-2">
+          <div style={{ containerType: "inline-size" }}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-hazard/40 bg-hazard/[.07] py-1.5 pl-2 pr-3">
+              <span className="flex h-4 w-4 items-center justify-center rounded bg-hazard text-[10px] font-black text-ink">
+                ▲
+              </span>
+              <span className="text-[11px] font-black tracking-[0.14em] text-hazard">
+                診断結果、取扱注意
+              </span>
+            </div>
+
+            <h1 className="mt-5 text-display" style={{ textWrap: "pretty" }}>
+              運命の人は
+              <br />
+              教えない。
+              <br />
+              <span className="text-primary">地雷なら教える。</span>
             </h1>
-            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-black">
-              トゥゲル
-            </p>
-          </div>
 
-          {/* Description & Button SPACER (INVISIBLE) - Keeps layout identical to foreground */}
-          <div className="flex flex-col items-center gap-8 opacity-0">
-             <p className="text-lg md:text-2xl font-bold tracking-wide leading-relaxed">
-              あなたの本音と相性が一瞬でわかる<br />
-              24タイプTogel型診断+AIマッチング
-            </p>
-            <Button
-              size="lg"
-              className="h-16 rounded-full border border-black/10 bg-white px-10 text-xl font-semibold text-[#0f172a] shadow-xl shadow-black/10 transition hover:-translate-y-0.5"
-              onClick={handleLogin}
-              disabled={isLoading}
+            <p
+              className="mt-5 max-w-[34em] text-[15px] leading-8 text-txt-muted"
+              style={{ textWrap: "pretty" }}
             >
-              {isLoading ? (
-                "接続中..."
-              ) : (
-                <span className="flex items-center gap-3">
-                  <GoogleIcon />
-                  Googleで始める
+              Togel＝<strong className="font-bold text-white">告げる</strong>
+              。40問のビッグファイブ診断で24タイプに判定し、あなたと
+              <strong className="font-bold text-white">絶対に合わない5タイプ</strong>
+              を名指しします。相性のいい人？ おまけです。
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="/diagnosis/select"
+                className="flex min-h-[56px] items-center justify-center gap-2.5 rounded-full bg-hazard px-[30px] text-base font-black text-ink shadow-cta transition-colors hover:bg-white"
+              >
+                地雷を見る
+                <span className="text-xs font-bold opacity-60">40問・無料</span>
+              </Link>
+              <Link
+                href="/diagnosis/select"
+                className="flex min-h-[56px] items-center justify-center rounded-full border border-[#29303f] px-[26px] text-sm font-bold text-txt-muted transition-colors hover:border-hazard hover:text-white"
+              >
+                まず10問で試す
+              </Link>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {["所要 約5分", "登録なしで開始", "18歳以上向け"].map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-chip border border-line-soft px-2.5 py-[5px] text-[11px] font-bold text-txt-subtle"
+                >
+                  {chip}
                 </span>
-              )}
-            </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <SealedCard />
           </div>
         </div>
-      </div>
-
-      {/* 3. Cutout Title Layer (Lighten Blend) */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none bg-[#FFD1DC] mix-blend-lighten">
-        <div className="container flex flex-col items-center gap-12 py-24 text-center">
-          {/* Title Block (VISIBLE with Stroke) */}
-          <div className="flex flex-col items-center">
-            {/* Text is transparent (destination-out) to show video through, stroke remains */}
-            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter text-black mix-blend-destination-out">
-              Togel
-            </h1>
-            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest text-black mix-blend-destination-out">
-              トゥゲル
-            </p>
-          </div>
-          
-          {/* Description & Button SPACER (INVISIBLE) */}
-          <div className="flex flex-col items-center gap-8 opacity-0">
-             <p className="text-lg md:text-2xl text-[#E91E63] font-medium tracking-wide">
-              あなたの本音と相性が一瞬でわかる<br />
-              24タイプTogel型診断+AIマッチング
-            </p>
-            <Button
-              size="lg"
-              className="h-16 rounded-full border border-black/10 bg-white px-10 text-xl font-semibold text-[#0f172a] shadow-xl shadow-black/10"
-              onClick={handleLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                "接続中..."
-              ) : (
-                <span className="flex items-center gap-3">
-                  <GoogleIcon />
-                  Googleで始める
-                </span>
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Foreground Content Layer (Normal Blend) - For Description & Button */}
-      <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
-        <div className="container flex flex-col items-center gap-12 py-24 text-center">
-          {/* Title Block SPACER (INVISIBLE) */}
-          <div className="flex flex-col items-center opacity-0">
-            <h1 className="font-heading text-[clamp(6rem,35vw,20rem)] font-bold leading-none tracking-tighter">
-              Togel
-            </h1>
-            <p className="mt-16 text-[clamp(1.2rem,4vw,4rem)] font-medium tracking-widest">
-              トゥゲル
-            </p>
-          </div>
-
-          {/* Visible Description & Button */}
-          <div className="flex flex-col items-center gap-8 pointer-events-auto">
-             <p className="text-lg md:text-2xl text-[#E91E63] font-bold tracking-wide drop-shadow-sm leading-relaxed">
-              あなたの本音と相性が一瞬でわかる<br />
-              24タイプTogel型診断+AIマッチング
-            </p>
-
-            <Button
-              size="lg"
-              className="h-16 rounded-full border border-black/10 bg-white px-10 text-xl font-semibold text-[#0f172a] shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5"
-              onClick={handleLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                "接続中..."
-              ) : (
-                <span className="flex items-center gap-3">
-                  <GoogleIcon />
-                  Googleで始める
-                </span>
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* SCROLL INDICATOR (New) */}
-      <div className="absolute bottom-10 left-1/2 z-50 -translate-x-1/2 animate-bounce text-white/80">
-        <span className="text-xs tracking-widest">SCROLL</span>
-        <div className="mx-auto mt-2 h-12 w-[1px] bg-white/50">
-          <div className="h-full w-full bg-gradient-to-b from-transparent to-white"></div>
-        </div>
-      </div>
-
-      {/* FADE TO BLACK OVERLAY (New) */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-[60] pointer-events-none"></div>
-    </main>
-
-    {/*
-      =============================================
-      LANDING: HOW IT WORKS → STEP 01-04 → CTA
-      （リデザイン: Togel.dc.html プロトタイプ準拠 / モバイルファースト）
-      =============================================
-    */}
-    <div className="relative z-50 bg-[#0d0f14] text-white selection:bg-pink-500 selection:text-white">
-
-      {/* Hook */}
-      <section className="relative overflow-hidden px-6 py-16 text-center">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(233,30,99,0.18),_transparent_60%)]" />
-        <p className="animate-pulse text-xs font-extrabold uppercase tracking-[0.45em] text-[#E91E63]">
-          HOW IT WORKS
-        </p>
-        <h2 className="mt-5 font-heading text-3xl font-black leading-[1.15] md:text-5xl">
-          運命なんて、
-          <br />
-          <span className="bg-gradient-to-r from-[#ff5a96] to-[#a86bff] bg-clip-text text-transparent">
-            計算できる。
-          </span>
-        </h2>
-        <p className="mx-auto mt-5 max-w-sm text-sm leading-[1.9] text-gray-400 md:text-base">
-          Togelは、あなたの「本性」を暴き出し、最高の相性と最悪の結末を予言するAIマッチングサービス。
-        </p>
       </section>
 
-      {/* Steps */}
-      {[
-        { step: "STEP 01", emoji: "🧠", titleA: "まずは", titleB: "診断", accent: "#E91E63", bg: "#0d0f14", body: "独自Togel型理論に基づく本格診断。質問に答えるだけで、考え方のクセ・恋愛傾向・隠れた本性が丸裸に。" },
-        { step: "STEP 02", emoji: "🐯", titleA: "24タイプ", titleB: "に分類", accent: "#a86bff", bg: "#101319", body: "診断結果から、あなたを24種類の「Togel型」に分類。強み・弱み・相性の良いタイプが明確に。" },
-        { step: "STEP 03", emoji: "💘", titleA: "AIが", titleB: "導き出す", accent: "#4A90E2", bg: "#0d0f14", body: "相性の良い異性5名をピックアップ。「なぜ合うのか」「どんなデートをすべきか」まで具体提案。", hasCard: true },
-        { step: "STEP 04", emoji: "💀", titleA: "地獄を", titleB: "回避せよ", accent: "#ff5252", bg: "#1a0e12", body: "最大の特徴は「ミスマッチランキング」。絶対に合わない、付き合うと不幸になる相手も教えます。" },
-      ].map((s) => (
-        <section
-          key={s.step}
-          className="border-t border-white/5 px-6 py-12 text-center"
-          style={{ background: s.bg }}
-        >
-          <div className="inline-block rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1 text-xs font-extrabold tracking-wide text-gray-400">
-            {s.step}
-          </div>
-          <div className="my-4 animate-bounce text-6xl">{s.emoji}</div>
-          <h3 className="text-3xl font-black leading-[1.15]">
-            {s.titleA}
-            <span style={{ color: s.accent }}>{s.titleB}</span>
-          </h3>
-          <p className="mx-auto mt-3.5 max-w-sm text-sm leading-[1.9] text-gray-400">
-            {s.body}
+      {/* CONCEPT */}
+      <section className="border-t border-line-soft bg-panel px-5.5 py-13">
+        <div className="mx-auto max-w-[1120px]" style={{ containerType: "inline-size" }}>
+          <div className="text-label text-primary">CONCEPT</div>
+          <h2 className="mt-3.5 text-h1" style={{ textWrap: "pretty" }}>
+            言いにくいことを、
+            <br />
+            代わりに告げる。
+          </h2>
+          <p
+            className="mt-4 max-w-[38em] text-sm leading-[2.05] text-txt-muted"
+            style={{ textWrap: "pretty" }}
+          >
+            相性のいい人を教えるサービスは、もう十分あります。Togelがやるのは逆。
+            <strong className="font-bold text-white">合わない相手を、先に</strong>
+            。ボロクソに言いますが、最後は必ず救います。毒の対象はあくまで「タイプ」であって、あなたでも、あの人でもありません。
           </p>
-
-          {s.hasCard && (
-            <div className="mx-auto mt-6 max-w-[280px] rounded-[22px] bg-gradient-to-br from-white to-[#f4f5f7] p-[18px] text-left text-black shadow-[0_20px_40px_-16px_rgba(233,30,99,0.5)]">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[34px]">👩</span>
-                <span className="text-[26px] font-black text-[#E91E63]">98%</span>
-              </div>
-              <div className="text-[17px] font-extrabold">運命の相手候補</div>
-              <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
-                あなたのアクティブさと、相手の慎重さが完璧に補完し合う関係。
+          <div className="mt-[30px] grid gap-3.5 sm:grid-cols-3">
+            <div className="rounded-card border border-line-soft bg-[#0f1420] p-5">
+              <div className="text-[11px] font-black tracking-[0.2em] text-hazard">STEP 01</div>
+              <div className="mt-2.5 text-lg font-black">40問に答える</div>
+              <p className="mt-2 text-xs leading-[1.95] text-txt-muted">
+                1問1画面。進むほど、逃げ場がなくなる設計。ライト10問もあります。
               </p>
-              <div className="mt-3 border-t border-gray-200 pt-3">
-                <div className="text-[10px] font-extrabold tracking-wider text-gray-400">ADVICE</div>
-                <div className="mt-0.5 text-[13px] font-extrabold">初デートは静かなカフェで ☕️</div>
+            </div>
+            <div className="rounded-card border border-line-soft bg-[#0f1420] p-5">
+              <div className="text-[11px] font-black tracking-[0.2em] text-hazard">STEP 02</div>
+              <div className="mt-2.5 text-lg font-black">24タイプに判定</div>
+              <p className="mt-2 text-xs leading-[1.95] text-txt-muted">
+                ビッグファイブ5因子から、あなたの取扱区分を確定します。
+              </p>
+            </div>
+            <div className="rounded-card border border-dangerline bg-dangerbg p-5">
+              <div className="text-[11px] font-black tracking-[0.2em] text-primary">STEP 03</div>
+              <div className="mt-2.5 text-lg font-black">ワースト5を告げる</div>
+              <p className="mt-2 text-xs leading-[1.95] text-txt-muted">
+                地獄のシナリオとNG行動つき。1位だけは、最後まで伏せます。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 看板コンテンツ */}
+      <section className="bg-ink px-5.5 py-13">
+        <div className="mx-auto max-w-[1120px]" style={{ containerType: "inline-size" }}>
+          <div className="text-label text-hazard">看板コンテンツ</div>
+          <h2 className="mb-[26px] mt-3.5 text-h1">
+            脇役だったものを、
+            <br />
+            看板に上げました。
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="relative overflow-hidden rounded-[18px] border border-dangerline bg-[linear-gradient(160deg,#1a0e15,#0f1420)] px-5.5 py-[26px]">
+              <div className="text-[44px] font-black leading-none text-primary opacity-25">01</div>
+              <div className="mt-1.5 text-xl font-black">付き合ったら起こる地獄のシナリオ</div>
+              <p className="mt-3 text-[13px] leading-8 text-txt-muted">
+                出会って3ヶ月、半年、1年。何がどう壊れるかを時系列で。読み終わる頃には笑っています。
+              </p>
+            </div>
+            <div className="relative overflow-hidden rounded-[18px] border border-warnline bg-[linear-gradient(160deg,#1a1608,#0f1420)] px-5.5 py-[26px]">
+              <div className="text-[44px] font-black leading-none text-hazard opacity-25">02</div>
+              <div className="mt-1.5 text-xl font-black">絶対にやってはいけないこと</div>
+              <p className="mt-3 text-[13px] leading-8 text-txt-muted">
+                タイプ別の禁止事項リスト。心当たりがある人ほど、スクショして送りたくなります。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 地雷回避ガイド（ライト面＝救い） */}
+      <section className="bg-paper px-5.5 py-13 text-navy">
+        <div className="mx-auto max-w-[1120px]" style={{ containerType: "inline-size" }}>
+          <div className="inline-flex items-center gap-2 rounded-full bg-navy px-3.5 py-1.5">
+            <span className="text-[11px] font-black tracking-[0.16em] text-relief">
+              毒のあとに、救いを
+            </span>
+          </div>
+          <h2 className="mt-4 text-h1">地雷回避ガイド</h2>
+          <p
+            className="mt-3.5 max-w-[36em] text-sm leading-[2.05] text-lighttext-muted"
+            style={{ textWrap: "pretty" }}
+          >
+            合わないと分かっても、上司も、友達も、家族も、選べません。だからTogelは「合わない相手との付き合い方」まで用意しました。ここからは、明るい話です。
+          </p>
+          <div className="mt-[26px] grid gap-3 sm:grid-cols-3">
+            {[
+              {
+                title: "言い方の翻訳",
+                body: "同じ内容を、相手のタイプに刺さる言葉に置き換える例文集。",
+              },
+              {
+                title: "地雷の踏み方図解",
+                body: "やりがちなNG行動と、その3秒前に戻る方法。",
+              },
+              {
+                title: "距離の置き方",
+                body: "無理に分かり合わない、という選択肢の作り方。",
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-[14px] border border-lightline bg-white p-[18px]">
+                <div className="text-sm font-black">{item.title}</div>
+                <p className="mt-1.5 text-xs leading-[1.9] text-lighttext-subtle">{item.body}</p>
+              </div>
+            ))}
+          </div>
+          <Link
+            href="/coaching"
+            className="mt-6 inline-flex min-h-[52px] items-center rounded-full bg-navy px-[26px] text-sm font-black text-white transition-colors hover:bg-primary"
+          >
+            ガイドを見る
+          </Link>
+        </div>
+      </section>
+
+      {/* MEMBER CARD */}
+      <section className="bg-[linear-gradient(180deg,#07090F,#0B0F1A)] px-5.5 py-13">
+        <div className="mx-auto grid max-w-[1120px] items-center gap-9 md:grid-cols-2">
+          <div style={{ containerType: "inline-size" }}>
+            <div className="text-label text-hazard">MEMBER CARD</div>
+            <h2 className="mt-3.5 text-h1">危険物取扱者カード</h2>
+            <p className="mt-3.5 max-w-[32em] text-[13px] leading-8 text-txt-muted">
+              名物の3D回転メタリック会員証を、新コンセプトで再解釈。あなたの取扱区分と、注意事項が刻印されます。マイページでいつでも回せます。
+            </p>
+          </div>
+          <div className="flex justify-center [perspective:900px]">
+            <div className="flex aspect-[1.586] w-full max-w-[330px] flex-col justify-between rounded-card border border-[#2c3a58] bg-metal p-5 shadow-[0_30px_60px_-25px_rgba(255,46,116,.5)] transition-transform duration-500 ease-togel [transform:rotateY(-14deg)_rotateX(6deg)] hover:[transform:rotateY(6deg)_rotateX(0deg)]">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-[9px] font-black tracking-[0.28em] text-hazard">
+                    HAZARDOUS TYPE LICENSE
+                  </div>
+                  <div className="mt-2 text-[19px] font-black text-white">静観する現実主義者型</div>
+                </div>
+                <TogelMark size={26} className="flex-none" />
+              </div>
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-[9px] tracking-[0.2em] text-[#7d879b]">注意事項</div>
+                  <div className="mt-1 text-[11px] font-bold text-txt-muted">
+                    熱量の高い人物と密閉空間に置かないこと
+                  </div>
+                </div>
+                <div className="whitespace-nowrap font-mono text-[9px] text-[#7d879b]">NO. 04-A</div>
               </div>
             </div>
-          )}
-        </section>
-      ))}
-
-      {/* CTA */}
-      <section className="relative overflow-hidden px-6 py-20 text-center">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(100%_80%_at_50%_0%,_rgba(233,30,99,0.4),_#0d0f14_60%)]" />
-        <h2 className="mb-7 text-3xl font-black md:text-4xl">準備はいいですか？</h2>
-        <div className="flex justify-center">
-          <Button
-            asChild
-            size="lg"
-            className="h-16 w-full max-w-[320px] rounded-full bg-white text-xl font-black text-[#E91E63] shadow-[0_0_50px_-8px_rgba(255,255,255,0.6)] transition-all hover:scale-105 hover:bg-gray-100"
-          >
-            <Link href="/diagnosis/select">今すぐ診断する</Link>
-          </Button>
+          </div>
         </div>
-        <p className="mt-4 text-[11px] text-white/50">※ エンタメ目的の診断です</p>
       </section>
 
+      {/* 最終CTA */}
+      <section className="relative overflow-hidden bg-[radial-gradient(110%_90%_at_50%_0%,rgba(255,46,116,.32),#07090F_62%)] px-5.5 pb-13 pt-[60px] text-center">
+        <h2
+          className="text-[clamp(26px,4cqw,44px)] font-black leading-[1.35] tracking-[-0.03em]"
+          style={{ containerType: "normal" }}
+        >
+          言われる覚悟、
+          <br />
+          ありますか。
+        </h2>
+        <p className="mx-auto mt-4 max-w-[26em] text-[13px] leading-8 text-txt-muted">
+          40問。約5分。最後にあなたと絶対に合わない5タイプを告げます。
+        </p>
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/diagnosis/select"
+            className="flex min-h-[58px] items-center justify-center rounded-full bg-hazard px-[34px] text-base font-black text-ink shadow-cta transition-colors hover:bg-white"
+          >
+            診断をはじめる
+          </Link>
+          <a
+            href="https://lin.ee/T7OYAGQ"
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-linegreen px-[26px] text-sm font-black text-white transition-opacity hover:opacity-90"
+          >
+            LINEで結果を受け取る
+          </a>
+        </div>
+        <p className="mt-[18px] text-[11px] text-txt-disabled">
+          ※ エンタメ目的の診断です。18歳以上の方が対象です。
+        </p>
+      </section>
     </div>
-    </>
   );
 }

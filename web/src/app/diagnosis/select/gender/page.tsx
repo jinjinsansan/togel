@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { Button } from "@/components/ui/button";
 import { useDiagnosisStore } from "@/store/diagnosis-store";
 
 const GenderSelectPage = () => {
@@ -22,67 +21,40 @@ const GenderSelectPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 md:py-16">
-      <div className="container px-4 md:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="inline-flex items-center justify-center rounded-full bg-[#E91E63]/10 px-4 py-1.5 mb-6">
-            <span className="text-sm font-bold text-[#E91E63] tracking-widest">STEP 2</span>
-          </div>
-          <h1 className="font-heading text-2xl md:text-3xl font-black text-slate-900 mb-4">
-            あなたの性別を選択
-          </h1>
-          <p className="text-slate-600 leading-relaxed max-w-lg mx-auto">
-            異性とのマッチング結果を表示するために、あなたの性別を教えてください。
-          </p>
-        </div>
-        
-        <div className="mx-auto mt-12 grid max-w-2xl gap-6 md:grid-cols-2">
-          <button
-            onClick={() => handleGenderSelect("male")}
-            className="group relative flex flex-col items-center rounded-2xl border border-white bg-white/80 backdrop-blur-sm p-6 shadow-xl shadow-blue-100/50 transition-all hover:scale-105 hover:shadow-2xl hover:border-blue-200 hover:bg-blue-50/30 md:rounded-[2.5rem] md:border-2 md:p-10"
-          >
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-50 text-5xl shadow-inner transition-transform group-hover:scale-110 group-hover:rotate-3 md:h-32 md:w-32 md:text-6xl">
-              👨
-            </div>
-            <h2 className="mt-6 font-heading text-2xl font-black text-slate-900 group-hover:text-blue-600 transition-colors md:text-3xl">男性</h2>
-            <p className="mt-3 text-sm font-medium text-slate-500">
-              女性との相性を診断
-            </p>
-            <div className="mt-6 w-full">
-              <div className="h-1 w-full rounded-full bg-blue-100/50 overflow-hidden">
-                <div className="h-full w-0 bg-blue-500 transition-all duration-500 group-hover:w-full" />
-              </div>
-            </div>
-          </button>
+    <div className="min-h-screen bg-ink text-white">
+      <div className="mx-auto max-w-xl px-5.5 pb-10 pt-[30px]">
+        <div className="text-[11px] font-black tracking-[0.26em] text-hazard">STEP 2 / 3</div>
+        <h1 className="mt-3.5 text-[28px] font-black leading-[1.4] tracking-[-0.02em]">
+          あなたの性別は？
+        </h1>
+        <p className="mt-3 text-[13px] leading-[1.95] text-txt-muted">
+          マッチング候補の抽出にのみ使用します。
+        </p>
 
+        <div className="mt-[26px] grid grid-cols-2 gap-3">
           <button
-            onClick={() => handleGenderSelect("female")}
-            className="group relative flex flex-col items-center rounded-2xl border border-white bg-white/80 backdrop-blur-sm p-6 shadow-xl shadow-pink-100/50 transition-all hover:scale-105 hover:shadow-2xl hover:border-pink-200 hover:bg-pink-50/30 md:rounded-[2.5rem] md:border-2 md:p-10"
+            type="button"
+            onClick={() => handleGenderSelect("male")}
+            className="rounded-[18px] border border-line bg-surface px-3 py-[30px] text-[17px] font-black transition-colors hover:border-primary hover:bg-dangerbg"
           >
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-pink-50 text-5xl shadow-inner transition-transform group-hover:scale-110 group-hover:-rotate-3 md:h-32 md:w-32 md:text-6xl">
-              👩
-            </div>
-            <h2 className="mt-6 font-heading text-2xl font-black text-slate-900 group-hover:text-pink-600 transition-colors md:text-3xl">女性</h2>
-            <p className="mt-3 text-sm font-medium text-slate-500">
-              男性との相性を診断
-            </p>
-            <div className="mt-6 w-full">
-              <div className="h-1 w-full rounded-full bg-pink-100/50 overflow-hidden">
-                <div className="h-full w-0 bg-pink-500 transition-all duration-500 group-hover:w-full" />
-              </div>
-            </div>
+            男性
+          </button>
+          <button
+            type="button"
+            onClick={() => handleGenderSelect("female")}
+            className="rounded-[18px] border border-line bg-surface px-3 py-[30px] text-[17px] font-black transition-colors hover:border-primary hover:bg-dangerbg"
+          >
+            女性
           </button>
         </div>
-        
-        <div className="mx-auto mt-12 max-w-2xl text-center">
-          <Button 
-            variant="ghost" 
-            onClick={() => router.push("/diagnosis/select")}
-            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full px-6"
-          >
-            ← 診断タイプ選択に戻る
-          </Button>
-        </div>
+
+        <button
+          type="button"
+          onClick={() => router.push("/diagnosis/select")}
+          className="mt-5 text-xs font-bold text-txt-subtle transition-colors hover:text-white"
+        >
+          ← 戻る
+        </button>
       </div>
     </div>
   );
