@@ -1,18 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { Bell, History, Mail, Link as LinkIcon, Check, Copy, AlertCircle, Palette } from "lucide-react";
 
-import { TogelCertificateCard } from "@/components/certificate/togel-certificate-card";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { generateThemeFromColor } from "@/lib/color-theme";
+import { TogelMark } from "@/components/brand/togel-mark";
 import { personalityTypes } from "@/lib/personality";
+import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 
 type Notification = {
   id: string;
@@ -27,57 +24,6 @@ type Notification = {
 
 type UserGender = "male" | "female" | "other";
 
-const LEGACY_THEME_COLORS: Record<string, string> = {
-  rose: "#f8bbd9",
-  blush: "#f9c0cb",
-  citrine: "#ffd166",
-  pearl: "#f1f5f9",
-  onyx: "#1a2538",
-  royal: "#2a1a4a",
-  aurum: "#ffd700",
-  argent: "#e0e0e0",
-  amethyst: "#6b21a8",
-};
-
-const DEFAULT_CERT_COLOR = "#f8bbd9" as const;
-
-const DEFAULT_COLOR_BY_GENDER: Record<UserGender | "default", string> = {
-  female: DEFAULT_CERT_COLOR,
-  male: DEFAULT_CERT_COLOR,
-  other: DEFAULT_CERT_COLOR,
-  default: DEFAULT_CERT_COLOR,
-};
-
-const HEX_COLOR_REGEX = /^#[0-9a-f]{6}$/i;
-
-const normalizeHexColor = (value?: string | null): string | null => {
-  if (!value) return null;
-  const trimmed = value.trim();
-  const prefixed = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
-  const normalized = prefixed.toLowerCase();
-  return HEX_COLOR_REGEX.test(normalized) ? normalized : null;
-};
-
-const resolveCertificateColor = (stored?: string | null, gender?: UserGender) => {
-  const normalized = normalizeHexColor(stored);
-  if (normalized) return normalized;
-  if (stored && LEGACY_THEME_COLORS[stored]) {
-    return LEGACY_THEME_COLORS[stored];
-  }
-  return DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
-};
-
-type ProfileDetails = {
-  favoriteThings?: string;
-  hobbies?: string;
-  specialSkills?: string;
-  values?: string;
-  communication?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-  certificateTheme?: string;
-};
-
 type UserProfile = {
   id: string;
   full_name: string;
@@ -91,7 +37,8 @@ type UserProfile = {
   social_links?: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   notification_settings?: any;
-  details?: ProfileDetails | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  details?: any;
 };
 
 type DiagnosisHistoryEntry = {
@@ -104,250 +51,165 @@ type DiagnosisHistoryEntry = {
   completedAt: string | null;
 };
 
-type DiagnosisHistoryMeta = {
-  total: number;
-  limit: number;
-  offset: number;
-  hasMore: boolean;
-};
+const findExtended = (typeId: string | null | undefined): ExtendedPersonalityTypeDefinition | null =>
+  personalityTypes.find((t) => t.id === typeId) ?? null;
 
-const HISTORY_PAGE_SIZE = 10;
-
-const HISTORY_CACHE_KEY = "mypageDiagnosisHistoryCache";
-const HISTORY_CACHE_TTL = 1000 * 60 * 5;
-
-type HistoryCacheEntry = {
-  cachedAt: number;
-  meta: DiagnosisHistoryMeta;
-  entries: DiagnosisHistoryEntry[];
-};
-
-type HistoryCacheCollection = Record<string, HistoryCacheEntry>;
-
-const readHistoryCache = (): HistoryCacheCollection => {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.sessionStorage.getItem(HISTORY_CACHE_KEY);
-    return raw ? (JSON.parse(raw) as HistoryCacheCollection) : {};
-  } catch (error) {
-    console.warn("Failed to parse history cache", error);
-    return {};
-  }
-};
-
-const getCachedHistory = (userId: string): HistoryCacheEntry | null => {
-  const collection = readHistoryCache();
-  const entry = collection[userId];
-  if (!entry) return null;
-  if (Date.now() - entry.cachedAt > HISTORY_CACHE_TTL) return null;
-  return entry;
-};
-
-const persistHistoryCache = (userId: string, payload: HistoryCacheEntry) => {
-  if (typeof window === "undefined") return;
-  try {
-    const collection = readHistoryCache();
-    collection[userId] = payload;
-    window.sessionStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(collection));
-  } catch (error) {
-    console.warn("Failed to persist history cache", error);
-  }
-};
-
-const getDefaultCertificateColor = (gender?: UserGender) => DEFAULT_COLOR_BY_GENDER[gender ?? "default"];
-
-const toTitleCase = (value: string) => value.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
-
-const formatTypeNameEn = (typeId?: string | null) => {
-  if (!typeId) return "Type Pending";
-  return toTitleCase(typeId);
-};
-
-const formatTogelTypeCode = (typeId?: string | null) => {
-  if (!typeId) return "Togel-00type";
+const formatCardNo = (typeId?: string | null) => {
   const index = personalityTypes.findIndex((type) => type.id === typeId);
-  const padded = index === -1 ? "00" : String(index + 1).padStart(2, "0");
-  return `Togel-${padded}type`;
+  return index === -1 ? "NO. 00-X" : `NO. ${String(index + 1).padStart(2, "0")}-${"ABC"[index % 3]}`;
 };
 
-const formatRegistrationDate = (value?: string | null) => {
+const formatYearMonth = (value?: string | null) => {
   if (!value) return "--";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "--";
-  const formatted = new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-  return formatted.replace(/\//g, ".");
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}`;
 };
 
-const formatDiagnosisDateTime = (value?: string | null) => {
+const formatDate = (value?: string | null) => {
   if (!value) return "--";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "--";
-  const formatted = new Intl.DateTimeFormat("ja-JP", {
+  return new Intl.DateTimeFormat("ja-JP", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
-  return formatted.replace(/\//g, ".");
+  })
+    .format(date)
+    .replace(/\//g, ".");
 };
 
-const formatDiagnosisModeLabel = (mode: "light" | "full") => (mode === "light" ? "ライト版" : "スタンダード版");
+/** 危険物取扱者カード: ドラッグ（またはホバー）で回転するメタリックカード */
+const HazardLicenseCard = ({
+  typeName,
+  catchphrase,
+  caution,
+  cardNo,
+  since,
+}: {
+  typeName: string;
+  catchphrase: string;
+  caution: string;
+  cardNo: string;
+  since: string;
+}) => {
+  const [rotation, setRotation] = useState({ x: 7, y: -16 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragging = useRef(false);
+  const last = useRef({ x: 0, y: 0 });
 
-const MODE_BADGE_STYLES: Record<DiagnosisHistoryEntry["mode"], string> = {
-  light: "bg-rose-50 text-[#E91E63] border border-rose-100",
-  full: "bg-violet-50 text-violet-600 border border-violet-100",
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragging.current = true;
+    setIsDragging(true);
+    last.current = { x: e.clientX, y: e.clientY };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const dx = e.clientX - last.current.x;
+    const dy = e.clientY - last.current.y;
+    last.current = { x: e.clientX, y: e.clientY };
+    setRotation((prev) => ({
+      x: Math.max(-28, Math.min(28, prev.x - dy * 0.4)),
+      y: Math.max(-45, Math.min(45, prev.y + dx * 0.4)),
+    }));
+  };
+  const onPointerUp = () => {
+    dragging.current = false;
+    setIsDragging(false);
+  };
+
+  return (
+    <div className="flex justify-center [perspective:1000px]">
+      <div
+        role="img"
+        aria-label={`危険物取扱者カード: ${typeName}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        className="relative flex aspect-[1.586] w-full max-w-[340px] cursor-grab touch-none select-none flex-col justify-between overflow-hidden rounded-[18px] border border-[#2c3a58] bg-metal p-5.5 shadow-[0_34px_70px_-28px_rgba(255,46,116,.6)] active:cursor-grabbing"
+        style={{
+          transform: `rotateY(${rotation.y}deg) rotateX(${rotation.x}deg)`,
+          transition: isDragging ? "none" : "transform .55s cubic-bezier(.2,.8,.2,1)",
+        }}
+      >
+        <div
+          className="animate-sheen pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,.14)_50%,transparent_65%)] bg-[length:200%_100%]"
+          aria-hidden="true"
+        />
+        <div className="relative flex items-start justify-between">
+          <div>
+            <div className="text-[9px] font-black tracking-[0.26em] text-hazard">
+              HAZARDOUS TYPE LICENSE
+            </div>
+            <div className="mt-2 text-xl font-black text-white">{typeName}</div>
+            <div className="mt-[3px] text-[10px] font-bold text-[#8fa2c0]">{catchphrase}</div>
+          </div>
+          <TogelMark size={26} className="flex-none" />
+        </div>
+        <div className="relative flex items-end justify-between gap-3">
+          <div>
+            <div className="text-[9px] tracking-[0.2em] text-[#7d879b]">注意事項</div>
+            <div className="mt-1 text-[11px] font-bold text-txt-muted">{caution}</div>
+          </div>
+          <div className="flex-none text-right font-mono text-[9px] leading-relaxed text-[#7d879b]">
+            <div>{cardNo}</div>
+            <div>{since}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [newsletterEnabled, setNewsletterEnabled] = useState(true);
-  const [rankInEnabled, setRankInEnabled] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [history, setHistory] = useState<DiagnosisHistoryEntry[]>([]);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const [copied, setCopied] = useState(false);
   const [prankActive, setPrankActive] = useState(true);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [certificateColor, setCertificateColor] = useState<string>(DEFAULT_COLOR_BY_GENDER.default);
-  const [themeSaving, setThemeSaving] = useState(false);
-  const [diagnosisHistory, setDiagnosisHistory] = useState<DiagnosisHistoryEntry[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
-  const [historyMeta, setHistoryMeta] = useState<DiagnosisHistoryMeta>({ total: 0, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
-  
+  const [newsletterEnabled, setNewsletterEnabled] = useState(true);
+
   const supabase = createSupabaseBrowserClient();
+
+  const hydrateProfile = useCallback((data: UserProfile) => {
+    setProfile(data);
+    setPrankActive(data.social_links?.prankActive ?? true);
+    setNewsletterEnabled(data.notification_settings?.newsletter ?? true);
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications");
-      if (res.ok) {
-        const notifs = await res.json();
-        setNotifications(notifs);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (Array.isArray(json)) {
+        setNotifications(json as Notification[]);
       }
     } catch (error) {
-      console.error("Failed to load notifications", error);
+      console.error("Failed to fetch notifications", error);
     }
   }, []);
 
-  useEffect(() => {
-    if (!notifications.length) {
-      setSelectedNotification(null);
-      return;
+  const fetchHistory = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({ limit: "20", offset: "0" });
+      const res = await fetch(`/api/diagnosis/history?${params.toString()}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (Array.isArray(json.history)) {
+        setHistory(json.history as DiagnosisHistoryEntry[]);
+        setHistoryTotal(json.meta?.total ?? json.history.length);
+      }
+    } catch (error) {
+      console.error("Failed to fetch diagnosis history", error);
     }
-    setSelectedNotification((prev) => {
-      if (!prev) {
-        return notifications[0];
-      }
-      const stillExists = notifications.find((note) => note.id === prev.id);
-      return stillExists ?? notifications[0];
-    });
-  }, [notifications]);
-
-  const hydrateProfile = useCallback((data: UserProfile) => {
-    setProfile(data);
-    const links = data.social_links || {};
-    setPrankActive(links.prankActive !== false);
-
-    const notificationSettings = data.notification_settings || {};
-    setRankInEnabled(notificationSettings.rank_in !== false);
-    setNewsletterEnabled(notificationSettings.newsletter !== false);
-
-    const details = (data.details as ProfileDetails) || {};
-    const nextColor = resolveCertificateColor(details.certificateTheme, data.gender);
-    setCertificateColor(nextColor);
   }, []);
-
-  const fetchDiagnosisHistory = useCallback(
-    async (
-      nextOffset = 0,
-      append = false,
-      options?: { allowCache?: boolean; forceRefresh?: boolean; userId?: string }
-    ) => {
-      const effectiveUserId = options?.userId ?? user?.id ?? null;
-      const allowCache = options?.allowCache !== false && !append && nextOffset === 0 && Boolean(effectiveUserId);
-      const forceRefresh = options?.forceRefresh ?? true;
-      let cacheApplied = false;
-
-      if (allowCache && effectiveUserId) {
-        const cached = getCachedHistory(effectiveUserId);
-        if (cached) {
-          setDiagnosisHistory(cached.entries);
-          setHistoryMeta(cached.meta);
-          cacheApplied = true;
-          setHistoryError(null);
-        }
-      }
-
-      if (append) {
-        setHistoryLoadingMore(true);
-      } else if (!cacheApplied) {
-        setHistoryLoading(true);
-      }
-      setHistoryError(null);
-
-      if (cacheApplied && !forceRefresh) {
-        if (append) {
-          setHistoryLoadingMore(false);
-        } else {
-          setHistoryLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const params = new URLSearchParams({
-          limit: String(HISTORY_PAGE_SIZE),
-          offset: String(nextOffset),
-        });
-        const res = await fetch(`/api/diagnosis/history?${params.toString()}`);
-        if (res.status === 401) {
-          setDiagnosisHistory([]);
-          setHistoryMeta({ total: 0, limit: HISTORY_PAGE_SIZE, offset: 0, hasMore: false });
-          return;
-        }
-        if (!res.ok) {
-          throw new Error("Failed to load history");
-        }
-        const data = await res.json();
-        const entries = Array.isArray(data.history) ? data.history : [];
-        setDiagnosisHistory((prev) => (append ? [...prev, ...entries] : entries));
-        const nextMeta = data.meta
-          ? {
-              total: Number(data.meta.total) || entries.length,
-              limit: Number(data.meta.limit) || HISTORY_PAGE_SIZE,
-              offset: Number(data.meta.offset) || nextOffset,
-              hasMore: Boolean(data.meta.hasMore),
-            }
-          : { total: entries.length, limit: HISTORY_PAGE_SIZE, offset: append ? historyMeta.offset : 0, hasMore: false };
-        setHistoryMeta(nextMeta);
-
-        if (!append && nextOffset === 0 && effectiveUserId) {
-          persistHistoryCache(effectiveUserId, {
-            cachedAt: Date.now(),
-            entries,
-            meta: nextMeta,
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load diagnosis history", err);
-        setHistoryError("診断履歴を取得できませんでした。");
-      } finally {
-        if (append) {
-          setHistoryLoadingMore(false);
-        } else if (!cacheApplied) {
-          setHistoryLoading(false);
-        }
-      }
-    },
-    [historyMeta.offset, user?.id]
-  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -368,76 +230,19 @@ export default function MyPage() {
 
       await Promise.all([
         profilePromise.then((res) => {
-          if (res?.data) {
-            hydrateProfile(res.data as UserProfile);
-          }
+          if (res?.data) hydrateProfile(res.data as UserProfile);
         }),
         fetchNotifications(),
-        fetchDiagnosisHistory(0, false, { allowCache: true, userId: authUser.id }),
+        fetchHistory(),
       ]);
-
       setLoading(false);
     };
-    fetchData();
-  }, [supabase, hydrateProfile, fetchNotifications, fetchDiagnosisHistory]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    const channel = supabase
-      .channel(`profile-updates-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-        (payload) => {
-          hydrateProfile(payload.new as UserProfile);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, user?.id, hydrateProfile]);
-
-  const handleColorSelection = async (color: string) => {
-    if (!profile || !user) return;
-    const normalized = normalizeHexColor(color);
-    if (!normalized || normalized === certificateColor) return;
-
-    const previousColor = certificateColor;
-    setCertificateColor(normalized);
-    setThemeSaving(true);
-
-    const currentDetails = (profile.details as ProfileDetails) || {};
-    const updatedDetails = { ...currentDetails, certificateTheme: normalized };
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({ details: updatedDetails })
-      .eq("id", user.id)
-      .select("*")
-      .single();
-
-    setThemeSaving(false);
-
-    if (error) {
-      console.error("Failed to save certificate color", error);
-      setCertificateColor(previousColor);
-      alert("カードのカラー設定の保存に失敗しました。時間を置いて再度お試しください。");
-      return;
-    }
-
-    if (data) {
-      hydrateProfile(data as UserProfile);
-    }
-  };
+    void fetchData();
+  }, [supabase, hydrateProfile, fetchNotifications, fetchHistory]);
 
   const handleNotificationRead = async (id: string, isRead: boolean) => {
-    if (isRead) return; // Already read
-    
-    // Optimistic update
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    
+    if (isRead) return;
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     await fetch("/api/notifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -445,86 +250,59 @@ export default function MyPage() {
     });
   };
 
-  const handleNotificationSettingToggle = async (key: "rank_in" | "newsletter", checked: boolean) => {
-    if (key === "rank_in") setRankInEnabled(checked);
-    if (key === "newsletter") setNewsletterEnabled(checked);
-    
-    if (!user || !profile) return;
-
-    const currentSettings = profile.notification_settings || {};
-    const updatedSettings = { ...currentSettings, [key]: checked };
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ notification_settings: updatedSettings })
-      .eq("id", user.id);
-
-    if (error) {
-      console.error("Failed to update settings", error);
-      // Revert (omitted for brevity)
-    } else {
-      setProfile({ ...profile, notification_settings: updatedSettings });
-    }
-  };
-
   const handlePrankToggle = async (checked: boolean) => {
     setPrankActive(checked);
     if (!user || !profile) return;
-
-    const currentLinks = profile.social_links || {};
-    const updatedLinks = { ...currentLinks, prankActive: checked };
-
+    const updatedLinks = { ...(profile.social_links || {}), prankActive: checked };
     const { error } = await supabase
       .from("profiles")
       .update({ social_links: updatedLinks })
       .eq("id", user.id);
-
     if (error) {
       console.error("Failed to update prank setting", error);
-      // Revert on error
       setPrankActive(!checked);
     } else {
       setProfile({ ...profile, social_links: updatedLinks });
     }
   };
 
-  // 招待条件チェック: 男性 かつ 基本情報(名前, 仕事, エリア) + アバターがあること
-  // ※詳細プロフィールは必須としない
-  const isEligibleForReferral = 
-    profile?.gender === "male" && 
-    !!profile?.avatar_url && 
-    !!profile?.full_name && 
-    !!profile?.job && 
-    !!profile?.city;
+  const handleNewsletterToggle = async (checked: boolean) => {
+    setNewsletterEnabled(checked);
+    if (!user || !profile) return;
+    const updatedSettings = { ...(profile.notification_settings || {}), newsletter: checked };
+    const { error } = await supabase
+      .from("profiles")
+      .update({ notification_settings: updatedSettings })
+      .eq("id", user.id);
+    if (error) {
+      console.error("Failed to update settings", error);
+      setNewsletterEnabled(!checked);
+    } else {
+      setProfile({ ...profile, notification_settings: updatedSettings });
+    }
+  };
 
-  const certificateTypeCode = formatTogelTypeCode(profile?.diagnosis_type_id);
-  const certificateBaseColor = certificateColor || getDefaultCertificateColor(profile?.gender);
-  const certificateNickname =
-    profile?.full_name ||
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split("@")[0] ||
-    "Togel Member";
-  const certificateSubtitle = formatTypeNameEn(profile?.diagnosis_type_id);
-  const registeredAt = profile?.created_at || user?.created_at;
-  const certificateDateDisplay = formatRegistrationDate(registeredAt);
-  const memberSince = certificateDateDisplay;
+  const buildInviteUrl = async (): Promise<string | null> => {
+    // サーバーで HMAC 署名された招待コードを取得（偽造不可・自分専用）
+    const res = await fetch("/api/invite/generate");
+    if (!res.ok) return null;
+    const { code, enabled } = await res.json();
+    if (!enabled || !code) return null;
+    const referralUrl = new URL(window.location.origin);
+    referralUrl.searchParams.set("c", code);
+    referralUrl.searchParams.set("openExternalBrowser", "1");
+    return referralUrl.toString();
+  };
 
   const handleCopyLink = async () => {
     if (typeof window === "undefined" || !user) return;
-    // サーバーで HMAC 署名された招待コードを取得（偽造不可・自分専用）
     try {
-      const res = await fetch("/api/invite/generate");
-      if (!res.ok) throw new Error("failed to generate invite code");
-      const { code, enabled } = await res.json();
-      if (!enabled || !code) {
+      const url = await buildInviteUrl();
+      if (!url) {
         alert("招待リンク機能は現在利用できません。");
         return;
       }
-      const referralUrl = new URL(window.location.origin);
-      referralUrl.searchParams.set("c", code);
-      referralUrl.searchParams.set("openExternalBrowser", "1");
-      await navigator.clipboard.writeText(referralUrl.toString());
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
@@ -533,411 +311,287 @@ export default function MyPage() {
     }
   };
 
+  const handleLineShare = async () => {
+    if (typeof window === "undefined" || !user) return;
+    try {
+      const url = await buildInviteUrl();
+      if (!url) {
+        alert("招待リンク機能は現在利用できません。");
+        return;
+      }
+      const text = "私たち、どれくらい合わないか診断してみない？";
+      window.open(
+        `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+        "_blank",
+      );
+    } catch (e) {
+      console.error("Failed to build invite link", e);
+    }
+  };
+
+  const selfType = findExtended(profile?.diagnosis_type_id);
+  const worstTypes = useMemo(
+    () =>
+      (selfType?.badCompatibleTypes ?? [])
+        .map((id) => findExtended(id))
+        .filter((t): t is ExtendedPersonalityTypeDefinition => Boolean(t)),
+    [selfType],
+  );
+
+  const caution = worstTypes[0]
+    ? `${worstTypes[0].typeName}と密閉空間に置かないこと`
+    : "診断を受けると注意事項が刻印されます";
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const visibleHistory = showAllHistory ? history : history.slice(0, 3);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-[#E91E63]"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-ink">
+        <div className="w-[200px] overflow-hidden rounded-full">
+          <div className="animate-marquee h-[10px] w-[400%] bg-hazard-sm" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#fdeef4] py-12 md:py-20 overflow-x-hidden">
-      <div className="container px-4 md:px-6 max-w-4xl">
-        
-        {/* Header Section - グラデーションバナー */}
-        <div className="relative mb-10 overflow-hidden rounded-[20px] bg-[linear-gradient(135deg,#ff5e93,#E91E63_55%,#a86bff)] p-6 text-white shadow-[0_18px_40px_-20px_rgba(233,30,99,0.6)]">
-          <div className="pointer-events-none absolute -right-3 -top-3 text-[90px] opacity-20">🐯</div>
-          <div className="relative flex items-center gap-4">
-            <div className="relative h-16 w-16 shrink-0 md:h-20 md:w-20">
-              {user?.user_metadata?.avatar_url ? (
-                <Image
-                  src={user.user_metadata.avatar_url}
-                  alt={user.user_metadata.name || "User"}
-                  fill
-                  sizes="80px"
-                  className="rounded-full border-[3px] border-white/60 object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-full border-[3px] border-white/60 bg-white/20 text-3xl">
-                  👤
-                </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-heading text-xl font-black md:text-2xl">
-                {user?.user_metadata?.full_name || user?.email?.split("@")[0] || "ゲスト"}
-              </h1>
-              <p className="truncate text-xs text-white/85">{user?.email}</p>
-              <span className="mt-2 inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold">
-                無料会員
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {profile && (
-          <section className="mb-12">
-            <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-[minmax(0,_3fr)_minmax(0,_2fr)]">
-              <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-slate-100/60 p-4 shadow-sm sm:p-6">
-                <div className="flex flex-col gap-2 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold tracking-[0.4em] uppercase text-slate-400">Togel Official</p>
-                    <p className="text-slate-800 font-bold">Premium Certificate</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase text-slate-400">Member Since</p>
-                    <p className="text-sm font-semibold text-slate-700">{memberSince}</p>
-                  </div>
-                </div>
-                <div className="mt-6 flex justify-center">
-                  <TogelCertificateCard
-                    baseColor={certificateBaseColor}
-                    nickname={certificateNickname}
-                    togelType={certificateTypeCode}
-                    togelLabel={certificateSubtitle}
-                    registrationDate={certificateDateDisplay}
-                  />
-                </div>
-              </div>
-              <CertificateColorPanel
-                currentColor={certificateBaseColor}
-                onSelect={handleColorSelection}
-                saving={themeSaving}
-              />
-            </div>
-          </section>
-        )}
-
-        <RecommendationsSection
-          togelType={profile?.diagnosis_type_id}
-          page="mypage"
-          heading="あなたに合った最新サービス"
-          subheading="診断結果をもとに運営が厳選しました"
-        />
-
-        <section className="mb-12">
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
-                <History size={20} />
-              </div>
-              <h2 className="font-bold text-lg text-slate-800">診断ヒストリー</h2>
-            </div>
-            {historyLoading && diagnosisHistory.length === 0 ? (
-              <div className="flex items-center justify-center py-10">
-                <div className="animate-spin rounded-full h-6 w-6 border-4 border-slate-200 border-t-[#E91E63]"></div>
-              </div>
-            ) : historyError ? (
-              <div className="text-center text-sm text-red-500 py-6">{historyError}</div>
-            ) : diagnosisHistory.length === 0 ? (
-              <div className="text-center text-sm text-slate-500 py-6 space-y-2">
-                <p>まだ診断履歴がありません。</p>
-                <Button asChild variant="ghost" className="text-[#E91E63] hover:text-[#D81B60]">
-                  <Link href="/diagnosis/select">診断を受ける</Link>
-                </Button>
-              </div>
-            ) : (
-              <ol className="relative border-l border-slate-200 pl-4 space-y-6">
-                {diagnosisHistory.map((entry) => {
-                  const togelCode = entry.togelTypeId ? formatTogelTypeCode(entry.togelTypeId) : entry.togelLabel ?? "Togel --型";
-                  const togelName = entry.togelTypeId ? formatTypeNameEn(entry.togelTypeId) : entry.typeName ?? "Type Pending";
-                  const modeBadgeClass = MODE_BADGE_STYLES[entry.mode];
-                  return (
-                    <li key={entry.id} className="relative pl-4">
-                      <span className="absolute -left-2 top-1 h-3 w-3 rounded-full bg-[#E91E63] border-2 border-white"></span>
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">第{entry.occurrence}回</p>
-                          <p className="text-lg font-bold text-slate-900">{formatDiagnosisDateTime(entry.completedAt)}</p>
-                        </div>
-                        <div className="text-sm text-slate-500 text-left sm:text-right space-y-1">
-                          <div className="flex flex-wrap gap-2 sm:justify-end">
-                            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${modeBadgeClass}`}>
-                              {formatDiagnosisModeLabel(entry.mode)}
-                            </span>
-                            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
-                              {togelCode}
-                            </span>
-                          </div>
-                          <p className="text-sm font-semibold text-slate-800">{togelName}</p>
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
-            {historyMeta.hasMore && (
-              <div className="mt-6 text-center">
-                <Button
-                  variant="outline"
-                  onClick={() => fetchDiagnosisHistory(historyMeta.offset + historyMeta.limit, true)}
-                  disabled={historyLoadingMore}
+    <div className="min-h-screen bg-ink text-white">
+      {/* ヒーロー: 危険物取扱者カード */}
+      <section
+        className="bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(255,46,116,.2),transparent_60%)] px-5.5 pb-[26px] pt-7"
+        style={{ containerType: "inline-size" }}
+      >
+        <div className="mx-auto grid max-w-[1120px] items-center gap-6 md:grid-cols-2">
+          <HazardLicenseCard
+            typeName={selfType?.typeName ?? "取扱区分 未判定"}
+            catchphrase={selfType?.catchphrase ?? "診断すると判定されます"}
+            caution={caution}
+            cardNo={formatCardNo(profile?.diagnosis_type_id)}
+            since={formatYearMonth(profile?.created_at ?? user?.created_at)}
+          />
+          <div>
+            <div className="text-[11px] font-black tracking-[0.24em] text-hazard">MEMBER CARD</div>
+            <h1 className="mt-3 text-[clamp(24px,3.6cqw,36px)] font-black leading-[1.35] tracking-[-0.02em]">
+              あなたの取扱区分
+            </h1>
+            <p className="mt-3 max-w-[30em] text-[13px] leading-8 text-txt-muted">
+              ドラッグで回転します。診断を受け直すと区分と注意事項が更新されます。
+            </p>
+            <div className="mt-[18px] flex flex-wrap gap-[9px]">
+              {selfType && (
+                <a
+                  href={`/api/og?type=${selfType.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-h-[48px] items-center rounded-full bg-hazard px-5 text-[13px] font-black text-ink transition-colors hover:bg-white"
                 >
-                  {historyLoadingMore ? "読み込み中..." : "さらに表示"}
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          
-          {/* 1. お知らせ受信箱 */}
-          <div className="md:col-span-2 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-                <Bell size={20} />
-              </div>
-              <h2 className="font-bold text-lg text-slate-800">お知らせ受信箱</h2>
+                  カードを保存
+                </a>
+              )}
+              <Link
+                href="/diagnosis/select"
+                className="flex min-h-[48px] items-center rounded-full border border-[#29303f] px-5 text-[13px] font-bold text-txt-muted transition-colors hover:border-primary hover:text-white"
+              >
+                診断を受け直す
+              </Link>
             </div>
-            <div className="space-y-1">
-{notifications.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-sm">
-                  お知らせはありません
-                </div>
-              ) : (
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="md:w-2/5 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>すべての通知</span>
-                      <span>{notifications.filter((note) => !note.read).length} 件の未読</span>
-                    </div>
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50/50 divide-y divide-slate-100 max-h-[360px] overflow-y-auto">
-                      {notifications.map((note) => (
-                        <button
-                          key={note.id}
-                          onClick={() => {
-                            setSelectedNotification(note);
-                            handleNotificationRead(note.id, note.read);
-                          }}
-                          className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
-                            selectedNotification?.id === note.id ? "bg-white shadow-sm" : "bg-transparent"
-                          }`}
-                        >
-                          <span
-                            className={`h-2 w-2 rounded-full mt-2 ${note.read ? "bg-slate-300" : "bg-[#E91E63]"}`}
-                          />
-                          <div className="flex-1">
-                            <p className={`text-sm font-semibold ${note.read ? "text-slate-500" : "text-slate-900"}`}>
-                              {note.title}
-                            </p>
-                            <p className="text-[11px] text-slate-400">
-                              {new Date(note.scheduled_at).toLocaleString("ja-JP")}
-                            </p>
-                          </div>
-                          {!note.read && (
-                            <span className="text-[10px] font-semibold text-[#E91E63] bg-[#E91E63]/10 px-2 py-0.5 rounded-full">
-                              未読
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+          </div>
+        </div>
+      </section>
 
-                  <div className="flex-1 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-5 min-h-[280px]">
-                    {!selectedNotification ? (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm gap-2">
-                        <span>左のリストからお知らせを選択してください</span>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] tracking-[0.3em] text-slate-400 uppercase">
-                            {selectedNotification.type === "matching" ? "MATCH" : "ADMIN"}
-                          </span>
-                          <span className="text-xs text-slate-400">
-                            {new Date(selectedNotification.scheduled_at).toLocaleString("ja-JP")}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-900">{selectedNotification.title}</h3>
-                          <p className="text-sm text-slate-500 whitespace-pre-wrap mt-2">
-                            {selectedNotification.content}
-                          </p>
-                          {selectedNotification.metadata?.url && (
-                            <Button asChild variant="ghost" className="mt-4 h-auto px-0 text-[#E91E63] hover:text-[#C2185B]">
-                              <Link href={selectedNotification.metadata.url}>詳細を見る →</Link>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+      {/* カードグリッド */}
+      <section className="px-5.5 pb-[34px] pt-2">
+        <div className="mx-auto grid max-w-[1120px] items-start gap-3.5 md:grid-cols-2">
+          {/* 診断履歴 */}
+          <div className="rounded-[18px] border border-line bg-surface p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+                診断履歴
+              </span>
+              {historyTotal > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllHistory((prev) => !prev)}
+                  className="text-[11px] font-black text-hazard hover:text-white"
+                >
+                  {showAllHistory ? "閉じる" : "すべて"}
+                </button>
               )}
             </div>
-          </div>
-
-          {/* 4. メルマガ通知設定 */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="p-2 rounded-xl bg-purple-50 text-purple-600">
-                <Mail size={20} />
-              </div>
-              <h2 className="font-bold text-lg text-slate-800">メルマガ通知</h2>
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 mb-4">
-              <div>
-                <p className="font-bold text-slate-700">運営からのお知らせ通知</p>
-                <p className="text-xs text-slate-500 mt-1">サービスに関するお知らせや情報を受け取る</p>
-              </div>
-              <Switch checked={newsletterEnabled} onCheckedChange={(c) => handleNotificationSettingToggle("newsletter", c)} />
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50">
-              <div>
-                <p className="font-bold text-slate-700">ランクイン通知</p>
-                <p className="text-xs text-slate-500 mt-1">誰かの診断結果で上位5名に入った際に通知</p>
-              </div>
-              <Switch checked={rankInEnabled} onCheckedChange={(c) => handleNotificationSettingToggle("rank_in", c)} />
-            </div>
-          </div>
-
-          {/* 5. 紹介URL発行 (条件付き) */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="p-2 rounded-xl bg-green-50 text-green-600">
-                <LinkIcon size={20} />
-              </div>
-              <h2 className="font-bold text-lg text-slate-800">友達を紹介する</h2>
-            </div>
-            
-            {/* 条件: 男性かつプロフィール充実 */}
-            {isEligibleForReferral ? ( 
-              <div className="space-y-4">
-                <p className="text-sm text-slate-600">
-                  このURLから女性が診断すると、<strong className="text-[#E91E63]">あなたがマッチング結果の1位に表示される</strong>確率が大幅に上がります（いたずら機能）。
-                </p>
-                <div className="flex gap-2">
-                  <div className="flex-1 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500 font-mono truncate border border-slate-200">
-                    {typeof window !== 'undefined' ? `${window.location.origin}?c=*******` : 'Loading...'}
-                  </div>
-                  <Button onClick={handleCopyLink} className="shrink-0" size="icon" variant="outline">
-                    {copied ? <Check size={18} className="text-green-600" /> : <Copy size={18} />}
-                  </Button>
-                </div>
-                <p className="text-xs text-slate-400">
-                  ※URLは暗号化されており、あなたのIDは直接見えません。
-                </p>
-                
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-slate-700">いたずら機能を有効にする</p>
-                      <p className="text-xs text-slate-500">OFFにすると、紹介相手には通常の結果だけが表示されます。</p>
+            <div className="mt-4 flex flex-col gap-2.5">
+              {visibleHistory.length === 0 && (
+                <p className="text-xs text-txt-subtle">まだ診断履歴がありません。</p>
+              )}
+              {visibleHistory.map((entry, i) => (
+                <div
+                  key={entry.id}
+                  className={`flex items-center gap-3 rounded-input border border-line-soft bg-panel px-3.5 py-[13px] ${
+                    i > 0 ? "opacity-[.65]" : ""
+                  }`}
+                >
+                  <div
+                    className={`h-2 w-2 flex-none rounded-full ${i === 0 ? "bg-primary" : "bg-txt-disabled"}`}
+                  />
+                  <div className="flex-1">
+                    <div className="text-[13px] font-black">{entry.typeName ?? "不明なタイプ"}</div>
+                    <div className="mt-[2px] text-[10px] text-txt-subtle">
+                      {formatDate(entry.completedAt)} ／{" "}
+                      {entry.mode === "light" ? "ライト10問" : "スタンダード40問"}
                     </div>
-                    <Switch checked={prankActive} onCheckedChange={handlePrankToggle} />
                   </div>
+                  <Link
+                    href="/result"
+                    className={`flex-none text-[11px] font-black ${i === 0 ? "text-hazard" : "text-txt-subtle"} hover:text-white`}
+                  >
+                    結果
+                  </Link>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-4 px-2">
-                <AlertCircle className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-                <p className="text-sm font-bold text-slate-400">発行条件を満たしていません</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  ※男性会員かつ基本プロフィール（写真含む）を<br/>すべて入力した方のみ発行可能です
-                </p>
-                <Button variant="ghost" asChild className="mt-2 h-auto p-0 text-[#E91E63] hover:underline">
-                  <Link href="/profile/edit">プロフィールを編集する</Link>
-                </Button>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
 
-        </div>
-        
-        <div className="mt-12 text-center">
-          <Button variant="outline" asChild className="text-slate-400 hover:text-slate-600">
-            <Link href="/">トップページに戻る</Link>
-          </Button>
-        </div>
+          {/* お知らせ */}
+          <div className="rounded-[18px] border border-line bg-surface p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+                お知らせ
+              </span>
+              {unreadCount > 0 && (
+                <span className="rounded-full bg-primary px-2 py-[3px] text-[10px] font-black text-white">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+            <div className="mt-4 flex flex-col gap-3">
+              {notifications.length === 0 && (
+                <p className="text-xs text-txt-subtle">お知らせはまだありません。</p>
+              )}
+              {notifications.slice(0, 5).map((notification) => (
+                <button
+                  key={notification.id}
+                  type="button"
+                  onClick={() => handleNotificationRead(notification.id, notification.read)}
+                  className="flex gap-[11px] text-left"
+                >
+                  <span
+                    className={`mt-1.5 h-[7px] w-[7px] flex-none rounded-full ${
+                      notification.read ? "bg-[#2a3348]" : "bg-primary"
+                    }`}
+                  />
+                  <span className={notification.read ? "opacity-60" : ""}>
+                    <span className="block text-[12.5px] font-bold leading-relaxed">
+                      {notification.title}
+                    </span>
+                    <span className="mt-[3px] block text-[10px] text-txt-subtle">
+                      {formatDate(notification.scheduled_at)}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      </div>
+          {/* 友達を招待 */}
+          <div className="rounded-[18px] border border-[#1e3557] bg-[linear-gradient(160deg,#0b1f3a,#0d111b)] p-5">
+            <span className="text-[11px] font-black tracking-[0.2em] text-[#8fa2c0]">
+              友達を招待
+            </span>
+            <p className="mt-3 text-[12.5px] leading-[1.95] text-txt-muted">
+              2人の「合わなさ」を判定します。仲がいいほど盛り上がります。
+            </p>
+            <div className="mt-3.5 flex items-center gap-2 rounded-input border border-dashed border-[#2a3348] bg-ink px-3.5 py-3">
+              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs text-txt-muted">
+                {copied ? "コピーしました！" : "あなた専用の招待リンク"}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="flex-none rounded-chip bg-hazard px-3 py-[7px] text-[11px] font-black text-ink transition-colors hover:bg-white"
+              >
+                コピー
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleLineShare}
+              className="mt-2.5 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-input bg-linegreen text-[13px] font-black text-white transition-opacity hover:opacity-90"
+            >
+              LINEで送る
+            </button>
+          </div>
+
+          {/* あなたの地雷リスト */}
+          <div className="rounded-[18px] border border-line bg-surface p-5">
+            <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+              あなたの地雷リスト
+            </span>
+            <div className="mt-4 flex flex-col gap-2">
+              {worstTypes.length === 0 && (
+                <p className="text-xs text-txt-subtle">診断を受けると地雷リストが作成されます。</p>
+              )}
+              {worstTypes.slice(0, 3).map((type, i) => (
+                <div
+                  key={type.id}
+                  className={`flex items-center gap-2.5 rounded-[11px] border px-[13px] py-[11px] ${
+                    i === 0 ? "border-dangerline bg-dangerbg" : "border-line-soft bg-panel"
+                  }`}
+                >
+                  <span
+                    className={`flex-none text-[11px] font-black ${i === 0 ? "text-primary" : "text-txt-subtle"}`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="flex-1 text-[12.5px] font-bold">{type.typeName}</span>
+                  <Link
+                    href="/coaching"
+                    className="flex-none text-[10px] font-black text-hazard hover:text-white"
+                  >
+                    攻略
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 設定 */}
+          <div className="rounded-[18px] border border-line bg-surface p-5 md:col-span-2">
+            <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">設定</span>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[12.5px] font-bold">運命モード（いたずら）</div>
+                  <div className="mt-[2px] text-[10px] text-txt-subtle">
+                    招待した相手の結果に自分を1位表示
+                  </div>
+                </div>
+                <Switch checked={prankActive} onCheckedChange={handlePrankToggle} />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[12.5px] font-bold">お知らせメール</div>
+                  <div className="mt-[2px] text-[10px] text-txt-subtle">新機能・タイプ別の配信</div>
+                </div>
+                <Switch checked={newsletterEnabled} onCheckedChange={handleNewsletterToggle} />
+              </div>
+              <div className="flex items-center justify-end">
+                <Link
+                  href="/profile/edit"
+                  className="flex min-h-[44px] items-center rounded-full border border-line px-5 text-xs font-bold text-txt-muted transition-colors hover:border-primary hover:text-white"
+                >
+                  プロフィールを編集
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PR / レコメンド枠 */}
+      <section className="border-t border-line-soft bg-panel px-5.5 py-5.5">
+        <div className="mx-auto max-w-[1120px]">
+          <RecommendationsSection togelType={profile?.diagnosis_type_id ?? null} page="mypage" />
+        </div>
+      </section>
     </div>
   );
 }
-
-type CertificateColorPanelProps = {
-  currentColor: string;
-  onSelect: (color: string) => void;
-  saving: boolean;
-};
-
-const CertificateColorPanel = ({ currentColor, onSelect, saving }: CertificateColorPanelProps) => {
-  const [inputValue, setInputValue] = useState(currentColor.toUpperCase());
-  const themePreview = useMemo(() => generateThemeFromColor(currentColor), [currentColor]);
-
-  useEffect(() => {
-    setInputValue(currentColor.toUpperCase());
-  }, [currentColor]);
-
-  const handleInputChange = (value: string) => {
-    if (value === "") {
-      setInputValue("#");
-      return;
-    }
-    const formatted = value.startsWith("#") ? value.toUpperCase() : `#${value.toUpperCase()}`;
-    if (/^#[0-9A-F]{0,6}$/.test(formatted)) {
-      setInputValue(formatted);
-      if (formatted.length === 7) {
-        onSelect(formatted.toLowerCase());
-      }
-    }
-  };
-
-  return (
-    <div className="rounded-3xl border border-slate-100 bg-white px-4 py-4 shadow-sm space-y-3 sm:px-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-400">Color Control</p>
-          <h3 className="font-semibold text-base text-slate-900 mt-1">カードカラー</h3>
-          <p className="text-xs text-slate-500 mt-0.5">HEXとピッカーで直感操作</p>
-        </div>
-        <div className="rounded-2xl bg-slate-50 p-1.5 text-slate-600">
-          <Palette size={16} />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <label className="relative h-10 w-10">
-          <span
-            className="absolute inset-0 rounded-full border border-slate-200 shadow-inner"
-            style={{ backgroundColor: currentColor }}
-          />
-          <input
-            type="color"
-            value={currentColor}
-            onChange={(event) => onSelect(event.target.value.toLowerCase())}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            aria-label="色を選択"
-          />
-        </label>
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(event) => handleInputChange(event.target.value)}
-          className="flex-1 h-10 rounded-2xl border border-slate-200 bg-slate-50 px-3 font-mono text-sm focus:border-slate-400 focus:outline-none"
-          placeholder="#F8BBD9"
-          aria-label="HEXカラーコード"
-        />
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-semibold text-slate-500">Palette Preview</p>
-        <div className="flex gap-1.5">
-          {[themePreview.primary, themePreview.accent, themePreview.text].map((color) => (
-            <span key={color} className="h-6 w-6 rounded-full border border-slate-100" style={{ backgroundColor: color }} />
-          ))}
-        </div>
-      </div>
-
-      <p className="text-[10px] text-slate-400 text-right">
-        {saving ? "保存中..." : "タップするだけで即保存"}
-      </p>
-    </div>
-  );
-};
-
