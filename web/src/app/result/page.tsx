@@ -1,21 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect, useRef, useCallback, useMemo, SyntheticEvent } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
-import { getTogelLabel } from "@/lib/personality";
-import { BigFiveScores, MatchingResult, PersonalityTypeDefinition } from "@/types/diagnosis";
-import { Switch } from "@/components/ui/switch";
-
-const buildFallbackAvatar = (seed: string, gender: "male" | "female"): string => {
-  const palette = gender === "male" ? "blue" : "pink";
-  const encodedSeed = encodeURIComponent(seed);
-  return `https://api.dicebear.com/8.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=ffdfbf,bee3db&scale=90&accessoriesProbability=40&hairColor=4a312c,2f1b0f&skinColor=f2d3b1,eac9a1&shapeColor=${palette}`;
-};
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { personalityTypes } from "@/lib/personality";
+import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
+import {
+  BigFiveScores,
+  MatchingResult,
+  MismatchResult,
+  PersonalityTypeDefinition,
+} from "@/types/diagnosis";
 
 type LatestDiagnosis = {
   bigFiveScores: BigFiveScores;
@@ -33,363 +30,111 @@ type LatestDiagnosis = {
   };
 };
 
-// 追加: マッチングカードをコンポーネントとして分離
-const MatchingCard = ({ result, isFeatured = false }: { result: MatchingResult; isFeatured?: boolean }) => {
-  return (
-    <div
-      className={`rounded-none md:rounded-3xl border-b-8 md:border-2 border-muted/20 md:border-border bg-white/95 px-5 py-8 md:p-6 shadow-none md:shadow-lg hover:shadow-xl transition-shadow ${
-        result.isPrank ? "ring-4 ring-[#E91E63]/30 border-[#E91E63]" : 
-        isFeatured ? "border-yellow-400 ring-4 ring-yellow-400/20" : ""
-      }`}
-    >
-      {/* ヘッダー */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between pb-4 border-b border-border">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="relative h-24 w-24">
-            <Image
-              src={result.profile.avatarUrl}
-              alt={result.profile.nickname}
-              fill
-              sizes="96px"
-              className={`rounded-full border-4 ${isFeatured ? "border-yellow-400" : "border-[#FFD1DC]"} object-cover`}
-              onError={(e: SyntheticEvent<HTMLImageElement>) => {
-                const target = e.currentTarget;
-                if (!target.src.includes("dicebear.com")) {
-                  target.src = buildFallbackAvatar(result.profile.id, result.profile.gender);
-                }
-              }}
-            />
-             {isFeatured && (
-               <div className="absolute -top-2 -right-2 bg-yellow-400 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
-                 PICK UP
-               </div>
-             )}
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              {isFeatured ? (
-                 <span className="text-xl font-black text-yellow-500 flex items-center gap-1">
-                   <span className="text-2xl">✨</span> SPECIAL
-                 </span>
-              ) : (
-                 <span className="text-3xl font-black text-primary">#{result.ranking}</span>
-              )}
-              <span className="text-2xl font-bold">{result.profile.nickname}</span>
-              <span className="text-sm text-muted-foreground">{result.profile.age}歳</span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-semibold">
-                {getTogelLabel(result.personalityTypes.profile.id)}
-              </span>
-              <span className="text-xs bg-muted px-3 py-1 rounded-full">{result.profile.job}</span>
-            </div>
-          </div>
-        </div>
-        <div className="text-left sm:text-right">
-          <p className="text-4xl font-black text-primary">{result.compatibility.total}%</p>
-          <p className="text-xs text-muted-foreground">マッチ度</p>
-        </div>
-      </div>
-
-      {/* キャッチフレーズ */}
-      <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-[#ffe9f0] to-[#eef4ff] border border-primary/20">
-        <p className="text-base font-extrabold text-foreground text-center">
-          {result.catchphrase}
-        </p>
-      </div>
-
-      {/* 👤 この人ってこんな人 */}
-      {result.profileNarrative && (
-        <div className="mt-4 rounded-2xl bg-blue-50 p-5">
-          <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
-            <span className="text-2xl">👤</span>
-            {result.profile.nickname}ってこんな人
-          </h4>
-          <ul className="space-y-2 text-sm">
-            {result.profileNarrative.personalityTraits.map((trait, idx) => (
-              <li key={idx}>• {trait}</li>
-            ))}
-          </ul>
-          
-          {result.profileNarrative.values.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-blue-200">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">こういう価値観</p>
-              <ul className="space-y-1 text-sm">
-                {result.profileNarrative.values.map((value, idx) => (
-                  <li key={idx}>✓ {value}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {result.profileNarrative.communicationStyle && (
-            <div className="mt-3">
-              <p className="text-xs font-semibold text-muted-foreground">💬 話し方</p>
-              <p className="mt-1 text-sm">{result.profileNarrative.communicationStyle}</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 🤖 なぜあなたとマッチ？ */}
-      {result.matchingReasons && result.matchingReasons.length > 0 && (
-        <div className="mt-4 rounded-2xl bg-purple-50 p-5">
-          <h4 className="flex items-center gap-2 text-lg font-bold mb-4">
-            <span className="text-2xl">🤖</span>
-            なぜあなたとマッチ？
-          </h4>
-          <div className="space-y-4">
-            {result.matchingReasons.map((reason, idx) => (
-              <div key={idx} className="rounded-xl bg-white/70 p-4">
-                <p className="font-bold text-base mb-2">{idx + 1}. {reason.title}</p>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>{reason.userTrait}</p>
-                  <p>{reason.profileTrait}</p>
-                </div>
-                <div className="mt-2 pl-4 border-l-4 border-primary/30">
-                  <p className="text-sm font-medium">💡 なぜ相性がいい？</p>
-                  <p className="mt-1 text-sm text-foreground">{reason.why}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 💭 付き合ったらこんな感じ */}
-      {result.relationshipPreview && (
-        <div className="mt-4 rounded-2xl bg-green-50 p-5">
-          <h4 className="flex items-center gap-2 text-lg font-bold mb-3">
-            <span className="text-2xl">💭</span>
-            付き合ったらこんな感じ
-          </h4>
-          
-          {result.relationshipPreview.goodPoints.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-green-700 mb-2">✅ 良いところ</p>
-              <ul className="space-y-1 text-sm">
-                {result.relationshipPreview.goodPoints.map((point, idx) => (
-                  <li key={idx}>• {point}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {result.relationshipPreview.warnings.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-green-200">
-              <p className="text-xs font-semibold text-orange-700 mb-2">⚠️ 気をつけること</p>
-              <ul className="space-y-1 text-sm">
-                {result.relationshipPreview.warnings.map((warning, idx) => (
-                  <li key={idx}>⚠️ {warning}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 💡 最初のデートはこれで */}
-      {result.firstDateSuggestion && (
-        <details className="group mt-4">
-          <summary className="cursor-pointer rounded-2xl bg-yellow-50 px-5 py-4 font-semibold hover:bg-yellow-100 transition-colors list-none flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <span className="text-2xl">💡</span>
-              最初のデート、どうする？
-            </span>
-            <span className="group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div className="mt-3 space-y-3">
-            {result.firstDateSuggestion.recommendations.length > 0 && (
-              <div className="rounded-xl bg-white/70 p-4">
-                <p className="text-sm font-bold text-muted-foreground mb-2">【おすすめ】</p>
-                {result.firstDateSuggestion.recommendations.map((rec, idx) => (
-                  <p key={idx} className="text-sm">{rec}</p>
-                ))}
-              </div>
-            )}
-
-            {result.firstDateSuggestion.conversationTopics.length > 0 && (
-              <div className="rounded-xl bg-white/70 p-4">
-                <p className="text-sm font-bold text-muted-foreground mb-2">💬 会話ネタ</p>
-                <ul className="space-y-1 text-sm">
-                  {result.firstDateSuggestion.conversationTopics.map((topic, idx) => (
-                    <li key={idx}>• {topic}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {result.firstDateSuggestion.ngActions.length > 0 && (
-              <div className="rounded-xl bg-red-50 p-4">
-                <p className="text-sm font-bold text-red-700 mb-2">🚫 絶対NG行動</p>
-                <ul className="space-y-1 text-sm">
-                  {result.firstDateSuggestion.ngActions.map((ng, idx) => (
-                    <li key={idx}>✗ {ng}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </details>
-      )}
-
-      {/* アクションボタン */}
-      <div className="mt-6">
-        <Button asChild className="w-full" size="lg">
-          <Link href={{ pathname: `/profile/${result.profile.id}`, query: { nickname: result.profile.nickname } }}>
-            プロフィール詳細を見る →
-          </Link>
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-const traitLabels: Record<keyof BigFiveScores, string> = {
-  openness: "アイデア感度",
-  conscientiousness: "計画遂行力",
-  extraversion: "交流エネルギー",
-  agreeableness: "共感スタイル",
-  neuroticism: "ストレス耐性",
-};
-
-const TRAITS: (keyof BigFiveScores)[] = [
-  "openness",
-  "conscientiousness",
-  "extraversion",
-  "agreeableness",
-  "neuroticism",
-];
-
 type MatchMode = "opposite" | "same";
+type TabKey = "personality" | "mismatch" | "best";
 
 const MATCH_STORAGE_KEYS: Record<MatchMode, string> = {
   opposite: "latestMatching:opposite",
   same: "latestMatching:same",
 };
 
-const ResultPage = () => {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+const TRAIT_ROWS: { key: keyof BigFiveScores; label: string }[] = [
+  { key: "openness", label: "開放性" },
+  { key: "conscientiousness", label: "誠実性" },
+  { key: "extraversion", label: "外向性" },
+  { key: "agreeableness", label: "協調性" },
+  { key: "neuroticism", label: "神経症傾向" },
+];
 
-  const clearSessionCaches = useCallback(() => {
-    if (typeof window === "undefined") return;
-    try {
-      sessionStorage.removeItem("latestMatching");
-      sessionStorage.removeItem(MATCH_STORAGE_KEYS.opposite);
-      sessionStorage.removeItem(MATCH_STORAGE_KEYS.same);
-      sessionStorage.removeItem("latestDiagnosis");
-      sessionStorage.removeItem("latestMismatch");
-      sessionStorage.removeItem("latestFeatured");
-    } catch (err) {
-      console.warn("Failed to clear session caches", err);
-    }
-  }, []);
-  const getStoredResults = useCallback((mode: MatchMode): MatchingResult[] => {
+const findExtended = (typeId: string | undefined): ExtendedPersonalityTypeDefinition | null =>
+  personalityTypes.find((t) => t.id === typeId) ?? null;
+
+const getStoredResults = (mode: MatchMode): MatchingResult[] => {
+  if (typeof window === "undefined") return [];
+  const raw =
+    sessionStorage.getItem(MATCH_STORAGE_KEYS[mode]) ??
+    (mode === "opposite" ? sessionStorage.getItem("latestMatching") : null);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as MatchingResult[];
+  } catch {
+    return [];
+  }
+};
+
+const ResultPage = () => {
+  const [tab, setTab] = useState<TabKey>("personality");
+  const [mode, setMode] = useState<MatchMode>("opposite");
+  const [results, setResults] = useState<MatchingResult[]>(() => getStoredResults("opposite"));
+  const [mismatchResults, setMismatchResults] = useState<MismatchResult[]>(() => {
     if (typeof window === "undefined") return [];
-    const raw = sessionStorage.getItem(MATCH_STORAGE_KEYS[mode]) ?? (mode === "opposite" ? sessionStorage.getItem("latestMatching") : null);
+    const raw = sessionStorage.getItem("latestMismatch");
     if (!raw) return [];
     try {
-      return JSON.parse(raw) as MatchingResult[];
-    } catch (error) {
-      console.error("Failed to parse matching results", error);
+      return JSON.parse(raw) as MismatchResult[];
+    } catch {
       return [];
     }
-  }, []);
-
-  const [matchMode, setMatchMode] = useState<MatchMode>("opposite");
-  const [results, setResults] = useState<MatchingResult[]>(() => getStoredResults("opposite"));
-
+  });
   const [diagnosis, setDiagnosis] = useState<LatestDiagnosis | null>(() => {
     if (typeof window === "undefined") return null;
     const raw = sessionStorage.getItem("latestDiagnosis");
     if (!raw) return null;
     try {
       return JSON.parse(raw) as LatestDiagnosis;
-    } catch (error) {
-      console.error("Failed to parse diagnosis", error);
-      return null;
-    }
-  });
-
-  const [isInitialLoading, setIsInitialLoading] = useState(() => results.length === 0 || !diagnosis);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [prankMode, setPrankMode] = useState(true);
-  const [hasPrank, setHasPrank] = useState(false);
-  
-  // PickUpユーザー
-  const [featuredResult, setFeaturedResult] = useState<MatchingResult | null>(() => {
-    if (typeof window === "undefined") return null;
-    const raw = sessionStorage.getItem("latestFeatured");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as MatchingResult;
     } catch {
       return null;
     }
   });
 
-  const persistSessionPayload = useCallback((payload: {
-    results?: MatchingResult[];
-    diagnosis?: LatestDiagnosis | null;
-    mismatchResults?: unknown;
-    featuredResult?: MatchingResult | null;
-    mode?: MatchMode;
-  }) => {
-    if (typeof window === "undefined") return;
-    if (payload.results) {
-      const mode = payload.mode ?? "opposite";
-      sessionStorage.setItem(MATCH_STORAGE_KEYS[mode], JSON.stringify(payload.results));
-    }
-    if (payload.diagnosis) {
-      sessionStorage.setItem("latestDiagnosis", JSON.stringify(payload.diagnosis));
-    }
-    if (payload.mode !== "same" && payload.mismatchResults) {
-      sessionStorage.setItem("latestMismatch", JSON.stringify(payload.mismatchResults));
-    }
-    if (payload.mode !== "same" && payload.featuredResult) {
-      sessionStorage.setItem("latestFeatured", JSON.stringify(payload.featuredResult));
-    }
-  }, []);
+  const [isInitialLoading, setIsInitialLoading] = useState(() => !diagnosis);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const supabase = createSupabaseBrowserClient();
+
+  // ログアウト時はキャッシュを破棄する
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        sessionStorage.removeItem(MATCH_STORAGE_KEYS.opposite);
+        sessionStorage.removeItem(MATCH_STORAGE_KEYS.same);
+        sessionStorage.removeItem("latestMatching");
+        sessionStorage.removeItem("latestMismatch");
+        sessionStorage.removeItem("latestDiagnosis");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const fetchLatest = useCallback(
-    async ({ skipLoading = false, forceFresh = false, mode = "opposite" as MatchMode } = {}) => {
+    async ({ skipLoading = false, forceFresh = false, fetchMode = "opposite" as MatchMode } = {}) => {
       if (skipLoading) {
         setIsRefreshing(true);
       } else {
         setIsInitialLoading(true);
       }
-
       try {
         const params = new URLSearchParams();
         params.set(forceFresh ? "fresh" : "revalidate", "1");
-        if (mode === "same") {
+        if (fetchMode === "same") {
           params.set("targetGender", "same");
         }
-        const res = await fetch(`/api/diagnosis/latest?${params.toString()}`, { cache: "no-store" });
-        if (!res.ok) {
-          return;
-        }
+        const res = await fetch(`/api/diagnosis/latest?${params.toString()}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
         const data = await res.json();
-
         if (data.results && data.diagnosis) {
           setResults(data.results);
-          if (mode === "opposite") {
-            setFeaturedResult(data.featuredResult ?? null);
-          } else {
-            setFeaturedResult(null);
-          }
           setDiagnosis(data.diagnosis);
-          persistSessionPayload({
-            results: data.results,
-            diagnosis: data.diagnosis,
-            mismatchResults: data.mismatchResults,
-            featuredResult: data.featuredResult,
-            mode,
-          });
-          if (Array.isArray(data.results)) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const prankData = data.results.some((r: any) => r.isPrank);
-            setHasPrank(prankData);
+          sessionStorage.setItem(MATCH_STORAGE_KEYS[fetchMode], JSON.stringify(data.results));
+          sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
+          if (fetchMode !== "same" && data.mismatchResults) {
+            setMismatchResults(data.mismatchResults);
+            sessionStorage.setItem("latestMismatch", JSON.stringify(data.mismatchResults));
           }
         }
       } catch (error) {
@@ -402,311 +147,391 @@ const ResultPage = () => {
         }
       }
     },
-    [persistSessionPayload]
+    [],
   );
 
   const initialFetchTriggered = useRef(false);
   useEffect(() => {
     if (initialFetchTriggered.current) return;
     initialFetchTriggered.current = true;
-    const hasCachedData = results.length > 0 && Boolean(diagnosis);
-    fetchLatest({ skipLoading: hasCachedData, mode: "opposite" });
-  }, [fetchLatest, results.length, diagnosis]);
+    void fetchLatest({ skipLoading: !!diagnosis });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") {
-        clearSessionCaches();
-        setResults([]);
-        setDiagnosis(null);
-        setFeaturedResult(null);
-        setHasPrank(false);
-      }
-
-      if (event === "SIGNED_IN" && session?.user) {
-        setIsRefreshing(true);
-        fetchLatest({ skipLoading: true, forceFresh: true, mode: matchMode })
-          .catch((error) => console.error("Retry fetch after sign-in failed", error))
-          .finally(() => setIsRefreshing(false));
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase, fetchLatest, clearSessionCaches, matchMode]);
-
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const prankData = results.some((r: any) => r.isPrank);
-    setHasPrank(prankData);
-  }, [results]);
-
-  const handleManualRefresh = () => {
-    const hasCachedData = results.length > 0 && Boolean(diagnosis);
-    fetchLatest({ skipLoading: hasCachedData, forceFresh: true, mode: matchMode });
-  };
-
-  const handleMatchModeToggle = () => {
-    const nextMode: MatchMode = matchMode === "opposite" ? "same" : "opposite";
-    setMatchMode(nextMode);
+  const handleModeChange = (nextMode: MatchMode) => {
+    if (nextMode === mode) return;
+    setMode(nextMode);
     const cached = getStoredResults(nextMode);
     if (cached.length > 0) {
       setResults(cached);
-      if (nextMode === "opposite") {
-        const featuredRaw = typeof window !== "undefined" ? sessionStorage.getItem("latestFeatured") : null;
-        if (featuredRaw) {
-          try {
-            setFeaturedResult(JSON.parse(featuredRaw) as MatchingResult);
-          } catch {
-            setFeaturedResult(null);
-          }
-        } else {
-          setFeaturedResult(null);
-        }
-      } else {
-        setFeaturedResult(null);
-      }
-      return;
+      void fetchLatest({ skipLoading: true, fetchMode: nextMode });
+    } else {
+      void fetchLatest({ fetchMode: nextMode });
     }
-    fetchLatest({ skipLoading: results.length > 0, forceFresh: true, mode: nextMode });
   };
 
-  if (isInitialLoading) {
+  const selfType = findExtended(diagnosis?.personalityType?.id);
+
+  // ミスマッチをタイプ単位に整形（ミスマッチページと同じ規則）
+  const worstTypeEntries = useMemo(() => {
+    const seen = new Set<string>();
+    const entries: {
+      rank: number;
+      score: number;
+      type: ExtendedPersonalityTypeDefinition;
+      blurb: string;
+    }[] = [];
+    for (const result of mismatchResults) {
+      const extended = findExtended(result.personalityTypes?.profile?.id);
+      if (!extended || seen.has(extended.id)) continue;
+      seen.add(extended.id);
+      entries.push({
+        rank: entries.length + 1,
+        score: Math.round(result.score),
+        type: extended,
+        blurb: result.mismatchReasons?.[0]?.disaster ?? extended.description,
+      });
+    }
+    return entries.slice(0, 5);
+  }, [mismatchResults]);
+
+  const tabClass = (key: TabKey) =>
+    `min-h-[42px] flex-none rounded-full border px-4 text-xs font-black transition-colors ${
+      tab === key
+        ? "border-primary bg-primary text-white"
+        : "border-line bg-transparent text-txt-muted hover:text-white"
+    }`;
+
+  if (isInitialLoading && !diagnosis) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-[#E91E63]"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-ink">
+        <div className="w-[200px] overflow-hidden rounded-full">
+          <div className="animate-marquee h-[10px] w-[400%] bg-hazard-sm" />
+        </div>
+        <p className="text-xs font-bold text-txt-subtle">回答を読んでいます…</p>
       </div>
     );
   }
 
-  // Prank mode filtering:
-  // If hasPrank is true and prankMode is true, show the prank result at rank 1.
-  // If hasPrank is true and prankMode is false, filter out the prank result (marked with isPrank).
-  // If hasPrank is false, show original results.
-  
-  const displayResults = results.filter(r => {
-    if (!hasPrank) return true;
-    if (r.isPrank) return prankMode;
-    return true;
-  }).map((r, idx) => ({
-    ...r,
-    ranking: idx + 1
-  }));
+  if (!diagnosis) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-ink px-6 text-center text-white">
+        <p className="text-sm font-bold text-txt-muted">まだ診断結果がありません。</p>
+        <Link
+          href="/diagnosis/select"
+          className="flex min-h-[52px] items-center rounded-full bg-hazard px-7 text-sm font-black text-ink shadow-cta transition-colors hover:bg-white"
+        >
+          診断をはじめる
+        </Link>
+      </div>
+    );
+  }
+
+  const scores = diagnosis.bigFiveScores;
 
   return (
-    <div className="min-h-screen w-full bg-[#fdeef4] py-6 md:py-10">
-      <div className="mx-auto max-w-5xl px-0 md:px-6">
-        <div className="text-center px-4 md:px-0">
-          <p className="text-xs font-extrabold tracking-[0.2em] text-primary">STEP 2 · RESULT</p>
-          <h1 className="mt-2 font-heading text-3xl md:text-4xl">マッチング結果</h1>
-          <p className="mt-3 text-sm md:text-base text-muted-foreground">
-            あなたの回答データから相性の良い5名を抽出しました
-          </p>
-          {results.length > 0 && (
-            <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <button
-                type="button"
-                onClick={handleManualRefresh}
-                className="inline-flex items-center gap-1 text-primary hover:underline"
-                disabled={isRefreshing}
-              >
-                {isRefreshing ? "更新中..." : "最新状態を取得"}
-              </button>
-              {isRefreshing && <span className="inline-flex h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />}
+    <div className="min-h-screen bg-ink text-white">
+      {/* ヒーロー: あなたのタイプ */}
+      <section
+        className="bg-[radial-gradient(120%_90%_at_50%_-20%,rgba(11,31,58,.9),transparent_60%)] px-5.5 pb-[26px] pt-8"
+        style={{ containerType: "inline-size" }}
+      >
+        <div className="mx-auto grid max-w-[1120px] items-center gap-6 md:grid-cols-2">
+          <div>
+            <div className="text-[11px] font-black tracking-[0.28em] text-hazard">
+              YOUR TYPE / 24
             </div>
-          )}
-          
-          {hasPrank && (
-            <div className="mt-4 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
-               <span className={`text-sm font-bold ${!prankMode ? "text-primary" : "text-muted-foreground"}`}>通常モード</span>
-               <Switch checked={prankMode} onCheckedChange={setPrankMode} />
-               <span className={`text-sm font-bold ${prankMode ? "text-[#E91E63]" : "text-muted-foreground"}`}>運命モード</span>
+            <h1 className="mt-3 text-[clamp(30px,5.4cqw,50px)] font-black leading-[1.25] tracking-[-0.03em]">
+              {selfType?.typeName ?? diagnosis.detailedNarrative.title}
+            </h1>
+            <div className="mt-2 text-sm font-bold text-primary">
+              {selfType?.catchphrase ?? diagnosis.detailedNarrative.subtitle}
             </div>
-          )}
-
-          <div className="mt-4 flex flex-col items-center gap-3">
-            {matchMode === "opposite" && (
-              <Button asChild variant="outline" size="sm" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
-                <Link href="/result/mismatch">
-                  <span className="text-lg">💀</span>
-                  ミスマッチランキングも見る
-                </Link>
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={handleMatchModeToggle}
+            <p
+              className="mt-3.5 max-w-[32em] text-[13px] leading-8 text-txt-muted"
+              style={{ textWrap: "pretty" }}
             >
-              {matchMode === "opposite" ? "同性のマッチング結果も見る" : "異性マッチングに戻る"}
-            </Button>
-          </div>
-        </div>
-
-        {/* あなたのタイプセクション - 新デザイン */}
-        {diagnosis?.detailedNarrative && (
-          <div className="mt-6 md:mt-10 rounded-none md:rounded-3xl border-0 md:border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-white to-secondary/5 p-5 md:p-8 shadow-none md:shadow-lg">
-            <div className="border-b border-primary/20 pb-4">
-              <p className="text-xs font-bold uppercase tracking-[0.4em] text-primary">📊 あなたの性格診断結果</p>
-              <h2 className="mt-2 font-heading text-2xl md:text-3xl">{diagnosis.detailedNarrative.title}</h2>
-              <p className="mt-1 text-base md:text-lg font-medium text-foreground">{diagnosis.detailedNarrative.subtitle}</p>
-            </div>
-
-            {/* 🎯 あなたってこんな人 */}
-            <div className="mt-6 rounded-2xl bg-white/70 p-5 md:p-6">
-              <h3 className="flex items-center gap-2 text-lg font-bold">
-                <span className="text-2xl">🎯</span>
-                あなたってこんな人
-              </h3>
-              
-              <div className="mt-4 space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-muted-foreground">💡 考え方のクセ</p>
-                  <ul className="mt-2 space-y-1 text-base">
-                    {diagnosis.detailedNarrative.thinkingStyle.map((text, idx) => (
-                      <li key={idx}>• {text}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold text-muted-foreground">💬 コミュニケーションスタイル</p>
-                  <ul className="mt-2 space-y-1 text-base">
-                    {diagnosis.detailedNarrative.communicationStyle.map((text, idx) => (
-                      <li key={idx}>• {text}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* ⚡ 得意技 */}
-            {diagnosis.detailedNarrative.strengths.length > 0 && (
-              <div className="mt-4 rounded-2xl bg-green-50 p-6">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
-                  <span className="text-2xl">⚡</span>
-                  あなたの得意技
-                </h3>
-                <ul className="mt-3 space-y-1 text-base">
-                  {diagnosis.detailedNarrative.strengths.map((strength, idx) => (
-                    <li key={idx}>✓ {strength}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* ⚠️ 要注意ポイント */}
-            {diagnosis.detailedNarrative.warnings.length > 0 && (
-              <div className="mt-4 rounded-2xl bg-orange-50 p-6">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
-                  <span className="text-2xl">⚠️</span>
-                  あなたの要注意ポイント
-                </h3>
-                <ul className="mt-3 space-y-1 text-base">
-                  {diagnosis.detailedNarrative.warnings.map((warning, idx) => (
-                    <li key={idx}>{warning}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* 💑 恋愛になるとこうなる */}
-            {diagnosis.detailedNarrative.loveTendency.length > 0 && (
-              <div className="mt-4 rounded-2xl bg-pink-50 p-6">
-                <h3 className="flex items-center gap-2 text-lg font-bold">
-                  <span className="text-2xl">💑</span>
-                  恋愛になるとこうなる
-                </h3>
-                <ul className="mt-3 space-y-1 text-base">
-                  {diagnosis.detailedNarrative.loveTendency.map((text, idx) => (
-                    <li key={idx}>• {text}</li>
-                  ))}
-                </ul>
-
-                {diagnosis.detailedNarrative.idealPartner.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-semibold text-muted-foreground">💕 求めてるのはこんな相手</p>
-                    <ul className="mt-2 space-y-1 text-base">
-                      {diagnosis.detailedNarrative.idealPartner.map((text, idx) => (
-                        <li key={idx}>→ {text}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Big Five スコア表示 */}
-            <details className="group mt-4">
-              <summary className="cursor-pointer rounded-2xl bg-muted/40 px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted/60 transition-colors list-none flex items-center justify-between">
-                <span>詳細スコアを見る</span>
-                <span className="group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
-                {TRAITS.map((trait) => (
-                  <div key={trait} className="flex items-center justify-between rounded-xl bg-white/70 px-4 py-3 border border-border">
-                    <span className="text-sm font-medium">{traitLabels[trait]}</span>
-                    <span className="text-lg font-bold text-primary">{diagnosis.bigFiveScores[trait].toFixed(1)}</span>
-                  </div>
+              {selfType?.description ?? diagnosis.narrative}
+            </p>
+            {selfType && (
+              <div className="mt-4 flex flex-wrap gap-[7px]">
+                {selfType.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-line bg-surface-alt px-[11px] py-[5px] text-[11px] font-bold text-txt-muted"
+                  >
+                    {tag}
+                  </span>
                 ))}
               </div>
-            </details>
+            )}
           </div>
-        )}
 
-        {/* マッチング結果 - 新デザイン */}
-        <div className="mt-0 md:mt-10 space-y-0 md:space-y-8">
-          {displayResults.length === 0 && (
-            <div className="rounded-3xl border border-dashed border-border px-6 py-12 text-center">
-              <p className="text-muted-foreground">まだ診断結果がありません。まずは診断を実施しましょう。</p>
-              <Button asChild className="mt-4">
-                <Link href="/diagnosis/select">診断ページへ</Link>
-              </Button>
+          <div className="flex justify-center">
+            <div className="w-full max-w-[320px] rounded-[18px] border border-line bg-surface p-5">
+              <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
+                BIG FIVE
+              </div>
+              <div className="mt-4 flex flex-col gap-3">
+                {TRAIT_ROWS.map(({ key, label }) => {
+                  const pct = Math.round((scores[key] / 5) * 100);
+                  const high = pct >= 50;
+                  return (
+                    <div key={key}>
+                      <div className="flex justify-between text-[11px] font-bold">
+                        <span className="text-txt-muted">{label}</span>
+                        <span className={high ? "text-hazard" : "text-primary"}>{pct}</span>
+                      </div>
+                      <div className="mt-[5px] h-1.5 rounded-full bg-surface-alt">
+                        <div
+                          className={`h-full rounded-full ${high ? "bg-hazard" : "bg-primary"}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          )}
-
-          {displayResults.map((result) => (
-            <MatchingCard key={result.profile.id} result={result} />
-          ))}
-
-          {/* PickUp ユーザー (5位の下) */}
-          {featuredResult && (
-             <div className="mt-12">
-               <div className="flex items-center gap-3 mb-4 justify-center md:justify-start">
-                 <span className="text-2xl animate-pulse">✨</span>
-                 <h3 className="font-bold text-xl text-slate-700">Special Pick Up</h3>
-                 <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded border border-yellow-200">期間限定</span>
-               </div>
-               <MatchingCard result={featuredResult} isFeatured={true} />
-             </div>
-          )}
-        </div>
-
-        <RecommendationsSection
-          togelType={diagnosis?.personalityType?.id}
-          page="result"
-          heading={diagnosis?.personalityType?.typeName ? `${diagnosis.personalityType.typeName}型のあなたにおすすめ` : undefined}
-          subheading="あなたの診断データに合わせてキュレーションされた注目サービス"
-        />
-
-        {/* 下部ミスマッチ結果リンク */}
-        {matchMode === "opposite" && results.length > 0 && (
-          <div className="mt-12 text-center px-4">
-            <p className="mb-4 text-muted-foreground">
-              相性の悪い相手も知っておくと、失敗を避けられるかも...？
-            </p>
-            <Button asChild variant="outline" size="lg" className="gap-2 border-red-600 text-red-600 hover:bg-red-50">
-              <Link href="/result/mismatch">
-                <span className="text-lg">💀</span>
-                ミスマッチランキングも見る
-              </Link>
-            </Button>
           </div>
+        </div>
+      </section>
+
+      {/* タブバー */}
+      <div className="sticky top-[66px] z-20 flex gap-1 overflow-x-auto border-y border-line-soft bg-ink/95 px-5.5 py-2.5 backdrop-blur">
+        <button type="button" onClick={() => setTab("personality")} className={tabClass("personality")}>
+          あなたの性格
+        </button>
+        <button type="button" onClick={() => setTab("mismatch")} className={tabClass("mismatch")}>
+          ミスマッチ {worstTypeEntries.length || 5}
+        </button>
+        <button type="button" onClick={() => setTab("best")} className={tabClass("best")}>
+          おまけ：ベスト5
+        </button>
+        {isRefreshing && (
+          <span className="ml-auto flex items-center text-[10px] font-bold text-txt-disabled">
+            更新中…
+          </span>
         )}
       </div>
+
+      {/* タブA: あなたの性格 */}
+      {tab === "personality" && (
+        <section className="animate-rise px-5.5 pb-[34px] pt-7">
+          <div className="mx-auto max-w-[1120px]">
+            <div className="grid gap-3.5 md:grid-cols-3">
+              <div className="rounded-card border border-line bg-surface p-5">
+                <div className="text-[10px] font-black tracking-[0.2em] text-relief">強み</div>
+                <ul className="mt-3 list-disc pl-[1.15em] text-[12.5px] leading-8 text-txt-muted">
+                  {diagnosis.detailedNarrative.strengths.slice(0, 3).map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-card border border-line bg-surface p-5">
+                <div className="text-[10px] font-black tracking-[0.2em] text-hazard">伸びしろ</div>
+                <ul className="mt-3 list-disc pl-[1.15em] text-[12.5px] leading-8 text-txt-muted">
+                  {diagnosis.detailedNarrative.warnings.slice(0, 3).map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-card border border-line bg-surface p-5">
+                <div className="text-[10px] font-black tracking-[0.2em] text-txt-muted">
+                  コミュニケーション
+                </div>
+                <ul className="mt-3 flex flex-col gap-1.5 text-[12.5px] leading-8 text-txt-muted">
+                  {diagnosis.detailedNarrative.communicationStyle.slice(0, 2).map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* 段階開示: 詳しい解説 */}
+            <div className="mt-3.5 rounded-card border border-line-soft bg-panel p-5">
+              <button
+                type="button"
+                onClick={() => setMoreOpen((prev) => !prev)}
+                className="flex w-full items-center justify-between text-sm font-black text-white"
+              >
+                <span>もっと詳しい性格解説を読む</span>
+                <span className="text-lg text-hazard">{moreOpen ? "−" : "＋"}</span>
+              </button>
+              {moreOpen && (
+                <div className="animate-rise mt-4 flex flex-col gap-4 border-t border-dashed border-line pt-4">
+                  {[
+                    { title: "考え方のクセ", items: diagnosis.detailedNarrative.thinkingStyle },
+                    { title: "恋愛傾向", items: diagnosis.detailedNarrative.loveTendency },
+                    { title: "求める相手", items: diagnosis.detailedNarrative.idealPartner },
+                  ]
+                    .filter((block) => block.items.length > 0)
+                    .map((block) => (
+                      <div key={block.title}>
+                        <div className="text-[10px] font-black tracking-[0.2em] text-txt-subtle">
+                          {block.title}
+                        </div>
+                        <ul className="mt-2 flex flex-col gap-1.5 text-[12.5px] leading-[2.1] text-txt-muted">
+                          {block.items.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* 本編への導線 */}
+            <div className="mt-3.5 rounded-[18px] border border-primary bg-[linear-gradient(160deg,#1c0d16,#0d111b)] p-5.5">
+              <div className="text-[11px] font-black tracking-[0.22em] text-primary">
+                この結果の本編
+              </div>
+              <div className="mt-2 text-xl font-black leading-normal">
+                あなたと絶対に合わない5タイプ
+              </div>
+              <p className="mt-2 text-[12.5px] leading-[1.95] text-txt-muted">
+                地獄のシナリオとNG行動つき。ここが一番読まれています。
+              </p>
+              <Link
+                href="/result/mismatch"
+                className="mt-4 flex min-h-[56px] items-center justify-center rounded-card bg-primary text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+              >
+                ミスマッチを見る
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* タブB: ミスマッチ5（要約） */}
+      {tab === "mismatch" && (
+        <section className="animate-rise px-5.5 pb-[34px] pt-7">
+          <div className="mx-auto max-w-[1120px]">
+            {worstTypeEntries.length === 0 ? (
+              <div className="rounded-hero border border-dashed border-line bg-panel px-6 py-12 text-center">
+                <p className="text-sm font-bold text-txt-muted">ミスマッチ結果を取得中です…</p>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-[18px] border border-primary bg-[linear-gradient(165deg,#1c0d16,#0d111b)] p-5">
+                  <div className="text-[10px] font-black tracking-[0.22em] text-primary">
+                    WORST 1 ／ 危険度 {worstTypeEntries[0].score}%
+                  </div>
+                  <div className="mt-2 text-2xl font-black">{worstTypeEntries[0].type.typeName}</div>
+                  <div className="mt-1 text-xs font-bold text-hazard">
+                    {worstTypeEntries[0].type.catchphrase}
+                  </div>
+                  <p className="mt-3 text-[12.5px] leading-8 text-txt-muted">
+                    {worstTypeEntries[0].blurb}
+                  </p>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {worstTypeEntries.slice(1).map((entry) => (
+                    <div key={entry.type.id} className="rounded-[14px] border border-line bg-surface p-4">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-sm font-black">{entry.type.typeName}</span>
+                        <span className="text-[11px] font-black text-primary">{entry.score}%</span>
+                      </div>
+                      <p className="mt-[7px] text-[11.5px] leading-[1.85] text-txt-muted">
+                        {entry.blurb}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  href="/result/mismatch"
+                  className="mt-3.5 flex min-h-[56px] items-center justify-center rounded-card bg-hazard text-[15px] font-black text-ink shadow-cta transition-colors hover:bg-white"
+                >
+                  地獄のシナリオを全部読む
+                </Link>
+              </>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* タブC: おまけ ベスト5（ライト面） */}
+      {tab === "best" && (
+        <section className="animate-rise bg-paper px-5.5 pb-[34px] pt-7 text-navy">
+          <div className="mx-auto max-w-[1120px]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="inline-flex rounded-full bg-navy px-3 py-[5px] text-[10px] font-black tracking-[0.18em] text-relief">
+                  おまけ
+                </div>
+                <h2 className="mt-3 text-[clamp(20px,3cqw,30px)] font-black leading-[1.4]">
+                  相性のいい5人
+                </h2>
+                <p className="mt-2.5 max-w-[32em] text-[12.5px] leading-8 text-lighttext-muted">
+                  本編ではありません。気楽に見てください。
+                </p>
+              </div>
+              <div className="flex gap-1 rounded-full border border-lightline bg-white p-1">
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("opposite")}
+                  className={`min-h-[36px] rounded-full px-4 text-[11px] font-black transition-colors ${
+                    mode === "opposite" ? "bg-navy text-white" : "text-lighttext-subtle"
+                  }`}
+                >
+                  異性
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("same")}
+                  className={`min-h-[36px] rounded-full px-4 text-[11px] font-black transition-colors ${
+                    mode === "same" ? "bg-navy text-white" : "text-lighttext-subtle"
+                  }`}
+                >
+                  同性
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {results.map((result) => {
+                const matchType = findExtended(result.personalityTypes?.profile?.id);
+                return (
+                  <Link
+                    key={`${result.ranking}-${result.profile.id}`}
+                    href={{
+                      pathname: `/profile/${result.profile.id}`,
+                      query: { nickname: result.profile.nickname },
+                    }}
+                    className={`block rounded-[14px] border bg-white p-4 transition-colors hover:border-navy ${
+                      result.isPrank ? "border-primary ring-2 ring-primary/20" : "border-lightline"
+                    }`}
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-sm font-black">
+                        {matchType?.typeName ?? result.profile.nickname}
+                      </span>
+                      <span className="flex-none text-xs font-black text-relief-ink">
+                        {Math.round(result.score)}%
+                      </span>
+                    </div>
+                    <div className="mt-[3px] text-[11px] font-bold text-lighttext-subtle">
+                      {result.profile.nickname}・{result.profile.age}歳
+                      {result.isPrank ? "・💘" : ""}
+                    </div>
+                    <p className="mt-[7px] text-[11.5px] leading-[1.85] text-lighttext-subtle">
+                      {result.catchphrase}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* PR / レコメンド枠: タブ内容の末尾にのみ配置 */}
+      <section className="border-t border-line-soft bg-panel px-5.5 py-5.5">
+        <div className="mx-auto max-w-[1120px]">
+          <RecommendationsSection togelType={diagnosis.personalityType?.id ?? null} page="result" />
+        </div>
+      </section>
     </div>
   );
 };
