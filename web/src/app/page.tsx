@@ -192,7 +192,7 @@ export default function Home() {
               style={{ textWrap: "pretty" }}
             >
               Togel＝<strong className="font-bold text-white">告げる</strong>
-              。40問のビッグファイブ診断で24タイプに判定し、あなたと
+              。独自開発の40問「トゥゲル診断」で24タイプに判定し、あなたと
               <strong className="font-bold text-white">絶対に合わない5タイプ</strong>
               を名指しします。相性のいい人？ おまけです。
             </p>
@@ -260,7 +260,7 @@ export default function Home() {
               <div className="text-[11px] font-black tracking-[0.2em] text-hazard">STEP 02</div>
               <div className="mt-2.5 text-lg font-black">24タイプに判定</div>
               <p className="mt-2 text-xs leading-[1.95] text-txt-muted">
-                ビッグファイブ5因子から、あなたの取扱区分を確定します。
+                5つの取扱指標から、あなたの取扱区分を確定します。
               </p>
             </div>
             <div className="rounded-card border border-dangerline bg-dangerbg p-5">

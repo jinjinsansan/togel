@@ -10,6 +10,7 @@ import { MapPin, Briefcase, Twitter, Instagram, Facebook, MessageCircle, Lock, U
 import { getTogelLabel, personalityTypes } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import { getTypeApproachGuide } from "@/lib/coaching/translations";
+import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
 import { BigFiveScores } from "@/types/diagnosis";
 
 const buildFallbackAvatar = (seed: string, gender: "male" | "female" | "other"): string => {
@@ -18,21 +19,7 @@ const buildFallbackAvatar = (seed: string, gender: "male" | "female" | "other"):
   return `https://api.dicebear.com/8.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=ffdfbf,bee3db&scale=90&accessoriesProbability=40&hairColor=4a312c,2f1b0f&skinColor=f2d3b1,eac9a1&shapeColor=${palette}`;
 };
 
-const traitLabels: Record<keyof BigFiveScores, string> = {
-  openness: "開放性",
-  conscientiousness: "誠実性",
-  extraversion: "外向性",
-  agreeableness: "協調性",
-  neuroticism: "神経症傾向",
-};
-
-const TRAITS: (keyof BigFiveScores)[] = [
-  "openness",
-  "conscientiousness",
-  "extraversion",
-  "agreeableness",
-  "neuroticism",
-];
+// トゥゲル診断の5つの取扱指標（lib/personality/togel-index.ts で一元管理）
 
 type Params = {
   id: string;
@@ -366,12 +353,12 @@ const ProfileDetailPage = (props: { params: Promise<Params> }) => {
           </div>
         )}
 
-        {/* 03 ビッグファイブ比較（自分と重ねて表示） */}
+        {/* 03 トゥゲル指標の比較（自分と重ねて表示） */}
         {diagnosisDetails && (
           <div className="mt-3 rounded-card border border-line bg-surface p-5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
-                BIG FIVE 比較
+                TOGEL INDEX 比較
               </span>
               <span className="flex items-center gap-3 text-[9px] font-bold text-txt-subtle">
                 <span className="flex items-center gap-1">
@@ -385,16 +372,16 @@ const ProfileDetailPage = (props: { params: Promise<Params> }) => {
               </span>
             </div>
             <div className="mt-4 flex flex-col gap-3">
-              {TRAITS.map((trait) => {
-                const targetPct = Math.round((diagnosisDetails.bigFiveScores[trait] / 5) * 100);
+              {TOGEL_INDEX.map(({ key: trait, label }) => {
+                const targetPct = togelIndexPercent(trait, diagnosisDetails.bigFiveScores);
                 const viewerPct =
                   viewerDiagnosis && !isOwner
-                    ? Math.round((viewerDiagnosis.bigFiveScores[trait] / 5) * 100)
+                    ? togelIndexPercent(trait, viewerDiagnosis.bigFiveScores)
                     : null;
                 return (
                   <div key={trait}>
                     <div className="flex justify-between text-[11px] font-bold">
-                      <span className="text-txt-muted">{traitLabels[trait]}</span>
+                      <span className="text-txt-muted">{label}</span>
                       <span className="font-mono text-txt-subtle">
                         {targetPct}
                         {viewerPct !== null ? ` / ${viewerPct}` : ""}

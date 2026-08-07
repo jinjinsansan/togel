@@ -9,12 +9,13 @@ import { clearSession, saveSession } from "@/lib/diagnosis/session";
 import { personalityTypes } from "@/lib/personality";
 import { useDiagnosisStore } from "@/store/diagnosis-store";
 
+// トゥゲル診断の5つの取扱指標（設問の右上ラベルに表示）
 const TRAIT_LABELS: Record<string, string> = {
-  openness: "開放性",
-  conscientiousness: "誠実性",
-  extraversion: "外向性",
-  agreeableness: "協調性",
-  neuroticism: "神経症傾向",
+  openness: "引火点",
+  conscientiousness: "構造強度",
+  extraversion: "放熱量",
+  agreeableness: "緩衝性能",
+  neuroticism: "耐圧限界",
 };
 
 /** 選択肢の値ごとのドット色（ピンク=あてはまる ↔ イエロー=あてはまらない） */

@@ -62,24 +62,26 @@ export default function LiffResultPage() {
       </div>
 
       <div className="container px-4 py-8">
-        {/* Big Five Scores */}
+        {/* トゥゲル指標スコア */}
         <section className="mb-8">
-          <h2 className="text-lg font-black text-slate-900 mb-4">Big Fiveスコア</h2>
+          <h2 className="text-lg font-black text-slate-900 mb-4">あなたのトゥゲル指標</h2>
           <div className="space-y-3">
             {Object.entries(diagnosis.bigFiveScores).map(([trait, score]) => {
               const labels: Record<string, string> = {
-                openness: "開放性",
-                conscientiousness: "誠実性",
-                extraversion: "外向性",
-                agreeableness: "協調性",
-                neuroticism: "神経症傾向",
+                openness: "引火点",
+                conscientiousness: "構造強度",
+                extraversion: "放熱量",
+                agreeableness: "緩衝性能",
+                neuroticism: "耐圧限界",
               };
-              const pct = ((score as number) / 5) * 100;
+              // 耐圧限界は元スコア（高いほどストレスに弱い）と意味が逆なので反転する
+              const rawPct = ((score as number) / 5) * 100;
+              const pct = trait === "neuroticism" ? 100 - rawPct : rawPct;
               return (
                 <div key={trait}>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-bold text-slate-700">{labels[trait] ?? trait}</span>
-                    <span className="font-bold text-[#E91E63]">{(score as number).toFixed(1)}</span>
+                    <span className="font-bold text-[#E91E63]">{Math.round(pct)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div

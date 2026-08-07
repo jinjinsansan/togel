@@ -53,7 +53,7 @@ export const SiteFooter = () => {
               </div>
             </div>
             <p className="text-xs leading-relaxed text-txt-muted">
-              ビッグファイブ診断で24タイプに分類。
+              独自開発の「トゥゲル診断」で24タイプに分類。
               <br />
               あなたと「絶対に合わない相手」を告げます。
             </p>

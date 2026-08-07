@@ -21,7 +21,7 @@ export default function AboutPage() {
             告げる。
           </h1>
           <p className="mt-5 max-w-[36em] text-[15px] leading-8 text-txt-muted">
-            Togel（トゥゲル）＝告げる。40問のビッグファイブ診断であなたを24タイプに分類し、
+            Togel（トゥゲル）＝告げる。独自開発の40問「トゥゲル診断」であなたを24タイプに分類し、
             <strong className="font-bold text-white">絶対に合わない相手</strong>
             を先にお伝えするサービスです。
           </p>
@@ -70,9 +70,9 @@ export default function AboutPage() {
           <div className="text-label text-hazard">METHOD</div>
           <h2 className="mt-3.5 text-h1">診断の中身</h2>
           <p className="mt-5 max-w-[38em] text-sm leading-[2.1] text-txt-muted" style={{ textWrap: "pretty" }}>
-            使っているのは、性格心理学で最も広く使われる
-            <strong className="font-bold text-white">ビッグファイブ（5因子モデル）</strong>
-            。開放性・誠実性・外向性・協調性・神経症傾向の5つを40問で測定し、その組み合わせから24タイプに分類します。ライト版（10問）もありますが、指摘の解像度は40問が段違いです。
+            使っているのは、性格心理学の研究知見をベースにTogelが独自に改良した測定法
+            <strong className="font-bold text-white">「トゥゲル診断」</strong>
+            。引火点・構造強度・放熱量・緩衝性能・耐圧限界——5つの取扱指標を40問で測定し、その組み合わせから24タイプに分類します。ライト版（10問）もありますが、指摘の解像度は40問が段違いです。
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {[

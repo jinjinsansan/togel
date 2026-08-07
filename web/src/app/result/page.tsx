@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { personalityTypes } from "@/lib/personality";
+import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import {
   BigFiveScores,
@@ -38,13 +39,7 @@ const MATCH_STORAGE_KEYS: Record<MatchMode, string> = {
   same: "latestMatching:same",
 };
 
-const TRAIT_ROWS: { key: keyof BigFiveScores; label: string }[] = [
-  { key: "openness", label: "開放性" },
-  { key: "conscientiousness", label: "誠実性" },
-  { key: "extraversion", label: "外向性" },
-  { key: "agreeableness", label: "協調性" },
-  { key: "neuroticism", label: "神経症傾向" },
-];
+// トゥゲル診断の5つの取扱指標（lib/personality/togel-index.ts で一元管理）
 
 const findExtended = (typeId: string | undefined): ExtendedPersonalityTypeDefinition | null =>
   personalityTypes.find((t) => t.id === typeId) ?? null;
@@ -270,11 +265,11 @@ const ResultPage = () => {
           <div className="flex justify-center">
             <div className="w-full max-w-[320px] rounded-[18px] border border-line bg-surface p-5">
               <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
-                BIG FIVE
+                TOGEL INDEX
               </div>
               <div className="mt-4 flex flex-col gap-3">
-                {TRAIT_ROWS.map(({ key, label }) => {
-                  const pct = Math.round((scores[key] / 5) * 100);
+                {TOGEL_INDEX.map(({ key, label }) => {
+                  const pct = togelIndexPercent(key, scores);
                   const high = pct >= 50;
                   return (
                     <div key={key}>
