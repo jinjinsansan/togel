@@ -3,16 +3,16 @@ import { join } from "node:path";
 
 import { ImageResponse } from "next/og";
 
-import { personalityTypes, getTogelLabel } from "@/lib/personality";
+import { personalityTypes } from "@/lib/personality";
 
 /**
- * シェア用OGP画像の動的生成。
+ * シェア用OGP画像の動的生成（デザイナー納品テンプレート準拠 / 1200×630）。
  *
- * GET /api/og?type=<typeId>            … 自分のタイプ発表カード
- * GET /api/og?type=<typeId>&mode=mismatch … 「私と絶対合わないのは」カード
+ * GET /api/og?type=<typeId>                … 自分のタイプ発表カード
+ * GET /api/og?type=<typeId>&mode=mismatch  … 「私と絶対合わないのは」カード（WORST1）
  *
- * ビジュアルは暫定（デザイナー納品後にテンプレートを差し替える前提）。
- * 構造・フォント同梱・キャッシュ設定などの基盤部分が本体。
+ * 文字は最小でも実寸28px。タイプ名と数字だけで意味が通ることを最優先。
+ * ロゴは現行A案（">"スワイプ）を使用。
  */
 
 export const dynamic = "force-dynamic";
@@ -31,6 +31,34 @@ const loadFonts = async () => {
   return fontCache;
 };
 
+/** 現行ロゴ（A案）: ネイビータイル + ピンクグラデT + ">"スワイプ */
+const LogoMark = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 40 40">
+    <defs>
+      <linearGradient id="tgOg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#ff6fa5" />
+        <stop offset="1" stopColor="#E91E63" />
+      </linearGradient>
+    </defs>
+    <rect x="1" y="1" width="38" height="38" rx="11" fill="#0b1f3a" />
+    <path
+      d="M9 13.5h13M15.5 13.5V27"
+      fill="none"
+      stroke="url(#tgOg)"
+      strokeWidth="2.7"
+      strokeLinecap="round"
+    />
+    <path
+      d="M25 20l6-5m-6 5l6 5"
+      fill="none"
+      stroke="url(#tgOg)"
+      strokeWidth="2.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const GET = async (request: Request) => {
   const url = new URL(request.url);
   const typeId = url.searchParams.get("type");
@@ -41,10 +69,13 @@ export const GET = async (request: Request) => {
     return new Response("unknown type", { status: 404 });
   }
 
-  const worstTypes = type.badCompatibleTypes
-    .map((id) => personalityTypes.find((t) => t.id === id))
-    .filter((t): t is NonNullable<typeof t> => Boolean(t))
-    .slice(0, 3);
+  const worst = personalityTypes.find((t) => t.id === type.badCompatibleTypes[0]) ?? null;
+
+  // 表示対象（mismatch: 相手タイプ / type: 自分のタイプ）
+  const featured = mode === "mismatch" && worst ? worst : type;
+  // タイプ名15文字以上は1段階だけ縮小、2行までは許容
+  const nameSize = featured.typeName.length >= 15 ? 80 : 106;
+  const showTagline = featured.typeName.length <= 11;
 
   const { bold, black } = await loadFonts();
 
@@ -56,112 +87,97 @@ export const GET = async (request: Request) => {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
-          padding: "56px 64px",
-          background: "linear-gradient(135deg, #0B1F3A 0%, #070D1A 70%)",
-          color: "#EAF0FA",
+          background: "radial-gradient(90% 90% at 20% 0%, rgba(255,46,116,.35), #07090F 62%)",
+          color: "#ffffff",
           fontFamily: "NotoSansJP",
         }}
       >
-        {/* ヘッダー */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* ハザードテープ */}
+        <div
+          style={{
+            display: "flex",
+            height: 22,
+            background: "repeating-linear-gradient(45deg,#FFE03D 0 26px,#0B0F1A 26px 52px)",
+          }}
+        />
+
+        {/* 本文 */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            padding: "0 76px",
+          }}
+        >
           <div
             style={{
               display: "flex",
-              fontSize: 26,
-              fontWeight: 700,
-              letterSpacing: "0.3em",
-              color: "#FF6FA5",
+              fontSize: 30,
+              fontWeight: 900,
+              letterSpacing: "0.28em",
+              color: "#FFE03D",
             }}
           >
-            TOGEL
+            {mode === "mismatch" ? "MISMATCH / WORST 1" : "MY TYPE / 24"}
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "#8FA2C4" }}>{getTogelLabel(type.id)}</div>
+          <div style={{ display: "flex", marginTop: 26, fontSize: 44, fontWeight: 700, color: "#9aa5ba" }}>
+            {mode === "mismatch" ? "私と絶対に合わないのは" : "私のタイプは"}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              marginTop: 14,
+              fontSize: nameSize,
+              fontWeight: 900,
+              lineHeight: 1.15,
+              letterSpacing: "-0.04em",
+              color: "#ffffff",
+            }}
+          >
+            {featured.typeName}
+          </div>
+          <div style={{ display: "flex", marginTop: 16, fontSize: 38, fontWeight: 700, color: "#FF2E74" }}>
+            {featured.catchphrase}
+          </div>
         </div>
-
-        {/* 本文 */}
-        {mode === "type" ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <div style={{ display: "flex", fontSize: 30, color: "#8FA2C4" }}>私のソウルタイプは</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-              <div style={{ display: "flex", fontSize: 110 }}>{type.emoji}</div>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", fontSize: 76, fontWeight: 900, color: "#FFFFFF" }}>
-                  {type.typeName}
-                </div>
-                <div style={{ display: "flex", fontSize: 32, color: "#FF9DC0", marginTop: 6 }}>
-                  「{type.catchphrase}」
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 14, marginTop: 10 }}>
-              {type.tags.map((tag) => (
-                <div
-                  key={tag}
-                  style={{
-                    display: "flex",
-                    fontSize: 24,
-                    fontWeight: 700,
-                    color: "#EAF0FA",
-                    background: "rgba(255,255,255,0.1)",
-                    padding: "10px 24px",
-                    borderRadius: 999,
-                  }}
-                >
-                  {tag}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ display: "flex", fontSize: 34 }}>{type.emoji}</div>
-              <div style={{ display: "flex", fontSize: 30, color: "#8FA2C4" }}>
-                {type.typeName}の私と、絶対合わないのは
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {worstTypes.map((worst, i) => (
-                <div key={worst.id} style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      fontSize: 26,
-                      fontWeight: 900,
-                      color: "#FF4F8B",
-                      width: 64,
-                    }}
-                  >
-                    {i + 1}位
-                  </div>
-                  <div style={{ display: "flex", fontSize: 44 }}>{worst.emoji}</div>
-                  <div style={{ display: "flex", fontSize: 44, fontWeight: 900, color: "#FFFFFF" }}>
-                    {worst.typeName}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: "flex", fontSize: 26, color: "#FF9DC0", marginTop: 4 }}>
-              ⚠ 付き合ったら地獄確定らしいです
-            </div>
-          </div>
-        )}
 
         {/* フッター */}
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
-            borderTop: "2px solid rgba(143,162,196,0.25)",
-            paddingTop: 28,
+            justifyContent: "space-between",
+            padding: "0 76px 54px",
           }}
         >
-          <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: "#EAF0FA" }}>
-            {BRAND_TAGLINE}
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <LogoMark size={64} />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 36, fontWeight: 900, color: "#ffffff" }}>
+                Togel
+              </div>
+              <div style={{ display: "flex", fontSize: 22, fontWeight: 700, color: "#6b7488" }}>
+                to-gel.com
+              </div>
+            </div>
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "#8FA2C4" }}>to-gel.com</div>
+          {showTagline && (
+            <div
+              style={{
+                display: "flex",
+                padding: "18px 30px",
+                borderRadius: 999,
+                background: "#FFE03D",
+                color: "#07090F",
+                fontSize: 28,
+                fontWeight: 900,
+              }}
+            >
+              {BRAND_TAGLINE}
+            </div>
+          )}
         </div>
       </div>
     ),
@@ -177,6 +193,9 @@ export const GET = async (request: Request) => {
   );
 
   // 内容はタイプごとに固定なのでCDNで長めにキャッシュ
-  image.headers.set("Cache-Control", "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800");
+  image.headers.set(
+    "Cache-Control",
+    "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+  );
   return image;
 };
