@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useEffect, useState, ReactNode, use } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { MapPin, Briefcase, Heart, User, Twitter, Instagram, Facebook, MessageCircle, Lock } from "lucide-react";
+import { MapPin, Briefcase, Twitter, Instagram, Facebook, MessageCircle, Lock, User } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { getTogelLabel } from "@/lib/personality";
+import { getTogelLabel, personalityTypes } from "@/lib/personality";
+import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
+import { getTypeApproachGuide } from "@/lib/coaching/translations";
 import { BigFiveScores } from "@/types/diagnosis";
 
 const buildFallbackAvatar = (seed: string, gender: "male" | "female" | "other"): string => {
@@ -18,11 +19,11 @@ const buildFallbackAvatar = (seed: string, gender: "male" | "female" | "other"):
 };
 
 const traitLabels: Record<keyof BigFiveScores, string> = {
-  openness: "アイデア感度",
-  conscientiousness: "計画遂行力",
-  extraversion: "交流エネルギー",
-  agreeableness: "共感スタイル",
-  neuroticism: "ストレス耐性",
+  openness: "開放性",
+  conscientiousness: "誠実性",
+  extraversion: "外向性",
+  agreeableness: "協調性",
+  neuroticism: "神経症傾向",
 };
 
 const TRAITS: (keyof BigFiveScores)[] = [
@@ -37,7 +38,6 @@ type Params = {
   id: string;
 };
 
-// Database Profile Type
 type ProfileDetails = {
   favoriteThings?: string;
   hobbies?: string;
@@ -52,14 +52,13 @@ type SocialLinkMeta = {
   icon: ReactNode;
   key: keyof SocialLinks;
   label: string;
-  color: string;
 };
 
 const SOCIAL_LINKS: SocialLinkMeta[] = [
-  { icon: <Twitter className="h-5 w-5" />, key: "twitter", label: "X (Twitter)", color: "hover:text-black hover:bg-black/5" },
-  { icon: <Instagram className="h-5 w-5" />, key: "instagram", label: "Instagram", color: "hover:text-pink-600 hover:bg-pink-50" },
-  { icon: <MessageCircle className="h-5 w-5" />, key: "line", label: "LINE", color: "hover:text-green-500 hover:bg-green-50" },
-  { icon: <Facebook className="h-5 w-5" />, key: "facebook", label: "Facebook", color: "hover:text-blue-600 hover:bg-blue-50" },
+  { icon: <Twitter className="h-4 w-4" />, key: "twitter", label: "X (Twitter)" },
+  { icon: <Instagram className="h-4 w-4" />, key: "instagram", label: "Instagram" },
+  { icon: <MessageCircle className="h-4 w-4" />, key: "line", label: "LINE" },
+  { icon: <Facebook className="h-4 w-4" />, key: "facebook", label: "Facebook" },
 ];
 
 type DbProfile = {
@@ -91,6 +90,31 @@ type DiagnosisDetails = {
   };
 };
 
+type ViewerDiagnosis = {
+  bigFiveScores: BigFiveScores;
+  personalityType: { id: string; typeName: string };
+};
+
+const findExtended = (typeId: string | undefined): ExtendedPersonalityTypeDefinition | null =>
+  personalityTypes.find((t) => t.id === typeId) ?? null;
+
+/** 相性/非相性の判定（毒はタイプ名にのみ付け、赤は使わない） */
+const judgeCompatibility = (
+  viewerTypeId: string | undefined,
+  targetTypeId: string | undefined,
+): "good" | "bad" | "neutral" | null => {
+  const viewer = findExtended(viewerTypeId);
+  const target = findExtended(targetTypeId);
+  if (!viewer || !target) return null;
+  if (viewer.badCompatibleTypes.includes(target.id) || target.badCompatibleTypes.includes(viewer.id)) {
+    return "bad";
+  }
+  if (viewer.compatibleTypes.includes(target.id) || target.compatibleTypes.includes(viewer.id)) {
+    return "good";
+  }
+  return "neutral";
+};
+
 const ProfileDetailPage = (props: { params: Promise<Params> }) => {
   const params = use(props.params);
   const searchParams = useSearchParams();
@@ -98,14 +122,26 @@ const ProfileDetailPage = (props: { params: Promise<Params> }) => {
   const isMockProfile = params.id.startsWith("mock-");
   const [profile, setProfile] = useState<DbProfile | null>(null);
   const [loading, setLoading] = useState(!isMockProfile);
-  const [accessState, setAccessState] = useState<"private" | "not_found" | null>(isMockProfile ? "private" : null);
+  const [accessState, setAccessState] = useState<"private" | "not_found" | null>(
+    isMockProfile ? "private" : null,
+  );
   const [viewerId, setViewerId] = useState<string | null>(null);
+  const [viewerDiagnosis, setViewerDiagnosis] = useState<ViewerDiagnosis | null>(null);
   const [diagnosisDetails, setDiagnosisDetails] = useState<DiagnosisDetails | null>(null);
   const [displayName, setDisplayName] = useState<string>(nicknameHint || "このユーザー");
   const [avatarOverride, setAvatarOverride] = useState<string | null>(null);
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
+    // 自分の直近診断（比較表示用）
+    try {
+      const raw = sessionStorage.getItem("latestDiagnosis");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sessionStorageはクライアントでしか読めない
+      if (raw) setViewerDiagnosis(JSON.parse(raw) as ViewerDiagnosis);
+    } catch {
+      /* ignore */
+    }
+
     if (isMockProfile) {
       return;
     }
@@ -171,8 +207,10 @@ const ProfileDetailPage = (props: { params: Promise<Params> }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-[#E91E63]"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-ink">
+        <div className="w-[200px] overflow-hidden rounded-full">
+          <div className="animate-marquee h-[10px] w-[400%] bg-hazard-sm" />
+        </div>
       </div>
     );
   }
@@ -181,259 +219,296 @@ const ProfileDetailPage = (props: { params: Promise<Params> }) => {
     return <PrivateProfileNotice name={displayName} />;
   }
 
-  if (accessState === "not_found") {
+  if (accessState === "not_found" || !profile) {
     return <ProfileNotFoundNotice />;
   }
 
-  if (!profile) {
-    return <ProfileNotFoundNotice />;
-  }
-
-  // 診断結果の表示ロジック（推定ロジックは廃止）
   const diagnosisTypeId = profile.diagnosis_type_id;
+  const targetType = findExtended(diagnosisTypeId);
   const togelLabel = diagnosisTypeId ? getTogelLabel(diagnosisTypeId) : "未診断";
-
-  // 一人称の設定（自分なら「私」、他人ならニックネーム）
   const isOwner = viewerId === profile.id;
   const subjectName = isOwner ? "私" : profile.full_name;
 
   const fallbackAvatar = buildFallbackAvatar(profile.id, profile.gender || "other");
   const avatarSource = avatarOverride ?? profile.avatar_url ?? fallbackAvatar;
 
+  const verdict = isOwner
+    ? null
+    : judgeCompatibility(viewerDiagnosis?.personalityType?.id, diagnosisTypeId);
+  const guide = targetType ? getTypeApproachGuide(targetType.id) : null;
+
   const infoItems = [
-    { label: "好きなこと", value: profile.details?.favoriteThings || "未設定", icon: <Heart className="h-4 w-4" /> },
-    { label: "趣味", value: profile.details?.hobbies || "未設定", icon: <Briefcase className="h-4 w-4" /> },
+    { label: "好きなこと", value: profile.details?.favoriteThings || "未設定" },
+    { label: "趣味", value: profile.details?.hobbies || "未設定" },
     { label: "特技", value: profile.details?.specialSkills || "未設定" },
     { label: "価値観", value: profile.details?.values || "未設定" },
     { label: "コミュ力", value: profile.details?.communication || "未設定" },
   ];
 
-  // SNS Links from DB
-  const socialLinks = SOCIAL_LINKS;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-10 md:py-16 overflow-x-hidden">
-      <div className="container px-4 sm:px-6 lg:px-8 max-w-full">
-        <div className="mx-auto max-w-5xl">
-          <div className="rounded-[2.5rem] border border-transparent md:border-2 md:border-white bg-white/95 backdrop-blur-md p-5 sm:p-8 md:p-12 shadow-md md:shadow-xl shadow-slate-200/30 relative overflow-hidden">
-            
-            {/* Edit Button for Owner */}
-            {viewerId === profile.id && (
-              <div className="absolute top-6 right-6 z-10">
-                <Button variant="outline" size="sm" className="rounded-full bg-white/80 backdrop-blur" asChild>
-                  <Link href="/profile/edit">編集する</Link>
-                </Button>
-              </div>
-            )}
-
-            {/* Header Profile Info */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between lg:text-left text-center gap-8 mb-10">
-              <div className="relative h-32 w-32 sm:h-36 sm:w-36 lg:h-40 lg:w-40 mx-auto lg:mx-0">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E91E63] to-purple-600 opacity-20 blur-2xl animate-pulse"></div>
-                <Image
-                  src={avatarSource}
-                  alt={profile.full_name}
-                  fill
-                  sizes="160px"
-                  className="rounded-full border-4 border-white object-cover shadow-lg"
-                  onError={() => {
-                    if (avatarSource === fallbackAvatar) return;
-                    setAvatarOverride(fallbackAvatar);
-                  }}
-                  priority={false}
-                />
-                <div className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md text-lg">
-                  {profile.gender === "male" ? "👨" : profile.gender === "female" ? "👩" : "🧑"}
-                </div>
-              </div>
-              <div className="w-full overflow-hidden">
-                <h1 className="font-heading text-3xl md:text-4xl font-black text-slate-900 mb-3 break-words">
-                  {profile.full_name} <span className="text-lg font-medium text-slate-400 block sm:inline">({profile.age ? `${profile.age}歳` : "年齢非公開"})</span>
-                </h1>
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 text-xs sm:text-sm font-medium text-slate-500 mb-4">
-                  {profile.job && (
-                    <span className="flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full">
-                      <Briefcase className="h-3.5 w-3.5" /> {profile.job}
-                    </span>
-                  )}
-                  {profile.city && (
-                    <span className="flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full">
-                      <MapPin className="h-3.5 w-3.5" /> {profile.city}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap justify-center lg:justify-start gap-4 mt-2">
-                  {socialLinks.map((link, index) => {
-                    const url = profile.social_links?.[link.key];
-                    if (!url) return null;
-                    
-                    return (
-                      <a
-                        key={index}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-all hover:scale-110 hover:border-transparent hover:shadow-md ${link.color}`}
-                        aria-label={link.label}
-                      >
-                        {link.icon}
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
+    <div className="min-h-screen bg-ink px-5.5 py-8 text-white">
+      <div className="mx-auto max-w-2xl">
+        {/* 01 ヘッダー: 写真・ニックネーム・タイプバッジ */}
+        <div className="relative rounded-hero border border-line bg-surface p-6">
+          {isOwner && (
+            <Link
+              href="/profile/edit"
+              className="absolute right-4 top-4 rounded-full border border-line px-4 py-2 text-[11px] font-bold text-txt-muted transition-colors hover:text-white"
+            >
+              編集する
+            </Link>
+          )}
+          <div className="flex items-center gap-5">
+            <div className="relative h-24 w-24 flex-none">
+              <Image
+                src={avatarSource}
+                alt={profile.full_name}
+                fill
+                sizes="96px"
+                className="rounded-full border-2 border-line object-cover"
+                onError={() => {
+                  if (avatarSource === fallbackAvatar) return;
+                  setAvatarOverride(fallbackAvatar);
+                }}
+                priority={false}
+              />
             </div>
-
-            {/* Personality Type */}
-            <div className="rounded-[2rem] bg-gradient-to-br from-slate-50 to-white p-5 sm:p-8 border border-transparent md:border-slate-200 mb-10 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#E91E63] to-purple-600"></div>
-              <div className="relative z-10 text-center">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#E91E63] mb-3">DIAGNOSIS RESULT</p>
-                
-                {diagnosisTypeId ? (
-                  <>
-                    <h2 className="font-heading text-4xl font-black text-slate-900 mb-2 tracking-tight">{togelLabel}</h2>
-                    <div className="inline-block px-4 py-1 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
-                      <p className="text-sm font-bold text-[#E91E63]">
-                        診断済み
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <div className="py-8">
-                    <h2 className="font-heading text-2xl font-bold text-slate-400 mb-4">未診断</h2>
-                    <p className="text-sm text-slate-500 mb-6">このユーザーはまだ診断を受けていません。</p>
-                    {viewerId === profile.id && (
-                      <Button asChild className="bg-[#E91E63] hover:bg-[#D81B60] text-white rounded-full px-8">
-                        <Link href="/diagnosis/select">今すぐ診断する</Link>
-                      </Button>
-                    )}
-                  </div>
+            <div className="min-w-0">
+              <h1 className="break-words text-2xl font-black">
+                {profile.full_name}
+                <span className="ml-2 text-sm font-bold text-txt-subtle">
+                  {profile.age ? `${profile.age}歳` : "年齢非公開"}
+                </span>
+              </h1>
+              {targetType ? (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[11px] font-black text-[#ff8fb4]">
+                  {targetType.emoji} {targetType.typeName}
+                  <span className="text-txt-subtle">/ {togelLabel}</span>
+                </div>
+              ) : (
+                <div className="mt-2 inline-flex rounded-full border border-line px-3 py-1 text-[11px] font-bold text-txt-subtle">
+                  未診断
+                </div>
+              )}
+              <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] font-bold text-txt-muted">
+                {profile.job && (
+                  <span className="flex items-center gap-1 rounded-chip bg-surface-alt px-2.5 py-1">
+                    <Briefcase className="h-3 w-3" /> {profile.job}
+                  </span>
+                )}
+                {profile.city && (
+                  <span className="flex items-center gap-1 rounded-chip bg-surface-alt px-2.5 py-1">
+                    <MapPin className="h-3 w-3" /> {profile.city}
+                  </span>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* 診断詳細情報 */}
-            {diagnosisDetails && (
-              <div className="mb-10 space-y-6">
-                {/* 🎯 こんな人 */}
-                <div className="rounded-2xl bg-white/80 p-5 sm:p-6 border border-transparent md:border-slate-200">
-                  <h3 className="flex items-center gap-2 text-lg font-bold mb-4">
-                    <span className="text-2xl">🎯</span>
-                    {subjectName}ってこんな人
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">💡 考え方のクセ</p>
-                      <ul className="space-y-1 text-base">
-                        {diagnosisDetails.detailedNarrative.thinkingStyle.map((text, idx) => (
-                          <li key={idx} className="break-words">• {text}</li>
-                        ))}
-                      </ul>
+          {/* SNS */}
+          <div className="mt-4 flex gap-2">
+            {SOCIAL_LINKS.map((link) => {
+              const url = profile.social_links?.[link.key];
+              if (!url) return null;
+              return (
+                <a
+                  key={link.key}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-txt-muted transition-colors hover:border-primary hover:text-white"
+                >
+                  {link.icon}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 02 相性 or 非相性の判定バー */}
+        {verdict && targetType && (
+          <div
+            className={`mt-3 rounded-card border p-4 ${
+              verdict === "bad"
+                ? "border-dangerline bg-dangerbg"
+                : verdict === "good"
+                  ? "border-reliefline bg-reliefbg"
+                  : "border-line bg-surface"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={`text-[10px] font-black tracking-[0.22em] ${
+                  verdict === "bad" ? "text-primary" : verdict === "good" ? "text-relief" : "text-txt-muted"
+                }`}
+              >
+                {verdict === "bad" ? "非相性" : verdict === "good" ? "相性 良好" : "相性 ふつう"}
+              </span>
+              <span className="text-[10px] font-bold text-txt-subtle">
+                あなた（{viewerDiagnosis?.personalityType?.typeName}）×{" "}
+                {targetType.typeName}
+              </span>
+            </div>
+            <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-black/30">
+              <div
+                className={`h-full rounded-full ${verdict === "good" ? "bg-relief" : "bg-primary"}`}
+                style={{ width: verdict === "bad" ? "88%" : verdict === "good" ? "82%" : "50%" }}
+              />
+            </div>
+            <p className="mt-2.5 text-[11.5px] leading-[1.85] text-txt-muted">
+              {verdict === "bad"
+                ? `${targetType.typeName}は、あなたのタイプと相性最悪リストに入っています。個人の話ではなく、タイプの話です。下の「やってはいけないこと」を読んでから接触してください。`
+                : verdict === "good"
+                  ? "タイプ相性は良好です。とはいえ油断した瞬間に足元をすくわれるのが人間関係です。"
+                  : "可もなく不可もなく。関係は2人の努力次第、という一番普通の判定です。"}
+            </p>
+          </div>
+        )}
+
+        {/* 03 ビッグファイブ比較（自分と重ねて表示） */}
+        {diagnosisDetails && (
+          <div className="mt-3 rounded-card border border-line bg-surface p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
+                BIG FIVE 比較
+              </span>
+              <span className="flex items-center gap-3 text-[9px] font-bold text-txt-subtle">
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-3 rounded-full bg-hazard" /> {subjectName}
+                </span>
+                {viewerDiagnosis && !isOwner && (
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-3 rounded-full bg-primary" /> あなた
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="mt-4 flex flex-col gap-3">
+              {TRAITS.map((trait) => {
+                const targetPct = Math.round((diagnosisDetails.bigFiveScores[trait] / 5) * 100);
+                const viewerPct =
+                  viewerDiagnosis && !isOwner
+                    ? Math.round((viewerDiagnosis.bigFiveScores[trait] / 5) * 100)
+                    : null;
+                return (
+                  <div key={trait}>
+                    <div className="flex justify-between text-[11px] font-bold">
+                      <span className="text-txt-muted">{traitLabels[trait]}</span>
+                      <span className="font-mono text-txt-subtle">
+                        {targetPct}
+                        {viewerPct !== null ? ` / ${viewerPct}` : ""}
+                      </span>
                     </div>
-
-                    <div>
-                      <p className="text-sm font-semibold text-muted-foreground mb-2">💬 コミュニケーションスタイル</p>
-                      <ul className="space-y-1 text-base">
-                        {diagnosisDetails.detailedNarrative.communicationStyle.map((text, idx) => (
-                          <li key={idx} className="break-words">• {text}</li>
-                        ))}
-                      </ul>
+                    <div className="relative mt-[5px] h-2 rounded-full bg-surface-alt">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-hazard/80"
+                        style={{ width: `${targetPct}%` }}
+                      />
+                      {viewerPct !== null && (
+                        <div
+                          className="absolute top-1/2 h-3 w-[3px] -translate-y-1/2 rounded-full bg-primary"
+                          style={{ left: `calc(${viewerPct}% - 1.5px)` }}
+                          aria-label={`あなた: ${viewerPct}`}
+                        />
+                      )}
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-                {/* ⚡ 得意技 */}
-                {diagnosisDetails.detailedNarrative.strengths.length > 0 && (
-                  <div className="rounded-2xl bg-green-50/80 p-5 sm:p-6 border border-transparent md:border-green-200">
-                    <h3 className="flex items-center gap-2 text-lg font-bold mb-3">
-                      <span className="text-2xl">⚡</span>
-                      {subjectName}の得意技
-                    </h3>
-                    <ul className="space-y-1 text-base">
-                      {diagnosisDetails.detailedNarrative.strengths.map((strength, idx) => (
-                        <li key={idx} className="break-words">✓ {strength}</li>
+        {/* 04 プロフィール本文 */}
+        <div className="mt-3 rounded-card border border-line bg-surface p-5">
+          <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">自己紹介</div>
+          <p className="mt-3 whitespace-pre-wrap break-words text-[13px] leading-8 text-txt-muted">
+            {profile.bio || "自己紹介はまだありません。"}
+          </p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {infoItems.map((item) => (
+              <div key={item.label} className="rounded-input border border-line-soft bg-panel px-3.5 py-3">
+                <div className="text-[9px] font-black tracking-[0.16em] text-txt-subtle">
+                  {item.label}
+                </div>
+                <div className="mt-1 whitespace-pre-wrap break-words text-xs font-bold text-txt-muted">
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 性格解説（本人の診断詳細） */}
+        {diagnosisDetails && (
+          <div className="mt-3 rounded-card border border-line bg-surface p-5">
+            <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
+              {subjectName}ってこんな人
+            </div>
+            <div className="mt-3 flex flex-col gap-3.5">
+              {[
+                { title: "考え方のクセ", items: diagnosisDetails.detailedNarrative.thinkingStyle },
+                {
+                  title: "コミュニケーション",
+                  items: diagnosisDetails.detailedNarrative.communicationStyle,
+                },
+                { title: "得意技", items: diagnosisDetails.detailedNarrative.strengths },
+              ]
+                .filter((block) => block.items.length > 0)
+                .map((block) => (
+                  <div key={block.title}>
+                    <div className="text-[10px] font-black text-txt-subtle">{block.title}</div>
+                    <ul className="mt-1.5 flex flex-col gap-1 text-xs leading-[1.9] text-txt-muted">
+                      {block.items.map((text, idx) => (
+                        <li key={idx} className="break-words">
+                          ・{text}
+                        </li>
                       ))}
                     </ul>
-                  </div>
-                )}
-
-                {/* 💑 恋愛になるとこうなる */}
-                {diagnosisDetails.detailedNarrative.loveTendency.length > 0 && (
-                  <div className="rounded-2xl bg-pink-50/80 p-5 sm:p-6 border border-transparent md:border-pink-200">
-                    <h3 className="flex items-center gap-2 text-lg font-bold mb-3">
-                      <span className="text-2xl">💑</span>
-                      恋愛になるとこうなる
-                    </h3>
-                    <ul className="space-y-1 text-base mb-4">
-                      {diagnosisDetails.detailedNarrative.loveTendency.map((text, idx) => (
-                        <li key={idx} className="break-words">• {text}</li>
-                      ))}
-                    </ul>
-
-                    {diagnosisDetails.detailedNarrative.idealPartner.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-pink-200">
-                        <p className="text-sm font-semibold text-muted-foreground mb-2">💕 求めてるのはこんな相手</p>
-                        <ul className="space-y-1 text-base">
-                          {diagnosisDetails.detailedNarrative.idealPartner.map((text, idx) => (
-                            <li key={idx} className="break-words">→ {text}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 詳細スコア */}
-                <details className="group">
-                  <summary className="cursor-pointer rounded-2xl bg-slate-100 px-4 sm:px-6 py-4 text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors list-none flex items-center justify-between">
-                    <span>📊 詳細スコアを見る</span>
-                    <span className="group-open:rotate-180 transition-transform">▼</span>
-                  </summary>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {TRAITS.map((trait) => (
-                      <div key={trait} className="flex items-center justify-between rounded-xl bg-white px-4 py-3 border border-slate-200">
-                        <span className="text-sm font-medium">{traitLabels[trait]}</span>
-                        <span className="text-lg font-bold text-[#E91E63]">{diagnosisDetails.bigFiveScores[trait].toFixed(1)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              </div>
-            )}
-
-            {/* Detailed Info */}
-            <div className="space-y-8">
-              {/* Bio Card */}
-              <div className="rounded-3xl border border-transparent md:border-slate-100 bg-white p-6 sm:p-8 shadow-sm relative">
-                <div className="absolute top-6 left-6 text-slate-200">
-                  <User className="h-8 w-8" />
-                </div>
-                <div className="relative z-10 text-center">
-                   <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-4">SELF INTRODUCTION</h3>
-                   <p className="text-lg text-slate-700 leading-loose whitespace-pre-wrap font-medium break-words">
-                     {profile.bio || "自己紹介はまだありません。"}
-                   </p>
-                </div>
-              </div>
-
-              <h3 className="font-heading text-xl font-bold text-slate-900 border-b border-slate-100 pb-4 px-2">基本プロフィール</h3>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {infoItems.map((item, index) => (
-                  <div key={index} className="rounded-2xl border border-transparent md:border-slate-100 bg-white p-4 sm:p-5 transition-colors hover:border-slate-200 overflow-hidden">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
-                      {item.icon} {item.label}
-                    </p>
-                    <p className="text-base font-medium text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
-                      {item.value}
-                    </p>
                   </div>
                 ))}
-              </div>
             </div>
-
           </div>
+        )}
+
+        {/* 05 やってはいけないこと / 会話のきっかけ（タイプに対する記述） */}
+        {targetType && guide && !isOwner && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-card border border-warnline bg-warnbg p-[18px]">
+              <div className="text-[10px] font-black tracking-[0.22em] text-hazard">
+                {targetType.typeName}にやってはいけないこと
+              </div>
+              <div className="mt-3 rounded-input bg-black/25 px-3.5 py-3 text-xs leading-[1.85] text-[#e2e7f0]">
+                ✕ {guide.ng}
+              </div>
+              <p className="mt-2.5 text-[11px] leading-[1.85] text-txt-subtle">{guide.why}</p>
+            </div>
+            <div className="rounded-card border border-reliefline bg-reliefbg p-[18px]">
+              <div className="text-[10px] font-black tracking-[0.22em] text-relief">
+                会話のきっかけ
+              </div>
+              <div className="mt-3 rounded-input bg-black/25 px-3.5 py-3 text-xs font-bold leading-[1.85] text-[#d5efe3]">
+                ◯ {guide.ok}
+              </div>
+              <p className="mt-2.5 text-[11px] leading-[1.85] text-[#9ccdb8]">{guide.dos[0]}</p>
+              <Link
+                href="/coaching"
+                className="mt-3 inline-flex min-h-[40px] items-center rounded-full bg-relief px-4 text-[11px] font-black text-[#05130e] transition-colors hover:bg-white"
+              >
+                このタイプの攻略法をすべて見る
+              </Link>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 text-center">
+          <Link
+            href="/result"
+            className="text-xs font-bold text-txt-subtle transition-colors hover:text-white"
+          >
+            ← 結果に戻る
+          </Link>
         </div>
       </div>
     </div>
@@ -449,23 +524,31 @@ const formatDisplayName = (raw?: string | null) => {
 const PrivateProfileNotice = ({ name }: { name?: string | null }) => {
   const formattedName = formatDisplayName(name);
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-16 px-4 flex items-center">
-      <div className="mx-auto max-w-xl rounded-[32px] border border-slate-100 bg-white/90 p-10 text-center shadow-2xl shadow-slate-200/70">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900">
-          <Lock className="h-8 w-8" />
+    <div className="flex min-h-screen items-center bg-ink px-4 py-16 text-white">
+      <div className="mx-auto w-full max-w-md rounded-hero border border-line bg-panel p-9 text-center">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-card bg-surface-alt text-txt-muted">
+          <Lock className="h-6 w-6" />
         </div>
-        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-400">Private Profile</p>
-        <h1 className="mt-4 text-2xl font-black leading-relaxed text-slate-900">
-          {formattedName}はプロフィールページを非公開中です。
+        <p className="text-[10px] font-black tracking-[0.3em] text-txt-subtle">PRIVATE PROFILE</p>
+        <h1 className="mt-3 text-lg font-black leading-relaxed">
+          {formattedName}はプロフィールを非公開中です。
         </h1>
-        <p className="mt-3 text-sm text-slate-500">公開されるまで今しばらくお待ちください。</p>
-        <div className="mt-8 flex flex-col gap-3">
-          <Button asChild size="lg" className="w-full">
-            <Link href="/result">マッチング結果ページに戻る</Link>
-          </Button>
-          <Button asChild variant="ghost" size="lg" className="w-full text-slate-500 hover:text-slate-700">
-            <Link href="/">トップページへ</Link>
-          </Button>
+        <p className="mt-2.5 text-xs leading-relaxed text-txt-subtle">
+          公開されるまで今しばらくお待ちください。
+        </p>
+        <div className="mt-6 flex flex-col gap-2.5">
+          <Link
+            href="/result"
+            className="flex min-h-[48px] items-center justify-center rounded-input bg-hazard text-[13px] font-black text-ink transition-colors hover:bg-white"
+          >
+            結果ページに戻る
+          </Link>
+          <Link
+            href="/"
+            className="flex min-h-[44px] items-center justify-center text-xs font-bold text-txt-subtle transition-colors hover:text-white"
+          >
+            トップページへ
+          </Link>
         </div>
       </div>
     </div>
@@ -473,16 +556,21 @@ const PrivateProfileNotice = ({ name }: { name?: string | null }) => {
 };
 
 const ProfileNotFoundNotice = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
-    <div className="bg-white p-10 rounded-[28px] shadow-xl max-w-md w-full border border-slate-100">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-700">
-        <User className="h-7 w-7" />
+  <div className="flex min-h-screen flex-col items-center justify-center bg-ink p-4 text-center text-white">
+    <div className="w-full max-w-md rounded-hero border border-line bg-panel p-9">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-card bg-surface-alt text-txt-muted">
+        <User className="h-6 w-6" />
       </div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-3">プロフィールが見つかりません</h1>
-      <p className="text-sm text-slate-500 mb-6">URLが間違っている可能性があります。トップページから再度アクセスしてください。</p>
-      <Button asChild size="lg" className="w-full">
-        <Link href="/">トップページへ戻る</Link>
-      </Button>
+      <h1 className="text-lg font-black">プロフィールが見つかりません</h1>
+      <p className="mt-2.5 text-xs leading-relaxed text-txt-subtle">
+        URLが間違っている可能性があります。トップページから再度アクセスしてください。
+      </p>
+      <Link
+        href="/"
+        className="mt-6 flex min-h-[48px] items-center justify-center rounded-input bg-hazard text-[13px] font-black text-ink transition-colors hover:bg-white"
+      >
+        トップページへ戻る
+      </Link>
     </div>
   </div>
 );

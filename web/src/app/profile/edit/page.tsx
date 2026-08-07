@@ -6,10 +6,6 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Save, Eye, EyeOff, Copy, Check, Loader2, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 
 type GenderOption = "male" | "female" | "other";
 
@@ -28,15 +24,36 @@ type ProfileDetails = {
   communication: string;
 };
 
-const SimpleSwitch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (c: boolean) => void }) => (
+/*
+ * フォーム状態定義（デザイナー納品準拠）:
+ * 高さ50px・角丸12px・16pxフォント（iOSの自動ズーム回避）
+ * DEFAULT: bg#0d111b/border#232b3d → FOCUS: border#FF2E74+リング → ERROR: #ff5a5a
+ */
+const inputClass =
+  "min-h-[50px] w-full rounded-input border border-line bg-surface px-3.5 text-base text-white placeholder:text-txt-disabled focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20 transition-colors";
+const inputErrorClass =
+  "min-h-[50px] w-full rounded-input border border-error bg-dangerbg px-3.5 text-base text-white placeholder:text-txt-disabled focus:outline-none focus:ring-[3px] focus:ring-error/20 transition-colors";
+const labelClass = "text-xs font-black text-txt-muted";
+
+const SimpleSwitch = ({
+  checked,
+  onCheckedChange,
+}: {
+  checked: boolean;
+  onCheckedChange: (c: boolean) => void;
+}) => (
   <button
     type="button"
+    role="switch"
+    aria-checked={checked}
     onClick={() => onCheckedChange(!checked)}
     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-      checked ? "bg-[#E91E63]" : "bg-slate-300"
+      checked ? "bg-primary" : "bg-line"
     }`}
   >
-    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+    <span
+      className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition ${checked ? "translate-x-5" : "translate-x-0.5"}`}
+    />
   </button>
 );
 
@@ -48,8 +65,9 @@ export default function ProfileEditPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [primaryUserId, setPrimaryUserId] = useState<string | null>(null);
-  
+
   const [fullName, setFullName] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [bio, setBio] = useState("");
   const [gender, setGender] = useState<GenderOption>("male");
   const [initialGender, setInitialGender] = useState<GenderOption | null>(null);
@@ -82,7 +100,7 @@ export default function ProfileEditPage() {
         router.push("/");
         return;
       }
-      
+
       setUser(session.user);
 
       const { data: userData } = await supabase.from("users").select("id").eq("auth_user_id", session.user.id).maybeSingle();
@@ -162,16 +180,17 @@ export default function ProfileEditPage() {
 
   const handleSave = async () => {
     if (!user) return;
+
+    const trimmedFullName = fullName.trim();
+    if (trimmedFullName.length < 2) {
+      setNameError("2文字以上で入力してください");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setNameError(null);
     setSaving(true);
 
     try {
-      const trimmedFullName = fullName.trim();
-      if (!trimmedFullName) {
-        alert("ニックネームを入力してください。");
-        setSaving(false);
-        return;
-      }
-
       const sanitizedLinks = (Object.keys(socialLinks) as (keyof SocialLinks)[]).reduce((acc, key) => {
         const trimmed = socialLinks[key].trim();
         if (trimmed) acc[key] = trimmed;
@@ -197,7 +216,7 @@ export default function ProfileEditPage() {
 
       const { error } = await supabase.from("profiles").upsert(updates);
       if (error) throw error;
-      
+
       if (!initialGender && genderToPersist) {
         setInitialGender(genderToPersist);
       }
@@ -232,234 +251,283 @@ export default function ProfileEditPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[#E91E63]" />
-          <p className="text-slate-500 font-bold animate-pulse">読み込み中...</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-ink">
+        <div className="w-[200px] overflow-hidden rounded-full">
+          <div className="animate-marquee h-[10px] w-[400%] bg-hazard-sm" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-32 overflow-x-hidden w-full">
-      {/* Hero Header */}
-      <div className="relative border-b border-slate-100 bg-gradient-to-br from-white to-slate-100 py-8 md:py-12">
-        <div className="container max-w-4xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
-            <div>
-              <p className="text-xs font-bold tracking-[0.3em] text-[#E91E63] mb-2 md:mb-3 uppercase">Settings</p>
-              <h1 className="font-heading text-2xl md:text-4xl font-black text-slate-900">
-                プロフィール編集
-              </h1>
-            </div>
-            {isPublic && (
-              <Button variant="outline" size="sm" asChild className="self-start md:self-auto rounded-full border-2 border-[#E91E63]/20 text-[#E91E63] hover:bg-[#E91E63] hover:text-white font-bold">
-                <a href={`/profile/${user?.id}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  公開ページを確認
-                </a>
-              </Button>
-            )}
+    <div className="min-h-screen w-full overflow-x-hidden bg-ink pb-32 text-white">
+      {/* ヘッダー */}
+      <div className="bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(255,46,116,.16),transparent_60%)] px-5.5 pb-5 pt-8">
+        <div className="mx-auto flex max-w-2xl flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-black tracking-[0.28em] text-hazard">SETTINGS</p>
+            <h1 className="mt-2.5 text-2xl font-black">プロフィール編集</h1>
           </div>
+          {isPublic && (
+            <a
+              href={`/profile/${user?.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-full border border-line px-4 py-2 text-[11px] font-bold text-txt-muted transition-colors hover:border-primary hover:text-white"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              公開ページを確認
+            </a>
+          )}
         </div>
       </div>
 
-      <div className="container max-w-4xl mx-auto px-3 md:px-4 mt-6 md:-mt-8 relative z-10 space-y-6 md:space-y-8">
-        
-        {/* Avatar & Public Status Grid */}
-        <div className="flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-6">
-          
-          {/* Left Col: Avatar */}
-          <div className="md:col-span-1">
-            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-4 md:p-6 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-              <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 shadow-inner">
-                  {avatarUrl ? (
-                    <Image src={avatarUrl} alt="Avatar" fill sizes="128px" className="object-cover transition-transform group-hover:scale-105" />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-4xl">👤</div>
-                  )}
-                </div>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 rounded-full transition-colors flex items-center justify-center">
-                   {uploading ? (
-                    <Loader2 className="animate-spin text-white" size={32} />
-                   ) : (
-                    <span className="text-white font-bold opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all">変更</span>
-                   )}
-                </div>
+      <div className="mx-auto max-w-2xl space-y-3.5 px-5.5">
+        {/* アバター + 公開設定 */}
+        <div className="grid gap-3.5 sm:grid-cols-3">
+          <div className="flex flex-col items-center justify-center rounded-card border border-line bg-surface p-5 text-center">
+            <button
+              type="button"
+              className="group relative"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="プロフィール写真を変更"
+            >
+              <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-line bg-surface-alt">
+                {avatarUrl ? (
+                  <Image src={avatarUrl} alt="Avatar" fill sizes="96px" className="object-cover transition-transform group-hover:scale-105" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-3xl">👤</div>
+                )}
               </div>
-              <p className="text-xs font-bold text-slate-400 mt-4">プロフィール写真</p>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
-            </div>
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors group-hover:bg-black/40">
+                {uploading ? (
+                  <Loader2 className="animate-spin text-white" size={26} />
+                ) : (
+                  <span className="text-xs font-black text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    変更
+                  </span>
+                )}
+              </div>
+            </button>
+            <p className="mt-3 text-[10px] font-bold text-txt-subtle">プロフィール写真</p>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
           </div>
 
-          {/* Right Col: Public Toggle & URL */}
-          <div className="md:col-span-2">
-            <div className="h-full bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-4 md:p-8 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between mb-6">
-                <div className="min-w-0 flex-1 mr-2">
-                  <h3 className="font-heading text-lg font-black text-slate-900 flex items-center gap-2 whitespace-nowrap">
-                    {isPublic ? <Eye className="text-[#E91E63] shrink-0" size={20} /> : <EyeOff className="text-slate-400 shrink-0" size={20} />}
-                    公開設定
-                  </h3>
-                  <p className="text-sm text-slate-500 font-medium mt-1 truncate">
-                    {isPublic ? "プロフィールは公開されています" : "プロフィールは非公開です"}
-                  </p>
-                </div>
-                <SimpleSwitch checked={isPublic} onCheckedChange={setIsPublic} />
+          <div className="rounded-card border border-line bg-surface p-5 sm:col-span-2">
+            <div className="flex items-center justify-between">
+              <div className="mr-2 min-w-0 flex-1">
+                <h3 className="flex items-center gap-2 whitespace-nowrap text-sm font-black">
+                  {isPublic ? (
+                    <Eye className="shrink-0 text-primary" size={16} />
+                  ) : (
+                    <EyeOff className="shrink-0 text-txt-subtle" size={16} />
+                  )}
+                  公開設定
+                </h3>
+                <p className="mt-1 truncate text-[11px] text-txt-subtle">
+                  {isPublic ? "プロフィールは公開されています" : "プロフィールは非公開です"}
+                </p>
               </div>
-
-              {isPublic && (
-                <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-200 max-w-full">
-                  <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Your Public URL</p>
-                  <div className="flex gap-2 items-center max-w-full">
-                    <div className="flex-1 min-w-0 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs md:text-sm font-mono text-slate-600 truncate">
-                      {`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${user?.id}`}
-                    </div>
-                    <Button onClick={copyPublicLink} size="icon" className={`shrink-0 h-9 w-9 rounded-xl font-bold ${copied ? "bg-green-500" : "bg-slate-900"}`}>
-                      {copied ? <Check size={16} /> : <Copy size={16} />}
-                    </Button>
-                  </div>
-                </div>
-              )}
+              <SimpleSwitch checked={isPublic} onCheckedChange={setIsPublic} />
             </div>
+
+            {isPublic && (
+              <div className="mt-4 rounded-input border border-dashed border-line bg-ink p-3">
+                <p className="text-[9px] font-black tracking-[0.16em] text-txt-subtle">
+                  YOUR PUBLIC URL
+                </p>
+                <div className="mt-2 flex max-w-full items-center gap-2">
+                  <div className="min-w-0 flex-1 truncate rounded-chip bg-surface px-3 py-2 font-mono text-xs text-txt-muted">
+                    {`${typeof window !== "undefined" ? window.location.origin : ""}/profile/${user?.id}`}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyPublicLink}
+                    aria-label="公開URLをコピー"
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-chip font-black transition-colors ${
+                      copied ? "bg-relief text-[#05130e]" : "bg-hazard text-ink hover:bg-white"
+                    }`}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Basic Info Form */}
-        <section className="bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-10 shadow-sm">
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
-             <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#E91E63]/10 text-xl">📝</span>
-             <h2 className="font-heading text-2xl font-black text-slate-900">基本情報</h2>
-          </div>
-          
-          <div className="grid gap-8">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-bold text-slate-700">ニックネーム <span className="text-[#E91E63]">*</span></Label>
-                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Togel太郎" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+        {/* 基本情報 */}
+        <section className="rounded-card border border-line bg-panel p-5">
+          <h2 className="border-b border-line-soft pb-4 text-base font-black">基本情報</h2>
+
+          <div className="mt-5 grid gap-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label htmlFor="fullName" className={labelClass}>
+                  ニックネーム <span className="text-primary">*</span>
+                </label>
+                <input
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    if (nameError && e.target.value.trim().length >= 2) setNameError(null);
+                  }}
+                  placeholder="Togel太郎"
+                  className={nameError ? inputErrorClass : inputClass}
+                />
+                {nameError && (
+                  <p className="text-[11px] font-bold text-errortext">{nameError}</p>
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                  <Label htmlFor="gender" className="text-sm font-bold text-slate-700">性別</Label>
+              <div className="grid grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
+                  <label htmlFor="gender" className={labelClass}>性別</label>
                   <div className="relative">
-                    <select 
-                      id="gender" 
-                      value={gender} 
+                    <select
+                      id="gender"
+                      value={gender}
                       onChange={(e) => {
                         if (initialGender) return;
                         setGender(e.target.value as GenderOption);
-                      }} 
+                      }}
                       disabled={Boolean(initialGender)}
-                      className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-base focus:outline-none focus:ring-2 focus:ring-[#E91E63] appearance-none"
+                      className={`w-full appearance-none ${
+                        initialGender
+                          ? "min-h-[50px] rounded-input border border-line-soft bg-[#0b0e17] px-3.5 text-base text-txt-disabled"
+                          : inputClass
+                      }`}
                     >
                       <option value="male">男性</option>
                       <option value="female">女性</option>
                       <option value="other">その他</option>
                     </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">▼</div>
+                    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-txt-subtle">
+                      ▼
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    {initialGender
-                      ? "性別は登録時の情報から変更できません"
-                      : "一度保存すると性別は変更できません"}
+                  <p className="text-[10px] leading-relaxed text-txt-subtle">
+                    {initialGender ? "性別は登録時の情報から変更できません" : "一度保存すると性別は変更できません"}
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="age" className="text-sm font-bold text-slate-700">年齢</Label>
-                  <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+                <div className="space-y-1.5">
+                  <label htmlFor="age" className={labelClass}>年齢</label>
+                  <input
+                    id="age"
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    placeholder="25"
+                    className={inputClass}
+                  />
                 </div>
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-               <div className="space-y-2">
-                <Label htmlFor="job" className="text-sm font-bold text-slate-700">職業</Label>
-                <Input id="job" value={job} onChange={(e) => setJob(e.target.value)} placeholder="会社員" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label htmlFor="job" className={labelClass}>職業</label>
+                <input id="job" value={job} onChange={(e) => setJob(e.target.value)} placeholder="会社員" className={inputClass} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="city" className="text-sm font-bold text-slate-700">居住地</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="東京都" className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+              <div className="space-y-1.5">
+                <label htmlFor="city" className={labelClass}>居住地</label>
+                <input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="東京都" className={inputClass} />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio" className="text-sm font-bold text-slate-700">自己紹介</Label>
-              <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="趣味や性格など、自由にかいてください！" className="min-h-[120px] rounded-xl border-slate-200 text-base focus:ring-[#E91E63] p-4 leading-relaxed" />
+            <div className="space-y-1.5">
+              <label htmlFor="bio" className={labelClass}>自己紹介</label>
+              <textarea
+                id="bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="趣味や性格など、自由にかいてください！"
+                className={`${inputClass} min-h-[120px] py-3 leading-relaxed`}
+              />
             </div>
           </div>
         </section>
 
-        {/* Details Form */}
-        <section className="bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-10 shadow-sm">
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
-             <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-100 text-xl">💡</span>
-             <h2 className="font-heading text-2xl font-black text-slate-900">詳細プロフィール</h2>
-          </div>
+        {/* 詳細プロフィール */}
+        <section className="rounded-card border border-line bg-panel p-5">
+          <h2 className="border-b border-line-soft pb-4 text-base font-black">詳細プロフィール</h2>
 
-          <div className="space-y-6">
+          <div className="mt-5 space-y-4">
             {[
-              { id: "favoriteThings", label: "好きなこと", value: details.favoriteThings, setter: (v: string) => setDetails({...details, favoriteThings: v}) },
-              { id: "hobbies", label: "趣味", value: details.hobbies, setter: (v: string) => setDetails({...details, hobbies: v}) },
-              { id: "specialSkills", label: "特技", value: details.specialSkills, setter: (v: string) => setDetails({...details, specialSkills: v}) },
-              { id: "values", label: "大切にしている価値観", value: details.values, setter: (v: string) => setDetails({...details, values: v}) },
-              { id: "communication", label: "コミュニケーションスタイル", value: details.communication, setter: (v: string) => setDetails({...details, communication: v}) },
+              { id: "favoriteThings", label: "好きなこと", value: details.favoriteThings, setter: (v: string) => setDetails({ ...details, favoriteThings: v }) },
+              { id: "hobbies", label: "趣味", value: details.hobbies, setter: (v: string) => setDetails({ ...details, hobbies: v }) },
+              { id: "specialSkills", label: "特技", value: details.specialSkills, setter: (v: string) => setDetails({ ...details, specialSkills: v }) },
+              { id: "values", label: "大切にしている価値観", value: details.values, setter: (v: string) => setDetails({ ...details, values: v }) },
+              { id: "communication", label: "コミュニケーションスタイル", value: details.communication, setter: (v: string) => setDetails({ ...details, communication: v }) },
             ].map((field) => (
-              <div key={field.id} className="space-y-2">
-                <Label htmlFor={field.id} className="text-sm font-bold text-slate-700">{field.label}</Label>
-                <Input id={field.id} value={field.value} onChange={(e) => field.setter(e.target.value)} className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
+              <div key={field.id} className="space-y-1.5">
+                <label htmlFor={field.id} className={labelClass}>{field.label}</label>
+                <input id={field.id} value={field.value} onChange={(e) => field.setter(e.target.value)} className={inputClass} />
               </div>
             ))}
           </div>
         </section>
 
-        {/* SNS Form */}
-        <section className="bg-white rounded-2xl md:rounded-3xl border-2 border-slate-100 p-5 md:p-10 shadow-sm">
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-100 pb-6">
-             <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-green-100 text-xl">🔗</span>
-             <div>
-               <h2 className="font-heading text-2xl font-black text-slate-900">SNSリンク</h2>
-               <p className="text-xs font-bold text-slate-400 mt-1">公開プロフィールに表示されます</p>
-             </div>
-          </div>
+        {/* SNSリンク */}
+        <section className="rounded-card border border-line bg-panel p-5">
+          <h2 className="border-b border-line-soft pb-4 text-base font-black">
+            SNSリンク
+            <span className="ml-2 text-[10px] font-bold text-txt-subtle">公開プロフィールに表示されます</span>
+          </h2>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-slate-700">X (Twitter)</Label>
-              <Input type="url" value={socialLinks.twitter} onChange={(e) => setSocialLinks({...socialLinks, twitter: e.target.value})} placeholder="https://x.com/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-slate-700">Instagram</Label>
-              <Input type="url" value={socialLinks.instagram} onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})} placeholder="https://instagram.com/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-slate-700">Facebook</Label>
-              <Input type="url" value={socialLinks.facebook} onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})} placeholder="https://facebook.com/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-slate-700">LINE</Label>
-              <Input type="url" value={socialLinks.line} onChange={(e) => setSocialLinks({...socialLinks, line: e.target.value})} placeholder="https://line.me/..." className="h-12 rounded-xl border-slate-200 text-base focus:ring-[#E91E63]" />
-            </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {(
+              [
+                { key: "twitter", label: "X (Twitter)", placeholder: "https://x.com/..." },
+                { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+                { key: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
+                { key: "line", label: "LINE", placeholder: "https://line.me/..." },
+              ] as { key: keyof SocialLinks; label: string; placeholder: string }[]
+            ).map((field) => (
+              <div key={field.key} className="space-y-1.5">
+                <label className={labelClass}>{field.label}</label>
+                <input
+                  type="url"
+                  value={socialLinks[field.key]}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, [field.key]: e.target.value })}
+                  placeholder={field.placeholder}
+                  className={inputClass}
+                />
+              </div>
+            ))}
           </div>
         </section>
-
       </div>
 
-      {/* Sticky Footer Action */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 p-4 z-50">
-        <div className="container max-w-4xl mx-auto flex items-center justify-between">
-          <Button variant="ghost" onClick={() => router.back()} className="font-bold text-slate-500 hover:text-slate-900">
-            キャンセル
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={saving} 
-            size="lg" 
-            className="rounded-full bg-[#E91E63] hover:bg-[#D81B60] text-white font-bold px-8 shadow-lg shadow-[#E91E63]/30 transition-all hover:scale-105"
+      {/* 画面下固定の保存バー（safe-area対応） */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-line-soft bg-ink/90 p-4 backdrop-blur-lg"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-1.5">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="text-sm font-bold text-txt-subtle transition-colors hover:text-white"
           >
-            {saving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> 保存中...</> : <><Save className="mr-2 h-5 w-5" /> 保存する</>}
-          </Button>
+            キャンセル
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex min-h-[52px] items-center gap-2 rounded-full bg-hazard px-8 text-sm font-black text-ink shadow-cta transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> 保存中...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" /> 保存する
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
