@@ -59,15 +59,15 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-paper">
       {/* Mobile Header - positioned above SiteHeader */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-slate-900 text-white flex items-center justify-between px-4 z-[100]">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-navy text-white flex items-center justify-between px-4 z-[100]">
         <h1 className="text-lg font-bold">Togel Admin</h1>
         <Button 
           variant="ghost" 
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-white hover:bg-slate-800"
+          className="text-white hover:bg-white/10"
         >
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </Button>
@@ -83,12 +83,12 @@ export default function AdminLayout({
 
       {/* Sidebar */}
       <aside className={`
-        w-64 bg-slate-900 text-white flex flex-col fixed h-full z-[95]
+        w-64 bg-navy text-white flex flex-col fixed h-full z-[95]
         transition-transform duration-300
         lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="p-6 border-b border-slate-800">
+        <div className="p-6 border-b border-white/10">
           <h1 className="text-xl font-bold tracking-wider">Togel Admin</h1>
         </div>
         
@@ -105,8 +105,8 @@ export default function AdminLayout({
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive 
-                    ? "bg-[#E91E63] text-white font-bold" 
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    ? "bg-primary-light text-white font-bold" 
+                    : "text-txt-muted hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <item.icon size={20} />
@@ -116,11 +116,11 @@ export default function AdminLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800 space-y-2">
+        <div className="p-4 border-t border-white/10 space-y-2">
           <Link href="/">
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800 gap-3"
+              className="w-full justify-start text-txt-muted hover:text-white hover:bg-white/10 gap-3"
             >
               <Home size={20} />
               <span>サイトに戻る</span>
@@ -128,7 +128,7 @@ export default function AdminLayout({
           </Link>
           <Button 
             variant="ghost" 
-            className="w-full justify-start text-slate-400 hover:text-white hover:bg-slate-800 gap-3"
+            className="w-full justify-start text-txt-muted hover:text-white hover:bg-white/10 gap-3"
             onClick={handleSignOut}
           >
             <LogOut size={20} />

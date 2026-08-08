@@ -339,7 +339,7 @@ export default function ServicesPage() {
       <section className="grid gap-4 lg:grid-cols-2">
         {loading ? (
           <div className="col-span-full flex items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-[#E91E63]" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary-light" />
           </div>
         ) : services.length === 0 ? (
           <div className="col-span-full rounded-3xl border border-dashed border-slate-200 bg-white py-12 text-center text-slate-500">
@@ -377,7 +377,7 @@ export default function ServicesPage() {
               <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
                 <div className="flex items-center gap-1">
                   <LinkIcon className="h-3.5 w-3.5" />
-                  <a href={service.linkUrl} target="_blank" rel="noreferrer" className="truncate text-[#E91E63] hover:underline">
+                  <a href={service.linkUrl} target="_blank" rel="noreferrer" className="truncate text-primary-light hover:underline">
                     {service.linkUrl}
                   </a>
                 </div>

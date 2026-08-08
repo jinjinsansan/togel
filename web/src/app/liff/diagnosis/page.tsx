@@ -3,13 +3,30 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { QuestionCard } from "@/components/diagnosis/question-card";
 import { DiagnosisAnalysisOverlay } from "@/components/diagnosis/analysis-overlay";
 import { Button } from "@/components/ui/button";
 import { DiagnosisQuestion, DiagnosisType } from "@/types/diagnosis";
 import { useLiff } from "@/lib/line/use-liff";
 
 type Answer = { questionId: string; value: number };
+
+// トゥゲル診断の5つの取扱指標（設問の右上ラベルに表示）※本体diagnosisと同一
+const TRAIT_LABELS: Record<string, string> = {
+  openness: "引火点",
+  conscientiousness: "構造強度",
+  extraversion: "放熱量",
+  agreeableness: "緩衝性能",
+  neuroticism: "耐圧限界",
+};
+
+/** 選択肢の値ごとのドット色（ピンク=あてはまる ↔ イエロー=あてはまらない） */
+const DOT_COLORS: Record<number, string> = {
+  5: "#FF2E74",
+  4: "rgba(255,46,116,.6)",
+  3: "#39415a",
+  2: "rgba(255,224,61,.6)",
+  1: "#FFE03D",
+};
 
 export default function LiffDiagnosisPage() {
   const router = useRouter();
@@ -225,70 +242,101 @@ export default function LiffDiagnosisPage() {
   const currentValue = answers.find((a) => a.questionId === currentQuestion?.id)?.value;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-6">
-      <div className="container px-4">
-        <div className="mx-auto max-w-2xl">
-          {/* Progress */}
-          <div className="mb-6 rounded-2xl border border-white bg-white/80 p-4 shadow-lg">
-            <div className="flex items-center justify-between text-xs mb-3">
-              <span className="font-bold text-slate-400">
-                Q.{currentIndex + 1} / {questions.length}
-              </span>
-              <span className="font-bold text-slate-400">{progress}%</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full bg-gradient-to-r from-[#E91E63] to-pink-500 transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
+    <div className="flex min-h-[100dvh] flex-col bg-ink text-white">
+      {/* 進捗ヘッダー（本体diagnosisと同デザイン） */}
+      <div className="px-5 pt-4">
+        <div className="flex items-center justify-between text-[11px] font-black">
+          <span className="text-txt-muted">
+            Q{currentIndex + 1} <span className="text-txt-disabled">/ {questions.length || "-"}</span>
+          </span>
+          <span className="tracking-[0.14em] text-hazard">
+            {currentQuestion ? (TRAIT_LABELS[currentQuestion.trait] ?? "") : ""}
+          </span>
+        </div>
+        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-alt">
+          <div
+            className="h-full rounded-full bg-progress transition-all duration-300 ease-togel"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
 
-          {currentQuestion && (
-            <QuestionCard
-              question={currentQuestion}
-              currentValue={currentValue}
-              onSelect={handleSelect}
-            />
-          )}
-
-          {error && (
-            <div className="mt-4 rounded-xl bg-red-50 border border-red-100 p-3 text-center">
-              <p className="text-sm font-bold text-red-500">{error}</p>
-            </div>
-          )}
-
-          <div className="mt-6 flex gap-3">
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={handlePrev}
-              disabled={currentIndex === 0}
-              className="flex-1 h-12 rounded-xl text-slate-400"
+      {/* 設問本体 */}
+      <div className="flex-1 overflow-y-auto px-5.5 pb-6 pt-[34px]">
+        {currentQuestion && (
+          <div key={currentQuestion.id} className="animate-rise mx-auto max-w-2xl">
+            <div className="text-[11px] font-black tracking-[0.2em] text-txt-disabled">QUESTION</div>
+            <h2
+              className="mt-3.5 text-[25px] font-black leading-relaxed tracking-[-0.01em]"
+              style={{ textWrap: "pretty" }}
             >
-              ← 前へ
-            </Button>
+              {currentQuestion.text}
+            </h2>
+            <p className="mt-3.5 text-xs leading-[1.9] text-txt-subtle">
+              直感で。考え込むほど当たらなくなります。
+            </p>
 
-            {currentIndex === questions.length - 1 ? (
-              <Button
-                size="lg"
-                onClick={handleSubmit}
-                disabled={step === "submitting"}
-                className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-[#E91E63] to-pink-600 font-bold text-white shadow-lg"
-              >
-                {step === "submitting" ? "AI分析中..." : "診断結果を見る →"}
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                onClick={handleNext}
-                className="flex-[2] h-12 rounded-xl bg-slate-900 font-bold text-white shadow-lg"
-              >
-                次へ →
-              </Button>
+            <div className="mt-[26px] flex flex-col gap-[9px]">
+              {[...currentQuestion.options]
+                .sort((a, b) => b.value - a.value)
+                .map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleSelect(option.value)}
+                    className={`flex min-h-[56px] items-center gap-3 rounded-[14px] border px-[18px] text-left text-sm font-bold transition-colors ${
+                      currentValue === option.value
+                        ? "border-primary bg-dangerbg text-white"
+                        : "border-line bg-surface text-[#e2e7f0] hover:border-primary hover:bg-dangerbg"
+                    }`}
+                  >
+                    <span
+                      className="h-[9px] w-[9px] flex-none rounded-full"
+                      style={{ background: DOT_COLORS[option.value] ?? "#39415a" }}
+                      aria-hidden="true"
+                    />
+                    {option.label}
+                  </button>
+                ))}
+            </div>
+
+            {error && (
+              <p className="mt-4 rounded-input bg-error/15 px-4 py-2 text-xs font-bold text-errortext">
+                {error}
+              </p>
             )}
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* フッター */}
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-between border-t border-line-soft px-5.5 pb-5.5 pt-3.5">
+        <button
+          type="button"
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
+          className="text-xs font-bold text-txt-subtle transition-colors hover:text-white disabled:opacity-40"
+        >
+          ← 前の質問
+        </button>
+        {currentIndex === questions.length - 1 ? (
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={step === "submitting"}
+            className="flex min-h-[48px] items-center rounded-full bg-primary px-6 text-[13px] font-black text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+          >
+            {step === "submitting" ? "AI分析中..." : "診断結果を見る →"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleNext}
+            className="flex min-h-[48px] items-center rounded-full border border-line px-6 text-[13px] font-bold text-txt-muted transition-colors hover:border-primary hover:text-white"
+          >
+            次へ →
+          </button>
+        )}
       </div>
     </div>
   );

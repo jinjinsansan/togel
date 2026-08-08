@@ -555,7 +555,7 @@ export default function AdminPage() {
                     type="button"
                     className={cn(
                       "w-full text-left rounded-2xl border border-slate-100 bg-white p-4 shadow-sm", 
-                      selectedUserId === user.id && "ring-2 ring-[#E91E63]/40"
+                      selectedUserId === user.id && "ring-2 ring-primary-light/40"
                     )}
                     onClick={() => setSelectedUserId(user.id)}
                   >
@@ -719,7 +719,7 @@ export default function AdminPage() {
                     ) : (
                       <div className="space-y-1 text-sm">
                         {socialEntries.map(([key, value]) => (
-                          <a key={key} href={value} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[#E91E63] hover:underline">
+                          <a key={key} href={value} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-primary-light hover:underline">
                             <LinkIcon className="h-3 w-3" />
                             <span className="capitalize">{key}</span>
                           </a>

@@ -172,7 +172,7 @@ export default function AdminNotificationsPage() {
               <Button 
                 onClick={handleSend} 
                 disabled={sending || !title || !content}
-                className="w-full bg-[#E91E63] hover:bg-[#D81B60]"
+                className="w-full bg-primary-light hover:bg-primary-light/90"
               >
                 {sending ? "送信中..." : (
                   <span className="flex items-center gap-2">

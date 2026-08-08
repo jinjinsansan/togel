@@ -352,9 +352,9 @@ export default function RecommendationAdminPage() {
             {selectedTypeInfo?.catchphrase && <p className="text-[11px] text-slate-400">{selectedTypeInfo.catchphrase}</p>}
           </div>
           <div className="rounded-2xl border border-slate-100 bg-pink-50 px-4 py-3">
-            <p className="text-xs font-semibold text-[#E91E63]">登録件数</p>
-            <p className="text-2xl font-black text-[#E91E63]">{recommendations.length}</p>
-            <p className="text-[11px] text-[#E91E63]/80">最大6件まで表示</p>
+            <p className="text-xs font-semibold text-primary-light">登録件数</p>
+            <p className="text-2xl font-black text-primary-light">{recommendations.length}</p>
+            <p className="text-[11px] text-primary-light/80">最大6件まで表示</p>
           </div>
         </div>
       </section>
@@ -362,7 +362,7 @@ export default function RecommendationAdminPage() {
       <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
         {loading ? (
           <div className="flex h-48 items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-[#E91E63]" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary-light" />
           </div>
         ) : recommendations.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center text-slate-500">
@@ -443,11 +443,11 @@ export default function RecommendationAdminPage() {
                               <div className="mt-2 flex items-center gap-2">
                                 <div className="h-2 flex-1 rounded-full bg-white">
                                   <div
-                                    className="h-full rounded-full bg-[#E91E63]"
+                                    className="h-full rounded-full bg-primary-light"
                                     style={{ width: `${Math.min(rec.matchPercentage ?? 0, 100)}%` }}
                                   />
                                 </div>
-                                <span className="text-sm font-bold text-[#E91E63]">{rec.matchPercentage ?? "-"}%</span>
+                                <span className="text-sm font-bold text-primary-light">{rec.matchPercentage ?? "-"}%</span>
                               </div>
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -476,7 +476,7 @@ export default function RecommendationAdminPage() {
                               className={cn(
                                 "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border",
                                 rec.showOnResultPage
-                                  ? "border-[#E91E63]/30 bg-[#E91E63]/10 text-[#E91E63]"
+                                  ? "border-primary-light/30 bg-primary-light/10 text-primary-light"
                                   : "border-slate-200 bg-slate-50 text-slate-500"
                               )}
                             >
@@ -544,7 +544,7 @@ export default function RecommendationAdminPage() {
                 {noServicesAvailable && (
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
                     <span>まずは「サービス管理」でサービスを追加してください。</span>
-                    <Link href="/admin/services" className="flex items-center gap-1 text-[#E91E63] font-semibold">
+                    <Link href="/admin/services" className="flex items-center gap-1 text-primary-light font-semibold">
                       サービスを追加する <ExternalLink className="h-3 w-3" />
                     </Link>
                   </div>
