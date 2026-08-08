@@ -40,3 +40,4 @@ fix_and_create_user.sql
 
 # 独自理論の知識ベース（パブリックリポジトリのため非公開・ローカル専用）
 /CLAUDE.md
+/TRANSLATION_LAYER.md
