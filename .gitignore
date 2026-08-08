@@ -37,3 +37,6 @@ fix_and_create_user.sql
 # redesign deliverable (not committed)
 /redesign_extract/
 /Togel*.zip
+
+# 独自理論の知識ベース（パブリックリポジトリのため非公開・ローカル専用）
+/CLAUDE.md
