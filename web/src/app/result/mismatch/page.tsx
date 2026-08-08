@@ -142,7 +142,10 @@ const MismatchResultPage = () => {
   const shareText = worst1
     ? `私（${selfType?.typeName ?? "診断済み"}）と絶対に合わないのは「${worst1.type.typeName}」らしい…`
     : "Togelで「絶対に合わないタイプ」を診断しました";
-  const shareUrl = "https://to-gel.com";
+  // シェア先はOGP付きランディング（/share/[typeId]）。タイプ未確定時はトップへ
+  const shareUrl = selfType
+    ? `https://to-gel.com/share/${selfType.id}?mode=mismatch`
+    : "https://to-gel.com";
 
   return (
     <div className="min-h-screen bg-ink text-white">
@@ -483,6 +486,29 @@ const MismatchResultPage = () => {
               おまけ：相性ベスト5を見る<span>→</span>
             </Link>
           </div>
+        </div>
+
+        {/* LINE友だち追加CTA（診断完了直後が追加率のピーク） */}
+        <div className="mx-auto mt-6 grid max-w-[1120px] items-center gap-[18px] rounded-[18px] bg-navy p-5.5 sm:grid-cols-2">
+          <div>
+            <div className="text-[11px] font-black tracking-[0.2em] text-relief">
+              週1で地雷注意報
+            </div>
+            <div className="mt-2 text-[19px] font-black leading-normal text-white">
+              あなたのワーストタイプの取説をLINEで受け取る
+            </div>
+            <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
+              言い方の翻訳・距離の置き方を毎週1本。読むだけで、来週の面倒がひとつ減ります。
+            </p>
+          </div>
+          <a
+            href="https://lin.ee/T7OYAGQ"
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
+          >
+            LINEで友だち追加
+          </a>
         </div>
       </section>
 
