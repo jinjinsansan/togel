@@ -109,8 +109,46 @@ export default function CoachingPage() {
 
       <section className="px-5.5 pb-[34px] pt-3.5">
         <div className="mx-auto max-w-[1120px]">
+          {/* 地雷の仕組み（全タイプ共通の前提。30秒でわかる版） */}
+          <div className="rounded-card border border-lightline bg-white p-5.5">
+            <div className="text-[10px] font-black tracking-[0.2em] text-relief-ink">
+              先に30秒だけ。地雷の仕組み
+            </div>
+            <p className="mt-2.5 text-xs leading-[1.95] text-lighttext-muted">
+              人の地雷は、性格の欠陥ではありません。仕組みはこうです。
+            </p>
+            <div className="mt-3.5 grid gap-2.5 sm:grid-cols-3">
+              {[
+                {
+                  term: "ラベル",
+                  body: "人は誰でも、昔どこかで貼られた「思い込みのラベル」を持っています。本人は性格だと思っていますが、あとから貼られたものです。",
+                },
+                {
+                  term: "タンク",
+                  body: "ラベルの下には感情のタンクが埋まっています。中身は人それぞれ。寂しさの人も、恐怖の人も、「私には価値がない」の人もいます。",
+                },
+                {
+                  term: "警報",
+                  body: "タンクに触られると、中身をこれ以上感じないために警報が鳴ります。怒鳴る人も、黙る人も、笑ってかわす人もいますが、全部同じ警報です。",
+                },
+              ].map((item) => (
+                <div key={item.term} className="rounded-[14px] border border-lightline bg-[#f1f5f2] p-4">
+                  <div className="text-[13px] font-black text-navy">{item.term}</div>
+                  <p className="mt-1.5 text-[11.5px] leading-[1.9] text-lighttext-subtle">
+                    {item.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3.5 text-xs leading-[1.95] text-lighttext-muted">
+              つまり、あなたが誰かの地雷を踏んだとき、相手はあなたを攻撃しているのではありません。自分のタンクを守っているだけです。
+              ひとつだけ約束してください。ここに書いてあるのはタイプという<b>キャラクター</b>の話。
+              <b>タイプは傾向、ラベルは個人。</b>あなたの隣にいるあの人の本当のラベルは、本人にしかわかりません。
+            </p>
+          </div>
+
           {/* タイプ切替タブ */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
             {targetTypes.map((type, i) => (
               <button
                 key={type.id}
@@ -151,6 +189,16 @@ export default function CoachingPage() {
                     {levelForRank(activeIndex + 1)}
                   </div>
                 </div>
+              </div>
+
+              {/* 中身の正体 */}
+              <div className="mt-5 rounded-[14px] border border-[#d8e2f0] bg-[#f2f6fb] p-[18px]">
+                <div className="text-[10px] font-black tracking-[0.2em] text-navy">
+                  中身の正体
+                </div>
+                <p className="mt-[11px] text-[12.5px] leading-[1.95] text-lighttext-muted">
+                  {guide.core}
+                </p>
               </div>
 
               <div className="mt-5.5 grid gap-3.5 md:grid-cols-2">
