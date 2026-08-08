@@ -35,6 +35,23 @@ export async function getLineUser(lineUserId: string): Promise<LineUserRecord | 
   return data;
 }
 
+/** 診断済み（タイプ確定済み）のLINE友だち一覧。定期配信の宛先に使う */
+export async function getDiagnosedLineUsers(): Promise<
+  Array<{ line_user_id: string; togel_type: string }>
+> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("line_users")
+    .select("line_user_id, togel_type")
+    .not("togel_type", "is", null);
+
+  if (error) {
+    console.error("[LINE DB] getDiagnosedLineUsers error:", error);
+    return [];
+  }
+  return (data ?? []) as Array<{ line_user_id: string; togel_type: string }>;
+}
+
 export async function getOrCreateLineUser(lineUserId: string): Promise<LineUserRecord | null> {
   const existing = await getLineUser(lineUserId);
   if (existing) return existing;

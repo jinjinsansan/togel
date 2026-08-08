@@ -42,6 +42,17 @@ export async function pushMessage(to: string, messages: LineMessage[]) {
   });
 }
 
+/** 同一メッセージを最大500人へ一括送信（LINE multicast API の上限） */
+export async function multicastMessage(to: string[], messages: LineMessage[]) {
+  if (to.length === 0) return null;
+  if (to.length > 500) {
+    throw new Error("multicastMessage: recipients must be 500 or fewer per call");
+  }
+  return lineApi("/message/multicast", {
+    body: { to, messages },
+  });
+}
+
 export async function getProfile(userId: string): Promise<LineProfile> {
   return lineApi(`/profile/${userId}`, { method: "GET" });
 }

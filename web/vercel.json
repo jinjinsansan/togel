@@ -1,5 +1,11 @@
 {
   "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/cron/line-broadcast",
+      "schedule": "0 3 * * 5"
+    }
+  ],
   "functions": {
     "src/app/api/michelle/chat/route.ts": {
       "maxDuration": 60
