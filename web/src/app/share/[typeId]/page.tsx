@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { personalityTypes } from "@/lib/personality";
-import { getAppBaseUrl } from "@/lib/url";
 
 /**
  * SNSシェア用ランディングページ。
@@ -41,9 +40,9 @@ export const generateMetadata = async ({
     : `私のタイプは「${featured.typeName}」 | Togel`;
   const description = `${featured.catchphrase}。運命の人は教えない。地雷なら教える。トゥゲル診断で確かめる。`;
 
-  const base = getAppBaseUrl();
-  const ogImage = `${base}/api/og?type=${encodeURIComponent(type.id)}${isMismatch ? "&mode=mismatch" : ""}`;
-  const pageUrl = `${base}/share/${encodeURIComponent(type.id)}${isMismatch ? "?mode=mismatch" : ""}`;
+  // 相対パスは layout の metadataBase（https://www.to-gel.com）で解決される
+  const ogImage = `/api/og?type=${encodeURIComponent(type.id)}${isMismatch ? "&mode=mismatch" : ""}`;
+  const pageUrl = `/share/${encodeURIComponent(type.id)}${isMismatch ? "?mode=mismatch" : ""}`;
 
   return {
     title,
