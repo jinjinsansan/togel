@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import "@fontsource/noto-sans-jp/400.css";
 import "@fontsource/noto-sans-jp/500.css";
@@ -50,6 +51,8 @@ export default function RootLayout({
         <AgeGate />
         <ConditionalHeader />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+        {/* アクセス解析（クッキーレス・個人を特定しない）。/privacy §6 に記載 */}
+        <Analytics />
         <ConditionalFooter />
       </body>
     </html>

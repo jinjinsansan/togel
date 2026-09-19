@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { loadSession } from "@/lib/diagnosis/session";
+import { trackLineCta } from "@/lib/analytics/events";
 import { personalityTypes } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import { storyLabelHref } from "@/lib/share/story-label";
@@ -516,6 +517,7 @@ const MismatchResultPage = () => {
             href="https://lin.ee/T7OYAGQ"
             target="_blank"
             rel="noreferrer"
+            onClick={() => trackLineCta("mismatch")}
             className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
           >
             1通目を受け取る

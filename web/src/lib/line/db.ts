@@ -108,6 +108,8 @@ export async function updateLineUserDiagnosis(params: {
   lineUserId: string;
   gender: "male" | "female";
   togelType: string;
+  /** 受けた診断の種別（light / full）。配信や盤の長さを判断する材料になる */
+  diagnosisType?: "light" | "full";
   diagnosisResult: Record<string, unknown>;
   bigFiveScores: Record<string, number>;
 }): Promise<void> {
@@ -117,6 +119,7 @@ export async function updateLineUserDiagnosis(params: {
     .update({
       gender: params.gender,
       togel_type: params.togelType,
+      ...(params.diagnosisType ? { diagnosis_type: params.diagnosisType } : {}),
       diagnosis_result: params.diagnosisResult,
       big_five_scores: params.bigFiveScores,
       conversation_state: "diagnosed",

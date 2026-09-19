@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { trackLineCta } from "@/lib/analytics/events";
 import { personalityTypes, typeToken } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import {
@@ -436,6 +437,7 @@ export default function CoachingPage() {
               href="https://lin.ee/T7OYAGQ"
               target="_blank"
               rel="noreferrer"
+              onClick={() => trackLineCta("coaching")}
               className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
             >
               1通目を受け取る

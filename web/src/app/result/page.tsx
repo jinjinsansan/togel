@@ -7,6 +7,7 @@ import { GroupBadge } from "@/components/brand/group-badge";
 import { HandbookShare } from "@/components/share/handbook-share";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { trackLineCta } from "@/lib/analytics/events";
 import { personalityTypes, typeToken } from "@/lib/personality";
 import { storyLabelHref } from "@/lib/share/story-label";
 import { handbookPostText } from "@/lib/share/text";
@@ -570,6 +571,7 @@ const ResultPage = () => {
             href="https://lin.ee/T7OYAGQ"
             target="_blank"
             rel="noreferrer"
+            onClick={() => trackLineCta("result")}
             className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
           >
             1通目を受け取る

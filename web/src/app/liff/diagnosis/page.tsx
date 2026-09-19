@@ -10,6 +10,7 @@ import { WarningGate } from "@/components/diagnosis/board/warning-gate";
 import { QuestionCard } from "@/components/diagnosis/question-card";
 import { Button } from "@/components/ui/button";
 import { DiagnosisQuestion, DiagnosisType } from "@/types/diagnosis";
+import { trackDiagnosisComplete, trackDiagnosisStart } from "@/lib/analytics/events";
 import { buildBoard, milestoneText, recallRecords } from "@/lib/diagnosis/board";
 import { loadSession, saveSession } from "@/lib/diagnosis/session";
 import { useLiff } from "@/lib/line/use-liff";
@@ -134,6 +135,7 @@ export default function LiffDiagnosisPage() {
       setAnswers([]);
       persist([], gender, diagnosisType);
       setStep("questions");
+      trackDiagnosisStart(diagnosisType, "liff");
     } catch {
       setError("質問の読み込みに失敗しました");
     } finally {
@@ -215,6 +217,7 @@ export default function LiffDiagnosisPage() {
 
   const startReveal = () => {
     setStep("reveal");
+    trackDiagnosisComplete(diagnosisType, "liff");
     void submitDiagnosis(answers);
   };
 

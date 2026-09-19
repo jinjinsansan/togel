@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { GroupBadge } from "@/components/brand/group-badge";
 import { HandbookShare } from "@/components/share/handbook-share";
+import { ShareLandingTracker } from "@/components/share/landing-tracker";
 import { personalityTypes, typeToken } from "@/lib/personality";
 import { storyLabelHref } from "@/lib/share/story-label";
 import { handbookPostText } from "@/lib/share/text";
@@ -87,6 +88,7 @@ const SharePage = async ({
 
   return (
     <div className="min-h-screen bg-ink text-white">
+      <ShareLandingTracker mode={isMismatch ? "mismatch" : "type"} />
       <div className="h-[10px] bg-hazard-sm" />
       <section
         className="bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(255,46,116,.26),transparent_60%)] px-5.5 pb-12 pt-[46px]"

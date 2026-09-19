@@ -223,6 +223,7 @@ async function handleAnswer(
       lineUserId: userId,
       gender: gender as "male" | "female",
       togelType: pt.id,
+      diagnosisType,
       diagnosisResult: result as unknown as Record<string, unknown>,
       bigFiveScores: result.bigFiveScores as unknown as Record<string, number>,
     });

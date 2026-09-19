@@ -10,6 +10,7 @@ import { useReducedMotion } from "@/components/diagnosis/board/use-reduced-motio
 import { WarningGate } from "@/components/diagnosis/board/warning-gate";
 import { QuestionCard } from "@/components/diagnosis/question-card";
 import { DiagnosisQuestion } from "@/types/diagnosis";
+import { trackDiagnosisComplete, trackDiagnosisStart } from "@/lib/analytics/events";
 import { buildBoard, milestoneText, recallRecords } from "@/lib/diagnosis/board";
 import { clearSession, saveSession } from "@/lib/diagnosis/session";
 import { personalityTypes, typeToken } from "@/lib/personality";
@@ -109,6 +110,14 @@ const DiagnosisPage = () => {
   const totalQuestions = questions.length;
   const board = useMemo(() => buildBoard(totalQuestions || 1), [totalQuestions]);
 
+  // 計測: 設問が出た時点で1回だけ（回答内容は送らない）
+  const startTracked = useRef(false);
+  useEffect(() => {
+    if (startTracked.current || totalQuestions === 0 || !diagnosisType) return;
+    startTracked.current = true;
+    trackDiagnosisStart(diagnosisType, "web");
+  }, [totalQuestions, diagnosisType]);
+
   const answerByIndex = useMemo(() => {
     const map = new Map<number, number>();
     questions.forEach((question, index) => {
@@ -179,6 +188,7 @@ const DiagnosisPage = () => {
 
   const startReveal = () => {
     setPhase("reveal");
+    if (diagnosisType) trackDiagnosisComplete(diagnosisType, "web");
     void submitDiagnosis();
   };
 

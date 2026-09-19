@@ -31,9 +31,17 @@ const groupKey = (typeId: string, issue: number) => `${typeId}#${issue}`;
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    // フェイルクローズ: シークレット未設定なら配信機能ごと無効
-    return NextResponse.json({ error: "broadcast disabled" }, { status: 503 });
+  const startedAt = process.env.LINE_BROADCAST_START_AT;
+
+  // フェイルクローズ。設定が要る変数が2つあるので、どちらが欠けているかを返す
+  // （片方だけ設定して「済んだ」と思い込む事故を防ぐ）。変数名のみで値は返さない
+  const missing: string[] = [];
+  if (!secret) missing.push("CRON_SECRET");
+  if (!startedAt || Number.isNaN(new Date(startedAt).getTime())) {
+    missing.push("LINE_BROADCAST_START_AT");
+  }
+  if (missing.length > 0) {
+    return NextResponse.json({ error: "broadcast disabled", missing }, { status: 503 });
   }
   if (req.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -66,12 +74,8 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const startedAt = process.env.LINE_BROADCAST_START_AT;
-  if (!startedAt || Number.isNaN(new Date(startedAt).getTime())) {
-    // 起点が無いと通目を決められない。推測しないでフェイルクローズする
-    return NextResponse.json({ error: "start date not configured" }, { status: 503 });
-  }
-  const startAt = new Date(startedAt);
+  // 起点は上で検証済み（通目を推測しない）
+  const startAt = new Date(startedAt as string);
   const now = new Date();
 
   const all = await getBroadcastRecipients();

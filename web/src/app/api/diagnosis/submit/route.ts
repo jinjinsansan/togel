@@ -355,6 +355,7 @@ export const POST = async (request: Request) => {
             lineUserId: parsed.data.lineUserId!,
             gender: parsed.data.userGender,
             togelType: diagnosisResult.personalityType.id,
+            diagnosisType: parsed.data.diagnosisType,
             diagnosisResult: diagnosisResult as unknown as Record<string, unknown>,
             bigFiveScores: diagnosisResult.bigFiveScores as unknown as Record<string, number>,
           });

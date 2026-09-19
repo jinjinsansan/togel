@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { lineUserId, gender, togelType, diagnosisResult, bigFiveScores } = body;
+    const { lineUserId, gender, togelType, diagnosisType, diagnosisResult, bigFiveScores } = body;
 
     if (!lineUserId || !togelType) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       lineUserId,
       gender: gender ?? "male",
       togelType,
+      diagnosisType: diagnosisType === "full" ? "full" : diagnosisType === "light" ? "light" : undefined,
       diagnosisResult: diagnosisResult ?? {},
       bigFiveScores: bigFiveScores ?? {},
     });
