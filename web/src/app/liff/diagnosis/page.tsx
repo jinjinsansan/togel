@@ -10,15 +10,6 @@ import { useLiff } from "@/lib/line/use-liff";
 
 type Answer = { questionId: string; value: number };
 
-// トゥゲル診断の5つの取扱指標（設問の右上ラベルに表示）※本体diagnosisと同一
-const TRAIT_LABELS: Record<string, string> = {
-  openness: "引火点",
-  conscientiousness: "構造強度",
-  extraversion: "放熱量",
-  agreeableness: "緩衝性能",
-  neuroticism: "耐圧限界",
-};
-
 /** 選択肢の値ごとのドット色（ピンク=あてはまる ↔ イエロー=あてはまらない） */
 const DOT_COLORS: Record<number, string> = {
   5: "#FF2E74",
@@ -243,14 +234,13 @@ export default function LiffDiagnosisPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-ink text-white">
-      {/* 進捗ヘッダー（本体diagnosisと同デザイン） */}
+      {/* 進捗ヘッダー（Web版は盤面に置換済み。ここへの盤面の適用は次段）
+          軸名（引火点等）は出さない。どの設問が何を見ているかを知らせると、
+          それに合わせた回答を誘発するため */}
       <div className="px-5 pt-4">
         <div className="flex items-center justify-between text-[11px] font-black">
           <span className="text-txt-muted">
             Q{currentIndex + 1} <span className="text-txt-disabled">/ {questions.length || "-"}</span>
-          </span>
-          <span className="tracking-[0.14em] text-hazard">
-            {currentQuestion ? (TRAIT_LABELS[currentQuestion.trait] ?? "") : ""}
           </span>
         </div>
         <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-alt">
