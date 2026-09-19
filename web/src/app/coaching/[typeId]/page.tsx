@@ -93,7 +93,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
 
           <div className="mt-[22px] rounded-card border border-lightline bg-white p-[22px] shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]">
             <div className="text-[10px] font-black tracking-[0.2em] text-[#c1113f]">中身の正体</div>
-            <p className="mt-[11px] text-[12.5px] leading-[2] text-lighttext-muted">{guide.core}</p>
+            <p className="mt-[11px] text-[13px] leading-[2] text-lighttext-muted">{guide.core}</p>
           </div>
         </div>
       </section>
@@ -119,7 +119,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
                 </div>
               </div>
             </div>
-            <p className="mt-3.5 text-[11.5px] leading-[1.95] text-lighttext-subtle">{guide.why}</p>
+            <p className="mt-3.5 text-[12px] leading-[1.95] text-lighttext-subtle">{guide.why}</p>
           </div>
 
           <div className="flex flex-col gap-3.5">
@@ -134,7 +134,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
                     <span className="flex h-[17px] w-[17px] flex-none items-center justify-center rounded-[5px] bg-relief-ink text-[10px] font-black text-white">
                       {index + 1}
                     </span>
-                    <span className="text-xs leading-[1.85] text-lighttext-muted">{item}</span>
+                    <span className="text-[12px] leading-[1.85] text-lighttext-muted">{item}</span>
                   </li>
                 ))}
               </ol>
@@ -145,7 +145,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
               <div className="text-[10px] font-black tracking-[0.2em] text-relief">
                 距離の置き方
               </div>
-              <p className="mt-[11px] text-[12.5px] leading-[1.95] text-[#c3d3e8]">
+              <p className="mt-[11px] text-[13px] leading-[1.95] text-[#c3d3e8]">
                 {guide.distance}
               </p>
             </div>
@@ -154,7 +154,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
 
         {/* 締め文（省略不可） */}
         <div className="mx-auto mt-3.5 max-w-[1120px] rounded-card border border-dashed border-[#cfdad4] bg-white px-5.5 py-[18px] text-center">
-          <p className="text-[12.5px] font-black leading-[1.95] text-navy">
+          <p className="text-[13px] font-black leading-[1.95] text-navy">
             タイプは傾向、ラベルは個人。
             <br />
             <span className="font-normal text-lighttext-subtle">
@@ -169,16 +169,16 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
             <div className="text-[11px] font-black tracking-[0.2em] text-relief">
               で、あなたの地雷は？
             </div>
-            <div className="mt-2 text-[19px] font-black leading-[1.5] text-white">
+            <div className="mt-2 text-[20px] font-black leading-[1.5] text-white">
               40問で、噛み合わない相手が出ます
             </div>
-            <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
+            <p className="mt-2 text-[12px] leading-[1.9] text-[#b7c6dd]">
               読むだけで終わってもいいですが、自分の分を知ると使いどころが増えます。
             </p>
           </div>
           <Link
             href="/diagnosis/select"
-            className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-primary text-sm font-black text-white transition-colors hover:bg-primary-hover"
+            className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-primary text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
           >
             自分の型を診断する
           </Link>
@@ -190,7 +190,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
             <div className="text-[11px] font-black tracking-[0.2em] text-relief-ink">
               毎週1通、全15回
             </div>
-            <div className="mt-[7px] text-base font-black leading-[1.5] text-navy">
+            <div className="mt-[7px] text-[15px] font-black leading-[1.5] text-navy">
               1通目から、踏まない歩き方だけ送ります
             </div>
           </div>
@@ -198,7 +198,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
             href="https://lin.ee/T7OYAGQ"
             target="_blank"
             rel="noreferrer"
-            className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
+            className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-linegreen text-[15px] font-black text-white transition-opacity hover:opacity-90"
           >
             1通目を受け取る
           </a>
@@ -207,7 +207,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
         <div className="mx-auto mt-4 max-w-[1120px] text-center">
           <Link
             href="/coaching"
-            className="text-xs font-bold text-lighttext-subtle underline transition-colors hover:text-navy"
+            className="text-[12px] font-bold text-lighttext-subtle underline transition-colors hover:text-navy"
           >
             24タイプ一覧に戻る
           </Link>

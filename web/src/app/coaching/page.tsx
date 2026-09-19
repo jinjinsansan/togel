@@ -194,7 +194,7 @@ export default function CoachingPage() {
                 <div className="text-[10px] font-black tracking-[0.2em] text-relief-ink">
                   {item.term}
                 </div>
-                <p className="mt-[9px] text-xs leading-[1.95] text-lighttext-subtle">{item.body}</p>
+                <p className="mt-[9px] text-[12px] leading-[1.95] text-lighttext-subtle">{item.body}</p>
               </div>
             ))}
           </div>
@@ -207,7 +207,7 @@ export default function CoachingPage() {
           {boardTypes.length > 0 && (
             <div className="rounded-hero border border-lightline bg-white px-5.5 py-6 shadow-[0_26px_50px_-34px_rgba(11,31,58,.55)]">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-[22px] font-black tracking-[-0.02em]">
+                <h2 className="text-[20px] font-black tracking-[-0.02em]">
                   {walked}マス歩きました
                 </h2>
                 <span className="text-[11px] font-bold text-lighttext-subtle">
@@ -225,7 +225,7 @@ export default function CoachingPage() {
                       <span className="text-[17px] font-black">
                         {type.emoji} {typeToken(type)}
                       </span>
-                      <span className="text-[11.5px] font-bold text-lighttext-subtle">
+                      <span className="text-[12px] font-bold text-lighttext-subtle">
                         {type.typeName}
                       </span>
                     </div>
@@ -274,15 +274,15 @@ export default function CoachingPage() {
                   <div className="text-[10px] font-black tracking-[0.2em] text-[#c1113f]">
                     {openLabel}
                   </div>
-                  <h3 className="mt-2 text-[22px] font-black tracking-[-0.02em]">
+                  <h3 className="mt-2 text-[20px] font-black tracking-[-0.02em]">
                     {openType.emoji} {typeToken(openType)}
                   </h3>
-                  <div className="mt-1 text-xs font-bold text-lighttext-subtle">
+                  <div className="mt-1 text-[12px] font-bold text-lighttext-subtle">
                     {openType.typeName} ／ {openType.catchphrase}
                   </div>
 
                   {openContent.body && (
-                    <p className="mt-3.5 text-[12.5px] leading-[1.95] text-lighttext-muted">
+                    <p className="mt-3.5 text-[13px] leading-[1.95] text-lighttext-muted">
                       {openContent.body}
                     </p>
                   )}
@@ -293,7 +293,7 @@ export default function CoachingPage() {
                         <div className="text-[10px] font-black text-[#c1113f]">
                           ✕ あなたが言いがち
                         </div>
-                        <div className="mt-1 rounded-[11px] border border-[#f0d3da] bg-white px-[13px] py-[11px] text-[12.5px] leading-[1.8] text-lighttext-muted">
+                        <div className="mt-1 rounded-[11px] border border-[#f0d3da] bg-white px-[13px] py-[11px] text-[13px] leading-[1.8] text-lighttext-muted">
                           {openContent.ng}
                         </div>
                       </div>
@@ -301,7 +301,7 @@ export default function CoachingPage() {
                         <div className="text-[10px] font-black text-relief-ink">
                           ◯ こう言い換える
                         </div>
-                        <div className="mt-1 rounded-[11px] border border-[#b9e3d0] bg-[#e9f7f0] px-[13px] py-[11px] text-[12.5px] font-bold leading-[1.8] text-navy">
+                        <div className="mt-1 rounded-[11px] border border-[#b9e3d0] bg-[#e9f7f0] px-[13px] py-[11px] text-[13px] font-bold leading-[1.8] text-navy">
                           {openContent.ok}
                         </div>
                       </div>
@@ -315,14 +315,14 @@ export default function CoachingPage() {
                           <span className="flex h-[17px] w-[17px] flex-none items-center justify-center rounded-[5px] bg-relief-ink text-[10px] font-black text-white">
                             {index + 1}
                           </span>
-                          <span className="text-xs leading-[1.8] text-lighttext-muted">{item}</span>
+                          <span className="text-[12px] leading-[1.8] text-lighttext-muted">{item}</span>
                         </li>
                       ))}
                     </ol>
                   )}
 
                   <div className="mt-[18px] flex flex-wrap items-center justify-between gap-2.5 border-t border-dashed border-lightline pt-[18px]">
-                    <span className="text-[11.5px] font-bold text-relief-ink">
+                    <span className="text-[12px] font-bold text-relief-ink">
                       歩き方を1つ覚えた
                     </span>
                     <Link
@@ -343,12 +343,12 @@ export default function CoachingPage() {
                     <br />
                     あと2タイプ、あなたと噛み合わない相手がいます。
                   </p>
-                  <p className="mt-2 text-xs leading-[1.9] text-lighttext-subtle">
+                  <p className="mt-2 text-[12px] leading-[1.9] text-lighttext-subtle">
                     （40問の診断で、残りが出ます）
                   </p>
                   <Link
                     href="/diagnosis/full"
-                    className="mt-4 inline-flex min-h-[48px] items-center rounded-full bg-navy px-7 text-xs font-black text-white transition-colors hover:bg-primary"
+                    className="mt-4 inline-flex min-h-[48px] items-center rounded-full bg-navy px-7 text-[12px] font-black text-white transition-colors hover:bg-primary"
                   >
                     40問の診断へ
                   </Link>
@@ -362,7 +362,7 @@ export default function CoachingPage() {
             <h2 className="text-[10px] font-black tracking-[0.2em] text-relief-ink">
               タイプ別ガイド（24タイプ・診断なしで読めます）
             </h2>
-            <p className="mt-2 text-xs leading-[1.95] text-lighttext-subtle">
+            <p className="mt-2 text-[12px] leading-[1.95] text-lighttext-subtle">
               {boardTypes.length > 0
                 ? "盤に出ていない相手も、ここから読めます。"
                 : "相手のタイプが分かっているなら、そのまま読めます。診断を受けると、あなたと噛み合わない相手だけを並べた「あなたの盤」がこの上に出ます。"}
@@ -379,12 +379,12 @@ export default function CoachingPage() {
                         href={`/coaching/${type.id}`}
                         className="flex min-h-[56px] items-center gap-3 rounded-input border border-lightline bg-[#f1f5f2] px-3.5 py-2.5 transition-colors hover:border-navy"
                       >
-                        <span className="text-[22px]">{type.emoji}</span>
+                        <span className="text-[20px]">{type.emoji}</span>
                         <span className="flex flex-col gap-px">
-                          <span className="text-[14px] font-black text-navy">
+                          <span className="text-[15px] font-black text-navy">
                             {typeToken(type)}
                           </span>
-                          <span className="text-[10.5px] text-lighttext-subtle">
+                          <span className="text-[10px] text-lighttext-subtle">
                             {type.typeName}
                           </span>
                         </span>
@@ -398,7 +398,7 @@ export default function CoachingPage() {
 
           {/* 締め文（省略不可） */}
           <div className="rounded-card border border-dashed border-[#cfdad4] bg-white px-5.5 py-[18px] text-center">
-            <p className="text-[12.5px] font-black leading-[1.95] text-navy">
+            <p className="text-[13px] font-black leading-[1.95] text-navy">
               タイプは傾向、ラベルは個人。
               <br />
               <span className="font-normal text-lighttext-subtle">
@@ -413,10 +413,10 @@ export default function CoachingPage() {
               <div className="text-[11px] font-black tracking-[0.2em] text-relief">
                 週に1通、全15回
               </div>
-              <div className="mt-2 text-[19px] font-black leading-[1.5] text-white">
+              <div className="mt-2 text-[20px] font-black leading-[1.5] text-white">
                 1通目から、踏まない歩き方だけ送ります
               </div>
-              <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
+              <p className="mt-2 text-[12px] leading-[1.9] text-[#b7c6dd]">
                 あなたが最も踏みやすい地雷は、3タイプ分あります。読み切りサイズで、週にひとつずつ。
               </p>
             </div>
@@ -425,7 +425,7 @@ export default function CoachingPage() {
               target="_blank"
               rel="noreferrer"
               onClick={() => trackLineCta("coaching")}
-              className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
+              className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-[15px] font-black text-white transition-opacity hover:opacity-90"
             >
               1通目を受け取る
             </a>
