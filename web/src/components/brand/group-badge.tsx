@@ -43,14 +43,44 @@ export const groupBadgeLine = (group: TypeGroupId): string => {
 
 type GroupBadgeProps = {
   group: TypeGroupId;
-  /** compact: 1行に収める（カード内・表の見出しなど） */
-  variant?: "default" | "compact";
+  /**
+   * default: 枠付きのバッジ
+   * compact: 1行に収める（カード内・表の見出しなど）
+   * section: 一覧の見出し用（枠なし・2段）
+   * light: ライト面（白カードの上）用
+   */
+  variant?: "default" | "compact" | "section" | "light";
   className?: string;
 };
 
 /** 画面（DOM）用の群バッジ。4群とも同じ装飾にする（群に優劣を作らない） */
 export const GroupBadge = ({ group, variant = "default", className = "" }: GroupBadgeProps) => {
   const { emoji, label, redefinition } = GROUP_BADGE[group];
+
+  if (variant === "light") {
+    return (
+      <div
+        className={`inline-flex flex-col gap-0.5 rounded-input border border-lightline bg-[#f1f5f2] px-3.5 py-2.5 ${className}`}
+        aria-label={groupBadgeLine(group)}
+      >
+        <span className="text-xs font-black text-lighttext">
+          {emoji} {label}
+        </span>
+        <span className="text-[10.5px] text-lighttext-subtle">{redefinition}</span>
+      </div>
+    );
+  }
+
+  if (variant === "section") {
+    return (
+      <div className={`flex flex-col gap-0.5 ${className}`} aria-label={groupBadgeLine(group)}>
+        <span className="text-[15px] font-black text-hazard">
+          {emoji} {label}
+        </span>
+        <span className="text-[11.5px] text-txt-muted">{redefinition}</span>
+      </div>
+    );
+  }
 
   if (variant === "compact") {
     return (
