@@ -7,6 +7,7 @@ import { DiagnosisBoard } from "@/components/diagnosis/board/diagnosis-board";
 import { MilestoneCard } from "@/components/diagnosis/board/milestone-card";
 import { RevealSequence } from "@/components/diagnosis/board/reveal-sequence";
 import { useReducedMotion } from "@/components/diagnosis/board/use-reduced-motion";
+import { WarningGate } from "@/components/diagnosis/board/warning-gate";
 import { QuestionCard } from "@/components/diagnosis/question-card";
 import { DiagnosisQuestion } from "@/types/diagnosis";
 import { buildBoard, milestoneText, recallRecords } from "@/lib/diagnosis/board";
@@ -211,46 +212,16 @@ const DiagnosisPage = () => {
 
   const currentValue = answers.find((answer) => answer.questionId === currentQuestion?.id)?.value;
 
-  /* ===== 警告フルスクリーン ===== */
+  /* ===== 警告フルスクリーン（開封の手前に1回だけ） ===== */
   if (phase === "warn") {
     return (
-      <div className="animate-flash relative flex min-h-[100dvh] flex-col items-center justify-center bg-dangerbg px-[26px] py-[34px] text-center text-white">
-        <div className="absolute inset-x-0 top-0 h-[10px] bg-hazard" aria-hidden="true" />
-        <div className="flex h-[82px] w-[82px] items-center justify-center rounded-hero bg-hazard text-[40px] font-black text-ink">
-          ▲
-        </div>
-        <div className="mt-6 text-[11px] font-black tracking-[0.34em] text-hazard">WARNING</div>
-        <h2 className="mt-3.5 text-[30px] font-black leading-[1.45] tracking-[-0.02em]">
-          この先、
-          <br />
-          けっこう言います。
-        </h2>
-        <p className="mt-4 max-w-[22em] text-[13px] leading-8 text-txt-muted">
-          {totalQuestions}問の回答から、あなたと絶対に合わない
-          {diagnosisType === "light" ? "タイプ" : "5タイプ"}
-          を特定しました。読んだあと、笑える人だけ進んでください。
-        </p>
-        {submitFailed && (
-          <p className="mt-4 rounded-input bg-error/15 px-4 py-2 text-xs font-bold text-errortext">
-            診断結果の生成に失敗しました。もう一度お試しください。
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={startReveal}
-          className="mt-[30px] min-h-[58px] w-full max-w-sm rounded-card bg-primary text-base font-black text-white shadow-danger transition-colors hover:bg-primary-hover"
-        >
-          覚悟して開ける
-        </button>
-        <button
-          type="button"
-          onClick={() => setPhase("quiz")}
-          className="mt-3 text-xs font-bold text-txt-subtle transition-colors hover:text-white"
-        >
-          やっぱりやめる
-        </button>
-        <div className="absolute inset-x-0 bottom-0 h-[10px] bg-hazard" aria-hidden="true" />
-      </div>
+      <WarningGate
+        totalQuestions={totalQuestions}
+        worstLabel={diagnosisType === "light" ? "タイプ" : "5タイプ"}
+        submitFailed={submitFailed}
+        onProceed={startReveal}
+        onCancel={() => setPhase("quiz")}
+      />
     );
   }
 

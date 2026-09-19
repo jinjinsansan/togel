@@ -6,6 +6,7 @@ import { DiagnosisBoard } from "@/components/diagnosis/board/diagnosis-board";
 import { MilestoneCard } from "@/components/diagnosis/board/milestone-card";
 import { RevealSequence } from "@/components/diagnosis/board/reveal-sequence";
 import { useReducedMotion } from "@/components/diagnosis/board/use-reduced-motion";
+import { WarningGate } from "@/components/diagnosis/board/warning-gate";
 import { QuestionCard } from "@/components/diagnosis/question-card";
 import { Button } from "@/components/ui/button";
 import { DiagnosisQuestion, DiagnosisType } from "@/types/diagnosis";
@@ -26,7 +27,7 @@ import { personalityTypes } from "@/lib/personality";
  */
 
 type Answer = { questionId: string; value: number };
-type Step = "type" | "gender" | "questions" | "milestone" | "reveal";
+type Step = "type" | "gender" | "questions" | "milestone" | "warn" | "reveal";
 
 type WorstReveal = { typeName: string; catchphrase: string };
 
@@ -186,8 +187,7 @@ export default function LiffDiagnosisPage() {
       setCurrentIndex((prev) => prev + 1);
       return;
     }
-    setStep("reveal");
-    void submitDiagnosis(nextAnswers);
+    setStep("warn");
   };
 
   const handleMilestoneContinue = () => {
@@ -197,6 +197,10 @@ export default function LiffDiagnosisPage() {
       setCurrentIndex((prev) => prev + 1);
       return;
     }
+    setStep("warn");
+  };
+
+  const startReveal = () => {
     setStep("reveal");
     void submitDiagnosis(answers);
   };
@@ -208,6 +212,19 @@ export default function LiffDiagnosisPage() {
     setMove((prev) => ({ kind: "instant", step: prev.step }));
     if (currentIndex > 0) setCurrentIndex((prev) => prev - 1);
   };
+
+  /* ===== 警告フルスクリーン（開封の手前に1回だけ） ===== */
+  if (step === "warn") {
+    return (
+      <WarningGate
+        totalQuestions={totalQuestions}
+        worstLabel={diagnosisType === "light" ? "タイプ" : "5タイプ"}
+        submitFailed={submitFailed}
+        onProceed={startReveal}
+        onCancel={() => setStep("questions")}
+      />
+    );
+  }
 
   /* ===== 開封 ===== */
   if (step === "reveal") {
