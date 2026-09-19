@@ -32,7 +32,7 @@ const TypeDetailSheet = ({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] font-black tracking-[0.2em] text-txt-subtle">
+          <div className="text-[10px] font-black tracking-[0.22em] text-txt-subtle">
             {getTogelLabel(type.id)}
           </div>
           <div className="mt-1.5 flex items-center gap-2.5">
@@ -69,7 +69,7 @@ const TypeDetailSheet = ({
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-input border border-reliefline bg-reliefbg p-3.5">
-          <div className="text-[10px] font-black tracking-[0.2em] text-relief">強み</div>
+          <div className="text-[10px] font-black tracking-[0.22em] text-relief">強み</div>
           <ul className="mt-2 flex flex-col gap-1 text-xs leading-relaxed text-[#d5efe3]">
             {type.characteristics.strengths.map((item, i) => (
               <li key={i}>・{item}</li>
@@ -77,7 +77,7 @@ const TypeDetailSheet = ({
           </ul>
         </div>
         <div className="rounded-input border border-warnline bg-warnbg p-3.5">
-          <div className="text-[10px] font-black tracking-[0.2em] text-hazard">弱点</div>
+          <div className="text-[10px] font-black tracking-[0.22em] text-hazard">弱点</div>
           <ul className="mt-2 flex flex-col gap-1 text-xs leading-relaxed text-[#e2e7f0]">
             {type.characteristics.growthAreas.map((item, i) => (
               <li key={i}>・{item}</li>
@@ -88,7 +88,7 @@ const TypeDetailSheet = ({
 
       {/* 合わない相手（新設の主役欄） */}
       <div className="mt-3 rounded-input border border-dangerline bg-dangerbg p-3.5">
-        <div className="text-[10px] font-black tracking-[0.2em] text-primary">合わない相手</div>
+        <div className="text-[10px] font-black tracking-[0.22em] text-primary">合わない相手</div>
         <div className="mt-2.5 flex flex-col gap-1.5">
           {type.badCompatibleTypes.map((id) => {
             const bad = findType(id);
@@ -111,7 +111,7 @@ const TypeDetailSheet = ({
 
       {/* 相性のいい相手 */}
       <div className="mt-3 rounded-input border border-line bg-surface p-3.5">
-        <div className="text-[10px] font-black tracking-[0.2em] text-txt-muted">相性のいい相手</div>
+        <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">相性のいい相手</div>
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {type.compatibleTypes.map((id) => {
             const good = findType(id);
@@ -178,7 +178,7 @@ const TypeListPage = () => {
         style={{ containerType: "inline-size" }}
       >
         <div className="mx-auto max-w-[1120px]">
-          <div className="text-[11px] font-black tracking-[0.28em] text-hazard">24 TYPES</div>
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">24 TYPES</div>
           <h1 className="mt-3 text-h1">24タイプ図鑑</h1>
           <p className="mt-3 max-w-[34em] text-[13px] leading-8 text-txt-muted">
             全タイプの特徴と「合わない相手」を公開しています。カードをタップで詳細へ。
@@ -263,7 +263,7 @@ const TypeListPage = () => {
                 </div>
                 <div className="mt-[3px] text-[10px] text-txt-subtle">{type.catchphrase}</div>
                 <div className="mt-2.5 border-t border-dashed border-line pt-[9px]">
-                  <div className="text-[9px] font-black tracking-[0.14em] text-primary">
+                  <div className="text-[9px] font-black tracking-[0.22em] text-primary">
                     合わない相手
                   </div>
                   <div className="mt-[3px] text-[10.5px] font-bold leading-snug text-txt-muted">

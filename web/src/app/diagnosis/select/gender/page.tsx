@@ -23,7 +23,7 @@ const GenderSelectPage = () => {
   return (
     <div className="min-h-screen bg-ink text-white">
       <div className="mx-auto max-w-xl px-5.5 pb-10 pt-[30px]">
-        <div className="text-[11px] font-black tracking-[0.26em] text-hazard">STEP 2 / 3</div>
+        <div className="text-[11px] font-black tracking-[0.22em] text-hazard">STEP 2 / 3</div>
         <h1 className="mt-3.5 text-[28px] font-black leading-[1.4] tracking-[-0.02em]">
           あなたの性別は？
         </h1>

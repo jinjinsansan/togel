@@ -157,7 +157,7 @@ const MismatchResultPage = () => {
         style={{ containerType: "inline-size" }}
       >
         <div className="mx-auto max-w-[1120px]">
-          <div className="text-[11px] font-black tracking-[0.28em] text-hazard">
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">
             MISMATCH RANKING
           </div>
           <h1
@@ -210,7 +210,7 @@ const MismatchResultPage = () => {
               {/* WORST 1 フィーチャーカード */}
               <div className="overflow-hidden rounded-hero border border-primary bg-[linear-gradient(165deg,#1c0d16,#0d111b)] shadow-[0_40px_80px_-34px_rgba(255,46,116,.85)]">
                 <div className="flex items-center justify-between border-b border-primary/30 bg-primary/[.14] px-5 py-3.5">
-                  <span className="text-[11px] font-black tracking-[0.24em] text-primary">
+                  <span className="text-[11px] font-black tracking-[0.22em] text-primary">
                     WORST 1
                   </span>
                   <span className="text-[11px] font-black text-hazard">危険度 {worst1.score}%</span>
@@ -262,7 +262,7 @@ const MismatchResultPage = () => {
                               {i < arr.length - 1 && <div className="w-px flex-1 bg-[#2a3348]" />}
                             </div>
                             <div className={i < arr.length - 1 ? "pb-[18px]" : undefined}>
-                              <div className="text-[11px] font-black tracking-[0.1em] text-hazard">
+                              <div className="text-[11px] font-black tracking-[0.22em] text-hazard">
                                 {TIMELINE_LABELS[i] ?? `${i + 1}年目`}
                               </div>
                               <p className="mt-1 text-xs leading-[1.95] text-txt-muted">
@@ -314,7 +314,7 @@ const MismatchResultPage = () => {
 
               {/* WORST 2-5 */}
               <div className="flex flex-col gap-3">
-                <div className="rounded-[14px] border border-line-soft bg-panel px-[18px] py-3.5 text-[11px] font-black tracking-[0.2em] text-txt-muted">
+                <div className="rounded-[14px] border border-line-soft bg-panel px-[18px] py-3.5 text-[11px] font-black tracking-[0.22em] text-txt-muted">
                   WORST 2 - {visibleEntries.length}
                 </div>
 
@@ -353,7 +353,7 @@ const MismatchResultPage = () => {
                         <div className="animate-rise mt-3 flex flex-col gap-2.5">
                           {entry.disaster && entry.disaster.horrorScenarios.length > 0 && (
                             <div className="rounded-input border border-dangerline bg-dangerbg p-3.5">
-                              <div className="text-[10px] font-black tracking-[0.2em] text-primary">
+                              <div className="text-[10px] font-black tracking-[0.22em] text-primary">
                                 地獄のシナリオ
                               </div>
                               <ul className="mt-2 flex flex-col gap-1.5">
@@ -367,7 +367,7 @@ const MismatchResultPage = () => {
                           )}
                           {entry.ngActions.length > 0 && (
                             <div className="rounded-input border border-warnline bg-warnbg p-3.5">
-                              <div className="text-[10px] font-black tracking-[0.2em] text-hazard">
+                              <div className="text-[10px] font-black tracking-[0.22em] text-hazard">
                                 やってはいけないこと
                               </div>
                               <ul className="mt-2 flex flex-col gap-1.5">
@@ -380,7 +380,7 @@ const MismatchResultPage = () => {
                             </div>
                           )}
                           <div className="rounded-input border border-reliefline bg-reliefbg p-3.5">
-                            <div className="text-[10px] font-black tracking-[0.2em] text-relief">
+                            <div className="text-[10px] font-black tracking-[0.22em] text-relief">
                               救い
                             </div>
                             <p className="mt-2 text-xs leading-[1.9] text-[#d5efe3]">
@@ -396,7 +396,7 @@ const MismatchResultPage = () => {
                 {/* ライト版アップセル */}
                 {isLightPlan && worstEntries.length > 3 && (
                   <div className="rounded-card border border-dashed border-line bg-panel p-[18px]">
-                    <div className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+                    <div className="text-[11px] font-black tracking-[0.22em] text-txt-muted">
                       WORST 4 - 5 は封印中
                     </div>
                     <p className="mt-2 text-xs leading-[1.9] text-txt-subtle">
@@ -413,7 +413,7 @@ const MismatchResultPage = () => {
 
                 {/* シェア */}
                 <div className="mt-1.5 rounded-card border border-[#1e3557] bg-[linear-gradient(160deg,#0b1f3a,#0d111b)] p-5">
-                  <div className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+                  <div className="text-[11px] font-black tracking-[0.22em] text-txt-muted">
                     スクショして貼る
                   </div>
                   <p className="mt-2 text-xs leading-[1.9] text-txt-muted">
@@ -471,7 +471,7 @@ const MismatchResultPage = () => {
           style={{ containerType: "inline-size" }}
         >
           <div>
-            <div className="text-[11px] font-black tracking-[0.24em] text-relief-ink">
+            <div className="text-[11px] font-black tracking-[0.22em] text-relief-ink">
               毒はここまで
             </div>
             <h2 className="mt-3 text-[clamp(22px,3.2cqw,34px)] font-black leading-[1.4] tracking-[-0.02em]">
@@ -503,7 +503,7 @@ const MismatchResultPage = () => {
         {/* LINE友だち追加CTA（診断完了直後が追加率のピーク） */}
         <div className="mx-auto mt-6 grid max-w-[1120px] items-center gap-[18px] rounded-[18px] bg-navy p-5.5 sm:grid-cols-2">
           <div>
-            <div className="text-[11px] font-black tracking-[0.2em] text-relief">
+            <div className="text-[11px] font-black tracking-[0.22em] text-relief">
               LINE
             </div>
             <div className="mt-2 text-[19px] font-black leading-normal text-white">

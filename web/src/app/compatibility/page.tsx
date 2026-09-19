@@ -39,7 +39,7 @@ const CompatibilityPage = () => (
 
     <section className="px-5.5 pb-10 pt-[42px]">
       <div className="mx-auto max-w-[760px]">
-        <div className="text-[11px] font-black tracking-[0.28em] text-hazard">COMPATIBILITY</div>
+        <div className="text-[11px] font-black tracking-[0.22em] text-hazard">COMPATIBILITY</div>
         <h1 className="mt-4 text-[clamp(28px,7cqw,44px)] font-black leading-[1.25] tracking-[-0.03em]">
           4群 相性表
         </h1>

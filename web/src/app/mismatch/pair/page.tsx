@@ -132,7 +132,7 @@ export default function PairMismatchPage() {
   return (
     <div className="min-h-screen bg-ink px-5.5 py-8 text-white">
       <div className="mx-auto max-w-lg">
-        <div className="text-center text-[11px] font-black tracking-[0.28em] text-hazard">
+        <div className="text-center text-[11px] font-black tracking-[0.22em] text-hazard">
           FRIEND MISMATCH
         </div>
 
@@ -153,14 +153,14 @@ export default function PairMismatchPage() {
               </div>
             </div>
           </div>
-          <div className="mt-[18px] text-[11px] font-black tracking-[0.2em] text-hazard">
+          <div className="mt-[18px] text-[11px] font-black tracking-[0.22em] text-hazard">
             合わなさ
           </div>
           <div className="text-[44px] font-black leading-[1.1] text-primary">
             {verdict.mismatchScore}
             <span className="text-xl">%</span>
           </div>
-          <div className="mt-1 text-[11px] font-black tracking-[0.14em] text-txt-muted">
+          <div className="mt-1 text-[11px] font-black tracking-[0.22em] text-txt-muted">
             判定: {verdict.level}
           </div>
           <p className="mt-2 text-[11.5px] leading-[1.85] text-txt-muted">{verdict.comment}</p>

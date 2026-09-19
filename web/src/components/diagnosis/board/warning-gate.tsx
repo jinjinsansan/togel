@@ -34,7 +34,7 @@ export const WarningGate = ({
     <div className="flex h-[82px] w-[82px] items-center justify-center rounded-hero bg-hazard text-[40px] font-black text-ink">
       ▲
     </div>
-    <div className="mt-6 text-[11px] font-black tracking-[0.34em] text-hazard">WARNING</div>
+    <div className="mt-6 text-[11px] font-black tracking-[0.22em] text-hazard">WARNING</div>
     <h2 className="mt-3.5 text-[30px] font-black leading-[1.45] tracking-[-0.02em]">
       この先、
       <br />

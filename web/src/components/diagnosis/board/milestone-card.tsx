@@ -19,7 +19,7 @@ type Props = {
 
 export const MilestoneCard = ({ text, onContinue, continueLabel = "進む" }: Props) => (
   <div className="animate-rise rounded-[18px] border border-warnline bg-warnbg p-5">
-    <div className="text-[10px] font-black tracking-[0.28em] text-hazard">通ってきた道</div>
+    <div className="text-[10px] font-black tracking-[0.22em] text-hazard">通ってきた道</div>
     <p
       className="mt-3.5 whitespace-pre-line text-[15px] font-bold leading-[1.9] text-white"
       style={{ textWrap: "pretty" }}

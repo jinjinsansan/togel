@@ -101,7 +101,7 @@ export const GroupBadge = ({ group, variant = "default", className = "" }: Group
       className={`inline-flex flex-col gap-1 rounded-[12px] border border-line bg-surface-alt px-3.5 py-2.5 ${className}`}
       aria-label={groupBadgeLine(group)}
     >
-      <span className="text-[12px] font-black tracking-[0.12em] text-hazard">
+      <span className="text-[12px] font-black tracking-[0.22em] text-hazard">
         {emoji} {label}
       </span>
       <span className="text-[12px] font-bold leading-[1.7] text-txt-muted">{redefinition}</span>
@@ -138,7 +138,7 @@ export const GroupBadgeOg = ({ group, size = 34 }: GroupBadgeOgProps) => {
           display: "flex",
           fontSize: size,
           fontWeight: 900,
-          letterSpacing: "0.08em",
+          letterSpacing: "0.22em",
           color: "#FFE03D",
         }}
       >

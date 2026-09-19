@@ -47,7 +47,7 @@ export const SiteFooter = () => {
               <TogelMark size={40} />
               <div>
                 <p className="font-heading text-2xl font-black text-white">Togel</p>
-                <p className="mt-0.5 text-[10px] font-bold tracking-[0.16em] text-txt-subtle">
+                <p className="mt-0.5 text-[10px] font-bold tracking-[0.22em] text-txt-subtle">
                   運命の人は教えない。地雷なら教える。
                 </p>
               </div>

@@ -16,7 +16,7 @@ const DistributionPage = async () => {
     <div className="min-h-screen bg-ink pb-16 text-white">
       <section className="bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(255,46,116,.2),transparent_60%)] px-5.5 pb-6 pt-8">
         <div className="mx-auto max-w-[760px]">
-          <div className="text-[11px] font-black tracking-[0.28em] text-hazard">DISTRIBUTION</div>
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">DISTRIBUTION</div>
           <h1 className="mt-3 text-h1">タイプ分布図</h1>
           <p className="mt-3 max-w-[34em] text-[13px] leading-8 text-txt-muted">
             全24タイプの生息状況です。あなたのタイプは多数派か、少数派か。
@@ -26,7 +26,7 @@ const DistributionPage = async () => {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            <span className="text-[11px] font-black tracking-[0.18em] text-txt-subtle">
+            <span className="text-[11px] font-black tracking-[0.22em] text-txt-subtle">
               TOTAL USERS
             </span>
             <span className="font-mono text-lg font-black">{total.toLocaleString()}</span>

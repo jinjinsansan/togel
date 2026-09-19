@@ -146,7 +146,7 @@ export const SiteHeader = () => {
                     <TogelMark size={44} className="rounded-2xl" />
                     <div>
                       <h2 className="font-heading text-xl font-black text-white">Togel</h2>
-                      <p className="mt-0.5 text-[10px] font-bold tracking-[0.18em] text-txt-subtle">
+                      <p className="mt-0.5 text-[10px] font-bold tracking-[0.22em] text-txt-subtle">
                         運命の人は教えない。地雷なら教える。
                       </p>
                     </div>

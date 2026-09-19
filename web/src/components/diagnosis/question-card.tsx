@@ -29,11 +29,11 @@ type Props = {
 export const QuestionCard = ({ question, currentValue, onSelect, counter }: Props) => (
   <div key={question.id} className="animate-rise">
     <div className="flex items-baseline justify-between">
-      <div className="text-[11px] font-black tracking-[0.2em] text-txt-disabled">QUESTION</div>
+      <div className="text-[11px] font-black tracking-[0.22em] text-txt-disabled">QUESTION</div>
       {counter && <div className="text-[11px] font-black text-txt-muted">{counter}</div>}
     </div>
     <h2
-      className="mt-3 text-[22px] font-black leading-relaxed tracking-[-0.01em] text-white"
+      className="mt-3 text-[22px] font-black leading-relaxed tracking-[-0.02em] text-white"
       style={{ textWrap: "pretty" }}
     >
       {question.text}

@@ -238,7 +238,7 @@ const ResultPage = () => {
       >
         <div className="mx-auto grid max-w-[1120px] items-center gap-6 md:grid-cols-2">
           <div>
-            <div className="text-[11px] font-black tracking-[0.28em] text-hazard">
+            <div className="text-[11px] font-black tracking-[0.22em] text-hazard">
               YOUR TYPE / 24
             </div>
             <h1 className="mt-3 text-[clamp(30px,5.4cqw,50px)] font-black leading-[1.25] tracking-[-0.03em]">
@@ -335,7 +335,7 @@ const ResultPage = () => {
           <div className="mx-auto max-w-[1120px]">
             <div className="grid gap-3.5 md:grid-cols-3">
               <div className="rounded-card border border-line bg-surface p-5">
-                <div className="text-[10px] font-black tracking-[0.2em] text-relief">強み</div>
+                <div className="text-[10px] font-black tracking-[0.22em] text-relief">強み</div>
                 <ul className="mt-3 list-disc pl-[1.15em] text-[12.5px] leading-8 text-txt-muted">
                   {diagnosis.detailedNarrative.strengths.slice(0, 3).map((item, i) => (
                     <li key={i}>{item}</li>
@@ -343,7 +343,7 @@ const ResultPage = () => {
                 </ul>
               </div>
               <div className="rounded-card border border-line bg-surface p-5">
-                <div className="text-[10px] font-black tracking-[0.2em] text-hazard">伸びしろ</div>
+                <div className="text-[10px] font-black tracking-[0.22em] text-hazard">伸びしろ</div>
                 <ul className="mt-3 list-disc pl-[1.15em] text-[12.5px] leading-8 text-txt-muted">
                   {diagnosis.detailedNarrative.warnings.slice(0, 3).map((item, i) => (
                     <li key={i}>{item}</li>
@@ -351,7 +351,7 @@ const ResultPage = () => {
                 </ul>
               </div>
               <div className="rounded-card border border-line bg-surface p-5">
-                <div className="text-[10px] font-black tracking-[0.2em] text-txt-muted">
+                <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
                   コミュニケーション
                 </div>
                 <ul className="mt-3 flex flex-col gap-1.5 text-[12.5px] leading-8 text-txt-muted">
@@ -382,7 +382,7 @@ const ResultPage = () => {
                     .filter((block) => block.items.length > 0)
                     .map((block) => (
                       <div key={block.title}>
-                        <div className="text-[10px] font-black tracking-[0.2em] text-txt-subtle">
+                        <div className="text-[10px] font-black tracking-[0.22em] text-txt-subtle">
                           {block.title}
                         </div>
                         <ul className="mt-2 flex flex-col gap-1.5 text-[12.5px] leading-[2.1] text-txt-muted">
@@ -471,7 +471,7 @@ const ResultPage = () => {
           <div className="mx-auto max-w-[1120px]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="inline-flex rounded-full bg-navy px-3 py-[5px] text-[10px] font-black tracking-[0.18em] text-relief">
+                <div className="inline-flex rounded-full bg-navy px-3 py-[5px] text-[10px] font-black tracking-[0.22em] text-relief">
                   おまけ
                 </div>
                 <h2 className="mt-3 text-[clamp(20px,3cqw,30px)] font-black leading-[1.4]">
@@ -557,7 +557,7 @@ const ResultPage = () => {
       <section className="px-5.5 pb-8 pt-4">
         <div className="mx-auto grid max-w-[1120px] items-center gap-[18px] rounded-[18px] border border-[#1e3557] bg-navy p-5.5 sm:grid-cols-2">
           <div>
-            <div className="text-[11px] font-black tracking-[0.2em] text-relief">
+            <div className="text-[11px] font-black tracking-[0.22em] text-relief">
               LINE
             </div>
             <div className="mt-2 text-[19px] font-black leading-normal text-white">

@@ -171,7 +171,7 @@ export default function CoachingPage() {
       >
         <div className="mx-auto max-w-[1120px]">
           <div className="inline-flex items-center gap-2 rounded-full border border-relief/40 bg-relief/[.14] px-[13px] py-[5px]">
-            <span className="text-[11px] font-black tracking-[0.16em] text-relief">
+            <span className="text-[11px] font-black tracking-[0.22em] text-relief">
               毒のあとに、救いを
             </span>
           </div>
@@ -191,7 +191,7 @@ export default function CoachingPage() {
                 key={item.term}
                 className="rounded-card border border-lightline bg-white p-5 shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]"
               >
-                <div className="text-[10px] font-black tracking-[0.2em] text-relief-ink">
+                <div className="text-[10px] font-black tracking-[0.22em] text-relief-ink">
                   {item.term}
                 </div>
                 <p className="mt-[9px] text-[12px] leading-[1.95] text-lighttext-subtle">{item.body}</p>
@@ -271,7 +271,7 @@ export default function CoachingPage() {
                   key={`${openType.id}:${open?.angle}`}
                   className="animate-rise mt-3.5 rounded-input border border-lightline bg-[#f1f5f2] p-[18px]"
                 >
-                  <div className="text-[10px] font-black tracking-[0.2em] text-[#c1113f]">
+                  <div className="text-[10px] font-black tracking-[0.22em] text-[#c1113f]">
                     {openLabel}
                   </div>
                   <h3 className="mt-2 text-[20px] font-black tracking-[-0.02em]">
@@ -359,7 +359,7 @@ export default function CoachingPage() {
 
           {/* 24タイプの公開一覧。診断の有無にかかわらず読める */}
           <div className="rounded-hero border border-lightline bg-white px-5.5 py-6 shadow-[0_26px_50px_-34px_rgba(11,31,58,.55)]">
-            <h2 className="text-[10px] font-black tracking-[0.2em] text-relief-ink">
+            <h2 className="text-[10px] font-black tracking-[0.22em] text-relief-ink">
               タイプ別ガイド（24タイプ・診断なしで読めます）
             </h2>
             <p className="mt-2 text-[12px] leading-[1.95] text-lighttext-subtle">
@@ -410,7 +410,7 @@ export default function CoachingPage() {
           {/* LINE */}
           <div className="grid items-center gap-[18px] rounded-hero bg-navy p-[22px] sm:grid-cols-2">
             <div>
-              <div className="text-[11px] font-black tracking-[0.2em] text-relief">
+              <div className="text-[11px] font-black tracking-[0.22em] text-relief">
                 週に1通、全15回
               </div>
               <div className="mt-2 text-[20px] font-black leading-[1.5] text-white">

@@ -92,7 +92,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
           <GroupBadge group={type.group} className="mt-4" />
 
           <div className="mt-[22px] rounded-card border border-lightline bg-white p-[22px] shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]">
-            <div className="text-[10px] font-black tracking-[0.2em] text-[#c1113f]">中身の正体</div>
+            <div className="text-[10px] font-black tracking-[0.22em] text-[#c1113f]">中身の正体</div>
             <p className="mt-[11px] text-[13px] leading-[2] text-lighttext-muted">{guide.core}</p>
           </div>
         </div>
@@ -102,7 +102,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
         <div className="mx-auto grid max-w-[1120px] gap-3.5 md:grid-cols-2">
           {/* 言い方の翻訳 */}
           <div className="rounded-card border border-lightline bg-white p-5 shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]">
-            <div className="text-[10px] font-black tracking-[0.2em] text-relief-ink">
+            <div className="text-[10px] font-black tracking-[0.22em] text-relief-ink">
               言い方の翻訳
             </div>
             <div className="mt-3.5 flex flex-col gap-3.5">
@@ -125,7 +125,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
           <div className="flex flex-col gap-3.5">
             {/* 今日からやること */}
             <div className="rounded-card border border-lightline bg-white p-5 shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]">
-              <div className="text-[10px] font-black tracking-[0.2em] text-relief-ink">
+              <div className="text-[10px] font-black tracking-[0.22em] text-relief-ink">
                 今日からやること
               </div>
               <ol className="mt-[13px] flex flex-col gap-[11px]">
@@ -142,7 +142,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
 
             {/* 距離の置き方 */}
             <div className="rounded-card bg-navy p-5">
-              <div className="text-[10px] font-black tracking-[0.2em] text-relief">
+              <div className="text-[10px] font-black tracking-[0.22em] text-relief">
                 距離の置き方
               </div>
               <p className="mt-[11px] text-[13px] leading-[1.95] text-[#c3d3e8]">
@@ -166,7 +166,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
         {/* 診断への導線 */}
         <div className="mx-auto mt-3.5 grid max-w-[1120px] items-center gap-[18px] rounded-hero bg-navy p-[22px] sm:grid-cols-2">
           <div>
-            <div className="text-[11px] font-black tracking-[0.2em] text-relief">
+            <div className="text-[11px] font-black tracking-[0.22em] text-relief">
               で、あなたの地雷は？
             </div>
             <div className="mt-2 text-[20px] font-black leading-[1.5] text-white">
@@ -187,7 +187,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
         {/* LINE */}
         <div className="mx-auto mt-3 grid max-w-[1120px] items-center gap-4 rounded-card border border-lightline bg-white px-5.5 py-5 sm:grid-cols-2">
           <div>
-            <div className="text-[11px] font-black tracking-[0.2em] text-relief-ink">
+            <div className="text-[11px] font-black tracking-[0.22em] text-relief-ink">
               毎週1通、全15回
             </div>
             <div className="mt-[7px] text-[15px] font-black leading-[1.5] text-navy">

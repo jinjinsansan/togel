@@ -95,7 +95,7 @@ const SharePage = async ({
         style={{ containerType: "inline-size" }}
       >
         <div className="mx-auto max-w-[680px]">
-          <div className="text-[11px] font-black tracking-[0.28em] text-hazard">
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">
             {isMismatch ? "MISMATCH / WORST 1" : "MY TYPE / 24"}
           </div>
           <p className="mt-5 text-sm font-bold text-txt-muted">

@@ -39,7 +39,7 @@ export const HandbookShare = ({ text, url, labelHref, className = "" }: Props) =
 
   return (
     <div className={`rounded-card border border-line bg-panel p-5 ${className}`}>
-      <div className="text-[11px] font-black tracking-[0.2em] text-hazard">HANDBOOK</div>
+      <div className="text-[11px] font-black tracking-[0.22em] text-hazard">HANDBOOK</div>
       <h3 className="mt-2 text-[19px] font-black leading-normal text-white">取扱説明書を配る</h3>
       <p className="mt-2 text-xs leading-[1.9] text-txt-muted">
         「私はこういう人間なので、こう扱ってください」を、そのまま渡せる形にしました。

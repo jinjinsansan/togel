@@ -147,7 +147,7 @@ const HazardLicenseCard = ({
         />
         <div className="relative flex items-start justify-between">
           <div>
-            <div className="text-[9px] font-black tracking-[0.26em] text-hazard">
+            <div className="text-[9px] font-black tracking-[0.22em] text-hazard">
               HAZARDOUS TYPE LICENSE
             </div>
             {/* 身分証なので、名乗りの単位である愛称を主に置く */}
@@ -164,7 +164,7 @@ const HazardLicenseCard = ({
         </div>
         <div className="relative flex items-end justify-between gap-3">
           <div>
-            <div className="text-[9px] tracking-[0.2em] text-[#7d879b]">注意事項</div>
+            <div className="text-[9px] tracking-[0.22em] text-[#7d879b]">注意事項</div>
             <div className="mt-1 text-[11px] font-bold text-txt-muted">{caution}</div>
           </div>
           <div className="flex-none text-right font-mono text-[9px] leading-relaxed text-[#7d879b]">
@@ -386,7 +386,7 @@ export default function MyPage() {
             since={formatYearMonth(profile?.created_at ?? user?.created_at)}
           />
           <div>
-            <div className="text-[11px] font-black tracking-[0.24em] text-hazard">MEMBER CARD</div>
+            <div className="text-[11px] font-black tracking-[0.22em] text-hazard">MEMBER CARD</div>
             <h1 className="mt-3 text-[clamp(24px,3.6cqw,36px)] font-black leading-[1.35] tracking-[-0.02em]">
               あなたの取扱区分
             </h1>
@@ -421,7 +421,7 @@ export default function MyPage() {
           {/* 診断履歴 */}
           <div className="rounded-[18px] border border-line bg-surface p-5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+              <span className="text-[11px] font-black tracking-[0.22em] text-txt-muted">
                 診断履歴
               </span>
               {historyTotal > 3 && (
@@ -469,7 +469,7 @@ export default function MyPage() {
           {/* お知らせ */}
           <div className="rounded-[18px] border border-line bg-surface p-5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+              <span className="text-[11px] font-black tracking-[0.22em] text-txt-muted">
                 お知らせ
               </span>
               {unreadCount > 0 && (
@@ -509,7 +509,7 @@ export default function MyPage() {
 
           {/* 友達を招待 */}
           <div className="rounded-[18px] border border-[#1e3557] bg-[linear-gradient(160deg,#0b1f3a,#0d111b)] p-5">
-            <span className="text-[11px] font-black tracking-[0.2em] text-[#8fa2c0]">
+            <span className="text-[11px] font-black tracking-[0.22em] text-[#8fa2c0]">
               友達を招待
             </span>
             <p className="mt-3 text-[12.5px] leading-[1.95] text-txt-muted">
@@ -538,7 +538,7 @@ export default function MyPage() {
 
           {/* あなたの地雷リスト */}
           <div className="rounded-[18px] border border-line bg-surface p-5">
-            <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">
+            <span className="text-[11px] font-black tracking-[0.22em] text-txt-muted">
               あなたの地雷リスト
             </span>
             <div className="mt-4 flex flex-col gap-2">
@@ -571,7 +571,7 @@ export default function MyPage() {
 
           {/* 設定 */}
           <div className="rounded-[18px] border border-line bg-surface p-5 md:col-span-2">
-            <span className="text-[11px] font-black tracking-[0.2em] text-txt-muted">設定</span>
+            <span className="text-[11px] font-black tracking-[0.22em] text-txt-muted">設定</span>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <div className="flex items-center justify-between gap-3">
                 <div>

@@ -265,7 +265,7 @@ export default function ProfileEditPage() {
       <div className="bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(255,46,116,.16),transparent_60%)] px-5.5 pb-5 pt-8">
         <div className="mx-auto flex max-w-2xl flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-[11px] font-black tracking-[0.28em] text-hazard">SETTINGS</p>
+            <p className="text-[11px] font-black tracking-[0.22em] text-hazard">SETTINGS</p>
             <h1 className="mt-2.5 text-2xl font-black">プロフィール編集</h1>
           </div>
           {isPublic && (
@@ -333,7 +333,7 @@ export default function ProfileEditPage() {
 
             {isPublic && (
               <div className="mt-4 rounded-input border border-dashed border-line bg-ink p-3">
-                <p className="text-[9px] font-black tracking-[0.16em] text-txt-subtle">
+                <p className="text-[9px] font-black tracking-[0.22em] text-txt-subtle">
                   YOUR PUBLIC URL
                 </p>
                 <div className="mt-2 flex max-w-full items-center gap-2">

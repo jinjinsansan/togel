@@ -14,7 +14,7 @@ export default function AboutPage() {
         style={{ containerType: "inline-size" }}
       >
         <div className="mx-auto max-w-[760px]">
-          <div className="text-[11px] font-black tracking-[0.3em] text-hazard">ABOUT TOGEL</div>
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">ABOUT TOGEL</div>
           <h1 className="mt-4 text-display" style={{ textWrap: "pretty" }}>
             言いにくいことを、
             <br />
@@ -52,7 +52,7 @@ export default function AboutPage() {
       <section className="bg-paper px-5.5 py-13 text-navy">
         <div className="mx-auto max-w-[760px]">
           <div className="inline-flex items-center gap-2 rounded-full bg-navy px-3.5 py-1.5">
-            <span className="text-[11px] font-black tracking-[0.16em] text-relief">トーンの約束</span>
+            <span className="text-[11px] font-black tracking-[0.22em] text-relief">トーンの約束</span>
           </div>
           <h2 className="mt-4 text-h1">毒は、タイプに向ける。</h2>
           <p className="mt-5 max-w-[36em] text-base leading-[2.1] text-lighttext-muted" style={{ textWrap: "pretty" }}>

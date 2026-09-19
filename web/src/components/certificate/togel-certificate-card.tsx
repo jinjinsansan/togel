@@ -182,7 +182,7 @@ export function TogelCertificateCard({
                     </span>
                   </div>
                   <span
-                    className="text-[9px] tracking-[0.15em] uppercase font-semibold ml-0.5"
+                    className="text-[9px] tracking-[0.22em] uppercase font-semibold ml-0.5"
                     style={{ color: resolvedTheme.textMuted }}
                   >
                     Personality Certificate
@@ -204,7 +204,7 @@ export function TogelCertificateCard({
 
               <div className="relative z-10 flex flex-col gap-3 px-5 pt-2 pb-5">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase tracking-[0.2em] font-semibold" style={{ color: resolvedTheme.textMuted }}>
+                  <span className="text-[9px] uppercase tracking-[0.22em] font-semibold" style={{ color: resolvedTheme.textMuted }}>
                     Member
                   </span>
                   <h2

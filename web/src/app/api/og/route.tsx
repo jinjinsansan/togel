@@ -162,7 +162,7 @@ const StoryLabel = ({
                 display: "flex",
                 fontSize: 30,
                 fontWeight: 900,
-                letterSpacing: "0.3em",
+                letterSpacing: "0.22em",
                 color: "#FFE03D",
               }}
             >
@@ -173,7 +173,7 @@ const StoryLabel = ({
                 display: "flex",
                 fontSize: 104,
                 fontWeight: 900,
-                letterSpacing: "-0.04em",
+                letterSpacing: "-0.03em",
                 lineHeight: 1.1,
               }}
             >
@@ -382,7 +382,7 @@ export const GET = async (request: Request) => {
               display: "flex",
               fontSize: 30,
               fontWeight: 900,
-              letterSpacing: "0.28em",
+              letterSpacing: "0.22em",
               color: "#FFE03D",
             }}
           >
@@ -398,7 +398,7 @@ export const GET = async (request: Request) => {
               fontSize: nameSize,
               fontWeight: 900,
               lineHeight: 1.15,
-              letterSpacing: "-0.04em",
+              letterSpacing: "-0.03em",
               color: "#ffffff",
             }}
           >

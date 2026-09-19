@@ -381,7 +381,7 @@ export default function LiffDiagnosisPage() {
           moveStep={move.step}
         />
         {board.chapterCount > 1 && !overview && (
-          <div className="pointer-events-none absolute left-4 top-3 text-[10px] font-bold tracking-[0.2em] text-txt-disabled">
+          <div className="pointer-events-none absolute left-4 top-3 text-[10px] font-bold tracking-[0.22em] text-txt-disabled">
             第{(currentCell?.chapter ?? 0) + 1}章
           </div>
         )}

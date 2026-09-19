@@ -111,7 +111,7 @@ export const RevealSequence = ({
             />
           </div>
           <div className="flex-1 px-5.5 pb-8">
-            <div className="text-[11px] font-black tracking-[0.3em] text-hazard">
+            <div className="text-[11px] font-black tracking-[0.22em] text-hazard">
               通ってきた道
             </div>
             <div className="mt-4 flex flex-col gap-2.5">

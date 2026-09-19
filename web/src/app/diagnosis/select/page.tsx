@@ -16,7 +16,7 @@ const DiagnosisSelectPage = () => {
   return (
     <div className="min-h-screen bg-ink text-white">
       <div className="mx-auto max-w-xl px-5.5 pb-10 pt-[30px]">
-        <div className="text-[11px] font-black tracking-[0.26em] text-hazard">STEP 1 / 3</div>
+        <div className="text-[11px] font-black tracking-[0.22em] text-hazard">STEP 1 / 3</div>
         <h1 className="mt-3.5 text-[28px] font-black leading-[1.4] tracking-[-0.02em]">
           どこまで
           <br />
@@ -61,7 +61,7 @@ const DiagnosisSelectPage = () => {
         </div>
 
         <div className="mt-5.5 rounded-[14px] border border-line-soft bg-panel p-4">
-          <div className="text-[10px] font-black tracking-[0.2em] text-hazard">注意事項</div>
+          <div className="text-[10px] font-black tracking-[0.22em] text-hazard">注意事項</div>
           <p className="mt-2 text-[11px] leading-[1.9] text-txt-subtle">
             本診断はエンタメ目的です。診断結果はタイプに対する記述であり、特定の個人を否定するものではありません。
           </p>

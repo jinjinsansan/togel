@@ -416,7 +416,7 @@ const ProfileDetailPage = (props: { params: Promise<Params> }) => {
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {infoItems.map((item) => (
               <div key={item.label} className="rounded-input border border-line-soft bg-panel px-3.5 py-3">
-                <div className="text-[9px] font-black tracking-[0.16em] text-txt-subtle">
+                <div className="text-[9px] font-black tracking-[0.22em] text-txt-subtle">
                   {item.label}
                 </div>
                 <div className="mt-1 whitespace-pre-wrap break-words text-xs font-bold text-txt-muted">
@@ -516,7 +516,7 @@ const PrivateProfileNotice = ({ name }: { name?: string | null }) => {
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-card bg-surface-alt text-txt-muted">
           <Lock className="h-6 w-6" />
         </div>
-        <p className="text-[10px] font-black tracking-[0.3em] text-txt-subtle">PRIVATE PROFILE</p>
+        <p className="text-[10px] font-black tracking-[0.22em] text-txt-subtle">PRIVATE PROFILE</p>
         <h1 className="mt-3 text-lg font-black leading-relaxed">
           {formattedName}はプロフィールを非公開中です。
         </h1>

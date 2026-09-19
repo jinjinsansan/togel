@@ -43,7 +43,7 @@ export const LineExternalBrowserRedirect = () => {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 px-6 py-8">
       <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-rose-400">LINEブラウザは非対応です</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-rose-400">LINEブラウザは非対応です</p>
         <h2 className="mt-3 text-lg font-semibold text-rose-900">外部ブラウザで開いてください</h2>
         <p className="mt-3 text-sm text-rose-700">
           AI診断とチャットは Safari / Chrome などのブラウザでのみご利用いただけます。

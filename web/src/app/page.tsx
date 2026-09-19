@@ -45,17 +45,17 @@ const SealedCard = () => {
     <div className="w-full max-w-[360px] overflow-hidden rounded-hero border border-line bg-surface shadow-[0_40px_80px_-30px_rgba(0,0,0,.9)]">
       <div className="h-1.5 bg-hazard-sm" aria-hidden="true" />
       <div className="flex items-center justify-between border-b border-line-soft px-[18px] py-3.5">
-        <span className="text-[10px] font-black tracking-[0.24em] text-hazard">
+        <span className="text-[10px] font-black tracking-[0.22em] text-hazard">
           MISMATCH / WORST 1
         </span>
-        <span className="text-[10px] font-black tracking-[0.14em] text-txt-disabled">
+        <span className="text-[10px] font-black tracking-[0.22em] text-txt-disabled">
           {sealed ? "封印中" : "開封済"}
         </span>
       </div>
 
       {sealed ? (
         <div className="px-5 pb-6 pt-[26px] text-center">
-          <div className="text-[11px] font-bold tracking-[0.1em] text-txt-muted">
+          <div className="text-[11px] font-bold tracking-[0.22em] text-txt-muted">
             あなたと絶対に合わないのは
           </div>
           <div className="mx-auto mt-4 w-fit select-none rounded-[10px] bg-surface-alt px-[18px] py-2.5 text-[26px] font-black text-txt-disabled blur-[6px]">
@@ -77,7 +77,7 @@ const SealedCard = () => {
         </div>
       ) : (
         <div className="animate-rise px-5 pb-6 pt-[22px]">
-          <div className="text-[11px] font-bold tracking-[0.1em] text-txt-muted">
+          <div className="text-[11px] font-bold tracking-[0.22em] text-txt-muted">
             あなたと絶対に合わないのは
           </div>
           <div className="mt-2 text-[27px] font-black leading-[1.3] tracking-[-0.02em] text-primary">
@@ -88,7 +88,7 @@ const SealedCard = () => {
           </div>
 
           <div className="mt-[18px] rounded-input border border-dangerline bg-dangerbg px-[15px] py-3.5">
-            <div className="text-[10px] font-black tracking-[0.2em] text-primary">
+            <div className="text-[10px] font-black tracking-[0.22em] text-primary">
               付き合ったら起こる地獄
             </div>
             <p className="mt-2 text-xs leading-[1.9] text-txt-muted">
@@ -97,7 +97,7 @@ const SealedCard = () => {
           </div>
 
           <div className="mt-2.5 rounded-input border border-line bg-panel px-[15px] py-3.5">
-            <div className="text-[10px] font-black tracking-[0.2em] text-hazard">
+            <div className="text-[10px] font-black tracking-[0.22em] text-hazard">
               絶対にやってはいけないこと
             </div>
             <p className="mt-2 text-xs leading-[1.9] text-txt-muted">
@@ -174,7 +174,7 @@ export default function Home() {
               <span className="flex h-4 w-4 items-center justify-center rounded bg-hazard text-[10px] font-black text-ink">
                 ▲
               </span>
-              <span className="text-[11px] font-black tracking-[0.14em] text-hazard">
+              <span className="text-[11px] font-black tracking-[0.22em] text-hazard">
                 診断結果、取扱注意
               </span>
             </div>
@@ -250,21 +250,21 @@ export default function Home() {
           </p>
           <div className="mt-[30px] grid gap-3.5 sm:grid-cols-3">
             <div className="rounded-card border border-line-soft bg-[#0f1420] p-5">
-              <div className="text-[11px] font-black tracking-[0.2em] text-hazard">STEP 01</div>
+              <div className="text-[11px] font-black tracking-[0.22em] text-hazard">STEP 01</div>
               <div className="mt-2.5 text-lg font-black">40問に答える</div>
               <p className="mt-2 text-xs leading-[1.95] text-txt-muted">
                 1問1画面。進むほど、逃げ場がなくなる設計。ライト10問もあります。
               </p>
             </div>
             <div className="rounded-card border border-line-soft bg-[#0f1420] p-5">
-              <div className="text-[11px] font-black tracking-[0.2em] text-hazard">STEP 02</div>
+              <div className="text-[11px] font-black tracking-[0.22em] text-hazard">STEP 02</div>
               <div className="mt-2.5 text-lg font-black">24タイプに判定</div>
               <p className="mt-2 text-xs leading-[1.95] text-txt-muted">
                 5つの取扱指標から、あなたの取扱区分を確定します。
               </p>
             </div>
             <div className="rounded-card border border-dangerline bg-dangerbg p-5">
-              <div className="text-[11px] font-black tracking-[0.2em] text-primary">STEP 03</div>
+              <div className="text-[11px] font-black tracking-[0.22em] text-primary">STEP 03</div>
               <div className="mt-2.5 text-lg font-black">ワースト5を告げる</div>
               <p className="mt-2 text-xs leading-[1.95] text-txt-muted">
                 地獄のシナリオとNG行動つき。1位だけは、最後まで伏せます。
@@ -306,7 +306,7 @@ export default function Home() {
       <section className="bg-paper px-5.5 py-13 text-navy">
         <div className="mx-auto max-w-[1120px]" style={{ containerType: "inline-size" }}>
           <div className="inline-flex items-center gap-2 rounded-full bg-navy px-3.5 py-1.5">
-            <span className="text-[11px] font-black tracking-[0.16em] text-relief">
+            <span className="text-[11px] font-black tracking-[0.22em] text-relief">
               毒のあとに、救いを
             </span>
           </div>
@@ -361,7 +361,7 @@ export default function Home() {
             <div className="flex aspect-[1.586] w-full max-w-[330px] flex-col justify-between rounded-card border border-[#2c3a58] bg-metal p-5 shadow-[0_30px_60px_-25px_rgba(255,46,116,.5)] transition-transform duration-500 ease-togel [transform:rotateY(-14deg)_rotateX(6deg)] hover:[transform:rotateY(6deg)_rotateX(0deg)]">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-[9px] font-black tracking-[0.28em] text-hazard">
+                  <div className="text-[9px] font-black tracking-[0.22em] text-hazard">
                     HAZARDOUS TYPE LICENSE
                   </div>
                   <div className="mt-2 text-[19px] font-black text-white">静観する現実主義者型</div>
@@ -370,7 +370,7 @@ export default function Home() {
               </div>
               <div className="flex items-end justify-between gap-3">
                 <div>
-                  <div className="text-[9px] tracking-[0.2em] text-[#7d879b]">注意事項</div>
+                  <div className="text-[9px] tracking-[0.22em] text-[#7d879b]">注意事項</div>
                   <div className="mt-1 text-[11px] font-bold text-txt-muted">
                     熱量の高い人物と密閉空間に置かないこと
                   </div>
