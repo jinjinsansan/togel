@@ -33,7 +33,7 @@ const GROUP_MATRIX: Record<string, GroupMatchCell> = {
   },
   "ignition:chain": {
     symbol: "◎",
-    text: "よく回ります。ただし後始末が連鎖群に全部行きがちです",
+    text: "よく回ります。ただし後始末は、たいてい回す側が全部持ちます",
   },
   "ignition:inert": {
     symbol: "⚡",
@@ -45,7 +45,7 @@ const GROUP_MATRIX: Record<string, GroupMatchCell> = {
   },
   "settling:chain": {
     symbol: "△",
-    text: "連鎖群の善意が、沈降群には侵入に見えることがあります",
+    text: "片方の善意が、もう片方には侵入に見えることがあります",
   },
   "settling:inert": {
     symbol: "◎",
@@ -57,7 +57,7 @@ const GROUP_MATRIX: Record<string, GroupMatchCell> = {
   },
   "chain:inert": {
     symbol: "◎",
-    text: "不活性群が守り、連鎖群が回す。分業が成立しやすい組み合わせです",
+    text: "守る側と回す側で、分業が成立しやすい組み合わせです",
   },
   "inert:inert": {
     symbol: "○",

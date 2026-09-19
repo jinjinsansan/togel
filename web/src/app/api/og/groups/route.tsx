@@ -39,16 +39,20 @@ const loadFonts = async () => {
  *
  * 同梱している日本語フォントは幾何記号のサブセットを含まず、文字のまま置くと
  * 豆腐になるためベクターで描く。意味は監修指示の4段階そのまま。
- * ⚡ だけハザード色なのは「取扱注意」の意で、群の優劣を示すものではない。
+ *
+ * 色は「両端に等しく色があり、真ん中が中立」に置く。
+ * ◎（噛み合う）と ⚡（難しい）を同じ強さで色付けし、○△ を中立色にする。
+ * 片端だけに色を持たせると、その記号が多い行＝悪い群、という読まれ方が発生する。
  */
 const MatchSymbol = ({ symbol, size }: { symbol: GroupMatchSymbol; size: number }) => {
   const hazard = "#FFE03D";
-  const plain = "#ffffff";
+  const relief = "#FF2E74";
+  const plain = "#7c869c";
 
   if (symbol === "◎") {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100">
-        <g fill="none" stroke={plain} strokeWidth="8">
+        <g fill="none" stroke={relief} strokeWidth="9">
           <circle cx="50" cy="50" r="42" />
           <circle cx="50" cy="50" r="19" />
         </g>

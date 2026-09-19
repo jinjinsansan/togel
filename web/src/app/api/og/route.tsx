@@ -121,7 +121,9 @@ const StoryLabel = ({
   type: ExtendedPersonalityTypeDefinition;
   scores: BigFiveScores;
 }) => {
-  const mine = typeApproachGuides[type.id]?.ng ?? "";
+  // 引用符の外側に付いている末尾の注記（例:「…？」（詮索））は読み手向けのメモなので
+  // ラベル上では落とす。引用符の内側は一切触らない（translations.ts も変更しない）
+  const mine = (typeApproachGuides[type.id]?.ng ?? "").replace(/(?<=」)\s*（[^（）]*）\s*$/, "");
   const mineSize = mine.length >= 20 ? 68 : mine.length >= 16 ? 78 : 88;
 
   return (

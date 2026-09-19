@@ -425,7 +425,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "quiet-observer",
     typeName: "静かな観察者",
-    nickname: "ステル",
+    nickname: "レーダ",
     group: "inert",
     catchphrase: "全てを見透かすステルス探偵",
     emoji: "🕵️",
