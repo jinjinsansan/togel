@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { DiagnosisBoard } from "./diagnosis-board";
+import { GroupBadge } from "@/components/brand/group-badge";
+import type { TypeGroupId } from "@/lib/personality";
 import type { AnswerRecord, Board } from "@/lib/diagnosis/board";
 
 /**
@@ -23,7 +25,14 @@ type Props = {
   records: AnswerRecord[];
   /** 回想で光らせるマス（records と同じ順） */
   recordIndexes: number[];
-  worst: { typeName: string; catchphrase: string } | null;
+  /** 開封で出す相手。愛称（〜型）と群は、判定できたときだけ入る */
+  worst: {
+    typeName: string;
+    catchphrase: string;
+    token?: string;
+    emoji?: string;
+    group?: TypeGroupId;
+  } | null;
   worstCountLabel: string;
   submitFailed: boolean;
   onRetry: () => void;
@@ -142,12 +151,18 @@ export const RevealSequence = ({
                 }`}
               >
                 <div className="text-[10px] font-black tracking-[0.22em] text-primary">WORST 1</div>
-                <div className="mt-2 text-[26px] font-black tracking-[-0.02em]">
-                  {worst.typeName}
+                {/* 製品中で最も注目される瞬間。ここで愛称を覚えなければ他では定着しない */}
+                <div className="mt-2 text-[30px] font-black leading-tight tracking-[-0.03em]">
+                  {worst.emoji ? `${worst.emoji} ` : ""}
+                  {worst.token ?? worst.typeName}
                 </div>
+                {worst.token && (
+                  <div className="mt-1 text-[13px] font-bold text-txt-muted">{worst.typeName}</div>
+                )}
                 {worst.catchphrase && (
                   <div className="mt-1 text-xs font-bold text-txt-muted">{worst.catchphrase}</div>
                 )}
+                {worst.group && <GroupBadge group={worst.group} className="mt-3.5" />}
               </div>
               <Link
                 href={resultHref}

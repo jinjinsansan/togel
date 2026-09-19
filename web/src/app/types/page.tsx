@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { personalityTypes, ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
-import { getTogelLabel } from "@/lib/personality";
+import { getTogelLabel, typeToken } from "@/lib/personality";
 
 const findType = (id: string): ExtendedPersonalityTypeDefinition | null =>
   personalityTypes.find((t) => t.id === id) ?? null;
@@ -38,8 +38,9 @@ const TypeDetailSheet = ({
           <div className="mt-1.5 flex items-center gap-2.5">
             <span className="text-3xl">{type.emoji}</span>
             <div>
-              <h2 className="text-xl font-black">{type.typeName}</h2>
-              <div className="text-xs font-bold text-primary">{type.catchphrase}</div>
+              <h2 className="text-xl font-black">{typeToken(type)}</h2>
+              <div className="text-[11px] font-bold text-txt-muted">{type.typeName}</div>
+              <div className="mt-0.5 text-xs font-bold text-primary">{type.catchphrase}</div>
             </div>
           </div>
         </div>
@@ -257,7 +258,8 @@ const TypeListPage = () => {
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-lg">{type.emoji}</span>
-                  <span className="text-[13px] font-black leading-tight">{type.typeName}</span>
+                  <span className="text-[13px] font-black leading-tight">{typeToken(type)}</span>
+                  <span className="text-[10px] font-bold text-txt-subtle">{type.typeName}</span>
                 </div>
                 <div className="mt-[3px] text-[10px] text-txt-subtle">{type.catchphrase}</div>
                 <div className="mt-2.5 border-t border-dashed border-line pt-[9px]">

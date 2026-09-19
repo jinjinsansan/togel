@@ -8,7 +8,9 @@ import { User } from "@supabase/supabase-js";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { Switch } from "@/components/ui/switch";
 import { TogelMark } from "@/components/brand/togel-mark";
-import { personalityTypes } from "@/lib/personality";
+import { GroupBadge } from "@/components/brand/group-badge";
+import { personalityTypes, typeToken } from "@/lib/personality";
+import type { TypeGroupId } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 
 type Notification = {
@@ -81,14 +83,19 @@ const formatDate = (value?: string | null) => {
 
 /** 危険物取扱者カード: ドラッグ（またはホバー）で回転するメタリックカード */
 const HazardLicenseCard = ({
+  token,
   typeName,
   catchphrase,
+  group,
   caution,
   cardNo,
   since,
 }: {
+  /** 愛称（〜型）。未判定のときは無い */
+  token?: string;
   typeName: string;
   catchphrase: string;
+  group?: TypeGroupId;
   caution: string;
   cardNo: string;
   since: string;
@@ -143,8 +150,15 @@ const HazardLicenseCard = ({
             <div className="text-[9px] font-black tracking-[0.26em] text-hazard">
               HAZARDOUS TYPE LICENSE
             </div>
-            <div className="mt-2 text-xl font-black text-white">{typeName}</div>
+            {/* 身分証なので、名乗りの単位である愛称を主に置く */}
+            <div className="mt-2 text-[22px] font-black leading-tight text-white">
+              {token ?? typeName}
+            </div>
+            {token && (
+              <div className="mt-[3px] text-[11px] font-bold text-[#c3d3e8]">{typeName}</div>
+            )}
             <div className="mt-[3px] text-[10px] font-bold text-[#8fa2c0]">{catchphrase}</div>
+            {group && <GroupBadge group={group} variant="compact" className="mt-2" />}
           </div>
           <TogelMark size={26} className="flex-none" />
         </div>
@@ -363,8 +377,10 @@ export default function MyPage() {
       >
         <div className="mx-auto grid max-w-[1120px] items-center gap-6 md:grid-cols-2">
           <HazardLicenseCard
+            token={selfType ? typeToken(selfType) : undefined}
             typeName={selfType?.typeName ?? "取扱区分 未判定"}
             catchphrase={selfType?.catchphrase ?? "診断すると判定されます"}
+            group={selfType?.group}
             caution={caution}
             cardNo={formatCardNo(profile?.diagnosis_type_id)}
             since={formatYearMonth(profile?.created_at ?? user?.created_at)}

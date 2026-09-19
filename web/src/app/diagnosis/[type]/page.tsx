@@ -12,7 +12,8 @@ import { QuestionCard } from "@/components/diagnosis/question-card";
 import { DiagnosisQuestion } from "@/types/diagnosis";
 import { buildBoard, milestoneText, recallRecords } from "@/lib/diagnosis/board";
 import { clearSession, saveSession } from "@/lib/diagnosis/session";
-import { personalityTypes } from "@/lib/personality";
+import { personalityTypes, typeToken } from "@/lib/personality";
+import type { TypeGroupId } from "@/lib/personality";
 import { useDiagnosisStore } from "@/store/diagnosis-store";
 
 /**
@@ -29,6 +30,9 @@ type Phase = "quiz" | "milestone" | "warn" | "reveal";
 type WorstReveal = {
   typeName: string;
   catchphrase: string;
+  token?: string;
+  emoji?: string;
+  group?: TypeGroupId;
 };
 
 const DiagnosisPage = () => {
@@ -151,7 +155,13 @@ const DiagnosisPage = () => {
         const typeId: string | undefined = first?.personalityTypes?.profile?.id;
         const extended = typeId ? personalityTypes.find((t) => t.id === typeId) : null;
         if (extended) {
-          setWorst({ typeName: extended.typeName, catchphrase: extended.catchphrase });
+          setWorst({
+            typeName: extended.typeName,
+            catchphrase: extended.catchphrase,
+            token: typeToken(extended),
+            emoji: extended.emoji,
+            group: extended.group,
+          });
         } else if (first?.personalityTypes?.profile?.typeName) {
           setWorst({ typeName: first.personalityTypes.profile.typeName, catchphrase: "" });
         }

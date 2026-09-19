@@ -13,7 +13,8 @@ import { DiagnosisQuestion, DiagnosisType } from "@/types/diagnosis";
 import { buildBoard, milestoneText, recallRecords } from "@/lib/diagnosis/board";
 import { loadSession, saveSession } from "@/lib/diagnosis/session";
 import { useLiff } from "@/lib/line/use-liff";
-import { personalityTypes } from "@/lib/personality";
+import { personalityTypes, typeToken } from "@/lib/personality";
+import type { TypeGroupId } from "@/lib/personality";
 
 /**
  * LINE内（LIFF）の診断フロー。
@@ -29,7 +30,13 @@ import { personalityTypes } from "@/lib/personality";
 type Answer = { questionId: string; value: number };
 type Step = "type" | "gender" | "questions" | "milestone" | "warn" | "reveal";
 
-type WorstReveal = { typeName: string; catchphrase: string };
+type WorstReveal = {
+  typeName: string;
+  catchphrase: string;
+  token?: string;
+  emoji?: string;
+  group?: TypeGroupId;
+};
 
 export default function LiffDiagnosisPage() {
   const { isReady, lineUserId, error: liffError } = useLiff();
@@ -153,7 +160,13 @@ export default function LiffDiagnosisPage() {
         const typeId: string | undefined = first?.personalityTypes?.profile?.id;
         const extended = typeId ? personalityTypes.find((t) => t.id === typeId) : null;
         if (extended) {
-          setWorst({ typeName: extended.typeName, catchphrase: extended.catchphrase });
+          setWorst({
+            typeName: extended.typeName,
+            catchphrase: extended.catchphrase,
+            token: typeToken(extended),
+            emoji: extended.emoji,
+            group: extended.group,
+          });
         } else if (first?.personalityTypes?.profile?.typeName) {
           setWorst({ typeName: first.personalityTypes.profile.typeName, catchphrase: "" });
         }
