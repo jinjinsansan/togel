@@ -11,6 +11,9 @@ import { typeApproachGuides } from "@/lib/coaching/translations";
  * 語彙は地雷回避ガイドと共通（ラベル / タンク / 警報）。
  *
  * weekIndex（エポック起点の週番号）で 5テンプレ × ワースト3タイプ = 15週分を巡回する。
+ *
+ * 冒頭には「何通目か」を必ず置く。来た距離だけを書き、
+ * 残り通数・連続記録・不在への言及はしない。
  */
 
 const COACHING_URL = "https://to-gel.com/coaching";
@@ -21,6 +24,8 @@ export const buildTypeBroadcast = (typeId: string, weekIndex: number): LineTextM
   const self = findType(typeId);
   if (!self || self.badCompatibleTypes.length === 0) return null;
 
+  // 15通で一巡。来た距離（何通目か）だけを示す
+  const issue = (((weekIndex % 15) + 15) % 15) + 1;
   const kind = weekIndex % 5;
   const worstId =
     self.badCompatibleTypes[Math.floor(weekIndex / 5) % self.badCompatibleTypes.length];
@@ -84,6 +89,6 @@ export const buildTypeBroadcast = (typeId: string, weekIndex: number): LineTextM
 
   return {
     type: "text",
-    text: `${body}\n\n▼ 地雷回避ガイド全文\n${COACHING_URL}`,
+    text: `${issue}通目です（全15通）\n\n${body}\n\n▼ 地雷回避ガイド全文\n${COACHING_URL}`,
   };
 };

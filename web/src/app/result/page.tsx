@@ -542,13 +542,13 @@ const ResultPage = () => {
         <div className="mx-auto grid max-w-[1120px] items-center gap-[18px] rounded-[18px] border border-[#1e3557] bg-navy p-5.5 sm:grid-cols-2">
           <div>
             <div className="text-[11px] font-black tracking-[0.2em] text-relief">
-              週1で地雷注意報
+              LINE
             </div>
             <div className="mt-2 text-[19px] font-black leading-normal text-white">
-              あなたのワーストタイプの取説をLINEで受け取る
+              あなたが最も踏みやすい地雷は、3タイプ分あります
             </div>
             <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
-              言い方の翻訳・距離の置き方を毎週1本。読むだけで、来週の面倒がひとつ減ります。
+              週に1通、全15回。1通目から、踏まない歩き方だけ送ります。
             </p>
           </div>
           <a
@@ -557,7 +557,7 @@ const ResultPage = () => {
             rel="noreferrer"
             className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
           >
-            LINEで友だち追加
+            1通目を受け取る
           </a>
         </div>
       </section>

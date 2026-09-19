@@ -23,10 +23,10 @@ type GroupBadgeContent = {
 };
 
 const GROUP_BADGE: Record<TypeGroupId, GroupBadgeContent> = {
-  ignition: { emoji: "🧨", label: "引火群", redefinition: "すぐ燃える。だから世界が動く" },
+  ignition: { emoji: "🌋", label: "引火群", redefinition: "すぐ燃える。だから世界が動く" },
   settling: { emoji: "🌊", label: "沈降群", redefinition: "深く沈む。だから底が見える" },
   chain: { emoji: "🔗", label: "連鎖群", redefinition: "つながる。だから独りにしない" },
-  inert: { emoji: "🪨", label: "不活性群", redefinition: "動かない。だから壊れない" },
+  inert: { emoji: "🧱", label: "不活性群", redefinition: "動かない。だから壊れない" },
 };
 
 /**
