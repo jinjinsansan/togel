@@ -28,6 +28,8 @@ type Props = {
   submitFailed: boolean;
   onRetry: () => void;
   reducedMotion: boolean;
+  /** 結果ページの遷移先。Web版とLIFF版で出口が違うので外から渡す */
+  resultHref?: string;
 };
 
 type Stage = "recall" | "envelope" | "card";
@@ -47,6 +49,7 @@ export const RevealSequence = ({
   submitFailed,
   onRetry,
   reducedMotion,
+  resultHref = "/result/mismatch",
 }: Props) => {
   const [stage, setStage] = useState<Stage>(reducedMotion ? "card" : "recall");
   const [shown, setShown] = useState(reducedMotion ? records.length : 0);
@@ -147,7 +150,7 @@ export const RevealSequence = ({
                 )}
               </div>
               <Link
-                href="/result/mismatch"
+                href={resultHref}
                 className="mt-3 flex min-h-[56px] items-center justify-center rounded-card bg-hazard text-[15px] font-black text-ink shadow-cta transition-colors hover:bg-white"
               >
                 ワースト{worstCountLabel}をすべて見る
