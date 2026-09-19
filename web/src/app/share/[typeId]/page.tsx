@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { personalityTypes } from "@/lib/personality";
+import { GroupBadge } from "@/components/brand/group-badge";
+import { personalityTypes, typeToken } from "@/lib/personality";
 
 /**
  * SNSシェア用ランディングページ。
@@ -36,8 +37,8 @@ export const generateMetadata = async ({
   const featured = isMismatch && worst ? worst : type;
 
   const title = isMismatch
-    ? `私と絶対に合わないのは「${featured.typeName}」 | Togel`
-    : `私のタイプは「${featured.typeName}」 | Togel`;
+    ? `私と絶対に合わないのは「${typeToken(featured)}（${featured.typeName}）」 | Togel`
+    : `私のタイプは「${typeToken(featured)}（${featured.typeName}）」 | Togel`;
   const description = `${featured.catchphrase}。運命の人は教えない。地雷なら教える。トゥゲル診断で確かめる。`;
 
   // 相対パスは layout の metadataBase（https://www.to-gel.com）で解決される
@@ -97,9 +98,11 @@ const SharePage = async ({
           </p>
           <h1 className="mt-2 text-[clamp(34px,8cqw,56px)] font-black leading-[1.2] tracking-[-0.03em]">
             <span className="mr-2">{featured.emoji}</span>
-            {featured.typeName}
+            {typeToken(featured)}
           </h1>
+          <p className="mt-2 text-[15px] font-bold text-txt-muted">{featured.typeName}</p>
           <p className="mt-3 text-base font-bold text-primary">{featured.catchphrase}</p>
+          <GroupBadge group={featured.group} className="mt-5" />
 
           <div className="mt-8 rounded-card border border-line bg-panel p-5">
             <p className="text-xs leading-[1.9] text-txt-muted">

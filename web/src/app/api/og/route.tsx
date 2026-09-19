@@ -3,13 +3,23 @@ import { join } from "node:path";
 
 import { ImageResponse } from "next/og";
 
-import { personalityTypes } from "@/lib/personality";
+import { GroupBadgeOg } from "@/components/brand/group-badge";
+import { typeApproachGuides } from "@/lib/coaching/translations";
+import { personalityTypes, representativeScores, typeToken } from "@/lib/personality";
+import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality";
+import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
+import type { BigFiveScores } from "@/types/diagnosis";
 
 /**
  * シェア用OGP画像の動的生成（デザイナー納品テンプレート準拠 / 1200×630）。
  *
- * GET /api/og?type=<typeId>                … 自分のタイプ発表カード
- * GET /api/og?type=<typeId>&mode=mismatch  … 「私と絶対合わないのは」カード（WORST1）
+ * GET /api/og?type=<typeId>               … 自分のタイプ発表カード（1200×630）
+ * GET /api/og?type=<typeId>&mode=mismatch … 「私と絶対合わないのは」カード（1200×630）
+ * GET /api/og?type=<typeId>&format=story  … 取扱注意ラベル（1080×1920 / 9:16）
+ *
+ * story は Instagram ストーリーズ と LINE トーク画面のスクリーンショットで流通する前提。
+ * リンクが剥がれた状態で出回るのが正常なので、ドメインとハッシュタグを画像内に焼き込む。
+ * 5指標は実測値（&s=o,c,e,a,n）があればそれを、無ければタイプ代表値を使う。
  *
  * 文字は最小でも実寸28px。タイプ名と数字だけで意味が通ることを最優先。
  * ロゴは現行A案（">"スワイプ）を使用。
@@ -59,6 +69,242 @@ const LogoMark = ({ size }: { size: number }) => (
   </svg>
 );
 
+/** 実測スコア（1〜5 を o,c,e,a,n の順でカンマ区切り）。壊れていれば null */
+const parseScores = (raw: string | null): BigFiveScores | null => {
+  if (!raw) return null;
+  const parts = raw.split(",").map((value) => Number.parseFloat(value));
+  if (
+    parts.length !== 5 ||
+    parts.some((value) => !Number.isFinite(value) || value < 1 || value > 5)
+  ) {
+    return null;
+  }
+  const [openness, conscientiousness, extraversion, agreeableness, neuroticism] = parts;
+  return { openness, conscientiousness, extraversion, agreeableness, neuroticism };
+};
+
+/** 菱形の警告標識（危険物ラベルのモチーフ）。中央に絵文字を置く */
+const WarningDiamond = ({ size, emoji }: { size: number; emoji: string }) => (
+  <div style={{ display: "flex", position: "relative", width: size, height: size }}>
+    <svg width={size} height={size} viewBox="0 0 100 100">
+      <polygon points="50,3 97,50 50,97 3,50" fill="#0B0F1A" stroke="#FFE03D" strokeWidth="5" />
+    </svg>
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: size * 0.38,
+      }}
+    >
+      {emoji}
+    </div>
+  </div>
+);
+
+/**
+ * 取扱注意ラベル（1080×1920）。
+ *
+ * タイプ間に優劣を作らないサービスなので、人がこれを貼る理由は「勝った」ではなく「これが自分だ」。
+ * 最大サイズを取るのは地雷の一文（自虐ネタとして引用されるのはそこ）であり、
+ * 情報量や網羅性を増やす方向には広げない。
+ */
+const StoryLabel = ({
+  type,
+  scores,
+}: {
+  type: ExtendedPersonalityTypeDefinition;
+  scores: BigFiveScores;
+}) => {
+  const mine = typeApproachGuides[type.id]?.ng ?? "";
+  const mineSize = mine.length >= 20 ? 68 : mine.length >= 16 ? 78 : 88;
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        background: "radial-gradient(85% 55% at 50% 0%, rgba(255,46,116,.32), #07090F 62%)",
+        color: "#ffffff",
+        fontFamily: "NotoSansJP",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          height: 34,
+          background: "repeating-linear-gradient(45deg,#FFE03D 0 34px,#0B0F1A 34px 68px)",
+        }}
+      />
+
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "74px 84px 64px",
+        }}
+      >
+        {/* タイプの提示 */}
+        <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
+          <WarningDiamond size={210} emoji={type.emoji} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 30,
+                fontWeight: 900,
+                letterSpacing: "0.3em",
+                color: "#FFE03D",
+              }}
+            >
+              取扱注意
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 104,
+                fontWeight: 900,
+                letterSpacing: "-0.04em",
+                lineHeight: 1.1,
+              }}
+            >
+              {typeToken(type)}
+            </div>
+            <div style={{ display: "flex", fontSize: 40, fontWeight: 700, color: "#9aa5ba" }}>
+              {type.typeName}
+            </div>
+            {/* 群（群名と再定義は必ずセット） */}
+            <div style={{ display: "flex", marginTop: 18 }}>
+              <GroupBadgeOg group={type.group} size={34} />
+            </div>
+          </div>
+        </div>
+
+        {/* 地雷の一文: このラベルの主役 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 32,
+              fontWeight: 900,
+              letterSpacing: "0.22em",
+              color: "#FF2E74",
+            }}
+          >
+            私に言うと、警報が鳴ります
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: mineSize,
+              fontWeight: 900,
+              lineHeight: 1.4,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            {mine}
+          </div>
+        </div>
+
+        {/* 5指標 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 26,
+              fontWeight: 900,
+              letterSpacing: "0.22em",
+              color: "#6b7488",
+            }}
+          >
+            TOGEL INDEX
+          </div>
+          {TOGEL_INDEX.map(({ key, label }) => {
+            const pct = togelIndexPercent(key, scores);
+            return (
+              <div key={key} style={{ display: "flex", alignItems: "center", gap: 22 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    width: 190,
+                    fontSize: 30,
+                    fontWeight: 700,
+                    color: "#c6cede",
+                  }}
+                >
+                  {label}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flex: 1,
+                    height: 16,
+                    borderRadius: 999,
+                    background: "#1a1f2e",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      width: `${pct}%`,
+                      height: 16,
+                      borderRadius: 999,
+                      background: "#FF2E74",
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 焼き込みの導線（リンクが剥がれた状態で流通する前提） */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+            <LogoMark size={72} />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 40, fontWeight: 900 }}>Togel</div>
+              <div style={{ display: "flex", fontSize: 28, fontWeight: 700, color: "#9aa5ba" }}>
+                to-gel.com
+              </div>
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              padding: "18px 30px",
+              borderRadius: 999,
+              background: "#FFE03D",
+              color: "#07090F",
+              fontSize: 30,
+              fontWeight: 900,
+            }}
+          >
+            #トゥゲル診断
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          height: 34,
+          background: "repeating-linear-gradient(45deg,#FFE03D 0 34px,#0B0F1A 34px 68px)",
+        }}
+      />
+    </div>
+  );
+};
+
 export const GET = async (request: Request) => {
   const url = new URL(request.url);
   const typeId = url.searchParams.get("type");
@@ -69,6 +315,28 @@ export const GET = async (request: Request) => {
     return new Response("unknown type", { status: 404 });
   }
 
+  const { bold, black } = await loadFonts();
+  const fonts = [
+    { name: "NotoSansJP", data: bold, weight: 700 as const, style: "normal" as const },
+    { name: "NotoSansJP", data: black, weight: 900 as const, style: "normal" as const },
+  ];
+
+  // 9:16 の取扱注意ラベル（ストーリーズ／トーク画面のスクショ用）
+  if (url.searchParams.get("format") === "story") {
+    const scores = parseScores(url.searchParams.get("s")) ?? representativeScores(type.id);
+    const story = new ImageResponse(<StoryLabel type={type} scores={scores} />, {
+      width: 1080,
+      height: 1920,
+      emoji: "twemoji",
+      fonts,
+    });
+    story.headers.set(
+      "Cache-Control",
+      "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+    );
+    return story;
+  }
+
   const worst = personalityTypes.find((t) => t.id === type.badCompatibleTypes[0]) ?? null;
 
   // 表示対象（mismatch: 相手タイプ / type: 自分のタイプ）
@@ -76,8 +344,6 @@ export const GET = async (request: Request) => {
   // タイプ名15文字以上は1段階だけ縮小、2行までは許容
   const nameSize = featured.typeName.length >= 15 ? 80 : 106;
   const showTagline = featured.typeName.length <= 11;
-
-  const { bold, black } = await loadFonts();
 
   const image = new ImageResponse(
     (
@@ -185,10 +451,7 @@ export const GET = async (request: Request) => {
       width: 1200,
       height: 630,
       emoji: "twemoji",
-      fonts: [
-        { name: "NotoSansJP", data: bold, weight: 700, style: "normal" },
-        { name: "NotoSansJP", data: black, weight: 900, style: "normal" },
-      ],
+      fonts,
     },
   );
 

@@ -1,16 +1,32 @@
 import { PersonalityTypeDefinition } from "@/types/diagnosis";
 
+import type { TypeGroupId } from "./groups";
+
 export interface ExtendedPersonalityTypeDefinition extends PersonalityTypeDefinition {
   catchphrase: string;
   emoji: string;
   badCompatibleTypes: string[];
   tags: string[];
+  /**
+   * カナ愛称（bio・口頭伝播用の識別トークン）。末尾の「型」は含めない。
+   * 表示は必ず typeToken() を通し、`ライオ型` の形に組み立てる
+   * （`ライオ型の人` `ライオ型同士` のような語形変化に対応するため）。
+   */
+  nickname: string;
+  /** 所属群。群名と再定義の一行は components/brand/group-badge.tsx が一体で保持する */
+  group: TypeGroupId;
 }
+
+/** 表示用の識別トークン（例: `ライオ型`）。愛称を単独で画面に出さないための唯一の入口 */
+export const typeToken = (type: Pick<ExtendedPersonalityTypeDefinition, "nickname">): string =>
+  `${type.nickname}型`;
 
 export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "creative-leader",
     typeName: "創造的リーダー",
+    nickname: "ライオ",
+    group: "ignition",
     catchphrase: "全人類を巻き込むアイデアマン",
     emoji: "🦁",
     tags: ["#カリスマ", "#新しもの好き", "#飽き性"],
@@ -29,6 +45,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "social-innovator",
     typeName: "社交的革新者",
+    nickname: "ウニコ",
+    group: "ignition",
     catchphrase: "人脈お化けのトレンドセッター",
     emoji: "🦄",
     tags: ["#コミュ力", "#流行の最先端", "#広く浅く"],
@@ -47,6 +65,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "charismatic-enthusiast",
     typeName: "カリスマ的熱狂家",
+    nickname: "フレア",
+    group: "ignition",
     catchphrase: "情熱だけで生きる暴走機関車",
     emoji: "🔥",
     tags: ["#熱血", "#直感", "#後先考えない"],
@@ -65,6 +85,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "exploratory-connector",
     typeName: "探求的コネクター",
+    nickname: "ジェット",
+    group: "ignition",
     catchphrase: "世界中が庭の自由人",
     emoji: "✈️",
     tags: ["#旅人", "#自由奔放", "#束縛無理"],
@@ -83,6 +105,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "visionary-executor",
     typeName: "ビジョナリー実行者",
+    nickname: "シロ",
+    group: "ignition",
     catchphrase: "夢を現実に変える最強の司令塔",
     emoji: "🏰",
     tags: ["#野心家", "#戦略", "#結果主義"],
@@ -101,6 +125,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "entertaining-creator",
     typeName: "エンターテイニングクリエイター",
+    nickname: "フェス",
+    group: "ignition",
     catchphrase: "歩くエンターテイメント",
     emoji: "🎉",
     tags: ["#ムードメーカー", "#お笑い", "#目立ちたがり"],
@@ -119,6 +145,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "introverted-artist",
     typeName: "内省的芸術家",
+    nickname: "アトリ",
+    group: "settling",
     catchphrase: "孤独を愛する孤高の天才",
     emoji: "🎨",
     tags: ["#マイワールド", "#繊細", "#こだわり"],
@@ -137,6 +165,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "philosophical-curator",
     typeName: "哲学的キュレーター",
+    nickname: "ビブリ",
+    group: "settling",
     catchphrase: "真理を見抜くインテリ",
     emoji: "📚",
     tags: ["#博識", "#冷静", "#分析"],
@@ -155,6 +185,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "depth-explorer",
     typeName: "深淵探求者",
+    nickname: "ノクタ",
+    group: "settling",
     catchphrase: "闇をも愛する哲学者",
     emoji: "🌑",
     tags: ["#ミステリアス", "#洞察力", "#深読み"],
@@ -173,6 +205,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "poetic-dreamer",
     typeName: "詩的夢想家",
+    nickname: "ルナ",
+    group: "settling",
     catchphrase: "夢と現実の狭間で生きるロマンチスト",
     emoji: "🌙",
     tags: ["#妄想", "#ロマンチック", "#天然"],
@@ -191,6 +225,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "solvent-intellectual",
     typeName: "孤独な知識人",
+    nickname: "ソロ",
+    group: "settling",
     catchphrase: "感情より論理のサイボーグ",
     emoji: "💻",
     tags: ["#論理的", "#効率厨", "#一人が楽"],
@@ -209,6 +245,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "contemplative-sage",
     typeName: "静観的賢者",
+    nickname: "マッチャ",
+    group: "settling",
     catchphrase: "全てを悟った仙人",
     emoji: "🍵",
     tags: ["#穏やか", "#達観", "#相談役"],
@@ -227,6 +265,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "practical-leader",
     typeName: "実践的リーダー",
+    nickname: "ゲンバ",
+    group: "chain",
     catchphrase: "口より先に手が動く現場監督",
     emoji: "👷",
     tags: ["#頼れる", "#現実的", "#兄貴肌"],
@@ -245,6 +285,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "social-organizer",
     typeName: "社交的組織者",
+    nickname: "カンジ",
+    group: "chain",
     catchphrase: "幹事やらせたら日本一",
     emoji: "📋",
     tags: ["#世話焼き", "#しっかり者", "#調整役"],
@@ -263,6 +305,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "active-communicator",
     typeName: "能動的コミュニケーター",
+    nickname: "メガホ",
+    group: "chain",
     catchphrase: "沈黙を許さないマシンガントーカー",
     emoji: "📢",
     tags: ["#おしゃべり", "#積極的", "#ポジティブ"],
@@ -281,6 +325,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "community-builder",
     typeName: "コミュニティ・ビルダー",
+    nickname: "ムラオ",
+    group: "chain",
     catchphrase: "みんなの居場所を作る優しい村長",
     emoji: "🏡",
     tags: ["#優しい", "#包容力", "#平和主義"],
@@ -299,6 +345,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "enthusiastic-networker",
     typeName: "熱心なネットワーカー",
+    nickname: "スニカ",
+    group: "chain",
     catchphrase: "フットワーク軽すぎの冒険家",
     emoji: "👟",
     tags: ["#行動力", "#好奇心", "#人好き"],
@@ -317,6 +365,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "relational-ambassador",
     typeName: "関係性大使",
+    nickname: "タイシ",
+    group: "chain",
     catchphrase: "敵を作らない最強の外交官",
     emoji: "🤝",
     tags: ["#バランス感覚", "#世渡り上手", "#中立"],
@@ -335,6 +385,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "steady-specialist",
     typeName: "堅実な専門家",
+    nickname: "バリア",
+    group: "inert",
     catchphrase: "石橋を叩いて渡るプロフェッショナル",
     emoji: "🛡️",
     tags: ["#真面目", "#慎重", "#安定"],
@@ -353,6 +405,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "reliable-organizer",
     typeName: "信頼できる整理者",
+    nickname: "フォルダ",
+    group: "inert",
     catchphrase: "散らかった部屋も人生も片付ける",
     emoji: "🗂️",
     tags: ["#幾帳面", "#整理整頓", "#ルール"],
@@ -371,6 +425,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "quiet-observer",
     typeName: "静かな観察者",
+    nickname: "ステル",
+    group: "inert",
     catchphrase: "全てを見透かすステルス探偵",
     emoji: "🕵️",
     tags: ["#聞き上手", "#洞察力", "#無口"],
@@ -389,6 +445,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "dedicated-crafter",
     typeName: "専心した職人",
+    nickname: "タクミ",
+    group: "inert",
     catchphrase: "一つの道を極める求道者",
     emoji: "🔨",
     tags: ["#オタク", "#集中力", "#頑固"],
@@ -407,6 +465,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "conscientious-guardian",
     typeName: "良心的守護者",
+    nickname: "テンビン",
+    group: "inert",
     catchphrase: "ルールと伝統を守る最後の砦",
     emoji: "⚖️",
     tags: ["#正義感", "#保守的", "#厳格"],
@@ -425,6 +485,8 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
   {
     id: "methodical-thinker",
     typeName: "方法的思考家",
+    nickname: "ジョーギ",
+    group: "inert",
     catchphrase: "歩く攻略本",
     emoji: "📐",
     tags: ["#計画的", "#手順重視", "#分析"],

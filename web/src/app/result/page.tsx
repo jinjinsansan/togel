@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { GroupBadge } from "@/components/brand/group-badge";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { personalityTypes } from "@/lib/personality";
+import { personalityTypes, typeToken } from "@/lib/personality";
+import { storyLabelHref } from "@/lib/share/story-label";
 import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import {
@@ -237,11 +239,15 @@ const ResultPage = () => {
               YOUR TYPE / 24
             </div>
             <h1 className="mt-3 text-[clamp(30px,5.4cqw,50px)] font-black leading-[1.25] tracking-[-0.03em]">
-              {selfType?.typeName ?? diagnosis.detailedNarrative.title}
+              {selfType ? typeToken(selfType) : diagnosis.detailedNarrative.title}
             </h1>
+            {selfType && (
+              <div className="mt-1.5 text-[15px] font-bold text-txt-muted">{selfType.typeName}</div>
+            )}
             <div className="mt-2 text-sm font-bold text-primary">
               {selfType?.catchphrase ?? diagnosis.detailedNarrative.subtitle}
             </div>
+            {selfType && <GroupBadge group={selfType.group} className="mt-4" />}
             <p
               className="mt-3.5 max-w-[32em] text-[13px] leading-8 text-txt-muted"
               style={{ textWrap: "pretty" }}
@@ -287,6 +293,16 @@ const ResultPage = () => {
                   );
                 })}
               </div>
+              {selfType && (
+                <a
+                  href={storyLabelHref(selfType.id, scores)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 flex min-h-[44px] items-center justify-center rounded-full bg-white text-xs font-black text-ink transition-colors hover:bg-hazard"
+                >
+                  取扱注意ラベルを保存（縦・ストーリーズ用）
+                </a>
+              )}
             </div>
           </div>
         </div>

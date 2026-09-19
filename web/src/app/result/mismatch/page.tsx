@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { loadSession } from "@/lib/diagnosis/session";
 import { personalityTypes } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
+import { storyLabelHref } from "@/lib/share/story-label";
 import { BigFiveScores, MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosis";
 
 type LatestDiagnosis = {
@@ -425,7 +426,17 @@ const MismatchResultPage = () => {
                         rel="noreferrer"
                         className="flex min-h-[44px] items-center rounded-full bg-white px-[18px] text-xs font-black text-ink transition-colors hover:bg-hazard"
                       >
-                        画像を保存
+                        画像を保存（横）
+                      </a>
+                    )}
+                    {selfType && (
+                      <a
+                        href={storyLabelHref(selfType.id, diagnosis?.bigFiveScores ?? null)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex min-h-[44px] items-center rounded-full bg-hazard px-[18px] text-xs font-black text-ink transition-colors hover:bg-white"
+                      >
+                        取扱注意ラベル（縦）
                       </a>
                     )}
                     <a
