@@ -14,8 +14,10 @@ const VISITED_KEY = "togel:coaching-visited";
 export type CoachingBoardState = {
   selfTypeId: string;
   plan: "light" | "full";
-  /** 盤に載せる相手（順序が盤の並び） */
+  /** 盤に載せる相手（順序が盤の並び）。常に3件 */
   typeIds: string[];
+  /** 盤には載せず、読めるガイドとして出す相手（full診断の4・5番目） */
+  readableTypeIds?: string[];
 };
 
 const readJson = <T>(key: string): T | null => {

@@ -56,7 +56,7 @@ const buildBoardState = (): CoachingBoardState | null => {
   if (!selfTypeId) return saved;
 
   const plan = loadSession()?.diagnosisType === "full" ? "full" : "light";
-  const limit = boardTypeCount(plan);
+  const limit = boardTypeCount();
 
   // ミスマッチ結果があればそれを、無ければタイプ定義の相性から組む
   let typeIds: string[] = [];
@@ -78,15 +78,18 @@ const buildBoardState = (): CoachingBoardState | null => {
   if (typeIds.length === 0) {
     typeIds = findExtended(selfTypeId)?.badCompatibleTypes ?? [];
   }
+  // 盤は常に3タイプ。4番目以降は盤に載せず、読めるガイドとして出す
+  const readableTypeIds = typeIds.slice(limit);
   typeIds = typeIds.slice(0, limit);
   if (typeIds.length === 0) return saved;
 
-  const next: CoachingBoardState = { selfTypeId, plan, typeIds };
+  const next: CoachingBoardState = { selfTypeId, plan, typeIds, readableTypeIds };
   if (
     saved &&
     saved.selfTypeId === next.selfTypeId &&
     saved.plan === next.plan &&
-    saved.typeIds.join(",") === next.typeIds.join(",")
+    saved.typeIds.join(",") === next.typeIds.join(",") &&
+    (saved.readableTypeIds ?? []).join(",") === readableTypeIds.join(",")
   ) {
     return saved;
   }
@@ -139,6 +142,14 @@ export default function CoachingPage() {
   const boardTypes = useMemo(
     () =>
       (board?.typeIds ?? [])
+        .map((id) => findExtended(id))
+        .filter((type): type is ExtendedPersonalityTypeDefinition => Boolean(type)),
+    [board],
+  );
+
+  const readableTypes = useMemo(
+    () =>
+      (board?.readableTypeIds ?? [])
         .map((id) => findExtended(id))
         .filter((type): type is ExtendedPersonalityTypeDefinition => Boolean(type)),
     [board],
@@ -344,7 +355,7 @@ export default function CoachingPage() {
                     あと2タイプ、あなたと噛み合わない相手がいます。
                   </p>
                   <p className="mt-2 text-[12px] leading-[1.9] text-lighttext-subtle">
-                    （40問の診断で、残りが出ます）
+                    （40問の診断で、その2タイプが読めるようになります。盤の長さは変わりません）
                   </p>
                   <Link
                     href="/diagnosis/full"
@@ -354,6 +365,33 @@ export default function CoachingPage() {
                   </Link>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* full 診断で増えるのは「読めるもの」。盤の長さは変えない */}
+          {readableTypes.length > 0 && (
+            <div className="rounded-card border border-lightline bg-white px-5.5 py-5 shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]">
+              <h2 className="text-[10px] font-black tracking-[0.22em] text-relief-ink">
+                40問で増えた、読めるタイプ
+              </h2>
+              <p className="mt-2 text-[12px] leading-[1.95] text-lighttext-subtle">
+                盤は3タイプ分のままです。こちらはマスではなく、読み物として増えた分です。
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {readableTypes.map((type) => (
+                  <Link
+                    key={type.id}
+                    href={`/coaching/${type.id}`}
+                    className="flex min-h-[56px] items-center gap-3 rounded-input border border-lightline bg-[#f1f5f2] px-3.5 py-2.5 transition-colors hover:border-navy"
+                  >
+                    <span className="text-[22px]">{type.emoji}</span>
+                    <span className="flex flex-col gap-px">
+                      <span className="text-[15px] font-black text-navy">{typeToken(type)}</span>
+                      <span className="text-[10px] text-lighttext-subtle">{type.typeName}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 

@@ -4,10 +4,12 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { groupBadgeLine } from "../src/components/brand/group-badge";
+import { BROADCAST_TOTAL_ISSUES } from "../src/lib/line/broadcast";
 import {
   ANGLES_PER_TYPE,
   ANGLE_BY_BROADCAST_KIND,
   BOARD_ANGLES,
+  BOARD_TYPE_COUNT,
   boardTypeCount,
   cellKey,
   parseCellKey,
@@ -117,9 +119,12 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
   }
 });
 
-test("攻略盤は light 15マス / full 25マス", () => {
-  assert.equal(boardTypeCount("light") * ANGLES_PER_TYPE, 15);
-  assert.equal(boardTypeCount("full") * ANGLES_PER_TYPE, 25);
+test("盤の全長は診断の種別によらず常に15マス", () => {
+  // 人によって全長が違うと、それ自体が達成度の差として読まれる。
+  // LINE週次配信（15通）の可視化としても、数が合っている必要がある。
+  assert.equal(BOARD_TYPE_COUNT, 3);
+  assert.equal(boardTypeCount() * ANGLES_PER_TYPE, 15);
+  assert.equal(boardTypeCount() * ANGLES_PER_TYPE, BROADCAST_TOTAL_ISSUES);
 });
 
 test("配信の5テンプレと盤の5つの角度が1対1で対応する", () => {
