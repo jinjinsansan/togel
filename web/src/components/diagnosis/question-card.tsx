@@ -2,64 +2,68 @@
 
 import { DiagnosisQuestion } from "@/types/diagnosis";
 
+/**
+ * 設問カード（Web版・LIFF版の共通部品）。
+ *
+ * 1問1画面・タップで即確定（確定ボタンなし）。
+ * 軸名は出さない（どの設問がどの軸かを知らせない）。
+ */
+
+/** 選択肢の値ごとのドット色（ピンク=あてはまる ↔ イエロー=あてはまらない） */
+const DOT_COLORS: Record<number, string> = {
+  5: "#FF2E74",
+  4: "rgba(255,46,116,.6)",
+  3: "#39415a",
+  2: "rgba(255,224,61,.6)",
+  1: "#FFE03D",
+};
+
 type Props = {
   question: DiagnosisQuestion;
   currentValue?: number;
   onSelect: (value: number) => void;
+  /** 設問番号の表示（例: "Q12 / 40"）。省略時は出さない */
+  counter?: string;
 };
 
-export const QuestionCard = ({ question, currentValue, onSelect }: Props) => {
-  return (
-    <div className="rounded-2xl border border-white bg-white/80 backdrop-blur-sm p-5 shadow-xl shadow-slate-200/50 md:rounded-[2.5rem] md:border-2 md:p-8">
-      <div className="text-center mb-8">
-        <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mb-3">
-          QUESTION {question.number}
-        </p>
-        <h2 className="text-xl md:text-3xl font-black text-slate-900 leading-tight">
-          {question.text}
-        </h2>
-        {question.helper && (
-          <p className="mt-3 text-base font-medium text-slate-500">{question.helper}</p>
-        )}
-      </div>
-      
-      <div className="grid gap-4 sm:grid-cols-1">
-        {question.options.map((option) => {
-          const isSelected = currentValue === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => onSelect(option.value)}
-              className={`group relative flex items-center p-3 rounded-2xl border transition-all duration-300 ease-out hover:scale-[1.01] md:p-4 md:border-2 ${
-                isSelected
-                  ? "border-[#E91E63] bg-[#E91E63]/5 shadow-lg shadow-[#E91E63]/10"
-                  : "border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50"
-              }`}
-            >
-              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors md:h-10 md:w-10 ${
-                isSelected
-                  ? "border-[#E91E63] bg-[#E91E63] text-white"
-                  : "border-slate-200 bg-slate-50 text-slate-400 group-hover:border-slate-300"
-              }`}>
-                {isSelected && (
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <span className={`ml-4 text-base font-bold transition-colors md:text-lg ${
-                isSelected ? "text-[#E91E63]" : "text-slate-700 group-hover:text-slate-900"
-              }`}>
-                {option.label}
-              </span>
-              {isSelected && (
-                <div className="absolute right-4 h-2 w-2 rounded-full bg-[#E91E63] animate-ping" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+export const QuestionCard = ({ question, currentValue, onSelect, counter }: Props) => (
+  <div key={question.id} className="animate-rise">
+    <div className="flex items-baseline justify-between">
+      <div className="text-[11px] font-black tracking-[0.2em] text-txt-disabled">QUESTION</div>
+      {counter && <div className="text-[11px] font-black text-txt-muted">{counter}</div>}
     </div>
-  );
-};
+    <h2
+      className="mt-3 text-[22px] font-black leading-relaxed tracking-[-0.01em] text-white"
+      style={{ textWrap: "pretty" }}
+    >
+      {question.text}
+    </h2>
+    <p className="mt-2.5 text-xs leading-[1.9] text-txt-subtle">
+      直感で。考え込むほど当たらなくなります。
+    </p>
+
+    <div className="mt-4 flex flex-col gap-[9px]">
+      {[...question.options]
+        .sort((a, b) => b.value - a.value)
+        .map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onSelect(option.value)}
+            className={`flex min-h-[52px] items-center gap-3 rounded-[14px] border px-[18px] text-left text-sm font-bold transition-colors ${
+              currentValue === option.value
+                ? "border-primary bg-dangerbg text-white"
+                : "border-line bg-surface text-[#e2e7f0] hover:border-primary hover:bg-dangerbg"
+            }`}
+          >
+            <span
+              className="h-[9px] w-[9px] flex-none rounded-full"
+              style={{ background: DOT_COLORS[option.value] ?? "#39415a" }}
+              aria-hidden="true"
+            />
+            {option.label}
+          </button>
+        ))}
+    </div>
+  </div>
+);

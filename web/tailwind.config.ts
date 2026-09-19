@@ -140,6 +140,24 @@ const config: Config = {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        // すごろくの着地：音と振動を使わず「視覚の重さ」で手応えを返す
+        "piece-land": {
+          "0%": { transform: "scaleY(0.92)" },
+          "100%": { transform: "scaleY(1)" },
+        },
+        "board-settle": {
+          "0%": { transform: "translateY(0)" },
+          "45%": { transform: "translateY(2px)" },
+          "100%": { transform: "translateY(0)" },
+        },
+        "envelope-open": {
+          from: { transform: "rotateX(0deg)" },
+          to: { transform: "rotateX(-168deg)" },
+        },
+        "card-turn": {
+          from: { transform: "rotateY(90deg)", opacity: "0" },
+          to: { transform: "rotateY(0deg)", opacity: "1" },
+        },
       },
       animation: {
         float: "float 6s ease-in-out infinite",
@@ -150,6 +168,10 @@ const config: Config = {
         rise: "rise .45s cubic-bezier(.2,.8,.2,1) both",
         flash: "flash 1.6s ease-in-out infinite",
         sheen: "sheen 5s linear infinite",
+        "piece-land": "piece-land 80ms ease-out 1",
+        "board-settle": "board-settle 160ms ease-out 1",
+        "envelope-open": "envelope-open .5s cubic-bezier(.2,.8,.2,1) both",
+        "card-turn": "card-turn .5s cubic-bezier(.2,.8,.2,1) both",
       },
     },
   },

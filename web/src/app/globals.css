@@ -78,7 +78,11 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-flash,
-  .animate-sheen {
+  .animate-sheen,
+  .animate-piece-land,
+  .animate-board-settle,
+  .animate-envelope-open,
+  .animate-card-turn {
     animation: none !important;
   }
   .animate-rise {
