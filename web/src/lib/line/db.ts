@@ -52,6 +52,26 @@ export async function getDiagnosedLineUsers(): Promise<
   return (data ?? []) as Array<{ line_user_id: string; togel_type: string }>;
 }
 
+/**
+ * 週次配信の宛先。通目をユーザー単位で出すため created_at も取る。
+ * （全体で1つの週番号から導出すると、登録時期によって「5通目」から始まる人が出る）
+ */
+export async function getBroadcastRecipients(): Promise<
+  Array<{ line_user_id: string; togel_type: string; created_at: string }>
+> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("line_users")
+    .select("line_user_id, togel_type, created_at")
+    .not("togel_type", "is", null);
+
+  if (error) {
+    console.error("[LINE DB] getBroadcastRecipients error:", error);
+    return [];
+  }
+  return (data ?? []) as Array<{ line_user_id: string; togel_type: string; created_at: string }>;
+}
+
 export async function getOrCreateLineUser(lineUserId: string): Promise<LineUserRecord | null> {
   const existing = await getLineUser(lineUserId);
   if (existing) return existing;
