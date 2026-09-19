@@ -1,6 +1,7 @@
 import type { LineTextMessage } from "./client";
 import { personalityTypes } from "@/lib/personality";
 import { typeApproachGuides } from "@/lib/coaching/translations";
+import { ANGLE_BY_BROADCAST_KIND, cellKey } from "@/lib/coaching/board";
 
 /**
  * LINE定期配信のタイプ別テンプレ文面。
@@ -17,6 +18,10 @@ import { typeApproachGuides } from "@/lib/coaching/translations";
  */
 
 const COACHING_URL = "https://to-gel.com/coaching";
+
+/** 配信1通 = 盤の1マス。そのマスを直接開くリンク */
+const cellUrl = (worstTypeId: string, kind: number) =>
+  `${COACHING_URL}?cell=${encodeURIComponent(cellKey(worstTypeId, ANGLE_BY_BROADCAST_KIND[kind]))}`;
 
 const findType = (typeId: string) => personalityTypes.find((t) => t.id === typeId) ?? null;
 
@@ -89,6 +94,6 @@ export const buildTypeBroadcast = (typeId: string, weekIndex: number): LineTextM
 
   return {
     type: "text",
-    text: `${issue}通目です（全15通）\n\n${body}\n\n▼ 地雷回避ガイド全文\n${COACHING_URL}`,
+    text: `${issue}通目です（全15通）\n\n${body}\n\n▼ このマスを開く\n${cellUrl(worstId, kind)}`,
   };
 };
