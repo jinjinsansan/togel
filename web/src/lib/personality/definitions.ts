@@ -91,7 +91,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
     emoji: "✈️",
     tags: ["#旅人", "#自由奔放", "#束縛無理"],
     description: "気づいたら海外にいるタイプ。新しい場所、新しい人が大好き。ルーティンワークは拷問と同じ。",
-    dominantTraits: ["探求心", "社会的柔軟性", "適応力"],
+    dominantTraits: ["探求心", "越境性", "適応力"],
     characteristics: {
       strengths: ["適応力が異常", "偏見がない", "サバイバル能力"],
       growthAreas: ["一つの場所に留まれない", "貯金が苦手"],
@@ -251,7 +251,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
     emoji: "🍵",
     tags: ["#穏やか", "#達観", "#相談役"],
     description: "実年齢より精神年齢が30歳くらい上。何が起きても動じない。みんなの相談役ポジション。",
-    dominantTraits: ["静観", "知恵", "超越性"],
+    dominantTraits: ["静観", "知恵", "不動心"],
     characteristics: {
       strengths: ["精神的安定感", "的確なアドバイス", "広い視野"],
       growthAreas: ["刺激に欠ける", "行動が遅い"],
@@ -451,7 +451,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
     emoji: "🔨",
     tags: ["#オタク", "#集中力", "#頑固"],
     description: "興味のあることには寝食を忘れて没頭する。それ以外はどうでもいい。現代の職人。",
-    dominantTraits: ["職人気質", "一途さ", "技術追求"],
+    dominantTraits: ["没入力", "一途さ", "技術追求"],
     characteristics: {
       strengths: ["圧倒的なスキル", "妥協しない", "専門知識"],
       growthAreas: ["視野が狭い", "協調性不足"],

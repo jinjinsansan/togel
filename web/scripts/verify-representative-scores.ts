@@ -19,7 +19,10 @@ import type { BigFiveScores } from "../src/types/diagnosis";
 
 type AxisKey = keyof BigFiveScores;
 
-/** dominantTraits の語 → 対応する軸。判定が割れる語（内省・感受性など）は意図的に入れない */
+/**
+ * dominantTraits の語 → 対応する軸。判定が割れる語（内省・感受性など）は意図的に入れない。
+ * 越境性・不動心・没入力も同様に入れない（単一の軸に対応しない語として選ばれている）。
+ */
 const TRAIT_TO_AXIS: Record<string, AxisKey> = {
   開放性: "openness",
   オープンマインド: "openness",
@@ -32,7 +35,6 @@ const TRAIT_TO_AXIS: Record<string, AxisKey> = {
   知性探求: "openness",
   文化的理解: "openness",
   哲学性: "openness",
-  超越性: "openness",
   遠見: "openness",
   堅実性: "conscientiousness",
   秩序: "conscientiousness",
@@ -42,7 +44,6 @@ const TRAIT_TO_AXIS: Record<string, AxisKey> = {
   体系的: "conscientiousness",
   実行力: "conscientiousness",
   専門性: "conscientiousness",
-  職人気質: "conscientiousness",
   信頼性: "conscientiousness",
   安定性: "conscientiousness",
   外向性: "extraversion",
@@ -57,7 +58,6 @@ const TRAIT_TO_AXIS: Record<string, AxisKey> = {
   協調性: "agreeableness",
   調整力: "agreeableness",
   社会的気配り: "agreeableness",
-  社会的柔軟性: "agreeableness",
   良心: "agreeableness",
   守護者: "agreeableness",
   建設性: "agreeableness",
