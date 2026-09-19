@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { GroupBadge } from "@/components/brand/group-badge";
+import { HandbookShare } from "@/components/share/handbook-share";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { personalityTypes, typeToken } from "@/lib/personality";
 import { storyLabelHref } from "@/lib/share/story-label";
+import { handbookPostText } from "@/lib/share/text";
 import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import {
@@ -533,6 +535,19 @@ const ResultPage = () => {
                 );
               })}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* 取扱説明書を配る（開封の直後ではなく、結果を読んだあとの位置に置く） */}
+      {selfType && (
+        <section className="px-5.5 pb-2 pt-4">
+          <div className="mx-auto max-w-[1120px]">
+            <HandbookShare
+              text={handbookPostText(selfType)}
+              url={`https://to-gel.com/share/${selfType.id}`}
+              labelHref={storyLabelHref(selfType.id, scores)}
+            />
           </div>
         </section>
       )}

@@ -7,6 +7,7 @@ import { loadSession } from "@/lib/diagnosis/session";
 import { personalityTypes } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import { storyLabelHref } from "@/lib/share/story-label";
+import { lineShareUrl, mismatchPostText, xIntentUrl } from "@/lib/share/text";
 import { BigFiveScores, MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosis";
 
 type LatestDiagnosis = {
@@ -140,9 +141,8 @@ const MismatchResultPage = () => {
   const rest = visibleEntries.slice(1);
   const totalLabel = isLightPlan ? "3タイプ" : "5タイプ";
 
-  const shareText = worst1
-    ? `私（${selfType?.typeName ?? "診断済み"}）と絶対に合わないのは「${worst1.type.typeName}」らしい…`
-    : "Togelで「絶対に合わないタイプ」を診断しました";
+  // 愛称（〜型）を先頭に置き、主＋型別のハッシュタグを付ける
+  const shareText = mismatchPostText(selfType, worst1?.type ?? null);
   // シェア先はOGP付きランディング（/share/[typeId]）。タイプ未確定時はトップへ
   const shareUrl = selfType
     ? `https://to-gel.com/share/${selfType.id}?mode=mismatch`
@@ -440,7 +440,7 @@ const MismatchResultPage = () => {
                       </a>
                     )}
                     <a
-                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+                      href={xIntentUrl(shareText, shareUrl)}
                       target="_blank"
                       rel="noreferrer"
                       className="flex min-h-[44px] items-center rounded-full border border-[#2a3348] bg-black px-[18px] text-xs font-black text-white transition-colors hover:border-white"
@@ -448,7 +448,7 @@ const MismatchResultPage = () => {
                       Xに投稿
                     </a>
                     <a
-                      href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
+                      href={lineShareUrl(shareText, shareUrl)}
                       target="_blank"
                       rel="noreferrer"
                       className="flex min-h-[44px] items-center rounded-full bg-linegreen px-[18px] text-xs font-black text-white transition-opacity hover:opacity-90"

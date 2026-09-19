@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { GroupBadge } from "@/components/brand/group-badge";
+import { HandbookShare } from "@/components/share/handbook-share";
 import { personalityTypes, typeToken } from "@/lib/personality";
+import { storyLabelHref } from "@/lib/share/story-label";
+import { handbookPostText } from "@/lib/share/text";
 
 /**
  * SNSシェア用ランディングページ。
@@ -104,7 +107,15 @@ const SharePage = async ({
           <p className="mt-3 text-base font-bold text-primary">{featured.catchphrase}</p>
           <GroupBadge group={featured.group} className="mt-5" />
 
-          <div className="mt-8 rounded-card border border-line bg-panel p-5">
+          {/* 自分の取扱説明書を渡す形。他人にラベルを貼って送る形にはしない */}
+          <HandbookShare
+            className="mt-8"
+            text={handbookPostText(featured)}
+            url={`https://to-gel.com/share/${featured.id}`}
+            labelHref={storyLabelHref(featured.id)}
+          />
+
+          <div className="mt-4 rounded-card border border-line bg-panel p-5">
             <p className="text-xs leading-[1.9] text-txt-muted">
               Togelは「運命の人は教えない。地雷なら教える。」がコンセプトの診断エンタメ。
               あなたの取扱区分と、絶対に合わないワーストタイプを判定します。
