@@ -16,7 +16,7 @@ import { groupMatrixPairs } from "@/lib/personality/group-matrix";
 
 const title = "4群 相性表 | トゥゲル診断";
 const description =
-  "引火群・沈降群・連鎖群・不活性群の16通り。どの組み合わせが噛み合い、どこが長引くか。運命の人は教えない。地雷なら教える。";
+  "24タイプは4つの群に分かれます。16通りの組み合わせのうち、どこが噛み合い、どこが長引くか。運命の人は教えない。地雷なら教える。";
 
 export const metadata: Metadata = {
   title,
