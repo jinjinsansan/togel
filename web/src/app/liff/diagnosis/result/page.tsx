@@ -17,7 +17,7 @@ import type { DiagnosisResult, MatchingResult, MismatchResult } from "@/types/di
  */
 
 export default function LiffResultPage() {
-  const { isReady, closeLiff, error: liffError } = useLiff();
+  const { isReady, closeLiff, openExternal, error: liffError } = useLiff();
   const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [matchingResults, setMatchingResults] = useState<MatchingResult[]>([]);
   const [mismatchResults, setMismatchResults] = useState<MismatchResult[]>([]);
@@ -69,6 +69,8 @@ export default function LiffResultPage() {
 
   const pt = diagnosis.personalityType;
   const extended = personalityTypes.find((type) => type.id === pt.id) ?? null;
+  const worstTypeId = mismatchResults[0]?.personalityTypes?.profile?.id;
+  const worstType = personalityTypes.find((type) => type.id === worstTypeId) ?? null;
 
   return (
     <div className="min-h-[100dvh] bg-ink text-white">
@@ -203,6 +205,34 @@ export default function LiffResultPage() {
             </div>
           </section>
         )}
+
+        {/* 診断直後の行き先。ワースト1の取扱説明が最も具体的なので主導線にする */}
+        <section className="mt-6 rounded-card border border-line bg-panel p-5">
+          <div className="text-[10px] font-black tracking-[0.22em] text-hazard">次にやること</div>
+          <p className="mt-2.5 text-[13px] leading-[1.95] text-txt-muted">
+            {worstType
+              ? `${typeToken(worstType)}とは、言い方を変えるだけで事故が減ります。`
+              : "合わない相手との付き合い方は、タイプごとに違います。"}
+          </p>
+          <div className="mt-4 flex flex-col gap-2.5">
+            {worstType && (
+              <button
+                type="button"
+                onClick={() => openExternal(`https://www.to-gel.com/coaching/${worstType.id}`)}
+                className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-primary px-5 text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+              >
+                {worstType.emoji} {typeToken(worstType)}の取扱説明を読む
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => openExternal("https://www.to-gel.com/coaching")}
+              className="flex min-h-[48px] items-center justify-center rounded-[14px] border border-line px-5 text-[13px] font-bold text-txt-muted transition-colors hover:border-hazard hover:text-white"
+            >
+              あなたの盤を見る（全15マス）
+            </button>
+          </div>
+        </section>
 
         <p className="mt-7 text-center text-[11px] font-bold text-txt-subtle">
           タイプは傾向、ラベルは個人。

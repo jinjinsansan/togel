@@ -10,6 +10,7 @@ interface LiffModule {
   getProfile: () => Promise<{ userId: string; displayName: string; pictureUrl?: string }>;
   closeWindow: () => void;
   isInClient: () => boolean;
+  openWindow: (config: { url: string; external?: boolean }) => void;
 }
 
 type LiffState = {
@@ -20,6 +21,8 @@ type LiffState = {
   pictureUrl: string | null;
   error: string | null;
   closeLiff: () => void;
+  /** LIFFの外にあるページを開く。LINEのブラウザ内では外部ブラウザに回す */
+  openExternal: (url: string) => void;
 };
 
 let liffModule: LiffModule | null = null;
@@ -112,5 +115,24 @@ export function useLiff(): LiffState {
     }
   }, []);
 
-  return { isReady, isInClient, lineUserId, displayName, pictureUrl, error, closeLiff };
+  const openExternal = useCallback((url: string) => {
+    const liff = liffModule;
+    // LINEのブラウザは通常ページ側で非対応の案内を出すので、外部ブラウザで開く
+    if (liff && liff.isInClient() && typeof liff.openWindow === "function") {
+      liff.openWindow({ url, external: true });
+      return;
+    }
+    window.open(url, "_blank", "noopener");
+  }, []);
+
+  return {
+    isReady,
+    isInClient,
+    lineUserId,
+    displayName,
+    pictureUrl,
+    error,
+    closeLiff,
+    openExternal,
+  };
 }
