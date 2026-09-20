@@ -1,6 +1,5 @@
 import { mockProfiles } from "@/data/mock-profiles";
 import {
-  Answer,
   BigFiveScores,
   DiagnosisPayload,
   MatchingProfile,
@@ -28,6 +27,7 @@ import {
   generateMismatchCatchphrase,
   generateAbsolutelyNotToDo,
 } from "@/lib/personality/mismatch-narrative";
+import { calculateBigFiveScores } from "@/lib/personality/score";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 
@@ -76,14 +76,6 @@ const neutralFallbackAvatars = [
   "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=400&q=80",
   "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
 ];
-
-const traitKeyMap: Record<string, TraitKey> = {
-  o: "openness",
-  c: "conscientiousness",
-  e: "extraversion",
-  a: "agreeableness",
-  n: "neuroticism",
-};
 
 const TRAIT_LABELS: Record<TraitKey, string> = {
   openness: "アイデア感度",
@@ -365,42 +357,16 @@ const hasValidAvatar = (profile: MatchingProfile): boolean => {
   return isValidHttpsUrl(trimmed);
 };
 
-function calculateBigFiveScores(answers: Answer[]): BigFiveScores {
-  const totals: Record<TraitKey, { sum: number; count: number }> = {
-    openness: { sum: 0, count: 0 },
-    conscientiousness: { sum: 0, count: 0 },
-    extraversion: { sum: 0, count: 0 },
-    agreeableness: { sum: 0, count: 0 },
-    neuroticism: { sum: 0, count: 0 },
-  };
-
-  answers.forEach((answer) => {
-    const trait = getTraitFromQuestionId(answer.questionId);
-    if (!trait) return;
-    totals[trait].sum += answer.value;
-    totals[trait].count += 1;
-  });
-
-  return TRAITS.reduce<BigFiveScores>((scores, trait) => {
-    const { sum, count } = totals[trait];
-    return {
-      ...scores,
-      [trait]: count === 0 ? 3 : Number((sum / count).toFixed(2)),
-    };
-  }, {
-    openness: 3,
-    conscientiousness: 3,
-    extraversion: 3,
-    agreeableness: 3,
-    neuroticism: 3,
-  });
-}
-
-function getTraitFromQuestionId(questionId: string): TraitKey | null {
-  const key = traitKeyMap[questionId[0]?.toLowerCase() ?? ""];
-  return key ?? null;
-}
-
+/**
+ * 回答から5軸の素点を出す。
+ *
+ * 軸と逆転の有無は `questions.ts` から読む。以前は設問IDの1文字目だけで軸を
+ * 引いていて、設問オブジェクトを一度も見ていなかった。そのため逆転項目を
+ * 定義しても採点側からは見えず、IDの命名規則が暗黙の仕様になっていた。
+ *
+ * 逆転項目は 6 - value に読み替える。`togel-index.ts` の `inverted` は
+ * 表示専用なので、ここと二重に反転させないこと。
+ */
 type CompatibilityDetails = {
   personality: number;
   valueAlignment: number;

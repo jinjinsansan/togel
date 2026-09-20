@@ -16,6 +16,13 @@ export type DiagnosisQuestion = {
   scale: ChoiceScale;
   options: QuestionOption[];
   trait: "openness" | "conscientiousness" | "extraversion" | "agreeableness" | "neuroticism";
+  /**
+   * true: 高く答えるほど、その軸が「低い」ことを示す項目。
+   * 採点時に 6 - value に読み替える。
+   * 表示側の `togel-index.ts` の `inverted` とは別物（あちらは見せ方の反転）。
+   * 同じ値を二重に反転させないこと。
+   */
+  reverse?: boolean;
 };
 
 export type Answer = {

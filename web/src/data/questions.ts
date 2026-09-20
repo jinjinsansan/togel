@@ -1,8 +1,10 @@
 import { DiagnosisQuestion } from "@/types/diagnosis";
 
+// 5段階は「当てはまるか」で揃える。以前は1-2が「違う」、4-5が「当てはまる」と
+// 軸が混在しており、特に2の「あまり違わない」は肯定寄りに読めるのに点数は2だった。
 const likertOptions = [
-  { value: 1, label: "全く違う" },
-  { value: 2, label: "あまり違わない" },
+  { value: 1, label: "まったく当てはまらない" },
+  { value: 2, label: "あまり当てはまらない" },
   { value: 3, label: "どちらでもない" },
   { value: 4, label: "少し当てはまる" },
   { value: 5, label: "よく当てはまる" },
@@ -15,13 +17,14 @@ const likertOptions = [
 const baseQuestions: DiagnosisQuestion[] = [
   // 開放性 - 2問
   {
-    id: "o1",
+    id: "o1r",
     diagnosisType: "light",
     number: 1,
-    text: "新しいことを試すのが好きだ",
+    text: "慣れたやり方を変えるのは気が進まない",
     scale: "likert",
     options: likertOptions,
     trait: "openness",
+    reverse: true,
   },
   {
     id: "o2",
@@ -34,13 +37,14 @@ const baseQuestions: DiagnosisQuestion[] = [
   },
   // 誠実性 - 2問
   {
-    id: "c1",
+    id: "c1r",
     diagnosisType: "light",
     number: 3,
-    text: "計画を立ててから行動するほうだ",
+    text: "手順を決めるより、やりながら考えたい",
     scale: "likert",
     options: likertOptions,
     trait: "conscientiousness",
+    reverse: true,
   },
   {
     id: "c2",
@@ -62,13 +66,14 @@ const baseQuestions: DiagnosisQuestion[] = [
     trait: "extraversion",
   },
   {
-    id: "e2",
+    id: "e2r",
     diagnosisType: "light",
     number: 6,
-    text: "パーティーやイベントが好きだ",
+    text: "誘いを断って家にいるほうが、気が楽なことが多い",
     scale: "likert",
     options: likertOptions,
     trait: "extraversion",
+    reverse: true,
   },
   // 協調性 - 2問
   {
@@ -81,13 +86,14 @@ const baseQuestions: DiagnosisQuestion[] = [
     trait: "agreeableness",
   },
   {
-    id: "a2",
+    id: "a2r",
     diagnosisType: "light",
     number: 8,
-    text: "困っている人がいると助けたいと思う",
+    text: "頼まれごとでも、無理なときは断る",
     scale: "likert",
     options: likertOptions,
     trait: "agreeableness",
+    reverse: true,
   },
   // 神経症傾向 - 2問
   {
@@ -100,13 +106,14 @@ const baseQuestions: DiagnosisQuestion[] = [
     trait: "neuroticism",
   },
   {
-    id: "n2",
+    id: "n2r",
     diagnosisType: "light",
     number: 10,
-    text: "ストレスを感じやすいほうだ",
+    text: "多少のことでは動じないほうだ",
     scale: "likert",
     options: likertOptions,
     trait: "neuroticism",
+    reverse: true,
   },
 ];
 
@@ -127,13 +134,14 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "openness",
   },
   {
-    id: "o4",
+    id: "o4r",
     diagnosisType: "full",
     number: 12,
-    text: "好奇心が強いほうだ",
+    text: "知らない分野の話は、あまり入ってこない",
     scale: "likert",
     options: likertOptions,
     trait: "openness",
+    reverse: true,
   },
   {
     id: "o5",
@@ -145,13 +153,14 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "openness",
   },
   {
-    id: "o6",
+    id: "o6r",
     diagnosisType: "full",
     number: 14,
-    text: "哲学的な話題に興味がある",
+    text: "想像の話より、目の前の事実のほうが大事だ",
     scale: "likert",
     options: likertOptions,
     trait: "openness",
+    reverse: true,
   },
   {
     id: "o7",
@@ -200,13 +209,14 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "conscientiousness",
   },
   {
-    id: "c6",
+    id: "c6r",
     diagnosisType: "full",
     number: 20,
-    text: "整理整頓している方だ",
+    text: "持ち物や部屋は、気づくと散らかっている",
     scale: "likert",
     options: likertOptions,
     trait: "conscientiousness",
+    reverse: true,
   },
   {
     id: "c7",
@@ -218,13 +228,14 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "conscientiousness",
   },
   {
-    id: "c8",
+    id: "c8r",
     diagnosisType: "full",
     number: 22,
-    text: "準備を入念にする方だ",
+    text: "締め切りが近づいてから手をつけることが多い",
     scale: "likert",
     options: likertOptions,
     trait: "conscientiousness",
+    reverse: true,
   },
   // 外向性（Extraversion）- 追加6問
   {
@@ -237,22 +248,24 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "extraversion",
   },
   {
-    id: "e4",
+    id: "e4r",
     diagnosisType: "full",
     number: 24,
-    text: "たくさんの人と一緒にいると元気になる",
+    text: "大人数の集まりのあとは、ひとりの時間がほしくなる",
     scale: "likert",
     options: likertOptions,
     trait: "extraversion",
+    reverse: true,
   },
   {
-    id: "e5",
+    id: "e5r",
     diagnosisType: "full",
     number: 25,
-    text: "自分から人に話しかけることが多い",
+    text: "初対面の場では、自分から話しかけないほうだ",
     scale: "likert",
     options: likertOptions,
     trait: "extraversion",
+    reverse: true,
   },
   {
     id: "e6",
@@ -301,22 +314,24 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "agreeableness",
   },
   {
-    id: "a5",
+    id: "a5r",
     diagnosisType: "full",
     number: 31,
-    text: "争いを避ける方だ",
+    text: "納得できないことは、はっきり言うほうだ",
     scale: "likert",
     options: likertOptions,
     trait: "agreeableness",
+    reverse: true,
   },
   {
-    id: "a6",
+    id: "a6r",
     diagnosisType: "full",
     number: 32,
-    text: "他人を信じるのが得意な方だ",
+    text: "人の話は、まず疑ってかかるところがある",
     scale: "likert",
     options: likertOptions,
     trait: "agreeableness",
+    reverse: true,
   },
   {
     id: "a7",
@@ -347,13 +362,14 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "neuroticism",
   },
   {
-    id: "n4",
+    id: "n4r",
     diagnosisType: "full",
     number: 36,
-    text: "気分の落ち込みやすい方だ",
+    text: "失敗しても、引きずらずに切り替えられる",
     scale: "likert",
     options: likertOptions,
     trait: "neuroticism",
+    reverse: true,
   },
   {
     id: "n5",
@@ -374,13 +390,14 @@ const fullQuestions: DiagnosisQuestion[] = [
     trait: "neuroticism",
   },
   {
-    id: "n7",
+    id: "n7r",
     diagnosisType: "full",
     number: 39,
-    text: "緊張しやすい方だ",
+    text: "緊張する場面でも、普段どおりでいられる",
     scale: "likert",
     options: likertOptions,
     trait: "neuroticism",
+    reverse: true,
   },
   {
     id: "n8",
