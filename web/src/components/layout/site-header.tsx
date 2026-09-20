@@ -126,7 +126,7 @@ export const SiteHeader = () => {
     isBrowser && isOpen
       ? createPortal(
           <div
-            className="mobile-nav-overlay fixed inset-0 top-0 z-[14000] md:hidden"
+            className="mobile-nav-overlay fixed inset-0 top-0 z-[14000] xl:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="ナビゲーションメニュー"
@@ -305,8 +305,18 @@ export const SiteHeader = () => {
               Togel
             </Link>
 
-            {/* Desktop Nav */}
-            <nav className="hidden items-center gap-1 text-[13px] font-bold text-txt-muted md:flex">
+            {/*
+              インラインのナビは xl（1280px）から。md（768px）で出すと**折り返す**。
+              本番の8項目が1行に収まるのは約1200pxからで、それ未満では
+              768pxで「ミ/ス/マ/ッ/チ」が縦積みになりヘッダーからはみ出していた
+              （2026-09-21に本番実測）。
+
+              ここを下げるなら、下げた幅で実際に撮ってから下げること。
+              項目数は MICHELLE_AI_ENABLED 等で増えるので、**多いほうの構成**で測る。
+              切替点は4箇所（このnav / 認証エリア / ハンバーガー / オーバーレイ）が
+              揃っている必要がある。1つでもずれると、ボタンは出るのに開かない状態になる。
+            */}
+            <nav className="hidden items-center gap-1 text-[13px] font-bold text-txt-muted xl:flex">
               {primaryNavItems.map((item) => (
                 <Link
                   key={item.href}
@@ -339,7 +349,7 @@ export const SiteHeader = () => {
 
             <div className="flex items-center gap-2">
               {/* Desktop Auth */}
-              <div className="hidden items-center gap-2 md:flex">
+              <div className="hidden items-center gap-2 xl:flex">
                 {!user ? (
                   <LoginButton />
                 ) : (
@@ -377,7 +387,7 @@ export const SiteHeader = () => {
               {/* Mobile Hamburger */}
               <button
                 type="button"
-                className="flex items-center justify-center rounded-full border border-line p-2 text-white md:hidden transition-colors hover:bg-white/5"
+                className="flex items-center justify-center rounded-full border border-line p-2 text-white xl:hidden transition-colors hover:bg-white/5"
                 onClick={toggleMenu}
                 aria-label={isOpen ? "メニューを閉じる" : "メニューを開く"}
                 aria-expanded={isOpen}
