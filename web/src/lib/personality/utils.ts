@@ -1,12 +1,18 @@
 import { BigFiveScores, MatchingProfile, PersonalityTypeDefinition } from "@/types/diagnosis";
 
 import { personalityTypes } from "./definitions";
+import { TYPE_PROTOTYPES } from "./prototypes";
+
+/** 距離を測る5軸。BigFiveScores の全キー */
+const TRAIT_KEYS = [
+  "openness",
+  "conscientiousness",
+  "extraversion",
+  "agreeableness",
+  "neuroticism",
+] as const satisfies readonly (keyof BigFiveScores)[];
 
 const getTypeIndex = (id: string) => personalityTypes.findIndex((type) => type.id === id);
-
-const getPersonalityTypeById = (id: string): PersonalityTypeDefinition => {
-  return personalityTypes.find((type) => type.id === id) ?? personalityTypes[0];
-};
 
 export const clonePersonalityType = (type: PersonalityTypeDefinition): PersonalityTypeDefinition => ({
   ...type,
@@ -23,79 +29,40 @@ export const clonePersonalityType = (type: PersonalityTypeDefinition): Personali
   tags: [...type.tags],
 });
 
+/**
+ * 5軸のスコアから24タイプを決める。**最も近い原型のタイプ**を返す。
+ *
+ * 以前は if を積んだ判定木だった。入口が外向性の高低でしか開いておらず、
+ * 外向性が中くらいの人には行き先が無い。その受け皿が末尾の
+ * 「どれにも当てはまらない場合」で、**26.94% がそこに落ちていた**
+ * （docs/ANALYSIS_2026-09-20_判定木の地図.md）。
+ *
+ * 距離は常に定義されるので、**行き先が無い人は原理的に生じない。**
+ * フォールバックという分岐を持たないのが、この実装の要点である。
+ * 割合を減らすのではなく、概念ごと消している。
+ *
+ * 原型は `prototypes.ts`。判定と表示で同じ値を使う（二重管理を作らない）。
+ */
 export const determinePersonalityType = (scores: BigFiveScores): PersonalityTypeDefinition => {
-  const high: string[] = [];
-  const low: string[] = [];
+  let best = personalityTypes[0];
+  let bestDistance = Infinity;
 
-  if (scores.openness >= 4) high.push("O");
-  if (scores.openness <= 2) low.push("O");
-  if (scores.conscientiousness >= 4) high.push("C");
-  if (scores.conscientiousness <= 2) low.push("C");
-  if (scores.extraversion >= 4) high.push("E");
-  if (scores.extraversion <= 2) low.push("E");
-  if (scores.agreeableness >= 4) high.push("A");
-  if (scores.agreeableness <= 2) low.push("A");
-  if (scores.neuroticism >= 4) high.push("N");
-  if (scores.neuroticism <= 2) low.push("N");
-
-  if (high.includes("E") && high.includes("O")) {
-    if (high.includes("A")) {
-      // 外向×開放×協調 に加えて計画性も高ければ「外交官」タイプ
-      return high.includes("C")
-        ? getPersonalityTypeById("relational-ambassador")
-        : getPersonalityTypeById("social-innovator");
+  // 距離が完全に等しいときは personalityTypes の並びで先に来るほうを採る。
+  // 例外処理ではなく規則。比較を「より近いときだけ更新」にすることで、
+  // 同点なら先に見たものが残る＝結果が入力順に依存しない
+  for (const type of personalityTypes) {
+    const prototype = TYPE_PROTOTYPES[type.id];
+    const distance = TRAIT_KEYS.reduce(
+      (sum, key) => sum + (scores[key] - prototype[key]) ** 2,
+      0,
+    );
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = type;
     }
-    if (high.includes("C")) return getPersonalityTypeById("visionary-executor");
-    // 外向×開放×自由奔放（計画性が低い）＝エンタメ創造タイプ
-    if (low.includes("C")) return getPersonalityTypeById("entertaining-creator");
-    if (low.includes("N")) return getPersonalityTypeById("exploratory-connector");
-    if (high.includes("N")) return getPersonalityTypeById("charismatic-enthusiast");
-    return getPersonalityTypeById("creative-leader");
   }
 
-  if (low.includes("E") && high.includes("O")) {
-    if (high.includes("A")) return getPersonalityTypeById("introverted-artist");
-    if (high.includes("C")) return getPersonalityTypeById("philosophical-curator");
-    if (high.includes("N")) return getPersonalityTypeById("poetic-dreamer");
-    if (low.includes("N")) return getPersonalityTypeById("depth-explorer");
-    return getPersonalityTypeById("solvent-intellectual");
-  }
-
-  if (high.includes("E") && high.includes("C") && !high.includes("O")) {
-    if (high.includes("A")) return getPersonalityTypeById("social-organizer");
-    if (low.includes("A")) return getPersonalityTypeById("active-communicator");
-    return getPersonalityTypeById("practical-leader");
-  }
-
-  if (high.includes("E") && high.includes("A") && !high.includes("C") && !high.includes("O")) {
-    if (low.includes("N")) return getPersonalityTypeById("enthusiastic-networker");
-    return getPersonalityTypeById("community-builder");
-  }
-
-  if (low.includes("E") && high.includes("C") && !high.includes("O")) {
-    if (high.includes("A")) return getPersonalityTypeById("reliable-organizer");
-    if (low.includes("A")) return getPersonalityTypeById("steady-specialist");
-    return getPersonalityTypeById("methodical-thinker");
-  }
-
-  if (low.includes("E")) {
-    if (low.includes("N") && high.includes("O")) return getPersonalityTypeById("depth-explorer");
-    if (high.includes("N")) return getPersonalityTypeById("contemplative-sage");
-    return getPersonalityTypeById("quiet-observer");
-  }
-
-  if (high.includes("O")) {
-    if (high.includes("C") && high.includes("N")) return getPersonalityTypeById("solvent-intellectual");
-    if (high.includes("A") && high.includes("N")) return getPersonalityTypeById("poetic-dreamer");
-    return getPersonalityTypeById("philosophical-curator");
-  }
-
-  if (high.includes("A")) {
-    if (high.includes("C")) return getPersonalityTypeById("conscientious-guardian");
-    return getPersonalityTypeById("dedicated-crafter");
-  }
-
-  return getPersonalityTypeById("contemplative-sage");
+  return clonePersonalityType(best);
 };
 
 // プロフィールIDからシードベースの疑似ランダムスコアを生成
@@ -108,10 +75,10 @@ function generateSeededScore(seed: string, trait: string): number {
     hash = (hash << 5) - hash + combined.charCodeAt(i);
     hash = hash & hash;
   }
-  
+
   // 0〜1の範囲に正規化
   const normalized = Math.abs(hash % 10000) / 10000;
-  
+
   // 1.0〜5.0の範囲に変換（極端な値も含む）
   // 正規分布ではなく均等分布にして、極端な値も出やすくする
   return 1.0 + normalized * 4.0;
