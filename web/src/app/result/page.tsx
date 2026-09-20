@@ -12,6 +12,8 @@ import { personalityTypes, typeToken } from "@/lib/personality";
 import { storyLabelHref } from "@/lib/share/story-label";
 import { handbookPostText } from "@/lib/share/text";
 import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
+import { generateDeepNarrative } from "@/lib/personality/narrative";
+import { DeepNarrativeSection } from "@/components/result/deep-narrative-section";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import {
   BigFiveScores,
@@ -228,6 +230,8 @@ const ResultPage = () => {
   }
 
   const scores = diagnosis.bigFiveScores;
+  // 本文が5種そろうまでは null。節ごと出さない
+  const deepNarrative = generateDeepNarrative(scores);
 
   return (
     <div className="min-h-screen bg-ink text-white">
@@ -309,6 +313,17 @@ const ResultPage = () => {
             </div>
           </div>
         </div>
+
+        {/*
+          深い自己説明。スペック（TOGEL INDEX）の下に置く。
+          数値の隣に並べると「解説」に見えてしまい、読まれずに飛ばされる。
+
+          本文が5種そろうまで generateDeepNarrative は null を返し、
+          この節ごと出ない。半端に出すと「自分のときは薄かった」が
+          利用者側に見える。
+        */}
+        {deepNarrative && <DeepNarrativeSection narrative={deepNarrative} />}
+
       </section>
 
       {/* タブバー */}

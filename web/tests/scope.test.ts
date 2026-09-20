@@ -159,16 +159,26 @@ test("「N件」と書いた数が、実際の項目数と合っている", () =
  * 環境変数を明示的に立てたときだけ出し、それ以外は404にする。
  */
 test("開発用プレビューは、環境変数を立てないと404になる", () => {
-  const page = readFileSync(
-    join(process.cwd(), "src/app/dev/preview/board/page.tsx"),
-    "utf8",
+  // パスを名指しにすると、次に増えたプレビューが検査されないまま公開される。
+  // src/app/dev 配下のページを**全部**見る
+  const pages = walk(join(process.cwd(), "src/app/dev")).filter((file) =>
+    file.endsWith(`${sep}page.tsx`),
   );
-  assert.ok(
-    /process\.env\.TOGEL_DEV_PREVIEW !== "1"[\s\S]{0,40}notFound\(\)/.test(page),
-    "環境変数が立っていないときに notFound() を呼んでいない",
-  );
-  // ビルド時に畳み込まれると、環境変数を付けても404のままになる（実際そうなった）
-  assert.ok(page.includes('export const dynamic = "force-dynamic"'), "実行時に判定していない");
+  assert.ok(pages.length > 0, "開発用ページが1つも見つからない（置き場が変わった？）");
+
+  for (const absolute of pages) {
+    const where = relative(process.cwd(), absolute).split(sep).join("/");
+    const page = readFileSync(absolute, "utf8");
+    assert.ok(
+      /process\.env\.TOGEL_DEV_PREVIEW !== "1"[\s\S]{0,40}notFound\(\)/.test(page),
+      `${where}: 環境変数が立っていないときに notFound() を呼んでいない`,
+    );
+    // ビルド時に畳み込まれると、環境変数を付けても404のままになる（実際そうなった）
+    assert.ok(
+      page.includes('export const dynamic = "force-dynamic"'),
+      `${where}: 実行時に判定していない`,
+    );
+  }
 });
 
 test("開発用プレビューは、どこからもリンクされずサイトマップにも載らない", async () => {
