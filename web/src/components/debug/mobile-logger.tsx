@@ -187,7 +187,7 @@ export function MobileLogger() {
             {logs.length} logs
           </span>
           {logs.filter((l) => l.level === "error").length > 0 && (
-            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">
               {logs.filter((l) => l.level === "error").length} errors
             </span>
           )}
@@ -242,7 +242,7 @@ export function MobileLogger() {
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-semibold uppercase">{log.level}</span>
+                  <span className="font-bold uppercase">{log.level}</span>
                   <span className="text-[10px] opacity-70">{formatTime(log.timestamp)}</span>
                 </div>
                 <div className="mt-1 break-words">{String(log.message)}</div>

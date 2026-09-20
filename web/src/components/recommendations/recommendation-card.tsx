@@ -44,7 +44,7 @@ export function RecommendationCard({ service, reason, matchPercentage, onClickTr
           <p className="mt-1 text-sm text-slate-600 line-clamp-2">{service.description}</p>
         </div>
         <div className="rounded-xl border border-pink-100 bg-pink-50/70 p-3">
-          <p className="text-xs font-semibold text-primary-ink">あなたにおすすめの理由</p>
+          <p className="text-xs font-bold text-primary-ink">あなたにおすすめの理由</p>
           <p className="mt-1 text-sm text-slate-700">{reason}</p>
         </div>
         <a

@@ -108,7 +108,7 @@ export function TogelCertificateCard({
         <button
           onClick={toggleAutoRotation}
           aria-pressed={isAutoRotating}
-          className="flex min-w-[170px] items-center justify-between gap-3 rounded-full px-5 py-2 text-sm font-semibold tracking-wide transition-all"
+          className="flex min-w-[170px] items-center justify-between gap-3 rounded-full px-5 py-2 text-sm font-bold tracking-wide transition-all"
           style={{
             backgroundColor: resolvedTheme.buttonBg,
             color: resolvedTheme.buttonText,
@@ -182,7 +182,7 @@ export function TogelCertificateCard({
                     </span>
                   </div>
                   <span
-                    className="text-[9px] tracking-[0.22em] uppercase font-semibold ml-0.5"
+                    className="text-[9px] tracking-[0.22em] uppercase font-bold ml-0.5"
                     style={{ color: resolvedTheme.textMuted }}
                   >
                     Personality Certificate
@@ -191,7 +191,7 @@ export function TogelCertificateCard({
 
                 <div className="text-right">
                   <span
-                    className="text-[8px] uppercase tracking-wider font-semibold block"
+                    className="text-[8px] uppercase tracking-wider font-bold block"
                     style={{ color: resolvedTheme.textMuted }}
                   >
                     Registered
@@ -204,7 +204,7 @@ export function TogelCertificateCard({
 
               <div className="relative z-10 flex flex-col gap-3 px-5 pt-2 pb-5">
                 <div className="space-y-1">
-                  <span className="text-[9px] uppercase tracking-[0.22em] font-semibold" style={{ color: resolvedTheme.textMuted }}>
+                  <span className="text-[9px] uppercase tracking-[0.22em] font-bold" style={{ color: resolvedTheme.textMuted }}>
                     Member
                   </span>
                   <h2
@@ -229,7 +229,7 @@ export function TogelCertificateCard({
                   <span className="text-sm font-bold tracking-tight" style={{ color: resolvedTheme.text }}>
                     {togelType}
                   </span>
-                  <span className="text-[11px] font-semibold" style={{ color: resolvedTheme.textMuted }}>
+                  <span className="text-[11px] font-bold" style={{ color: resolvedTheme.textMuted }}>
                     / {togelLabel}
                   </span>
                 </div>
