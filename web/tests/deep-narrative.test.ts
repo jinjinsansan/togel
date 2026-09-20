@@ -71,12 +71,20 @@ test("2つだけが同点のときも、優先順の上が残る", () => {
 });
 
 test("強度は耐圧限界が低いほど強い", () => {
-  assert.equal(intensityOf(80), "low");
-  assert.equal(intensityOf(67), "low");
-  assert.equal(intensityOf(66), "mid");
-  assert.equal(intensityOf(34), "mid");
-  assert.equal(intensityOf(33), "high");
-  assert.equal(intensityOf(0), "high");
+  // しきい値の数値は固定しない（実回答で測り直したときに検査が邪魔になる）。
+  // 固定するのは**向き**と、中立点がまん中の帯に入ること
+  assert.equal(intensityOf(100), "low", "耐圧限界が最大なら効きにくい");
+  assert.equal(intensityOf(NEUTRAL), "mid", "尺度のまん中はまん中の帯");
+  assert.equal(intensityOf(20), "high", "耐圧限界が最小ならよく効く");
+
+  // 下げていく途中で帯が逆戻りしないこと
+  const order: Record<string, number> = { low: 0, mid: 1, high: 2 };
+  let previous = -1;
+  for (let v = 100; v >= 20; v--) {
+    const rank = order[intensityOf(v)];
+    assert.ok(rank >= previous, `耐圧限界 ${v} で帯が逆戻りしている`);
+    previous = rank;
+  }
 });
 
 test("耐圧限界は反転した値で判定する（画面の数字と判定の根拠をそろえる）", () => {
@@ -225,6 +233,50 @@ test("判定の中立点が、尺度の中心と一致している", () => {
     [true, true, true, true, true],
     "尺度のまん中の人で候補値が 0 にならない（中立点がずれている）",
   );
+});
+
+/**
+ * 強度と放熱量のバンドが潰れていないこと。
+ *
+ * 見るのは**しきい値そのものではなく、どのバンドにも人が入るか**。
+ * 数値を固定すると、実回答で測り直したときに検査のほうが邪魔になる。
+ *
+ * 捕まえたいのは潰れ方。中立点50・しきい値67/33 の組では強度 high が
+ * **0.1%** で、S1の5ブロックが誰にも届いていなかった。放熱も 85.9/14.1 で、
+ * S4の5ブロックが14%にしか届かなかった。
+ */
+test("強度と放熱量のバンドが潰れていない", () => {
+  let rng = 5150;
+  const rand = () => ((rng = (rng * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const gauss = () => { let s = 0; for (let i = 0; i < 6; i++) s += rand(); return s / 6; };
+
+  const intensity = new Map<string, number>(INTENSITY_KEYS.map((k) => [k, 0]));
+  const heat = new Map<string, number>(HEAT_KEYS.map((k) => [k, 0]));
+  const N = 50000;
+  for (let i = 0; i < N; i++) {
+    const s = scoresOf(...(Array.from({ length: 5 }, () => 1 + gauss() * 4) as [number, number, number, number, number]));
+    const p = determineReaction(s);
+    intensity.set(p.intensity, intensity.get(p.intensity)! + 1);
+    heat.set(p.heat, heat.get(p.heat)! + 1);
+  }
+
+  for (const [label, counts] of [["強度", intensity], ["放熱量", heat]] as const) {
+    for (const [key, n] of counts) {
+      const share = n / N;
+      assert.ok(
+        share >= 0.1,
+        `${label} ${key} が ${(share * 100).toFixed(1)}%（この分岐の本文がほぼ誰にも届かない）`,
+      );
+    }
+  }
+});
+
+test("しきい値が中立点からの相対で書かれている", () => {
+  const source = readFileSync("src/lib/personality/reaction.ts", "utf8");
+  // 数値を直書きすると、尺度が変わったとき中立点だけが追随して取り残される
+  assert.ok(!/>=\s*(66|67|50|33|54)/.test(source), "しきい値に数値が直書きされている");
+  assert.ok(source.includes("NEUTRAL + BAND") && source.includes("NEUTRAL - BAND"), "強度が相対で切られていない");
+  assert.ok(/>=\s*NEUTRAL\s*\?/.test(source), "放熱量が中立点で切られていない");
 });
 
 test("主反応が、どれか1つに偏っていない", () => {

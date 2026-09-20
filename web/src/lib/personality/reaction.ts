@@ -98,10 +98,30 @@ const pickReaction = (candidates: Record<ReactionKey, number>): ReactionKey => {
   return best;
 };
 
-/** 耐圧限界（反転済み・低いほど脆い）から強度を出す。低いほど刺激が強く効く */
+/**
+ * バンドの振れ幅。**中立点からの相対で切る。数値を直書きしない。**
+ *
+ * 66 や 54 と書くと、尺度が変われば中立点だけが追随して、しきい値が取り残される。
+ * 実際それが起きていて、中立点50・しきい値67/33の組で `high` が 0.1% まで潰れた。
+ * 中立点・強度・放熱の3つとも `NEUTRAL` という同じ一点から出す。
+ *
+ * 🔴 **6 という幅に理論的な根拠はない。** 「中心に寄った回答」という
+ * **仮定した分布**に対して人数がおおむね3等分になる値で、**暫定値**。
+ * 実際の回答が溜まったら測り直すこと（`scripts/probe-splits.ts`）。
+ *
+ * 人数で割ることそのものは、性格検査として正しい。この種の指標は
+ * 絶対量ではなく**回答者の中での位置**を返すもので、本文も
+ * 「〜のほうです」と相対で書いてある。
+ */
+const BAND = 6;
+
+/**
+ * 耐圧限界（反転済み・低いほど脆い）から強度を出す。
+ * 耐圧限界が**低いほど刺激が強く効く**ので、表示値とは向きが逆になる。
+ */
 export const intensityOf = (pressureLimit: number): IntensityKey => {
-  if (pressureLimit >= 67) return "low";
-  if (pressureLimit >= 34) return "mid";
+  if (pressureLimit >= NEUTRAL + BAND) return "low";
+  if (pressureLimit > NEUTRAL - BAND) return "mid";
   return "high";
 };
 
@@ -110,7 +130,7 @@ export const determineReaction = (scores: BigFiveScores): ReactionProfile => {
   return {
     reaction: pickReaction(candidates),
     intensity: intensityOf(axisPercent("neuroticism", scores)),
-    heat: axisPercent("extraversion", scores) >= 50 ? "high" : "low",
+    heat: axisPercent("extraversion", scores) >= NEUTRAL ? "high" : "low",
     scores: candidates,
   };
 };

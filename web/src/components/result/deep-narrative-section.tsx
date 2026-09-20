@@ -37,6 +37,16 @@ export const DeepNarrativeSection = ({
   slots?: readonly DeepSlot[];
 }) => (
   <div className="mx-auto mt-7 flex max-w-[1120px] flex-col gap-3.5">
+    {/*
+      節の**いちばん最初**に置く約束。見出しは付けず、地の文として。
+      回収（S3・S4）は iPhone で 2.0〜2.8画面目まで来ない。S1 の直後に置くと
+      カードが約600pxあるため 1.0画面目＝折り返し地点に落ち、スクロールせずに
+      離脱した人には届かなかった。ここなら 0.25画面目に入る。
+    */}
+    <p className="mx-1 whitespace-pre-line px-4 text-[12.5px] leading-[2.1] text-txt-subtle">
+      {DEEP_BRIDGE}
+    </p>
+
     {slots.map((slot) => (
       <Fragment key={slot}>
         <div className="rounded-card border border-line bg-surface p-5">
@@ -55,16 +65,6 @@ export const DeepNarrativeSection = ({
           </p>
         </div>
 
-        {/*
-          S1 の直後に挟む約束。見出しは付けず、地の文として置く。
-          ここで離脱しても「突き放された」で終わらないようにするためのものなので、
-          **S1 が出ているときは必ず出す**（S2 以降を見せない指定のときも）。
-        */}
-        {slot === "s1" && (
-          <p className="mx-1 whitespace-pre-line px-4 text-[12.5px] leading-[2.1] text-txt-subtle">
-            {DEEP_BRIDGE}
-          </p>
-        )}
       </Fragment>
     ))}
   </div>
