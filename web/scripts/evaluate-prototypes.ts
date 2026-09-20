@@ -36,6 +36,9 @@ const TRAITS = [
 
 type Prototypes = Record<string, BigFiveScores>;
 
+/** この距離までを「囲まれている」と数える。素点の幅(1〜5)に対して約3分の1 */
+const CROWD_RADIUS = 1.3;
+
 /* ===== 仮想の回答者 ===== */
 
 /**
@@ -147,19 +150,81 @@ const evaluate = (prototypes: Prototypes, people: BigFiveScores[], quiet = false
     console.log(`\n■ 距離が完全に等しかった件数: ${ties} / ${total} = ${(ties / total * 100).toFixed(3)}%`);
     console.log("  （固定順で決定的に解いている。フォールバックではない）");
 
-    console.log("\n■ 群ごとの合計");
+    // 群の取り分は、その群の原型がどれだけ密集しているかでほぼ決まる。
+    // 6点が固まっていれば受け持つ領域も狭く、散っていれば広い。
+    const groupCrowd = (group: string) =>
+      order
+        .filter((id) => groupOf.get(id) === group)
+        .reduce(
+          (sum, id) =>
+            sum +
+            order.filter(
+              (other) => other !== id && distance(prototypes[id], prototypes[other]) <= CROWD_RADIUS,
+            ).length,
+          0,
+        );
+
+    console.log("\n■ 群ごとの合計（6タイプずつ／均等なら25%）");
+    console.log("  密集度 = その群の6つが、他の原型とどれだけ近接しているかの合計");
     for (const group of TYPE_GROUP_ORDER) {
       const n = groupCounts.get(group) ?? 0;
-      console.log(`  ${group.padEnd(9)} ${String(n).padStart(6)}  ${(n / total * 100).toFixed(2)}%  （6タイプ／均等なら25%）`);
+      console.log(
+        `  ${group.padEnd(9)} ${String(n).padStart(6)}  ${((n / total) * 100).toFixed(2).padStart(6)}%   密集度 ${String(groupCrowd(group)).padStart(2)}`,
+      );
     }
+
+    const token = (id: string) => typeToken(personalityTypes.find((t) => t.id === id)!);
 
     const moved = [...moves.values()].reduce((a, b) => a + b, 0);
     console.log(`\n■ 現行との差分: ${moved} / ${total} = ${(moved / total * 100).toFixed(1)}% が別のタイプになる`);
     console.log("  移動の多い順（上位15）");
-    const token = (id: string) => typeToken(personalityTypes.find((t) => t.id === id)!);
     for (const [key, n] of [...moves].sort((a, b) => b[1] - a[1]).slice(0, 15)) {
       const [from, to] = key.split(" → ");
       console.log(`    ${token(from).padEnd(7)} → ${token(to).padEnd(7)} ${String(n).padStart(5)}  ${(n / total * 100).toFixed(2)}%`);
+    }
+
+    // 回答者の重心。原型がここから遠いほど、担当する人が少なくなる
+    const centre = Object.fromEntries(
+      TRAITS.map((trait) => [trait, people.reduce((sum, p) => sum + p[trait], 0) / total]),
+    ) as unknown as BigFiveScores;
+
+    // 原型同士がどれだけ近いか。近すぎる組は互いに食い合い、片方が痩せる
+    const neighbours = order.map((id) => {
+      let nearest = "";
+      let nearestDistance = Infinity;
+      for (const other of order) {
+        if (other === id) continue;
+        const d = distance(prototypes[id], prototypes[other]);
+        if (d < nearestDistance) {
+          nearestDistance = d;
+          nearest = other;
+        }
+      }
+      // 隣が1つ近いだけなら端を削られるだけだが、複数に囲まれると四方から削られる
+      const crowd = order.filter(
+        (other) => other !== id && distance(prototypes[id], prototypes[other]) <= CROWD_RADIUS,
+      ).length;
+      return {
+        id,
+        nearest,
+        distance: nearestDistance,
+        crowd,
+        fromCentre: distance(prototypes[id], centre),
+        n: counts.get(id) ?? 0,
+      };
+    });
+
+    console.log("\n■ 隣の原型までの距離と、回答者の重心からの距離（隣が近い順）");
+    console.log("  到達率を決めるのは2つ。隣が近いと食い合い、重心から遠いと痩せる");
+    console.log(`  重心 = ${TRAITS.map((t) => `${t[0].toUpperCase()}${centre[t].toFixed(2)}`).join(" ")}`);
+    console.log("  タイプ    到達率  隣まで  最も近い原型        囲み  重心から");
+    for (const row of [...neighbours].sort((a, b) => a.distance - b.distance)) {
+      const same = groupOf.get(row.id) === groupOf.get(row.nearest) ? "同群" : "他群";
+      console.log(
+        `  ${token(row.id).padEnd(7)} ${((row.n / total) * 100).toFixed(2).padStart(5)}%  ` +
+          ` ${row.distance.toFixed(2)}   ${token(row.nearest).padEnd(7)} (${same})   ` +
+          `${row.crowd}    ${row.fromCentre.toFixed(2)}`,
+      );
     }
 
     console.log("\n■ 判定");
