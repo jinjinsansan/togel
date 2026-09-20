@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const isLineInAppBrowser = () => {
@@ -8,11 +9,22 @@ const isLineInAppBrowser = () => {
   return /Line\//i.test(ua);
 };
 
+/**
+ * LIFFはLINEのブラウザの中でしか動かない。
+ * そこで「外部ブラウザで開いてください」を出すと、案内の先に行き場がなく、
+ * LINE経由の導線がその画面で終わる。LIFF配下はこの案内の対象外にする。
+ */
+const EXEMPT_PREFIXES = ["/liff"];
+
 export const LineExternalBrowserRedirect = () => {
+  const pathname = usePathname();
   const [needsRedirect, setNeedsRedirect] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (EXEMPT_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+      return undefined;
+    }
     if (!isLineInAppBrowser()) {
       return undefined;
     }
@@ -22,7 +34,7 @@ export const LineExternalBrowserRedirect = () => {
     return () => {
       document.body.style.overflow = "";
     };
-  }, []);
+  }, [pathname]);
 
   const currentUrl = typeof window === "undefined" ? "https://www.to-gel.com" : window.location.href;
 
