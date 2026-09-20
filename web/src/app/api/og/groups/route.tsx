@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
 import { GroupBadgeOg, groupEmoji } from "@/components/brand/group-badge";
+import { emojiDataUri } from "@/lib/og/emoji";
 import { TYPE_GROUP_ORDER } from "@/lib/personality";
 import type { TypeGroupId } from "@/lib/personality";
 import { groupMatrixCell, groupMatrixPairs } from "@/lib/personality/group-matrix";
@@ -109,6 +110,11 @@ export const GET = async () => {
   const { bold, black } = await loadFonts();
   const groups = TYPE_GROUP_ORDER;
 
+  // 絵文字はリポジトリから読む。satoriに文字で渡すと描画のたびに外部CDNを叩く
+  const groupEmojiSrc = Object.fromEntries(
+    await Promise.all(groups.map(async (group) => [group, await emojiDataUri(groupEmoji(group))])),
+  ) as Record<(typeof groups)[number], string>;
+
   const image = new ImageResponse(
     (
       <div
@@ -143,7 +149,7 @@ export const GET = async () => {
             <div style={{ display: "flex", width: 196 }} />
             {groups.map((column) => (
               <div key={column} style={{ display: "flex", flex: 1 }}>
-                <GroupBadgeOg group={column} size={19} />
+                <GroupBadgeOg group={column} size={19} emojiSrc={groupEmojiSrc[column]} />
               </div>
             ))}
           </div>
@@ -153,7 +159,7 @@ export const GET = async () => {
             {groups.map((row) => (
               <div key={row} style={{ display: "flex", height: 96, gap: 8 }}>
                 <div style={{ display: "flex", width: 196, alignItems: "center" }}>
-                  <GroupBadgeOg group={row} size={19} />
+                  <GroupBadgeOg group={row} size={19} emojiSrc={groupEmojiSrc[row]} />
                 </div>
                 {groups.map((column) => (
                   <MatrixCell key={`${row}:${column}`} row={row} column={column} />
@@ -175,7 +181,10 @@ export const GET = async () => {
                     fontSize: 26,
                   }}
                 >
-                  {groupEmoji(a)} × {groupEmoji(b)}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- satoriが描くのでnext/imageは使えない */}
+                  <img src={groupEmojiSrc[a]} width={26} height={26} alt="" />×
+                  {/* eslint-disable-next-line @next/next/no-img-element -- satoriが描くのでnext/imageは使えない */}
+                  <img src={groupEmojiSrc[b]} width={26} height={26} alt="" />
                 </div>
                 <div style={{ display: "flex", width: 44, justifyContent: "center" }}>
                   <MatchSymbol symbol={cell.symbol} size={28} />
@@ -238,7 +247,6 @@ export const GET = async () => {
     {
       width: 1080,
       height: 1350,
-      emoji: "twemoji",
       fonts: [
         { name: "NotoSansJP", data: bold, weight: 700, style: "normal" },
         { name: "NotoSansJP", data: black, weight: 900, style: "normal" },

@@ -14,6 +14,12 @@ import { personalityTypes } from "../src/lib/personality";
  *
  * ルートを直接呼ぶ（サーバを立てない）。初回だけ描画エンジンの初期化で数秒かかり、
  * 以降は1枚あたり1秒弱。全49枚で40秒前後を見込む。
+ *
+ * 外部への取得が起きないことも検査する。satori は絵文字を文字のまま渡すと
+ * 描画のたびにCDNから画像を取りに行く。OG画像はXに貼られたリンクの
+ * プレビューとして出るので、CDNが落ちればプレビューが静かに出なくなり、
+ * 壊れたことに気づく手段が無い。絵文字はリポジトリに置いてある
+ * （src/assets/emoji、取得は scripts/fetch-emoji.ts）。
  */
 
 const PNG_SIGNATURE = "89504e470d0a1a0a";
@@ -71,4 +77,52 @@ test("実測スコアを渡した取扱注意ラベルも生成できる", async
 test("知らないタイプIDは404（画像を作らない）", async () => {
   const response = await ogRoute(new Request("https://www.to-gel.com/api/og?type=unknown-type"));
   assert.equal(response.status, 404);
+});
+
+/* ===== 外部への依存が戻っていないこと ===== */
+
+test("絵文字の素材が24タイプ＋4群ぶん揃っている", async () => {
+  const { personalityTypes: types, TYPE_GROUP_ORDER } = await import("../src/lib/personality");
+  const { groupEmoji } = await import("../src/components/brand/group-badge");
+  const { emojiDataUri } = await import("../src/lib/og/emoji");
+
+  const needed = new Set<string>();
+  for (const type of types) needed.add(type.emoji);
+  for (const group of TYPE_GROUP_ORDER) needed.add(groupEmoji(group));
+
+  for (const emoji of needed) {
+    const uri = await emojiDataUri(emoji);
+    assert.ok(uri.startsWith("data:image/svg+xml;base64,"), emoji);
+  }
+});
+
+test("OG画像の生成が外部へ取りに行かない", async () => {
+  // satori は自前の http クライアントを使うので globalThis.fetch を塞いでも捕まらない。
+  // 外へ出るなら必ず通る socket の接続を塞いで、試みた先を記録する。
+  const net = await import("node:net");
+  const attempts: string[] = [];
+
+  const original = net.Socket.prototype.connect;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (net.Socket.prototype as any).connect = function blocked(...args: unknown[]) {
+    const target = args[0];
+    attempts.push(typeof target === "object" ? JSON.stringify(target) : String(target));
+    throw new Error("外部接続は禁止");
+  };
+
+  try {
+    // 検査そのものが空振りしていないことを先に確かめる。
+    // 塞ぎ方が効いていなければ、以降の「0件」は何も意味しない
+    await assert.rejects(fetch("https://cdn.jsdelivr.net/"));
+    assert.ok(attempts.length > 0, "接続を塞げていない（この検査は空振りしている）");
+    attempts.length = 0;
+
+    // 絵文字を使う2種（ラベル・相性表）。横型カードは絵文字を持たない
+    await render(`/api/og?type=${personalityTypes[0].id}&format=story`, ogRoute);
+    await render("/api/og/groups", groupsRoute);
+  } finally {
+    net.Socket.prototype.connect = original;
+  }
+
+  assert.deepEqual(attempts, [], "OG生成が外部へ取りに行っている");
 });

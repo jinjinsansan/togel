@@ -3,10 +3,11 @@ import { join } from "node:path";
 
 import { ImageResponse } from "next/og";
 
-import { GroupBadgeOg } from "@/components/brand/group-badge";
+import { GroupBadgeOg, groupEmoji } from "@/components/brand/group-badge";
 import { personalityTypes, representativeScores, typeToken } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality";
 import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
+import { emojiDataUri } from "@/lib/og/emoji";
 import { landmineHeading, landmineQuote } from "@/lib/share/text";
 import type { BigFiveScores } from "@/types/diagnosis";
 
@@ -84,7 +85,7 @@ const parseScores = (raw: string | null): BigFiveScores | null => {
 };
 
 /** 菱形の警告標識（危険物ラベルのモチーフ）。中央に絵文字を置く */
-const WarningDiamond = ({ size, emoji }: { size: number; emoji: string }) => (
+const WarningDiamond = ({ size, emojiSrc }: { size: number; emojiSrc: string }) => (
   <div style={{ display: "flex", position: "relative", width: size, height: size }}>
     <svg width={size} height={size} viewBox="0 0 100 100">
       <polygon points="50,3 97,50 50,97 3,50" fill="#0B0F1A" stroke="#FFE03D" strokeWidth="5" />
@@ -99,10 +100,11 @@ const WarningDiamond = ({ size, emoji }: { size: number; emoji: string }) => (
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: size * 0.38,
       }}
     >
-      {emoji}
+      {/* 絵文字は文字ではなく画像で渡す（下の emojiDataUri の説明を参照） */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- satoriが描くのでnext/imageは使えない */}
+      <img src={emojiSrc} width={size * 0.42} height={size * 0.42} alt="" />
     </div>
   </div>
 );
@@ -117,9 +119,13 @@ const WarningDiamond = ({ size, emoji }: { size: number; emoji: string }) => (
 const StoryLabel = ({
   type,
   scores,
+  typeEmojiSrc,
+  groupEmojiSrc,
 }: {
   type: ExtendedPersonalityTypeDefinition;
   scores: BigFiveScores;
+  typeEmojiSrc: string;
+  groupEmojiSrc: string;
 }) => {
   const mine = landmineQuote(type.id);
   const mineSize = mine.length >= 20 ? 68 : mine.length >= 16 ? 78 : 88;
@@ -155,7 +161,7 @@ const StoryLabel = ({
       >
         {/* タイプの提示 */}
         <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
-          <WarningDiamond size={210} emoji={type.emoji} />
+          <WarningDiamond size={210} emojiSrc={typeEmojiSrc} />
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div
               style={{
@@ -184,7 +190,7 @@ const StoryLabel = ({
             </div>
             {/* 群（群名と再定義は必ずセット） */}
             <div style={{ display: "flex", marginTop: 18 }}>
-              <GroupBadgeOg group={type.group} size={34} />
+              <GroupBadgeOg group={type.group} size={34} emojiSrc={groupEmojiSrc} />
             </div>
           </div>
         </div>
@@ -324,12 +330,20 @@ export const GET = async (request: Request) => {
   // 9:16 の取扱注意ラベル（ストーリーズ／トーク画面のスクショ用）
   if (url.searchParams.get("format") === "story") {
     const scores = parseScores(url.searchParams.get("s")) ?? representativeScores(type.id);
-    const story = new ImageResponse(<StoryLabel type={type} scores={scores} />, {
-      width: 1080,
-      height: 1920,
-      emoji: "twemoji",
-      fonts,
-    });
+    // 絵文字はリポジトリから読む。satoriに文字で渡すと描画のたびに外部CDNを叩く
+    const [typeEmojiSrc, groupEmojiSrc] = await Promise.all([
+      emojiDataUri(type.emoji),
+      emojiDataUri(groupEmoji(type.group)),
+    ]);
+    const story = new ImageResponse(
+      <StoryLabel
+        type={type}
+        scores={scores}
+        typeEmojiSrc={typeEmojiSrc}
+        groupEmojiSrc={groupEmojiSrc}
+      />,
+      { width: 1080, height: 1920, fonts },
+    );
     story.headers.set(
       "Cache-Control",
       "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
@@ -341,10 +355,6 @@ export const GET = async (request: Request) => {
 
   // 表示対象（mismatch: 相手タイプ / type: 自分のタイプ）
   const featured = mode === "mismatch" && worst ? worst : type;
-  // タイプ名15文字以上は1段階だけ縮小、2行までは許容
-  // 長い名前は縮めて折り返す。タグラインはブランドの一文なので常に出す
-  // （以前は11字を超えると落としていて、24タイプのうち1つだけ欠けていた）
-  const nameSize = featured.typeName.length >= 15 ? 80 : 106;
 
   const image = new ImageResponse(
     (
@@ -392,20 +402,26 @@ export const GET = async (request: Request) => {
           <div style={{ display: "flex", marginTop: 26, fontSize: 44, fontWeight: 700, color: "#9aa5ba" }}>
             {mode === "mismatch" ? "私と絶対に合わないのは" : "私のタイプは"}
           </div>
+          {/* 主は愛称。1200×630はリンクを貼るたびに自動で出る既定のOGPなので、
+              最も見られるこの画像に識別トークンを置く。正式名は副に落とす。
+              愛称は最長5字なので、折り返しと字数の場合分けが要らなくなる */}
           <div
             style={{
               display: "flex",
               marginTop: 14,
-              fontSize: nameSize,
+              fontSize: 106,
               fontWeight: 900,
               lineHeight: 1.15,
               letterSpacing: "-0.03em",
               color: "#ffffff",
             }}
           >
+            {typeToken(featured)}
+          </div>
+          <div style={{ display: "flex", marginTop: 10, fontSize: 40, fontWeight: 700, color: "#9aa5ba" }}>
             {featured.typeName}
           </div>
-          <div style={{ display: "flex", marginTop: 16, fontSize: 38, fontWeight: 700, color: "#FF2E74" }}>
+          <div style={{ display: "flex", marginTop: 12, fontSize: 36, fontWeight: 700, color: "#FF2E74" }}>
             {featured.catchphrase}
           </div>
         </div>
@@ -450,7 +466,6 @@ export const GET = async (request: Request) => {
     {
       width: 1200,
       height: 630,
-      emoji: "twemoji",
       fonts,
     },
   );

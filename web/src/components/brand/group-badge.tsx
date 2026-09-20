@@ -113,14 +113,19 @@ type GroupBadgeOgProps = {
   group: TypeGroupId;
   /** 画像内のフォントサイズ基準値（px） */
   size?: number;
+  /**
+   * 群の絵文字の画像（data URI）。`emojiDataUri(groupEmoji(group))` で作る。
+   * 文字のまま渡すと satori が描画のたびに外部CDNへ取りに行くので、画像で渡す。
+   */
+  emojiSrc: string;
 };
 
 /**
  * OG画像（satori）用の群バッジ。
  * satoriはTailwindを解釈しないのでインラインstyleで書く。DOM版と同じく2要素セット。
  */
-export const GroupBadgeOg = ({ group, size = 34 }: GroupBadgeOgProps) => {
-  const { emoji, label, redefinition } = GROUP_BADGE[group];
+export const GroupBadgeOg = ({ group, size = 34, emojiSrc }: GroupBadgeOgProps) => {
+  const { label, redefinition } = GROUP_BADGE[group];
   return (
     <div
       style={{
@@ -142,7 +147,10 @@ export const GroupBadgeOg = ({ group, size = 34 }: GroupBadgeOgProps) => {
           color: "#FFE03D",
         }}
       >
-        {emoji} {label}
+        {/* 絵文字は文字ではなく画像で渡す。satoriに文字で渡すと外部CDNを叩く */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- satoriが描くのでnext/imageは使えない */}
+        <img src={emojiSrc} width={size} height={size} alt="" style={{ marginRight: size * 0.3 }} />
+        {label}
       </div>
       <div style={{ display: "flex", fontSize: size * 0.85, fontWeight: 700, color: "#9aa5ba" }}>
         {redefinition}
