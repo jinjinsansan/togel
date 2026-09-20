@@ -2,8 +2,7 @@
 User-agent: *
 Allow: /
 
-# Sitemap (必要に応じて有効化)
-# Sitemap: https://www.to-gel.com/sitemap.xml
+Sitemap: https://www.to-gel.com/sitemap.xml
 
 # 管理画面をクロール対象外に
 User-agent: *
