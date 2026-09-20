@@ -2,6 +2,7 @@ import { BigFiveScores, PersonalityTypeDefinition } from "@/types/diagnosis";
 import { getTogelLabel } from "./utils";
 import { evaluationCopy } from "./copy/reaction-evaluation";
 import { isolationCopy, lossCopy, pressureCopy, shockCopy } from "./copy/reaction-rest";
+import { deepNarrativeBridge } from "./copy/reaction-bridge";
 import {
   determineReaction,
   HEAT_KEYS,
@@ -365,6 +366,17 @@ export const DEEP_HEADINGS = {
   s3: "それ、あなたが決めたことじゃありません",
   s4: "あなたが自分を守るためにやっていること",
 } as const;
+
+/**
+ * S1 の直後に固定で挟む一文。**分岐しない。全員が同じものを読む。**
+ *
+ * 回収（S3・S4）は iPhone で 1.8〜2.6画面目まで来ない。問題は回収が遅いこと
+ * ではなく、**来るかどうか分からないまま2画面読まされる**こと。
+ * ここで先に約束しておけば、途中で離脱しても「突き放された」にはならない。
+ *
+ * 見出しは付けない。地の文として置く。
+ */
+export const DEEP_BRIDGE = deepNarrativeBridge;
 
 export const DEEP_SLOTS = ["s1", "s2", "s3", "s4"] as const;
 export type DeepSlot = (typeof DEEP_SLOTS)[number];

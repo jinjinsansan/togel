@@ -48,13 +48,33 @@ const TIE_EPSILON = 1e-9;
 const axisPercent = (key: keyof BigFiveScores, scores: BigFiveScores) =>
   togelIndexPercent(key, scores);
 
+/**
+ * 判定の中立点。**尺度から導く。定数を直に書かない。**
+ *
+ * 表示値は `score/5*100` で、スコアは1〜5。つまり範囲は **20〜100 で、中心は 60**。
+ * ここを 50 にすると、まん中の回答者が全軸で +10 から始まり、係数の非対称と
+ * 合わさって一方向に倒れる。実際そうなっていて、中心に寄った回答の 64.8% が
+ * evaluation に落ち、pressure と shock は合わせて 5% 未満だった
+ * （24タイプの原型スコアでは 0 タイプ）。
+ *
+ * `togelIndexPercent` の写し方が変われば中心も動くので、**そこから計算する**。
+ */
+const SCALE_MID_SCORE = 3; // 1〜5 のまん中
+export const NEUTRAL = togelIndexPercent("openness", {
+  openness: SCALE_MID_SCORE,
+  conscientiousness: SCALE_MID_SCORE,
+  extraversion: SCALE_MID_SCORE,
+  agreeableness: SCALE_MID_SCORE,
+  neuroticism: SCALE_MID_SCORE,
+});
+
 export const reactionScores = (scores: BigFiveScores): Record<ReactionKey, number> => {
   const ignition = axisPercent("openness", scores); // 引火点
   const structure = axisPercent("conscientiousness", scores); // 構造強度
   const heat = axisPercent("extraversion", scores); // 放熱量
   const buffer = axisPercent("agreeableness", scores); // 緩衝性能
 
-  const d = (v: number) => v - 50;
+  const d = (v: number) => v - NEUTRAL;
 
   return {
     evaluation: d(structure) + d(buffer) * 0.5,

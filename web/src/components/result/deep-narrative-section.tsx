@@ -1,4 +1,12 @@
-import { DEEP_HEADINGS, DEEP_SLOTS, type DeepNarrative, type DeepSlot } from "@/lib/personality/narrative";
+import { Fragment } from "react";
+
+import {
+  DEEP_BRIDGE,
+  DEEP_HEADINGS,
+  DEEP_SLOTS,
+  type DeepNarrative,
+  type DeepSlot,
+} from "@/lib/personality/narrative";
 
 /**
  * 診断直後に読む「深い自己説明」（S1〜S4）。
@@ -30,21 +38,34 @@ export const DeepNarrativeSection = ({
 }) => (
   <div className="mx-auto mt-7 flex max-w-[1120px] flex-col gap-3.5">
     {slots.map((slot) => (
-      <div key={slot} className="rounded-card border border-line bg-surface p-5">
-        <h2
-          className={`text-[13px] font-black leading-[1.6] ${
-            TONE[slot] === "hazard" ? "text-hazard" : "text-relief"
-          }`}
-        >
-          {DEEP_HEADINGS[slot]}
-        </h2>
-        <p
-          className="mt-3 max-w-[38em] whitespace-pre-line text-[13px] leading-8 text-txt-muted"
-          style={{ textWrap: "pretty" }}
-        >
-          {narrative[slot]}
-        </p>
-      </div>
+      <Fragment key={slot}>
+        <div className="rounded-card border border-line bg-surface p-5">
+          <h2
+            className={`text-[13px] font-black leading-[1.6] ${
+              TONE[slot] === "hazard" ? "text-hazard" : "text-relief"
+            }`}
+          >
+            {DEEP_HEADINGS[slot]}
+          </h2>
+          <p
+            className="mt-3 max-w-[38em] whitespace-pre-line text-[13px] leading-8 text-txt-muted"
+            style={{ textWrap: "pretty" }}
+          >
+            {narrative[slot]}
+          </p>
+        </div>
+
+        {/*
+          S1 の直後に挟む約束。見出しは付けず、地の文として置く。
+          ここで離脱しても「突き放された」で終わらないようにするためのものなので、
+          **S1 が出ているときは必ず出す**（S2 以降を見せない指定のときも）。
+        */}
+        {slot === "s1" && (
+          <p className="mx-1 whitespace-pre-line px-4 text-[12.5px] leading-[2.1] text-txt-subtle">
+            {DEEP_BRIDGE}
+          </p>
+        )}
+      </Fragment>
     ))}
   </div>
 );

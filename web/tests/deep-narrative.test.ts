@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import {
   determineReaction,
   intensityOf,
+  NEUTRAL,
   reactionScores,
   REACTION_KEYS,
   INTENSITY_KEYS,
@@ -12,12 +13,14 @@ import {
   type ReactionKey,
 } from "../src/lib/personality/reaction";
 import {
+  DEEP_BRIDGE,
   DEEP_COPY,
   DEEP_HEADINGS,
   allDeepCombinations,
   generateDeepNarrative,
   isDeepCopyComplete,
 } from "../src/lib/personality/narrative";
+import { togelIndexPercent } from "../src/lib/personality/togel-index";
 import type { BigFiveScores } from "../src/types/diagnosis";
 
 /**
@@ -38,9 +41,9 @@ const scoresOf = (o: number, c: number, e: number, a: number, n: number): BigFiv
 /* ===== 主反応の判定 ===== */
 
 test("同点のときは、決めた優先順どおりに決まる", () => {
-  // 表示は score/5*100 なので、50% はスコア 3.0 ではなく **2.5**。
-  // 全軸を 50% に置くと d() が全部 0 になり、5候補が同点になる
-  const flat = scoresOf(2.5, 2.5, 2.5, 2.5, 2.5);
+  // 中立点は尺度の中心（60）なので、同点になるのは**全軸スコア3.0**。
+  // 表示値で 50% にあたるスコア2.5 ではない（表示は score/5*100 で 20〜100）
+  const flat = scoresOf(3, 3, 3, 3, 3);
   const candidates = reactionScores(flat);
   // `-d(heat)` などは -0 を返すので deepEqual では 0 と一致しない。
   // ここで見たいのは符号付きゼロではなく「差が無いこと」
@@ -200,6 +203,52 @@ test("1人が受け取る地の文が 800字を超える", () => {
   }
 });
 
+/**
+ * 判定の中立点が、尺度の中心とそろっていること。
+ *
+ * 表示値は 20〜100（スコア1〜5 を score/5*100 で写す）なので中心は 60。
+ * ここが 50 だと、まん中の回答者が全軸 +10 から始まって一方向に倒れる。
+ * 実際そうなっていて、中心に寄った回答の 64.8% が evaluation に落ち、
+ * pressure と shock は合わせて 5% 未満だった。
+ *
+ * 尺度の写し方を変えたらここも落ちる。定数の直書きに戻さないための検査。
+ */
+test("判定の中立点が、尺度の中心と一致している", () => {
+  const lowest = togelIndexPercent("openness", scoresOf(1, 1, 1, 1, 1));
+  const highest = togelIndexPercent("openness", scoresOf(5, 5, 5, 5, 5));
+  assert.equal(NEUTRAL, (lowest + highest) / 2, `尺度は ${lowest}〜${highest} なので中心は ${(lowest + highest) / 2}`);
+
+  // まん中の回答者が、どれか1つに偏って落ちないこと
+  const middle = reactionScores(scoresOf(3, 3, 3, 3, 3));
+  assert.deepEqual(
+    Object.values(middle).map((v) => v + 0 === 0),
+    [true, true, true, true, true],
+    "尺度のまん中の人で候補値が 0 にならない（中立点がずれている）",
+  );
+});
+
+test("主反応が、どれか1つに偏っていない", () => {
+  // 実際の回答は中心に寄るので、一様乱数ではなく正規寄りで見る
+  let rng = 5150;
+  const rand = () => ((rng = (rng * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const gauss = () => { let s = 0; for (let i = 0; i < 6; i++) s += rand(); return s / 6; };
+
+  const counts = new Map<ReactionKey, number>(REACTION_KEYS.map((k) => [k, 0]));
+  const N = 50000;
+  for (let i = 0; i < N; i++) {
+    const s = scoresOf(...(Array.from({ length: 5 }, () => 1 + gauss() * 4) as [number, number, number, number, number]));
+    const { reaction } = determineReaction(s);
+    counts.set(reaction, counts.get(reaction)! + 1);
+  }
+  const shares = [...counts].map(([k, v]) => [k, v / N] as const);
+
+  // 1種に半分以上が落ちるなら、残りの本文は書き損になる
+  for (const [key, share] of shares) {
+    assert.ok(share < 0.5, `${key} に ${(share * 100).toFixed(1)}% が集中している`);
+    assert.ok(share > 0.03, `${key} が ${(share * 100).toFixed(1)}% にしか届かない`);
+  }
+});
+
 /* ===== 書いてはいけない語 ===== */
 
 /**
@@ -244,15 +293,17 @@ const FORBIDDEN_PATTERNS = [
   /障害(が|の)ある/,
 ];
 
+/** 検査にかける文字列。**分岐しない橋渡し文も含める**（全員が読むので取りこぼせない） */
 const deepCopyText = (): string =>
-  Object.values(DEEP_COPY)
-    .flatMap((copy) => [
+  [
+    DEEP_BRIDGE,
+    ...Object.values(DEEP_COPY).flatMap((copy) => [
       ...Object.values(copy.s1),
       copy.s2,
       copy.s3,
       ...Object.values(copy.s4),
-    ])
-    .join("\n");
+    ]),
+  ].join("\n");
 
 test("本文に理論側の用語が出ない", () => {
   const text = deepCopyText() + "\n" + Object.values(DEEP_HEADINGS).join("\n");
