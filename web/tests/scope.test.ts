@@ -150,3 +150,43 @@ test("「N件」と書いた数が、実際の項目数と合っている", () =
   }
   assert.deepEqual(offenders, []);
 });
+
+/* ===== 開発専用のプレビュー ===== */
+
+/**
+ * 攻略盤は利用者ごとの保存状態でしか描画されないため、開発用の静的プレビューを
+ * 置いている（`/dev/preview/board`）。本番に出てはいけない。
+ * 環境変数を明示的に立てたときだけ出し、それ以外は404にする。
+ */
+test("開発用プレビューは、環境変数を立てないと404になる", () => {
+  const page = readFileSync(
+    join(process.cwd(), "src/app/dev/preview/board/page.tsx"),
+    "utf8",
+  );
+  assert.ok(
+    /process\.env\.TOGEL_DEV_PREVIEW !== "1"[\s\S]{0,40}notFound\(\)/.test(page),
+    "環境変数が立っていないときに notFound() を呼んでいない",
+  );
+  // ビルド時に畳み込まれると、環境変数を付けても404のままになる（実際そうなった）
+  assert.ok(page.includes('export const dynamic = "force-dynamic"'), "実行時に判定していない");
+});
+
+test("開発用プレビューは、どこからもリンクされずサイトマップにも載らない", async () => {
+  const sitemap = (await import("../src/app/sitemap")).default;
+  const leaked = sitemap()
+    .map((entry) => new URL(entry.url).pathname)
+    .filter((path) => path.startsWith("/dev"));
+  assert.deepEqual(leaked, [], "サイトマップに開発用のパスが載っている");
+
+  // 見るのは「遷移する経路」だけ。年齢ゲートの除外リストや説明のコメントに
+  // パスが出てくるのは正常なので、href / push / redirect に絞る
+  const linked = walk(join(process.cwd(), "src"))
+    .map((absolute) => relative(process.cwd(), absolute).split(sep).join("/"))
+    .filter((file) => !file.startsWith("src/app/dev/"))
+    .filter((file) =>
+      /(href|push|replace|redirect)\s*[=(]\s*[{("'`]*\/dev\//.test(
+        readFileSync(join(process.cwd(), file), "utf8"),
+      ),
+    );
+  assert.deepEqual(linked, [], "開発用のパスへ遷移する経路がある");
+});

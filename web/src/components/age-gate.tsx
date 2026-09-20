@@ -17,7 +17,8 @@ export function AgeGate() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     // 法務・情報ページは年齢確認なしで閲覧可能にする
-    const exemptPaths = ["/terms", "/privacy", "/tokushoho", "/about"];
+    // /dev は開発専用のプレビュー（本番では404）。ゲートが覆うと撮影できない
+    const exemptPaths = ["/terms", "/privacy", "/tokushoho", "/about", "/dev/"];
     if (exemptPaths.some((p) => window.location.pathname.startsWith(p))) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- SSRとのhydration差異を避けるためクライアント側でのみ判定する
       setVerified(true);
