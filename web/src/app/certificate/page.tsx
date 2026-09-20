@@ -2,7 +2,7 @@ import { TogelCertificateShowcase } from "@/components/certificate/togel-certifi
 
 export default function CertificateDemoPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-16 px-6">
+    <div className="min-h-screen bg-paper px-5.5 py-14">
       <TogelCertificateShowcase />
     </div>
   )

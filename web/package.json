@@ -13,7 +13,7 @@
     "seed:questions": "tsx ../supabase/mock-data/seed-questions.ts",
     "seed:michelle-knowledge": "tsx scripts/michelle-knowledge/process-knowledge.ts",
     "seed:michelle-attraction-knowledge": "tsx scripts/michelle-attraction-knowledge/process-knowledge.ts",
-    "test": "node --import tsx --test tests/board.test.ts tests/broadcast.test.ts tests/invariants.test.ts tests/representative-scores.test.ts tests/tracking.test.ts tests/sitemap.test.ts tests/json-ld.test.ts tests/contrast.test.ts tests/og-images.test.ts",
+    "test": "node --import tsx --test tests/board.test.ts tests/broadcast.test.ts tests/invariants.test.ts tests/representative-scores.test.ts tests/tracking.test.ts tests/scope.test.ts tests/sitemap.test.ts tests/json-ld.test.ts tests/contrast.test.ts tests/og-images.test.ts",
     "verify:deployed": "tsx scripts/verify-deployed.ts"
   },
   "dependencies": {

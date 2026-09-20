@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
+import { OUT_OF_SCOPE_PREFIXES } from "./scope";
+
 /**
  * letter-spacing がトークンの役割から外れていないことを検査する。
  *
@@ -10,9 +12,9 @@ import { join, relative, sep } from "node:path";
  * 実装には一時期17種類の値があり、同じ役割に18の値が付いていた。
  * 役割が1つなら値も1つ、を機械で保つ。
  *
- * 除外（LEGACY）は「刷新前意匠」の画面。letter-spacing だけ寄せても
- * uppercase・font-semibold・slate系という別の視覚言語が残るので、半端に寄せない。
- * これらを刷新するかどうかは別の課題として残っている。
+ * 除外（LEGACY）は刷新の対象外と決めた画面で、宣言は tests/scope.ts にある。
+ * letter-spacing だけ寄せても uppercase・font-semibold・slate系という
+ * 別の視覚言語が残るので、対象外の画面には半端に寄せない。
  */
 
 const TOKENS = {
@@ -24,15 +26,8 @@ const TOKENS = {
 
 const ALLOWED = new Set<string>(Object.values(TOKENS));
 
-/** ブランドトークンの適用範囲外（刷新前意匠）。ここは触らない */
-const LEGACY = [
-  "src/app/admin/",
-  "src/app/points/",
-  "src/app/michelle/",
-  "src/app/privacy/",
-  "src/app/terms/",
-  "src/app/tokushoho/",
-];
+/** ブランドトークンの適用範囲外。宣言は tests/scope.ts に一本化してある */
+const LEGACY = OUT_OF_SCOPE_PREFIXES;
 
 /** 役割がラベルではない個別の例外。増やすときは理由を書く */
 const EXCEPTIONS: { file: string; value: string; reason: string }[] = [

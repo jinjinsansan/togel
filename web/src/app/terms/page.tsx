@@ -58,19 +58,19 @@ export default function TermsPage() {
   ];
 
   return (
-    <div className="bg-gradient-to-b from-white to-[#f7f9ff]">
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-paper text-navy">
+      <div className="mx-auto max-w-[760px] px-5.5 pb-14 pt-11">
         <header className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#e91e63]">Terms of Service</p>
-          <h1 className="mt-3 text-3xl font-bold text-[#0f2f4d]">利用規約</h1>
-          <p className="mt-2 text-sm text-[#4a6076]">最終更新日: 2026年6月24日</p>
+          <p className="text-label text-primary-ink">Terms of Service</p>
+          <h1 className="mt-3.5 text-[28px] font-black leading-[1.4] tracking-[-0.02em]">利用規約</h1>
+          <p className="mt-2.5 text-[12px] font-bold text-lighttext-subtle">最終更新日: 2026年6月24日</p>
         </header>
 
-        <section className="mt-10 space-y-8 rounded-3xl bg-white/90 p-8 shadow-lg shadow-[#0f2f4d]/5">
+        <section className="mt-7 space-y-7 rounded-card border border-lightline bg-white p-[22px] shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]">
           {sections.map((section) => (
             <article key={section.title}>
-              <h2 className="text-lg font-semibold text-[#0f2f4d]">{section.title}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-[#4a4f64]">{section.body}</p>
+              <h2 className="text-[15px] font-black leading-[1.6] text-navy">{section.title}</h2>
+              <p className="mt-2.5 text-[13px] leading-[1.95] text-lighttext-muted">{section.body}</p>
             </article>
           ))}
         </section>

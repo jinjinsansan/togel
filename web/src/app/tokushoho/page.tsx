@@ -41,27 +41,27 @@ export default function TokushohoPage() {
   ];
 
   return (
-    <div className="bg-gradient-to-b from-white to-[#f7f9ff]">
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-paper text-navy">
+      <div className="mx-auto max-w-[760px] px-5.5 pb-14 pt-11">
         <header className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-[#e91e63]">
+          <p className="text-label text-primary-ink">
             Legal Notice
           </p>
-          <h1 className="mt-3 text-3xl font-bold text-[#0f2f4d]">
+          <h1 className="mt-3.5 text-[28px] font-black leading-[1.4] tracking-[-0.02em]">
             特定商取引法に基づく表記
           </h1>
-          <p className="mt-2 text-sm text-[#4a6076]">最終更新日: 2026年8月7日</p>
+          <p className="mt-2.5 text-[12px] font-bold text-lighttext-subtle">最終更新日: 2026年8月7日</p>
         </header>
 
-        <section className="mt-10 overflow-hidden rounded-3xl bg-white/95 shadow-lg shadow-[#0f2f4d]/5">
-          <dl className="divide-y divide-slate-100">
+        <section className="mt-7 overflow-hidden rounded-card border border-lightline bg-white shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]">
+          <dl className="divide-y divide-lightline">
             {rows.map((row) => (
               <div
                 key={row.label}
-                className="grid grid-cols-1 gap-1 px-6 py-5 sm:grid-cols-3 sm:gap-4"
+                className="grid grid-cols-1 gap-1.5 px-5.5 py-5 sm:grid-cols-3 sm:gap-4"
               >
-                <dt className="text-sm font-semibold text-[#0f2f4d]">{row.label}</dt>
-                <dd className="text-sm leading-relaxed text-[#4a4f64] sm:col-span-2">
+                <dt className="text-[13px] font-black text-navy">{row.label}</dt>
+                <dd className="text-[13px] leading-[1.95] text-lighttext-muted sm:col-span-2">
                   {row.value}
                 </dd>
               </div>
