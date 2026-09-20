@@ -146,6 +146,13 @@ const evaluate = (prototypes: Prototypes, people: BigFiveScores[], quiet = false
     }
     console.log(`\n  最大 ${top.token} ${(top.n / total * 100).toFixed(2)}% ／ 最小 ${bottom.token} ${(bottom.n / total * 100).toFixed(2)}%`);
     console.log(`  均等なら 1タイプ ${(100 / 24).toFixed(2)}%`);
+    // 版をまたいで1つの数字で比べられるように。均等からのばらつき
+    const shares = rows.map((row) => (row.n / total) * 100);
+    const mean = 100 / shares.length;
+    const sd = Math.sqrt(shares.reduce((sum, s) => sum + (s - mean) ** 2, 0) / shares.length);
+    console.log(
+      `  ばらつき（標準偏差） ${sd.toFixed(2)}pt ／ 最大÷最小 ${(top.n / Math.max(bottom.n, 1)).toFixed(1)}倍`,
+    );
 
     console.log(`\n■ 距離が完全に等しかった件数: ${ties} / ${total} = ${(ties / total * 100).toFixed(3)}%`);
     console.log("  （固定順で決定的に解いている。フォールバックではない）");
