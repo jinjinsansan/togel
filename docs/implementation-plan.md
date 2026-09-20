@@ -1,5 +1,8 @@
 # Matching診断 実装計画
 
+> ⚠️ **2025-11-26時点の記録です。現在の実装とは異なります**（Next.js 16 ／ 状態管理は sessionStorage + localStorage ＋ React の state）。
+> 当時の意思決定の記録として残してあります。本文は書き換えていません。最新は [docs/README.md](./README.md) を参照してください。
+
 ## アーキテクチャ方針
 - **アプリ基盤**: Next.js 14 App Router（TypeScript）＋Tailwind CSS＋shadcn/ui。
 - **状態管理**: React Server Components＋クライアント側はContext/Zustand。
