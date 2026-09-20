@@ -32,9 +32,17 @@ export const TOGEL_INDEX: TogelIndexAxis[] = [
 export const togelIndexLabel = (key: keyof BigFiveScores): string =>
   TOGEL_INDEX.find((axis) => axis.key === key)?.label ?? "";
 
-/** 1-5スケールのスコアを表示用の0-100に変換する（反転指標は反転済みの値を返す） */
+/**
+ * 1-5スケールのスコアを表示用の0-100に変換する（反転指標は反転済みの値を返す）。
+ *
+ * 反転は `100 - pct` ではなく **スコアの側を 6 - v にしてから**割る。
+ * 前者だと反転指標だけ 0〜80%、他の軸は 20〜100% になり、**土俵が違ってしまう**。
+ * 実際そのせいで、24タイプのどれ一つとして耐圧限界が最長にならず
+ * （最短は13タイプ）、「何が起きても動じない」はずのマッチャ型でも
+ * 耐圧限界が緩衝性能に負けていた。
+ */
 export const togelIndexPercent = (key: keyof BigFiveScores, scores: BigFiveScores): number => {
   const axis = TOGEL_INDEX.find((a) => a.key === key);
-  const pct = Math.round((scores[key] / 5) * 100);
-  return axis?.inverted ? 100 - pct : pct;
+  const value = axis?.inverted ? 6 - scores[key] : scores[key];
+  return Math.round((value / 5) * 100);
 };

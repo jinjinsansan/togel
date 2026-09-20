@@ -87,9 +87,55 @@ test("耐圧限界の反転が1回だけ適用される", () => {
     agreeableness: 3,
     neuroticism,
   });
-  assert.equal(togelIndexPercent("neuroticism", probe(1)), 80);
-  assert.equal(togelIndexPercent("neuroticism", probe(3)), 40);
-  assert.equal(togelIndexPercent("neuroticism", probe(5)), 0);
+  assert.equal(togelIndexPercent("neuroticism", probe(1)), 100);
+  assert.equal(togelIndexPercent("neuroticism", probe(3)), 60);
+  assert.equal(togelIndexPercent("neuroticism", probe(5)), 20);
   // 反転しない軸には適用されない
   assert.equal(togelIndexPercent("openness", probe(3)), 60);
+});
+
+/**
+ * 反転する軸としない軸で、表示値の取りうる範囲が同じであること。
+ *
+ * これが無かったために、反転を `100 - pct` で実装していた時期は
+ * 耐圧限界だけ 0〜80%、他の軸は 20〜100% と土俵が違っていた。
+ * 結果、**24タイプのどれ一つとして耐圧限界が最長にならず**（最短は13タイプ）、
+ * 「何が起きても動じない」はずのマッチャ型でも耐圧限界が緩衝性能に負けていた。
+ *
+ * 目視では出ない。バーの長さが「そのタイプらしいか」は24枚並べても分からず、
+ * 5軸を数値で並べて最長・最短を数えて初めて出た欠陥なので、数で留める。
+ */
+test("5軸とも表示値の範囲が同じ（反転する軸だけ土俵が違わない）", () => {
+  const uniform = (value: number): BigFiveScores => ({
+    openness: value,
+    conscientiousness: value,
+    extraversion: value,
+    agreeableness: value,
+    neuroticism: value,
+  });
+  const ranges = TOGEL_INDEX.map(({ key, label }) => {
+    const values = [1, 2, 3, 4, 5].map((v) => togelIndexPercent(key, uniform(v)));
+    return { label, min: Math.min(...values), max: Math.max(...values) };
+  });
+  for (const range of ranges) {
+    assert.equal(range.min, ranges[0].min, `${range.label} の下限が他の軸と違う`);
+    assert.equal(range.max, ranges[0].max, `${range.label} の上限が他の軸と違う`);
+  }
+});
+
+test("どの指標も、最長になれるタイプが1つ以上ある", () => {
+  const longest = new Map<string, number>();
+  for (const type of personalityTypes) {
+    const scores = representativeScores(type.id);
+    const bars = TOGEL_INDEX.map(({ key, label }) => ({
+      label,
+      pct: togelIndexPercent(key, scores),
+    }));
+    const max = Math.max(...bars.map((bar) => bar.pct));
+    for (const bar of bars.filter((b) => b.pct === max)) {
+      longest.set(bar.label, (longest.get(bar.label) ?? 0) + 1);
+    }
+  }
+  const never = TOGEL_INDEX.filter(({ label }) => !longest.has(label)).map((a) => a.label);
+  assert.deepEqual(never, [], "この指標が最長になるタイプが1つも無い");
 });
