@@ -238,6 +238,66 @@ const evaluate = (prototypes: Prototypes, people: BigFiveScores[], quiet = false
   return { ok: warnings.length === 0, warnings } satisfies Verdict;
 };
 
+/* ===== 表どうしの比較 ===== */
+
+/**
+ * 前の版と並べる。
+ *
+ * **原型を動かしていないタイプの取り分も動く**のが最近傍の性質で、
+ * 隣が動けば境界が動くため。意図した動きと、巻き添えの動きを分けて見る。
+ */
+const compare = (before: Prototypes, after: Prototypes, people: BigFiveScores[], label: string) => {
+  const order = personalityTypes.map((type) => type.id);
+  const count = (prototypes: Prototypes) => {
+    const counts = new Map<string, number>();
+    for (const person of people) {
+      const { id } = assign(person, prototypes, order);
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return counts;
+  };
+
+  const a = count(before);
+  const b = count(after);
+  const total = people.length;
+  const token = (id: string) => typeToken(personalityTypes.find((t) => t.id === id)!);
+
+  const rows = order.map((id) => {
+    const shift = distance(before[id], after[id]);
+    return {
+      id,
+      shift,
+      from: ((a.get(id) ?? 0) / total) * 100,
+      to: ((b.get(id) ?? 0) / total) * 100,
+    };
+  });
+
+  const show = (title: string, subset: typeof rows) => {
+    if (subset.length === 0) return;
+    console.log(`\n  ${title}`);
+    for (const row of [...subset].sort((x, y) => y.to - y.from - (x.to - x.from))) {
+      const delta = row.to - row.from;
+      const sign = delta >= 0 ? "+" : "";
+      console.log(
+        `    ${token(row.id).padEnd(7)} ${row.from.toFixed(2).padStart(5)}% → ${row.to.toFixed(2).padStart(5)}%  ` +
+          `${(sign + delta.toFixed(2)).padStart(6)}pt${row.shift > 0 ? `   （原型を ${row.shift.toFixed(2)} 動かした）` : ""}`,
+      );
+    }
+  };
+
+  console.log(`\n■ 前の版との比較（${label}）`);
+  show("原型を動かしたタイプ", rows.filter((row) => row.shift > 1e-9));
+  show("原型を動かしていないタイプ（隣が動いた巻き添え）", rows.filter((row) => row.shift <= 1e-9));
+
+  const collateral = rows
+    .filter((row) => row.shift <= 1e-9)
+    .reduce((sum, row) => sum + Math.abs(row.to - row.from), 0);
+  console.log(
+    `\n  動かしていない13タイプの増減の合計: ${collateral.toFixed(2)}pt` +
+      `（意図せず動いた分。大きいほど設計の見通しが効いていない）`,
+  );
+};
+
 /* ===== 入力の検証 ===== */
 
 const loadPrototypes = (path: string): Prototypes => {
@@ -350,7 +410,14 @@ const main = () => {
 
   const prototypes = loadPrototypes(arg);
   console.log(`原型表: ${arg}（24タイプ・5軸を確認）`);
-  evaluate(prototypes, people);
+  const result = evaluate(prototypes, people);
+
+  const againstIndex = process.argv.indexOf("--against");
+  if (againstIndex > 0 && process.argv[againstIndex + 1]) {
+    compare(loadPrototypes(process.argv[againstIndex + 1]), prototypes, people, process.argv[againstIndex + 1]);
+  }
+
+  return result;
 };
 
 main();
