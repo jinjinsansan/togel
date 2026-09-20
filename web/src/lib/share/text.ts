@@ -29,6 +29,21 @@ export const typeHashtag = (type: ExtendedPersonalityTypeDefinition): string =>
 export const landmineQuote = (typeId: string): string =>
   (typeApproachGuides[typeId]?.ng ?? "").replace(/(?<=」)\s*（[^（）]*）\s*$/, "");
 
+/**
+ * 地雷が「言われること」か「されること」か。
+ *
+ * ガイドの ng は2つの役割を兼ねている。ガイドでは「NG行動」なのでト書き
+ * （例:（考えているので6秒黙る））も有効だが、共有する文面では「私に言われたく
+ * ない一言」として扱うので、発話でないと文が成立しない。
+ * タイプ名で分岐せず、データの形で判別する。
+ */
+export const isSpokenLandmine = (typeId: string): boolean =>
+  landmineQuote(typeId).startsWith("「");
+
+/** 取扱注意ラベルの見出し */
+export const landmineHeading = (typeId: string): string =>
+  isSpokenLandmine(typeId) ? "私に言うと、警報が鳴ります" : "私にされると、警報が鳴ります";
+
 /** ラベルの一文（中身の正体の冒頭に置かれた「…」）。見つからなければ null */
 export const labelQuote = (typeId: string): string | null => {
   const core = typeApproachGuides[typeId]?.core ?? "";
@@ -74,7 +89,11 @@ export const handbookPostText = (type: ExtendedPersonalityTypeDefinition): strin
   ];
   if (label) lines.push(`「${label}」`);
   if (landmine) {
-    lines.push("", `私に${landmine}は言わないでください。`, "警報が鳴ります。");
+    // ト書き（沈黙など）は「言う」ものではないので、動詞を変える
+    const request = isSpokenLandmine(type.id)
+      ? `私に${landmine}は言わないでください。`
+      : `私の前で${landmine}はしないでください。`;
+    lines.push("", request, "警報が鳴ります。");
   }
   lines.push("", `${MAIN_HASHTAG} ${typeHashtag(type)}`);
   return lines.join("\n");

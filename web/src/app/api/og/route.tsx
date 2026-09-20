@@ -7,7 +7,7 @@ import { GroupBadgeOg } from "@/components/brand/group-badge";
 import { personalityTypes, representativeScores, typeToken } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality";
 import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
-import { landmineQuote } from "@/lib/share/text";
+import { landmineHeading, landmineQuote } from "@/lib/share/text";
 import type { BigFiveScores } from "@/types/diagnosis";
 
 /**
@@ -200,7 +200,7 @@ const StoryLabel = ({
               color: "#FF2E74",
             }}
           >
-            私に言うと、警報が鳴ります
+            {landmineHeading(type.id)}
           </div>
           <div
             style={{
@@ -342,8 +342,9 @@ export const GET = async (request: Request) => {
   // 表示対象（mismatch: 相手タイプ / type: 自分のタイプ）
   const featured = mode === "mismatch" && worst ? worst : type;
   // タイプ名15文字以上は1段階だけ縮小、2行までは許容
+  // 長い名前は縮めて折り返す。タグラインはブランドの一文なので常に出す
+  // （以前は11字を超えると落としていて、24タイプのうち1つだけ欠けていた）
   const nameSize = featured.typeName.length >= 15 ? 80 : 106;
-  const showTagline = featured.typeName.length <= 11;
 
   const image = new ImageResponse(
     (
@@ -429,21 +430,20 @@ export const GET = async (request: Request) => {
               </div>
             </div>
           </div>
-          {showTagline && (
-            <div
-              style={{
-                display: "flex",
-                padding: "18px 30px",
-                borderRadius: 999,
-                background: "#FFE03D",
-                color: "#07090F",
-                fontSize: 28,
-                fontWeight: 900,
-              }}
-            >
-              {BRAND_TAGLINE}
-            </div>
-          )}
+          <div
+            style={{
+              display: "flex",
+              flexShrink: 0,
+              padding: "18px 30px",
+              borderRadius: 999,
+              background: "#FFE03D",
+              color: "#07090F",
+              fontSize: 28,
+              fontWeight: 900,
+            }}
+          >
+            {BRAND_TAGLINE}
+          </div>
         </div>
       </div>
     ),

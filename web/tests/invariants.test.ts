@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { typeApproachGuides } from "../src/lib/coaching/translations";
+import { isSpokenLandmine, landmineHeading, landmineQuote } from "../src/lib/share/text";
 
 import { groupBadgeLine } from "../src/components/brand/group-badge";
 import { BROADCAST_TOTAL_ISSUES } from "../src/lib/line/broadcast";
@@ -140,4 +142,48 @@ test("マス指定は往復できる（タイプIDにハイフンが含まれて
   assert.deepEqual(round, { typeId: "creative-leader", angle: "distance" });
   assert.equal(parseCellKey("creative-leader:unknown"), null);
   assert.equal(parseCellKey(null), null);
+});
+
+/* ===== 共有する文面の地雷（ガイドの ng） ===== */
+
+/**
+ * ng は2つの役割を兼ねている。ガイドでは「NG行動」でト書きも有効、
+ * 共有する文面では「私に言われたくない一言」。片方で正しい形が、もう片方で壊れる。
+ * 形だけを機械で固定して、壊れ方が戻ってこないようにする。
+ */
+
+const guides = Object.entries(typeApproachGuides);
+
+test("注記は引用符の外に置く（内側にあると本人が声に出して言ったことになる）", () => {
+  const offenders = guides
+    .filter(([, guide]) => (guide.ng.match(/「[^」]*」/g) ?? []).some((q) => /[（）]/.test(q)))
+    .map(([id, guide]) => `${id}: ${guide.ng}`);
+
+  assert.deepEqual(offenders, []);
+});
+
+test("引用符の外の注記は、共有する文面から落ちる", () => {
+  for (const [id, guide] of guides) {
+    if (!/(?<=」)\s*（[^（）]*）\s*$/.test(guide.ng)) continue;
+    assert.ok(!landmineQuote(id).includes("（"), `${id} の注記が落ちていない`);
+  }
+});
+
+test("見出しは ng の形と一致する（言うことか、されることか）", () => {
+  for (const [id, guide] of guides) {
+    const spoken = guide.ng.startsWith("「");
+    assert.equal(isSpokenLandmine(id), spoken, id);
+    assert.equal(
+      landmineHeading(id),
+      spoken ? "私に言うと、警報が鳴ります" : "私にされると、警報が鳴ります",
+      id,
+    );
+  }
+});
+
+test("24タイプすべてに地雷の一文がある", () => {
+  for (const [id] of guides) {
+    assert.ok(landmineQuote(id).length > 0, `${id} の ng が空`);
+  }
+  assert.equal(guides.length, 24);
 });
