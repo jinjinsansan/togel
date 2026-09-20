@@ -41,9 +41,13 @@ export const DeepNarrativeSection = ({
       節の**いちばん最初**に置く約束。見出しは付けず、地の文として。
       回収（S3・S4）は iPhone で 2.0〜2.8画面目まで来ない。S1 の直後に置くと
       カードが約600pxあるため 1.0画面目＝折り返し地点に落ち、スクロールせずに
-      離脱した人には届かなかった。ここなら 0.25画面目に入る。
+      離脱した人には届かなかった。ここなら 0.2画面目に入る。
+
+      字は**本文と同じ**にする。最初に読ませると決めた一文を、ページで一番小さく
+      一番暗い字で出すと、注意書きの見た目になって読み飛ばされる。
+      本文より目立たせる必要はないが、引っ込ませる理由も無い。
     */}
-    <p className="mx-1 whitespace-pre-line px-4 text-[12.5px] leading-[2.1] text-txt-subtle">
+    <p className="mx-1 whitespace-pre-line px-4 text-[13px] leading-8 text-txt-muted">
       {DEEP_BRIDGE}
     </p>
 
