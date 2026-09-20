@@ -1,6 +1,12 @@
 "use client";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  NEXT_COOKIE,
+  NEXT_COOKIE_MAX_AGE,
+  NEXT_PARAM,
+  safeNextPath,
+} from "@/lib/auth/next-path";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +18,19 @@ export const LoginButton = () => {
   const handleLogin = async () => {
     setIsLoading(true);
     
+    // 行き先をクッキーに預けてから出発する。useSearchParams を使わないのは、
+    // この画面を静的なままにしておくため（押した時点ではクライアントにいる）
+    const next = safeNextPath(new URLSearchParams(window.location.search).get(NEXT_PARAM));
+    document.cookie = [
+      `${NEXT_COOKIE}=${encodeURIComponent(next)}`,
+      "path=/",
+      `max-age=${NEXT_COOKIE_MAX_AGE}`,
+      "samesite=lax",
+      window.location.protocol === "https:" ? "secure" : "",
+    ]
+      .filter(Boolean)
+      .join("; ");
+
     const redirectTo = `${window.location.origin}/auth/callback`;
     
     console.log("[Login] Starting OAuth flow", {

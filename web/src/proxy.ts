@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 import type { NextRequest } from "next/server";
 import { env } from "@/lib/env";
+import { loginUrlFor } from "@/lib/auth/next-path";
 
 const createSupabaseMiddlewareClient = (req: NextRequest, res: NextResponse) =>
   createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
@@ -50,7 +51,11 @@ export async function proxy(req: NextRequest) {
 
   // If accessing a protected route without a session, redirect to login (or home)
   if (isProtectedRoute && !session) {
-    const redirectUrl = new URL("/login", req.url);
+    // 行き先を持たせる。ログイン後に別の場所へ落とすと、何をしに来たのか分からなくなる
+    const redirectUrl = loginUrlFor(
+      `${req.nextUrl.pathname}${req.nextUrl.search}`,
+      req.url,
+    );
     return NextResponse.redirect(redirectUrl);
   }
 

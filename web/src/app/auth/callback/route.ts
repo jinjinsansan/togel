@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import type { NextRequest } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { NEXT_COOKIE, readNextCookie } from "@/lib/auth/next-path";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -11,6 +12,8 @@ export async function GET(request: NextRequest) {
   const errorDescription = requestUrl.searchParams.get("error_description");
   const origin = requestUrl.origin;
   const cookieStore = await cookies();
+  // proxy → /login → OAuth と運ばれてきた行き先。信用できない値は既定に落ちる
+  const next = readNextCookie(cookieStore.get(NEXT_COOKIE)?.value);
   const cookieNames = cookieStore.getAll().map(({ name }: { name: string }) => name);
 
   // 全パラメータをログ出力（デバッグ用）※センシティブな値はマスク
@@ -103,8 +106,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/?error=session_verify_failed", requestUrl));
     }
 
-    console.log("[Auth Callback] Success, redirecting to /diagnosis/select");
-    return NextResponse.redirect(new URL("/diagnosis/select", requestUrl));
+    console.log("[Auth Callback] Success, redirecting", { next });
+    const response = NextResponse.redirect(new URL(next, requestUrl));
+    response.cookies.delete(NEXT_COOKIE);
+    return response;
   } catch (error) {
     console.error("[Auth Callback] Unexpected error", error);
     return NextResponse.redirect(new URL("/?error=unexpected", requestUrl));
