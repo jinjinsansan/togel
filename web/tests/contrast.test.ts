@@ -94,3 +94,36 @@ test("ブランド色をボタン背景にしたとき、白文字が3:1以上�
     assert.ok(ratio >= 3, `白文字 on ${bg} = ${ratio.toFixed(2)}:1`);
   }
 });
+
+/* ===== 色と背景画像で名前がぶつかっていないこと ===== */
+
+/**
+ * `colors` と `backgroundImage` に同じ名前があると、Tailwind は同じクラス名で
+ * **2本のルール**を出力する。`background-image` が後に来て `background-color` を
+ * 覆うので、単色のつもりのクラスが柄になる。
+ *
+ * 実際 `hazard` がこれで、`bg-hazard` を単色の黄として書いた41箇所が縞になり、
+ * 載せていた `text-ink` が暗帯（#0B0F1A）の上で 1.04:1 まで落ちていた。
+ * 2026-08-07 から約6週間、公開状態で続いていた。
+ *
+ * 🔴 **上の色のコントラスト検査は、これを「異常なし」で通した。**
+ * あちらはトークンの色同士しか突き合わせておらず、背景画像の層を見ていない。
+ * 道具が嘘をついたのではなく、測っていない層について何も言わなかっただけ。
+ */
+test("色と背景画像で、同じクラス名を作らない", () => {
+  const images = Object.keys(config.theme?.extend?.backgroundImage ?? {});
+
+  // 入れ子の色は bg-<親>-<子> になるので、その形まで展開して突き合わせる
+  const colorClassNames = Object.entries(colors).flatMap(([name, value]) =>
+    typeof value === "string"
+      ? [name]
+      : Object.keys(value).map((sub) => (sub === "DEFAULT" ? name : `${name}-${sub}`)),
+  );
+
+  const collisions = images.filter((image) => colorClassNames.includes(image));
+  assert.deepEqual(
+    collisions,
+    [],
+    "この名前は bg-<名前> が色と画像の2本になり、画像が色を覆う",
+  );
+});

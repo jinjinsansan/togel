@@ -107,7 +107,11 @@ const config: Config = {
         focusring: "0 0 0 3px rgba(255,46,116,.35)",
       },
       backgroundImage: {
-        hazard: "repeating-linear-gradient(45deg,#FFE03D 0 12px,#0B0F1A 12px 24px)",
+        // colors.hazard と同名にしない。同名だと Tailwind が .bg-hazard を
+        // 2本（background-color と background-image）出力し、image が color を覆う。
+        // その結果、単色のつもりで書いた41箇所のCTAが縞になり、text-ink が
+        // 暗帯（#0B0F1A）の上で 1.04:1 まで落ちていた（2026-08-07 から約6週間）
+        "hazard-lg": "repeating-linear-gradient(45deg,#FFE03D 0 12px,#0B0F1A 12px 24px)",
         "hazard-sm": "repeating-linear-gradient(45deg,#FFE03D 0 10px,#0B0F1A 10px 20px)",
         progress: "linear-gradient(90deg,#FF2E74,#FFE03D)",
         logo: "linear-gradient(135deg,#ff6fa5,#FF2E74)",
