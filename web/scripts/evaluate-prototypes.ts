@@ -36,6 +36,18 @@ const TRAITS = [
 
 type Prototypes = Record<string, BigFiveScores>;
 
+/**
+ * 警告の閾値。24タイプの均等値は 100/24 = 4.17% なので、そこから引く。
+ *
+ * 最小は **均等の半分（2.0%）**。以前は1.0%（均等の4分の1）だったが、
+ * それだと「実質使われていない」の手前で止められない。v4の最小1.13%が
+ * 1.0%の0.13pt上をすり抜けて「警告なし」になり、閾値が甘いせいで出なかった
+ * 「警告なし」は、測っていないのに0件と言うのと同じだと分かった。
+ */
+const MIN_SHARE_WARN = 2.0;
+/** 最大は均等の3.6倍。1タイプが全体の15%を超えたら偏りとみなす */
+const MAX_SHARE_WARN = 15.0;
+
 /** この距離までを「囲まれている」と数える。素点の幅(1〜5)に対して約3分の1 */
 const CROWD_RADIUS = 1.3;
 
@@ -132,8 +144,8 @@ const evaluate = (prototypes: Prototypes, people: BigFiveScores[], quiet = false
 
   const warnings: string[] = [];
   if (zero.length > 0) warnings.push(`到達率0のタイプが ${zero.length} 件（${zero.map((r) => r.token).join(" ")}）`);
-  if (top.n / total > 0.15) warnings.push(`最大の到達率が ${(top.n / total * 100).toFixed(1)}%（1タイプに偏っている）`);
-  if (bottom.n / total < 0.01 && bottom.n > 0) warnings.push(`最小の到達率が ${(bottom.n / total * 100).toFixed(2)}%（実質使われていない）`);
+  if ((top.n / total) * 100 > MAX_SHARE_WARN) warnings.push(`最大の到達率が ${(top.n / total * 100).toFixed(1)}%（1タイプに偏っている／閾値 ${MAX_SHARE_WARN}%）`);
+  if ((bottom.n / total) * 100 < MIN_SHARE_WARN) warnings.push(`最小の到達率が ${(bottom.n / total * 100).toFixed(2)}%（均等値4.17%の半分を下回る／閾値 ${MIN_SHARE_WARN}%）`);
   if (ties / total > 0.01) warnings.push(`距離のタイが ${(ties / total * 100).toFixed(2)}%`);
 
   if (!quiet) {
