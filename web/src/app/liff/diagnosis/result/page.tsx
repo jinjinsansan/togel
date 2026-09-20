@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from "react";
 
+import { GroupBadge } from "@/components/brand/group-badge";
 import { useLiff } from "@/lib/line/use-liff";
+import { personalityTypes, typeToken } from "@/lib/personality";
+import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
 import type { DiagnosisResult, MatchingResult, MismatchResult } from "@/types/diagnosis";
+
+/**
+ * LINE内（LIFF）の診断結果。
+ *
+ * 意匠はブランド面（/result と同じパターン）。新しい意匠は作らない。
+ * 5指標の算出は lib/personality/togel-index.ts を使う（以前はここに
+ * 軸名と反転ロジックが複製されていて、本体とずれる余地があった）。
+ */
 
 export default function LiffResultPage() {
   const { isReady, closeLiff, error: liffError } = useLiff();
@@ -25,21 +36,29 @@ export default function LiffResultPage() {
 
   if (!isReady && !liffError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-pink-500" />
+      <div className="flex min-h-[100dvh] items-center justify-center bg-ink">
+        <div className="flex flex-col items-center gap-5">
+          <div className="w-[160px] overflow-hidden rounded-full">
+            <div className="animate-marquee h-2 w-[400%] bg-hazard-sm" />
+          </div>
+          <p className="text-[12px] font-bold text-txt-subtle">LINE接続中…</p>
+        </div>
       </div>
     );
   }
 
   if (!diagnosis) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-ink px-5.5 text-white">
         <div className="text-center">
-          <p className="text-lg font-bold text-slate-700 mb-2">診断結果が見つかりません</p>
-          <p className="text-sm text-slate-500">LINEトーク画面から「診断」と送って、診断を受けてください。</p>
+          <p className="text-[17px] font-black">診断結果が見つかりません</p>
+          <p className="mt-2 text-[13px] leading-[1.95] text-txt-muted">
+            LINEトーク画面から「診断」と送って、診断を受けてください。
+          </p>
           <button
+            type="button"
             onClick={closeLiff}
-            className="mt-6 rounded-xl bg-slate-900 px-8 py-3 font-bold text-white"
+            className="mt-6 min-h-[52px] rounded-[14px] bg-primary px-8 text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
           >
             LINEに戻る
           </button>
@@ -49,43 +68,43 @@ export default function LiffResultPage() {
   }
 
   const pt = diagnosis.personalityType;
+  const extended = personalityTypes.find((type) => type.id === pt.id) ?? null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-[#FFF0F5] to-[#FFE4EC] px-4 py-10 text-center">
-        <p className="text-6xl mb-4">{pt.emoji}</p>
-        <p className="text-sm font-bold text-primary-ink tracking-widest mb-1">YOUR TOGEL TYPE</p>
-        <h1 className="text-2xl font-black text-slate-900">{pt.id}</h1>
-        <p className="text-lg font-bold text-primary-ink mt-1">{pt.typeName}</p>
-        <p className="mt-3 text-sm text-slate-600 max-w-sm mx-auto">{pt.catchphrase}</p>
-      </div>
+    <div className="min-h-[100dvh] bg-ink text-white">
+      {/* ヒーロー: あなたのタイプ */}
+      <section className="bg-[radial-gradient(120%_90%_at_50%_-20%,rgba(11,31,58,.9),transparent_60%)] px-5.5 pb-[26px] pt-8">
+        <div className="mx-auto max-w-xl">
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">YOUR TYPE / 24</div>
+          <div className="mt-3.5 text-[40px] leading-none">{pt.emoji}</div>
+          <h1 className="mt-3 text-[30px] font-black leading-[1.25] tracking-[-0.03em]">
+            {extended ? typeToken(extended) : pt.typeName}
+          </h1>
+          {extended && (
+            <div className="mt-1.5 text-[13px] font-bold text-txt-muted">{pt.typeName}</div>
+          )}
+          <div className="mt-2 text-[13px] font-bold text-primary">{pt.catchphrase}</div>
+          {extended && <GroupBadge group={extended.group} className="mt-4" />}
+        </div>
+      </section>
 
-      <div className="container px-4 py-8">
-        {/* トゥゲル指標スコア */}
-        <section className="mb-8">
-          <h2 className="text-lg font-black text-slate-900 mb-4">あなたのトゥゲル指標</h2>
-          <div className="space-y-3">
-            {Object.entries(diagnosis.bigFiveScores).map(([trait, score]) => {
-              const labels: Record<string, string> = {
-                openness: "引火点",
-                conscientiousness: "構造強度",
-                extraversion: "放熱量",
-                agreeableness: "緩衝性能",
-                neuroticism: "耐圧限界",
-              };
-              // 耐圧限界は元スコア（高いほどストレスに弱い）と意味が逆なので反転する
-              const rawPct = ((score as number) / 5) * 100;
-              const pct = trait === "neuroticism" ? 100 - rawPct : rawPct;
+      <div className="mx-auto max-w-xl px-5.5 pb-10">
+        {/* トゥゲル指標 */}
+        <section className="rounded-card border border-line bg-surface p-5">
+          <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">TOGEL INDEX</div>
+          <div className="mt-4 flex flex-col gap-3">
+            {TOGEL_INDEX.map(({ key, label }) => {
+              const pct = togelIndexPercent(key, diagnosis.bigFiveScores);
+              const high = pct >= 50;
               return (
-                <div key={trait}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-bold text-slate-700">{labels[trait] ?? trait}</span>
-                    <span className="font-bold text-primary-ink">{Math.round(pct)}</span>
+                <div key={key}>
+                  <div className="flex justify-between text-[11px] font-bold">
+                    <span className="text-txt-muted">{label}</span>
+                    <span className={high ? "text-hazard" : "text-primary"}>{pct}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="mt-[5px] h-1.5 rounded-full bg-surface-alt">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#E91E63] to-pink-400"
+                      className={`h-full rounded-full ${high ? "bg-hazard" : "bg-primary"}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -95,94 +114,107 @@ export default function LiffResultPage() {
           </div>
         </section>
 
-        {/* Characteristics */}
-        <section className="mb-8">
-          <h2 className="text-lg font-black text-slate-900 mb-4">あなたの特徴</h2>
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-green-600 mb-2">強み</h3>
-              <ul className="space-y-1">
-                {pt.characteristics.strengths.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                    <span className="text-green-500 mt-0.5">✓</span>{s}
-                  </li>
-                ))}
-              </ul>
+        {/* 特徴 */}
+        <section className="mt-3.5 flex flex-col gap-2.5">
+          <div className="rounded-card border border-line bg-surface p-5">
+            <div className="text-[10px] font-black tracking-[0.22em] text-relief">強み</div>
+            <ul className="mt-2.5 flex flex-col gap-1.5">
+              {pt.characteristics.strengths.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-[13px] leading-[1.9] text-[#D5DBE8]">
+                  <span className="mt-[2px] flex-none text-relief">✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-card border border-warnline bg-warnbg p-5">
+            <div className="text-[10px] font-black tracking-[0.22em] text-hazard">成長ポイント</div>
+            <ul className="mt-2.5 flex flex-col gap-1.5">
+              {pt.characteristics.growthAreas.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-[13px] leading-[1.9] text-[#D5DBE8]">
+                  <span className="mt-[2px] flex-none text-hazard">!</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-card border border-line bg-surface p-5">
+            <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
+              コミュニケーション
             </div>
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-amber-600 mb-2">成長ポイント</h3>
-              <ul className="space-y-1">
-                {pt.characteristics.growthAreas.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                    <span className="text-amber-500 mt-0.5">!</span>{s}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-blue-600 mb-2">コミュニケーション</h3>
-              <p className="text-sm text-slate-700">{pt.characteristics.communication}</p>
-            </div>
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-purple-600 mb-2">恋愛傾向</h3>
-              <p className="text-sm text-slate-700">{pt.characteristics.relationships}</p>
-            </div>
+            <p className="mt-2.5 text-[13px] leading-[1.9] text-[#D5DBE8]">
+              {pt.characteristics.communication}
+            </p>
+          </div>
+          <div className="rounded-card border border-line bg-surface p-5">
+            <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">恋愛傾向</div>
+            <p className="mt-2.5 text-[13px] leading-[1.9] text-[#D5DBE8]">
+              {pt.characteristics.relationships}
+            </p>
           </div>
         </section>
 
-        {/* Top Match Preview */}
+        {/* 要注意の相手 */}
+        {mismatchResults.length > 0 && (
+          <section className="mt-6">
+            <h2 className="text-[10px] font-black tracking-[0.22em] text-primary">要注意の相手</h2>
+            <div className="mt-3 flex flex-col gap-2.5">
+              {mismatchResults.slice(0, 2).map((m) => (
+                <div
+                  key={m.ranking}
+                  className="flex items-center gap-3.5 rounded-card border border-dangerline bg-dangerbg p-4"
+                >
+                  <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary text-[15px] font-black text-white">
+                    {m.ranking}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-black">{m.profile.nickname}</p>
+                    <p className="text-[11px] text-txt-muted">{m.catchphrase}</p>
+                  </div>
+                  <div className="text-[15px] font-black text-primary">{m.score}%</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 相性の良い人 */}
         {matchingResults.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-lg font-black text-slate-900 mb-4">
+          <section className="mt-6">
+            <h2 className="text-[10px] font-black tracking-[0.22em] text-relief">
               相性の良い人 TOP {Math.min(3, matchingResults.length)}
             </h2>
-            <div className="space-y-3">
+            <div className="mt-3 flex flex-col gap-2.5">
               {matchingResults.slice(0, 3).map((m) => (
-                <div key={m.ranking} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-50 text-lg font-black text-primary-ink">
+                <div
+                  key={m.ranking}
+                  className="flex items-center gap-3.5 rounded-card border border-line bg-surface p-4"
+                >
+                  <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-surface-alt text-[15px] font-black text-relief">
                     {m.ranking}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{m.profile.nickname}</p>
-                    <p className="text-xs text-slate-500">{m.profile.job}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-black">{m.profile.nickname}</p>
+                    <p className="text-[11px] text-txt-muted">{m.profile.job}</p>
                   </div>
-                  <div className="text-lg font-black text-primary-ink">{m.score}%</div>
+                  <div className="text-[15px] font-black text-relief">{m.score}%</div>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* Mismatch Preview */}
-        {mismatchResults.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-lg font-black text-slate-900 mb-4">要注意の相手</h2>
-            <div className="space-y-3">
-              {mismatchResults.slice(0, 2).map((m) => (
-                <div key={m.ranking} className="flex items-center gap-4 rounded-2xl bg-red-50 p-4 shadow-sm">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-lg font-black text-red-600">
-                    {m.ranking}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{m.profile.nickname}</p>
-                    <p className="text-xs text-red-500">{m.catchphrase}</p>
-                  </div>
-                  <div className="text-lg font-black text-red-600">{m.score}%</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+        <p className="mt-7 text-center text-[11px] font-bold text-txt-subtle">
+          タイプは傾向、ラベルは個人。
+        </p>
 
-        {/* Close Button */}
-        <div className="text-center pb-8">
-          <button
-            onClick={closeLiff}
-            className="rounded-xl bg-slate-900 px-10 py-3 font-bold text-white shadow-lg transition hover:bg-slate-800"
-          >
-            LINEに戻る
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={closeLiff}
+          className="mt-4 flex min-h-[54px] w-full items-center justify-center rounded-[14px] bg-primary text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+        >
+          LINEに戻る
+        </button>
       </div>
     </div>
   );

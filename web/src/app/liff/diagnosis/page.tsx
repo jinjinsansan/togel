@@ -8,7 +8,6 @@ import { RevealSequence } from "@/components/diagnosis/board/reveal-sequence";
 import { useReducedMotion } from "@/components/diagnosis/board/use-reduced-motion";
 import { WarningGate } from "@/components/diagnosis/board/warning-gate";
 import { QuestionCard } from "@/components/diagnosis/question-card";
-import { Button } from "@/components/ui/button";
 import { DiagnosisQuestion, DiagnosisType } from "@/types/diagnosis";
 import { trackDiagnosisComplete, trackDiagnosisStart } from "@/lib/analytics/events";
 import { buildBoard, milestoneText, recallRecords } from "@/lib/diagnosis/board";
@@ -278,43 +277,64 @@ export default function LiffDiagnosisPage() {
   // Step: Select Diagnosis Type
   if (step === "type") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
-        <div className="container px-4">
-          <div className="mx-auto max-w-lg text-center">
-            <div className="mb-2 text-4xl">🧠</div>
-            <h1 className="mb-2 text-2xl font-black text-slate-900">Togel性格診断</h1>
-            <p className="mb-8 text-sm text-slate-500">診断タイプを選んでください</p>
+      <div className="min-h-screen bg-ink text-white">
+        <div className="mx-auto max-w-xl px-5.5 pb-10 pt-[30px]">
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">STEP 1 / 3</div>
+          <h1 className="mt-3.5 text-[28px] font-black leading-[1.4] tracking-[-0.02em]">
+            どこまで
+            <br />
+            言われたいですか。
+          </h1>
+          <p className="mt-3 text-[13px] leading-[1.95] text-txt-muted">
+            設問が多いほど、指摘は具体的になります。
+          </p>
 
-            <div className="space-y-4">
-              <button
-                onClick={() => handleSelectType("light")}
-                className="w-full rounded-2xl border-2 border-white bg-white/80 p-6 text-left shadow-lg transition hover:scale-[1.02] hover:border-blue-200"
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-lg font-black text-slate-900">ライト版</span>
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600">
-                    10問
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500">3分でサクッと診断。まずは気軽に。</p>
-              </button>
+          <div className="mt-6 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => handleSelectType("light")}
+              className="rounded-[18px] border border-line bg-surface p-5 text-left transition-colors hover:border-hazard"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[19px] font-black">ライト診断</span>
+                <span className="rounded-full bg-line-soft px-2.5 py-1 text-[11px] font-black text-txt-muted">
+                  10問 / 約2分
+                </span>
+              </div>
+              <p className="mt-2 text-[12px] leading-[1.9] text-txt-muted">
+                まず味見したい人へ。ワースト3までお伝えします。
+              </p>
+            </button>
 
-              <button
-                onClick={() => handleSelectType("full")}
-                className="w-full rounded-2xl border-2 border-white bg-white/80 p-6 text-left shadow-lg transition hover:scale-[1.02] hover:border-pink-200"
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-lg font-black text-slate-900">スタンダード版</span>
-                  <span className="rounded-full bg-pink-50 px-3 py-1 text-xs font-bold text-pink-600">
-                    40問
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500">精度重視のスタンダード。約8分。</p>
-              </button>
-            </div>
-
-            {error && <p className="mt-6 text-xs font-bold text-red-500">{error}</p>}
+            <button
+              type="button"
+              onClick={() => handleSelectType("full")}
+              className="relative rounded-[18px] border border-primary bg-[linear-gradient(160deg,#160d14,#0d111b)] p-5 text-left shadow-[0_20px_50px_-26px_rgba(255,46,116,.9)] transition-colors hover:border-hazard"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[19px] font-black">スタンダード診断</span>
+                <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-black text-white">
+                  40問 / 約5分
+                </span>
+              </div>
+              <p className="mt-2 text-[12px] leading-[1.9] text-txt-muted">
+                ワースト5・地獄のシナリオ・NG行動まで全部。おすすめ。
+              </p>
+            </button>
           </div>
+
+          <div className="mt-5.5 rounded-[14px] border border-line-soft bg-panel p-4">
+            <div className="text-[10px] font-black tracking-[0.22em] text-hazard">注意事項</div>
+            <p className="mt-2 text-[11px] leading-[1.9] text-txt-subtle">
+              本診断はエンタメ目的です。診断結果はタイプに対する記述であり、特定の個人を否定するものではありません。
+            </p>
+          </div>
+
+          {error && (
+            <p className="mt-4 rounded-input bg-error/15 px-4 py-2 text-[12px] font-bold text-errortext">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -323,43 +343,55 @@ export default function LiffDiagnosisPage() {
   // Step: Select Gender
   if (step === "gender") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
-        <div className="container px-4">
-          <div className="mx-auto max-w-lg text-center">
-            <h1 className="mb-2 text-2xl font-black text-slate-900">性別を選択</h1>
-            <p className="mb-8 text-sm text-slate-500">マッチング結果表示のために教えてください</p>
+      <div className="min-h-screen bg-ink text-white">
+        <div className="mx-auto max-w-xl px-5.5 pb-10 pt-[30px]">
+          <div className="text-[11px] font-black tracking-[0.22em] text-hazard">STEP 2 / 3</div>
+          <h1 className="mt-3.5 text-[28px] font-black leading-[1.4] tracking-[-0.02em]">
+            あなたの性別は？
+          </h1>
+          <p className="mt-3 text-[13px] leading-[1.95] text-txt-muted">
+            マッチング候補の抽出にのみ使用します。
+          </p>
 
-            {loading ? (
-              <div className="py-12">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-pink-500" />
+          {loading ? (
+            <div className="mt-[26px] flex flex-col items-center gap-5 py-10">
+              <div className="w-[160px] overflow-hidden rounded-full">
+                <div className="animate-marquee h-2 w-[400%] bg-hazard-sm" />
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => handleSelectGender("male")}
-                  className="flex flex-col items-center rounded-2xl border-2 border-white bg-white/80 p-6 shadow-lg transition hover:scale-105 hover:border-blue-200"
-                >
-                  <span className="mb-3 text-5xl">👨</span>
-                  <span className="text-xl font-black text-slate-900">男性</span>
-                </button>
-                <button
-                  onClick={() => handleSelectGender("female")}
-                  className="flex flex-col items-center rounded-2xl border-2 border-white bg-white/80 p-6 shadow-lg transition hover:scale-105 hover:border-pink-200"
-                >
-                  <span className="mb-3 text-5xl">👩</span>
-                  <span className="text-xl font-black text-slate-900">女性</span>
-                </button>
-              </div>
-            )}
+              <p className="text-[12px] font-bold text-txt-subtle">質問を用意しています…</p>
+            </div>
+          ) : (
+            <div className="mt-[26px] grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleSelectGender("male")}
+                className="rounded-[18px] border border-line bg-surface px-3 py-[30px] text-[17px] font-black transition-colors hover:border-primary hover:bg-dangerbg"
+              >
+                男性
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectGender("female")}
+                className="rounded-[18px] border border-line bg-surface px-3 py-[30px] text-[17px] font-black transition-colors hover:border-primary hover:bg-dangerbg"
+              >
+                女性
+              </button>
+            </div>
+          )}
 
-            <Button
-              variant="ghost"
-              onClick={() => setStep("type")}
-              className="mt-6 text-slate-400 hover:text-slate-600"
-            >
-              ← 戻る
-            </Button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setStep("type")}
+            className="mt-5 min-h-[44px] text-[12px] font-bold text-txt-subtle transition-colors hover:text-white"
+          >
+            ← 戻る
+          </button>
+
+          {error && (
+            <p className="mt-4 rounded-input bg-error/15 px-4 py-2 text-[12px] font-bold text-errortext">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     );
