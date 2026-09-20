@@ -111,6 +111,35 @@ export default function AboutPage() {
           ※ エンタメ目的の診断です。18歳以上の方が対象です。
         </p>
       </section>
+
+      {/*
+        共有画像に使っている絵文字の帰属（CC-BY 4.0）。
+        画像はXやLINEのタイムライン——サイトの外——で表示されるので、
+        リポジトリの NOTICE だけでは見た人が辿り着けない。表にも出す。
+      */}
+      <section className="border-t border-line-soft px-5.5 py-7">
+        <p className="mx-auto max-w-[1120px] text-[11px] leading-[1.9] text-txt-subtle">
+          共有画像の絵文字は{" "}
+          <a
+            href="https://github.com/twitter/twemoji"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline transition-colors hover:text-white"
+          >
+            Twemoji
+          </a>{" "}
+          を使用しています（
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline transition-colors hover:text-white"
+          >
+            CC-BY 4.0
+          </a>
+          ）。
+        </p>
+      </section>
     </div>
   );
 }

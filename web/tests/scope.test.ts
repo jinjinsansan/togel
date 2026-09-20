@@ -64,3 +64,25 @@ test("対象外の宣言には理由が書いてある", () => {
     assert.ok(area.reason.length >= 10, `${area.prefix} の理由が短すぎる`);
   }
 });
+
+/* ===== docs の索引 ===== */
+
+/**
+ * docs/README.md は「次に入る人が最初に読む1枚」なので、載っていない文書が
+ * あると、その文書は存在しないのと同じになる。索引が実体とずれたら落とす。
+ */
+test("docs の索引が実体と一致する", () => {
+  const docsDir = join(process.cwd(), "..", "docs");
+  const index = readFileSync(join(docsDir, "README.md"), "utf8");
+
+  const listed = new Set(
+    [...index.matchAll(/\]\(\.\/([^)]+)\)/g)].map((match) => decodeURIComponent(match[1])),
+  );
+  const actual = readdirSync(docsDir).filter((name) => name.endsWith(".md") && name !== "README.md");
+
+  const unlisted = actual.filter((name) => !listed.has(name));
+  assert.deepEqual(unlisted, [], "索引に載っていない文書がある");
+
+  const dangling = [...listed].filter((name) => !existsSync(join(docsDir, name)));
+  assert.deepEqual(dangling, [], "索引が実体の無い文書を指している");
+});

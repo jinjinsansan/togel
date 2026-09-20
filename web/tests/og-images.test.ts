@@ -126,3 +126,24 @@ test("OG画像の生成が外部へ取りに行かない", async () => {
 
   assert.deepEqual(attempts, [], "OG生成が外部へ取りに行っている");
 });
+
+test("絵文字の素材を置いている限り、帰属表示を2か所に出す", async () => {
+  const { readFileSync, existsSync } = await import("node:fs");
+  const { join } = await import("node:path");
+
+  const assetDir = join(process.cwd(), "src/assets/emoji");
+  if (!existsSync(assetDir)) return; // 素材を使うのをやめたなら帰属も要らない
+
+  // 素材は CC-BY 4.0。OG画像はサイトの外（Xのタイムライン等）で表示されるので、
+  // リポジトリ内の NOTICE だけでは見た人が辿り着けない。表にも出す。
+  const notice = readFileSync(join(assetDir, "NOTICE.md"), "utf8");
+  assert.ok(notice.includes("CC-BY 4.0"), "NOTICE.md にライセンスの記載が無い");
+  assert.ok(notice.includes("Twemoji"), "NOTICE.md に出典の記載が無い");
+
+  const about = readFileSync(join(process.cwd(), "src/app/about/page.tsx"), "utf8");
+  assert.ok(about.includes("Twemoji"), "/about に出典が出ていない");
+  assert.ok(
+    about.includes("creativecommons.org/licenses/by/4.0"),
+    "/about にライセンスへのリンクが無い",
+  );
+});
