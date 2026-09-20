@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type DistributionItem = {
   id: string;
   label: string;
+  token: string;
   typeName: string;
   catchphrase: string;
   emoji: string;
@@ -40,10 +41,10 @@ export const DistributionChart = ({ items }: { items: DistributionItem[] }) => {
   const remark =
     selfItem && selfRank
       ? selfRank <= 6
-        ? `あなた（${selfItem.typeName}）は多数派です。よく見かけるタイプ、ということです。`
+        ? `あなた（${selfItem.token}）は多数派です。よく見かけるタイプ、ということです。`
         : selfRank <= 16
-          ? `あなた（${selfItem.typeName}）は${selfRank}位。ほどよい生息数です。`
-          : `あなた（${selfItem.typeName}）は少数派です。レアであることと生きやすさは別問題ですが。`
+          ? `あなた（${selfItem.token}）は${selfRank}位。ほどよい生息数です。`
+          : `あなた（${selfItem.token}）は少数派です。レアであることと生きやすさは別問題ですが。`
       : null;
 
   return (
@@ -65,6 +66,9 @@ export const DistributionChart = ({ items }: { items: DistributionItem[] }) => {
                   </span>
                   <span>{item.emoji}</span>
                   <span className={`truncate ${isSelf ? "text-white" : "text-txt-muted"}`}>
+                    {item.token}
+                  </span>
+                  <span className="hidden flex-none text-[10px] text-txt-disabled sm:inline">
                     {item.typeName}
                   </span>
                   {isSelf && (

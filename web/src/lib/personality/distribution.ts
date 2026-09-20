@@ -1,9 +1,10 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { personalityTypes, getTogelLabel } from ".";
+import { personalityTypes, getTogelLabel, typeToken } from ".";
 
 export type TogelDistributionItem = {
   id: string;
   label: string; // Togel XX型
+  token: string; // ライオ型 等（名乗りの単位）
   typeName: string; // 創造的リーダー 等
   description: string;
   catchphrase: string;
@@ -57,6 +58,7 @@ export const loadTogelDistribution = async () => {
     return {
       id: type.id,
       label,
+      token: typeToken(type),
       typeName: type.typeName,
       description: type.description,
       catchphrase: type.catchphrase,

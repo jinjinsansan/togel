@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { GroupBadge } from "@/components/brand/group-badge";
 import { getTypeApproachGuide } from "@/lib/coaching/translations";
 import { personalityTypes, typeToken } from "@/lib/personality";
+import { serializeJsonLd, typeArticleJsonLd } from "@/lib/seo/json-ld";
 
 /**
  * タイプ別の攻略ページ（公開）。
@@ -65,6 +66,11 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
 
   return (
     <div className="min-h-screen bg-paper text-navy">
+      {/* 構造化データ。検索結果に出るが画面には出ない */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(typeArticleJsonLd(type)) }}
+      />
       {/* ヒーロー: ネイビー→ペーパーの硬い分割（毒から救いへの転換） */}
       <section
         className="bg-[linear-gradient(180deg,#0b1f3a_0%,#0b1f3a_58%,#F4F7F5_58%,#F4F7F5_100%)] px-5.5 pb-[26px] pt-[30px]"

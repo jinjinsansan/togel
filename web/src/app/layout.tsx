@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
+
+import { serializeJsonLd, websiteJsonLd } from "@/lib/seo/json-ld";
 import "./globals.css";
 import "@fontsource/noto-sans-jp/400.css";
 import "@fontsource/noto-sans-jp/500.css";
@@ -47,6 +49,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="min-h-screen bg-background text-foreground antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteJsonLd()) }}
+        />
         <LineExternalBrowserRedirect />
         <AgeGate />
         <ConditionalHeader />
