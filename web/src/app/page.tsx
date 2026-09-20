@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { GroupBadge } from "@/components/brand/group-badge";
 import { TogelMark } from "@/components/brand/togel-mark";
+import { personalityTypes, TYPE_GROUP_ORDER, typeToken } from "@/lib/personality";
 
 const marqueeItems = [
   { text: "取扱注意", className: "text-hazard" },
@@ -227,6 +229,63 @@ export default function Home() {
 
           <div className="flex justify-center">
             <SealedCard />
+          </div>
+        </div>
+      </section>
+
+      {/* 識別体系: 愛称と群。Xの投稿から来た人が、投稿で見たものに最初に出会う場所 */}
+      <section className="border-t border-line-soft bg-panel px-5.5 py-[34px]">
+        <div className="mx-auto max-w-[1120px]" style={{ containerType: "inline-size" }}>
+          <div className="text-label text-hazard">24 TYPES</div>
+          <h2 className="mt-3.5 text-xl font-black leading-[1.5]">
+            24タイプ、ぜんぶ「〜型」で名乗れます。
+          </h2>
+          <p className="mt-2.5 text-[13px] leading-[1.95] text-txt-muted">
+            タイプは4つの群に分かれます。自分の型が分かると、噛み合わない相手の型も分かります。
+          </p>
+
+          {/* 愛称（横スクロール） */}
+          <div className="-mx-5.5 mt-4 overflow-x-auto px-5.5 pb-1.5">
+            <div className="flex w-max gap-2">
+              {personalityTypes.map((type) => (
+                <Link
+                  key={type.id}
+                  href={`/coaching/${type.id}`}
+                  className="flex min-h-[44px] flex-none items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-[13px] font-black text-white transition-colors hover:border-hazard"
+                >
+                  <span aria-hidden="true">{type.emoji}</span>
+                  {typeToken(type)}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* 群（名前と再定義はセット） */}
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {TYPE_GROUP_ORDER.map((group) => (
+              <GroupBadge key={group} group={group} variant="compact" className="px-1" />
+            ))}
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link
+              href="/types"
+              className="flex min-h-[48px] items-center rounded-full border border-line px-5 text-[13px] font-bold text-txt-muted transition-colors hover:border-hazard hover:text-white"
+            >
+              24タイプ図鑑
+            </Link>
+            <Link
+              href="/coaching"
+              className="flex min-h-[48px] items-center rounded-full border border-line px-5 text-[13px] font-bold text-txt-muted transition-colors hover:border-hazard hover:text-white"
+            >
+              地雷回避ガイド
+            </Link>
+            <Link
+              href="/compatibility"
+              className="flex min-h-[48px] items-center rounded-full border border-line px-5 text-[13px] font-bold text-txt-muted transition-colors hover:border-hazard hover:text-white"
+            >
+              4群 相性表
+            </Link>
           </div>
         </div>
       </section>
