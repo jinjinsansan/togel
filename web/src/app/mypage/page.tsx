@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { withExternalBrowserParam } from "@/lib/line/external-browser";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -304,8 +305,8 @@ export default function MyPage() {
     if (!enabled || !code) return null;
     const referralUrl = new URL(window.location.origin);
     referralUrl.searchParams.set("c", code);
-    referralUrl.searchParams.set("openExternalBrowser", "1");
-    return referralUrl.toString();
+    // LINEのトークに貼られる前提。LINE内で開かれると紹介が紐付かないので外に出す
+    return withExternalBrowserParam(referralUrl).toString();
   };
 
   const handleCopyLink = async () => {

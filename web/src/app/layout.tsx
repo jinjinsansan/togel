@@ -9,7 +9,6 @@ import "@fontsource/noto-sans-jp/700.css";
 
 import { ConditionalHeader } from "@/components/layout/conditional-header";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
-import { LineExternalBrowserRedirect } from "@/components/line-external-browser-redirect";
 import { AgeGate } from "@/components/age-gate";
 
 export const viewport: Viewport = {
@@ -53,7 +52,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteJsonLd()) }}
         />
-        <LineExternalBrowserRedirect />
         <AgeGate />
         <ConditionalHeader />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
