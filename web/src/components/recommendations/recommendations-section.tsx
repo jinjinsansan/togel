@@ -89,7 +89,7 @@ export function RecommendationsSection({ togelType, page, heading, subheading }:
     <section className="mt-12">
       <div className="mx-auto w-full max-w-5xl px-4 md:px-0">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#E91E63]/70">SERVICE</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary-ink">SERVICE</p>
           <h2 className="mt-2 text-3xl font-black text-slate-900">{heading ?? "あなたにおすすめのサービス"}</h2>
           <p className="mt-2 text-sm text-slate-500">{subheading ?? "性格データをもとに厳選した特別な提案"}</p>
         </div>

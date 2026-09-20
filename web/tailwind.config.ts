@@ -42,7 +42,8 @@ const config: Config = {
         primary: {
           DEFAULT: "#FF2E74",
           hover: "#ff5a92",
-          light: "#E91E63", // ライト面専用
+          light: "#E91E63", // ライト面の面（背景・ボタン）用。本文には ink を使う
+          ink: "#D61556", // ライト面の本文用（paper 4.75 / white 5.12）
           foreground: "#ffffff",
         },
         hazard: "#FFE03D",
@@ -54,7 +55,8 @@ const config: Config = {
         panel: "#0B0F1A",
         surface: { DEFAULT: "#0d111b", alt: "#141a26" },
         line: { DEFAULT: "#232b3d", soft: "#1c2333" },
-        txt: { DEFAULT: "#ffffff", muted: "#9aa5ba", subtle: "#6b7488", disabled: "#39415a" },
+        // subtle は旧値 #6b7488 だとどのダーク背景でも 4.5:1 に届かない（本文で使えない）
+        txt: { DEFAULT: "#ffffff", muted: "#9aa5ba", subtle: "#818A9C", disabled: "#39415a" },
         // ライト面（救い）
         paper: "#F4F7F5",
         lightline: "#dde5e0",

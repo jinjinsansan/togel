@@ -388,7 +388,7 @@ export default function LiffDiagnosisPage() {
         <button
           type="button"
           onClick={() => setOverview((value) => !value)}
-          className="absolute right-3 top-3 min-h-[34px] rounded-full border border-line bg-surface/80 px-3.5 text-[11px] font-bold text-txt-muted backdrop-blur transition-colors hover:text-white"
+          className="absolute right-3 top-3 min-h-[44px] rounded-full border border-line bg-surface/80 px-3.5 text-[11px] font-bold text-txt-muted backdrop-blur transition-colors hover:text-white"
         >
           {overview ? "現在地に戻る" : "全体を見る"}
         </button>

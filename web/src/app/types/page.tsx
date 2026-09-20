@@ -189,7 +189,7 @@ const TypeListPage = () => {
             <button
               type="button"
               onClick={() => setFilterMode("worst")}
-              className={`min-h-[38px] flex-1 rounded-full px-4 transition-colors md:flex-none ${
+              className={`min-h-[44px] flex-1 rounded-full px-4 transition-colors md:flex-none ${
                 filterMode === "worst" ? "bg-primary text-white" : "text-txt-muted"
               }`}
             >
@@ -201,7 +201,7 @@ const TypeListPage = () => {
                 setFilterMode("all");
                 setFilterId(null);
               }}
-              className={`min-h-[38px] flex-1 rounded-full px-4 transition-colors md:flex-none ${
+              className={`min-h-[44px] flex-1 rounded-full px-4 transition-colors md:flex-none ${
                 filterMode === "all" ? "bg-primary text-white" : "text-txt-muted"
               }`}
             >
@@ -216,7 +216,7 @@ const TypeListPage = () => {
                   key={type.id}
                   type="button"
                   onClick={() => setFilterId((prev) => (prev === type.id ? null : type.id))}
-                  className={`min-h-[36px] flex-none rounded-full border px-3 text-[11px] font-bold transition-colors ${
+                  className={`min-h-[44px] flex-none rounded-full border px-3 text-[11px] font-bold transition-colors ${
                     filterId === type.id
                       ? "border-hazard bg-hazard text-ink"
                       : "border-line text-txt-muted hover:text-white"

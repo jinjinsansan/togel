@@ -485,7 +485,7 @@ const ResultPage = () => {
                 <button
                   type="button"
                   onClick={() => handleModeChange("opposite")}
-                  className={`min-h-[36px] rounded-full px-4 text-[11px] font-black transition-colors ${
+                  className={`min-h-[44px] rounded-full px-4 text-[11px] font-black transition-colors ${
                     mode === "opposite" ? "bg-navy text-white" : "text-lighttext-subtle"
                   }`}
                 >
@@ -494,7 +494,7 @@ const ResultPage = () => {
                 <button
                   type="button"
                   onClick={() => handleModeChange("same")}
-                  className={`min-h-[36px] rounded-full px-4 text-[11px] font-black transition-colors ${
+                  className={`min-h-[44px] rounded-full px-4 text-[11px] font-black transition-colors ${
                     mode === "same" ? "bg-navy text-white" : "text-lighttext-subtle"
                   }`}
                 >

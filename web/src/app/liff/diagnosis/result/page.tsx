@@ -55,9 +55,9 @@ export default function LiffResultPage() {
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#FFF0F5] to-[#FFE4EC] px-4 py-10 text-center">
         <p className="text-6xl mb-4">{pt.emoji}</p>
-        <p className="text-sm font-bold text-[#E91E63] tracking-widest mb-1">YOUR TOGEL TYPE</p>
+        <p className="text-sm font-bold text-primary-ink tracking-widest mb-1">YOUR TOGEL TYPE</p>
         <h1 className="text-2xl font-black text-slate-900">{pt.id}</h1>
-        <p className="text-lg font-bold text-[#E91E63] mt-1">{pt.typeName}</p>
+        <p className="text-lg font-bold text-primary-ink mt-1">{pt.typeName}</p>
         <p className="mt-3 text-sm text-slate-600 max-w-sm mx-auto">{pt.catchphrase}</p>
       </div>
 
@@ -81,7 +81,7 @@ export default function LiffResultPage() {
                 <div key={trait}>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-bold text-slate-700">{labels[trait] ?? trait}</span>
-                    <span className="font-bold text-[#E91E63]">{Math.round(pct)}</span>
+                    <span className="font-bold text-primary-ink">{Math.round(pct)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div
@@ -139,14 +139,14 @@ export default function LiffResultPage() {
             <div className="space-y-3">
               {matchingResults.slice(0, 3).map((m) => (
                 <div key={m.ranking} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-50 text-lg font-black text-[#E91E63]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-50 text-lg font-black text-primary-ink">
                     {m.ranking}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-slate-900 truncate">{m.profile.nickname}</p>
                     <p className="text-xs text-slate-500">{m.profile.job}</p>
                   </div>
-                  <div className="text-lg font-black text-[#E91E63]">{m.score}%</div>
+                  <div className="text-lg font-black text-primary-ink">{m.score}%</div>
                 </div>
               ))}
             </div>

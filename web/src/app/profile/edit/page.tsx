@@ -316,14 +316,14 @@ export default function ProfileEditPage() {
           <div className="rounded-card border border-line bg-surface p-5 sm:col-span-2">
             <div className="flex items-center justify-between">
               <div className="mr-2 min-w-0 flex-1">
-                <h3 className="flex items-center gap-2 whitespace-nowrap text-sm font-black">
+                <h2 className="flex items-center gap-2 whitespace-nowrap text-sm font-black">
                   {isPublic ? (
                     <Eye className="shrink-0 text-primary" size={16} />
                   ) : (
                     <EyeOff className="shrink-0 text-txt-subtle" size={16} />
                   )}
                   公開設定
-                </h3>
+                </h2>
                 <p className="mt-1 truncate text-[11px] text-txt-subtle">
                   {isPublic ? "プロフィールは公開されています" : "プロフィールは非公開です"}
                 </p>

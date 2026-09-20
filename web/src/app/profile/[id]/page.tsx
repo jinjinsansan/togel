@@ -481,7 +481,7 @@ const ProfileDetailPage = (props: { params: Promise<Params> }) => {
               <p className="mt-2.5 text-[11px] leading-[1.85] text-[#9ccdb8]">{guide.dos[0]}</p>
               <Link
                 href="/coaching"
-                className="mt-3 inline-flex min-h-[40px] items-center rounded-full bg-relief px-4 text-[11px] font-black text-[#05130e] transition-colors hover:bg-white"
+                className="mt-3 inline-flex min-h-[44px] items-center rounded-full bg-relief px-4 text-[11px] font-black text-[#05130e] transition-colors hover:bg-white"
               >
                 このタイプの攻略法をすべて見る
               </Link>
