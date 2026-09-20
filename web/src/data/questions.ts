@@ -37,7 +37,7 @@ const baseQuestions: DiagnosisQuestion[] = [
     id: "c1",
     diagnosisType: "light",
     number: 3,
-    text: "計画を立ててから行動するほうがだ",
+    text: "計画を立ててから行動するほうだ",
     scale: "likert",
     options: likertOptions,
     trait: "conscientiousness",
