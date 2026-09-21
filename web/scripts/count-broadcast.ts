@@ -7,10 +7,15 @@
  * 着地先の字数だけ見ると、実際に届く量と食い違う。
  */
 import { buildTypeBroadcast, BROADCAST_TOTAL_ISSUES } from "../src/lib/line/broadcast";
+import { ANGLE_BY_BROADCAST_KIND, BOARD_ANGLES } from "../src/lib/coaching/board";
 import { personalityTypes } from "../src/lib/personality";
 
 const len = (s: string) => [...s].length;
-const KIND_LABEL = ["今週の地雷注意報", "中身の正体", "言い方の翻訳講座", "今日からやること", "距離の置き方"];
+// 見出しを直書きしない。**角度の対応から作る。**
+// 直書きすると、本文の見出しを変えたときに道具のほうが古い名前を言い続ける。
+const KIND_LABEL = ANGLE_BY_BROADCAST_KIND.map(
+  (angle) => BOARD_ANGLES.find((a) => a.key === angle)?.label ?? angle,
+);
 
 const perKind: number[][] = [[], [], [], [], []];
 const bodies: string[] = [];

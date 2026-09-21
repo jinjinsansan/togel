@@ -87,13 +87,14 @@ export const buildTypeBroadcast = (typeId: string, issue: number): LineTextMessa
       ].join("\n");
       break;
     case 2:
+      // この通の角度は `why`。**`ng / ok` を混ぜない。**
+      // 以前は ✕/◯ も載せていたため、1通目（translate）と同じ中身が2週後に
+      // もう一度届いていた（15通中3通）。見出しも「言い方の翻訳講座」のままで、
+      // 中身が why なのに見出しが嘘になっていた。
       body = [
-        `【言い方の翻訳講座｜対 ${worst.typeName}】`,
+        `【なぜ効くか｜対 ${worst.typeName}】`,
         "",
-        `✕ ${guide.ng}`,
-        `◯ ${guide.ok}`,
-        "",
-        `なぜ効くか: ${guide.why}`,
+        guide.why,
       ].join("\n");
       break;
     case 3:

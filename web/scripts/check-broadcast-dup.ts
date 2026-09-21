@@ -1,8 +1,12 @@
 /** 【計測用】同じ ✕/◯ が同じ相手について複数の通に出ていないかを見る */
 import { buildTypeBroadcast, BROADCAST_TOTAL_ISSUES } from "../src/lib/line/broadcast";
+import { ANGLE_BY_BROADCAST_KIND, BOARD_ANGLES } from "../src/lib/coaching/board";
 import { personalityTypes } from "../src/lib/personality";
 
-const KIND = ["今週の地雷注意報", "中身の正体", "言い方の翻訳講座", "今日からやること", "距離の置き方"];
+// 見出しを直書きしない。**角度の対応から作る。**
+const KIND = ANGLE_BY_BROADCAST_KIND.map(
+  (angle) => BOARD_ANGLES.find((a) => a.key === angle)?.label ?? angle,
+);
 const sample = personalityTypes[0];
 console.log(`例: ${sample.typeName} の15通\n`);
 
