@@ -121,9 +121,11 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
   }
 });
 
-test("盤の全長は診断の種別によらず常に15マス", () => {
-  // 人によって全長が違うと、それ自体が達成度の差として読まれる。
-  // LINE週次配信（15通）の可視化としても、数が合っている必要がある。
+test("週次配信の全15通が、3タイプ×5角度と一致する", () => {
+  // 🔴 **これは図の検査ではない。配信の検査。**
+  // 2026-09-21 に「何マス歩いたか」を数える図は撤去したが、この検査は残す。
+  // 消すと、BROADCAST_TOTAL_ISSUES を 16 に変えても誰も気づかなくなる。
+  // 元は「盤の全長は常に15マス」という名前で、図の検査に見えていた。
   assert.equal(BOARD_TYPE_COUNT, 3);
   assert.equal(boardTypeCount() * ANGLES_PER_TYPE, 15);
   assert.equal(boardTypeCount() * ANGLES_PER_TYPE, BROADCAST_TOTAL_ISSUES);

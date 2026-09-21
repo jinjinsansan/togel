@@ -1,13 +1,19 @@
-/** 攻略盤の構造検算。npx tsx scripts/... で実行 */
+/**
+ * 週次配信の構造検算（角度・マスの住所）。npx tsx scripts/... で実行
+ *
+ * 【2026-09-21】15マスを数える図は撤去したが、**ここは図の検算ではない。**
+ * 配信テンプレと角度の対応、マス指定の往復を見ている。
+ * `3タイプ × 5角度 = 15` は配信の全15通と一致している必要がある。
+ */
 import { ANGLES_PER_TYPE, ANGLE_BY_BROADCAST_KIND, BOARD_ANGLES, boardTypeCount, cellKey, parseCellKey } from "../src/lib/coaching/board";
 
 const failures: string[] = [];
-const light = boardTypeCount("light") * ANGLES_PER_TYPE;
-const full = boardTypeCount("full") * ANGLES_PER_TYPE;
-console.log(`[1] light = ${boardTypeCount("light")} x ${ANGLES_PER_TYPE} = ${light}（期待15）`);
-console.log(`[1] full  = ${boardTypeCount("full")} x ${ANGLES_PER_TYPE} = ${full}（期待25）`);
-if (light !== 15) failures.push("[1] light が15マスでない");
-if (full !== 25) failures.push("[1] full が25マスでない");
+// 🔴 この検算は「full は25」と書かれたまま放置されていた。boardTypeCount は
+// 引数を取らず（診断の種別によらず3タイプ）、実際はどちらも15。
+// 期待値のほうが古く、**走らせれば落ちる状態が残っていた**。
+const cells = boardTypeCount() * ANGLES_PER_TYPE;
+console.log(`[1] ${boardTypeCount()} タイプ x ${ANGLES_PER_TYPE} 角度 = ${cells}（期待15・配信の全通数と一致）`);
+if (cells !== 15) failures.push("[1] 3タイプ×5角度が15にならない");
 
 // 週次配信15通（5テンプレ×3タイプ）と light の15マスが1対1で対応すること
 const angles = new Set(ANGLE_BY_BROADCAST_KIND);

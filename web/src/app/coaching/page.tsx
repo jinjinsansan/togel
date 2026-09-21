@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { GroupBadge } from "@/components/brand/group-badge";
-import { BoardHero, BoardTypeCards } from "@/components/coaching/board-view";
+import { BoardTypeCards } from "@/components/coaching/board-view";
 import { trackLineCta } from "@/lib/analytics/events";
 import { personalityTypes, TYPE_GROUP_ORDER, typesInGroup, typeToken } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
@@ -18,7 +18,7 @@ import {
 } from "@/lib/coaching/board";
 import type { BoardAngle } from "@/lib/coaching/board";
 import { getTypeApproachGuide } from "@/lib/coaching/translations";
-import { loadBoardState, loadVisited, markVisited, saveBoardState } from "@/lib/coaching/progress";
+import { loadBoardState, saveBoardState } from "@/lib/coaching/progress";
 import type { CoachingBoardState } from "@/lib/coaching/progress";
 import { loadSession } from "@/lib/diagnosis/session";
 import type { MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosis";
@@ -27,11 +27,16 @@ import type { MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosi
  * 地雷回避ガイド。
  *
  * 2つを分けて置く。
- * - 盤 … 個人のもの。診断が要る（ミスマッチ3 or 5タイプ × 5つの角度）
+ * - あなた向けの入口 … 診断が要る（噛み合わない3タイプ × 5つの角度）
  * - タイプ別ガイド … 誰でも読める。24タイプの一覧から各ページへ
  *
- * 盤で出していいのは来た距離（「{n}マス歩きました」）と全長だけ。
- * 残数・達成率・ストリーク・完走演出・督促・他人との比較は置かない。
+ * 【2026-09-21】**「何マス歩いたか」を数える盤は撤去した。**
+ * 数えていたのは「ガイドを何ページ開いたか」で、増えても読む人に意味が無い。
+ * 置き換えられる数が無い（診断後に積み上がるものがまだ無い）ので、
+ * 別の数に差し替えるのではなく、**無いものを数える図ごと消した**。
+ * 残したのは「読むものへの入口」と本文。
+ *
+ * LINE配信のリンク（`?cell=`）はここに着地して本文を開く。**印は付けない。**
  *
  * 意匠はデザイン一式の「地雷回避ガイド」に合わせる（ライト面＝救いの画面）。
  */
@@ -39,7 +44,7 @@ import type { MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosi
 const findExtended = (typeId: string | undefined): ExtendedPersonalityTypeDefinition | null =>
   personalityTypes.find((t) => t.id === typeId) ?? null;
 
-/** 診断結果（あれば）から盤を組む。無ければ保存済みの盤を使う */
+/** 診断結果（あれば）から、噛み合わないタイプを決める。無ければ保存済みのものを使う */
 const buildBoardState = (): CoachingBoardState | null => {
   if (typeof window === "undefined") return null;
 
@@ -79,7 +84,7 @@ const buildBoardState = (): CoachingBoardState | null => {
   if (typeIds.length === 0) {
     typeIds = findExtended(selfTypeId)?.badCompatibleTypes ?? [];
   }
-  // 盤は常に3タイプ。4番目以降は盤に載せず、読めるガイドとして出す
+  // 入口に出すのは常に3タイプ（配信の全15通＝3×5と一致）。4番目以降は一覧側へ
   const readableTypeIds = typeIds.slice(limit);
   typeIds = typeIds.slice(0, limit);
   if (typeIds.length === 0) return saved;
@@ -115,29 +120,25 @@ const MECHANISM = [
 
 export default function CoachingPage() {
   const [board, setBoard] = useState<CoachingBoardState | null>(null);
-  const [visited, setVisited] = useState<string[]>([]);
   const [open, setOpen] = useState<{ typeId: string; angle: BoardAngle } | null>(null);
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- 盤の状態は永続層にあり、クライアントでしか読めない */
+    /* eslint-disable react-hooks/set-state-in-effect -- 診断結果は永続層にあり、クライアントでしか読めない */
     const state = buildBoardState();
     setBoard(state);
-    const stored = loadVisited();
 
-    // LINE配信のリンク（?cell=<typeId>:<angle>）で来た場合は、そのマスを開いて埋める
+    // LINE配信のリンク（?cell=<typeId>:<angle>）で来たら、その角度の本文を開く。
+    // **「歩いた」印は付けない**（数えるものが無くなったので、印だけ残すと
+    //   意味の無い状態が残る）。開くところまで。
     const requested = parseCellKey(new URLSearchParams(window.location.search).get("cell"));
     if (requested && state?.typeIds.includes(requested.typeId)) {
       setOpen(requested);
-      setVisited(markVisited(cellKey(requested.typeId, requested.angle)));
-      return;
     }
-    setVisited(stored);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const openCell = useCallback((typeId: string, angle: BoardAngle) => {
     setOpen({ typeId, angle });
-    setVisited(markVisited(cellKey(typeId, angle)));
   }, []);
 
   const boardTypes = useMemo(
@@ -156,25 +157,14 @@ export default function CoachingPage() {
     [board],
   );
 
-  const totalCells = boardTypes.length * ANGLES_PER_TYPE;
-  const walked = useMemo(
-    () =>
-      boardTypes.reduce(
-        (count, type) =>
-          count +
-          BOARD_ANGLES.filter((angle) => visited.includes(cellKey(type.id, angle.key))).length,
-        0,
-      ),
-    [boardTypes, visited],
-  );
-  const finished = totalCells > 0 && walked >= totalCells;
 
   const openType = open ? findExtended(open.typeId) : null;
   const openGuide = openType ? getTypeApproachGuide(openType.id) : null;
   const openContent = openGuide && open ? cellContent(openGuide, open.angle) : null;
   const openLabel = open ? BOARD_ANGLES.find((angle) => angle.key === open.angle)?.label : null;
 
-  const hasBoard = boardTypes.length > 0;
+  /** 噛み合わないタイプが割り出せているか。盤は無くなったので「盤がある」ではない */
+  const hasTypes = boardTypes.length > 0;
 
   const mechanism = (
     <div className="grid gap-3 sm:grid-cols-3">
@@ -198,7 +188,7 @@ export default function CoachingPage() {
           診断済みなら盤が主役になるので、ヒーローごと差し替える */}
       <section
         className={`px-5.5 pb-[26px] ${
-          hasBoard
+          hasTypes
             ? "bg-[linear-gradient(180deg,#0b1f3a_0%,#0b1f3a_52%,#F4F7F5_52%,#F4F7F5_100%)] pt-[30px]"
             : "bg-[linear-gradient(180deg,#0b1f3a_0%,#0b1f3a_46%,#F4F7F5_46%,#F4F7F5_100%)] pt-8"
         }`}
@@ -207,15 +197,11 @@ export default function CoachingPage() {
         <div className="mx-auto max-w-[1120px]">
           <div className="inline-flex items-center gap-2 rounded-full border border-relief/40 bg-relief/[.14] px-[13px] py-[5px]">
             <span className="text-[11px] font-black tracking-[0.22em] text-relief">
-              {hasBoard ? "あなたの盤" : "毒のあとに、救いを"}
+              毒のあとに、救いを
             </span>
           </div>
 
-          {hasBoard ? (
-            <>
-              <BoardHero types={boardTypes} visited={visited} walked={walked} />
-            </>
-          ) : (
+          {(
             <>
               <h1 className="mt-4 text-[clamp(28px,5cqw,48px)] font-black leading-[1.28] tracking-[-0.03em] text-white">
                 合わない相手は、
@@ -235,15 +221,10 @@ export default function CoachingPage() {
 
       <section className="px-5.5 pb-[34px] pt-3.5">
         <div className="mx-auto flex max-w-[1120px] flex-col gap-3.5">
-          {/* あなたの盤（診断済みのみ）。タイプごとに1枚、1行が1マス */}
-          {hasBoard && (
+          {/* 読むものへの入口（診断済みのみ）。タイプごとに1枚、1行が1つの角度 */}
+          {hasTypes && (
             <>
-              <BoardTypeCards
-                types={boardTypes}
-                visited={visited}
-                open={open}
-                onOpenCell={openCell}
-              />
+              <BoardTypeCards types={boardTypes} open={open} onOpenCell={openCell} />
 
               {/* 開いているマス */}
               {openType && openContent && (
@@ -315,18 +296,22 @@ export default function CoachingPage() {
                 </div>
               )}
 
-              {/* 盤が埋まったあと: light だけ次の階段（full には置かない） */}
-              {finished && board?.plan === "light" && (
+              {/*
+                light だけ次の階段（full には置かない）。
+                以前は「盤を歩き切ったら出す」だったが、数えるのをやめたので
+                出す条件が無くなった。10問で来た人には常に出す。
+              */}
+              {board?.plan === "light" && (
                 <div className="grid items-center gap-4 rounded-card border border-lightline bg-white px-5.5 py-5 shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)] sm:grid-cols-2">
                   <div>
                     <div className="text-[11px] font-black tracking-[0.22em] text-relief-ink">
-                      歩き切ったあと
+                      10問で来た方へ
                     </div>
                     <div className="mt-[7px] text-[15px] font-black leading-[1.6] text-navy">
                       あと2タイプ、あなたと噛み合わない相手がいます
                     </div>
                     <p className="mt-[7px] text-[12px] leading-[1.9] text-lighttext-subtle">
-                      40問の診断で、その2タイプが読めるようになります。盤の長さは変わりません。
+                      40問の診断で、その2タイプが読めるようになります。
                     </p>
                   </div>
                   <Link
@@ -340,8 +325,8 @@ export default function CoachingPage() {
             </>
           )}
 
-          {/* 診断済みのときは盤がヒーローになるので、地雷の仕組みはここに置く */}
-          {hasBoard && mechanism}
+          {/* 診断済みのときは上に入口が並ぶので、地雷の仕組みはここに置く */}
+          {hasTypes && mechanism}
 
           {/* full 診断で増えるのは「読めるもの」。盤の長さは変えない */}
           {readableTypes.length > 0 && (
@@ -377,8 +362,8 @@ export default function CoachingPage() {
             </h2>
             <p className="mt-2 text-[12px] leading-[1.95] text-lighttext-subtle">
               {boardTypes.length > 0
-                ? "盤に出ていない相手も、ここから読めます。"
-                : "相手のタイプが分かっているなら、そのまま読めます。診断を受けると、あなたと噛み合わない相手だけを並べた「あなたの盤」がこの上に出ます。"}
+                ? "上に出ていない相手も、ここから読めます。"
+                : "相手のタイプが分かっているなら、そのまま読めます。診断を受けると、あなたと噛み合わない相手だけがこの上に並びます。"}
             </p>
 
             <div className="mt-4 flex flex-col gap-5">

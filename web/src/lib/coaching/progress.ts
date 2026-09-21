@@ -9,7 +9,6 @@
  */
 
 const BOARD_KEY = "togel:coaching-board";
-const VISITED_KEY = "togel:coaching-visited";
 
 export type CoachingBoardState = {
   selfTypeId: string;
@@ -43,12 +42,9 @@ export const loadBoardState = (): CoachingBoardState | null => readJson(BOARD_KE
 
 export const saveBoardState = (state: CoachingBoardState) => writeJson(BOARD_KEY, state);
 
-export const loadVisited = (): string[] => readJson<string[]>(VISITED_KEY) ?? [];
-
-export const markVisited = (key: string): string[] => {
-  const current = loadVisited();
-  if (current.includes(key)) return current;
-  const next = [...current, key];
-  writeJson(VISITED_KEY, next);
-  return next;
-};
+/*
+ * 「歩いたマス」の記録（loadVisited / markVisited）は 2026-09-21 に削除した。
+ * 数えていたのは「ガイドを何ページ開いたか」で、増えても読む人に意味が無い。
+ * 置き換えられる数が無い（診断後に積み上がるものがまだ無い）ので、
+ * 数える図ごと撤去した。**利用者の端末に残っている古い記録は読まない。**
+ */
