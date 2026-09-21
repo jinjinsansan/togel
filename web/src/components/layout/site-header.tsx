@@ -28,10 +28,15 @@ const journeyNavItems = [
     : []),
 ];
 
-const utilityNavItems = [
+/**
+ * アカウント管理の面。**ナビ（読み物）には置かず、ログイン時だけ右の認証エリアに置く。**
+ * 基準は「保護されているか」ではなく「自分の記録を操作する面か」
+ * （保護されたページはナビに他にもある）。お問い合わせはヘッダーに置かない
+ * （同じURLがフッター他にある）。
+ */
+const accountNavItems = [
   { href: "/profile/edit", label: "プロフィール" },
   { href: "/mypage", label: "マイページ" },
-  { href: "https://lin.ee/T7OYAGQ", label: "お問い合わせ" },
 ];
 
 const ADMIN_EMAILS = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
@@ -208,27 +213,6 @@ export const SiteHeader = () => {
                       </div>
                     )}
 
-                    <div>
-                      <h3 className="text-[10px] font-black tracking-[0.22em] text-txt-subtle mb-3 px-2">その他</h3>
-                      <div className="space-y-1">
-                        {utilityNavItems.map((item) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            className="group flex items-center py-3 px-2 rounded-[10px] hover:bg-white/5 transition-all active:scale-[0.98]"
-                            onClick={closeMenu}
-                            target={item.href.startsWith("http") ? "_blank" : undefined}
-                          >
-                            <span className="text-[15px] font-bold text-white/90 group-hover:text-white transition-colors">
-                              {item.label}
-                            </span>
-                            <span className="ml-auto text-txt-disabled group-hover:text-primary group-hover:translate-x-1 transition-all">
-                              →
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
                   </nav>
                 </div>
 
@@ -260,6 +244,15 @@ export const SiteHeader = () => {
                         >
                           <Link href="/mypage" onClick={closeMenu}>
                             マイページへ
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-12 w-full rounded-input border-line bg-transparent text-sm font-bold text-white hover:bg-white/5"
+                          asChild
+                        >
+                          <Link href="/profile/edit" onClick={closeMenu}>
+                            プロフィール
                           </Link>
                         </Button>
                         <Button
@@ -298,7 +291,7 @@ export const SiteHeader = () => {
           <div className="container flex h-[56px] items-center justify-between">
             <Link
               href="/"
-              className="flex items-center gap-2 font-heading text-lg font-black text-white"
+              className="flex shrink-0 items-center gap-2 font-heading text-lg font-black text-white"
               onClick={closeMenu}
             >
               <TogelMark size={28} />
@@ -321,7 +314,7 @@ export const SiteHeader = () => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-full px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
+                  className="whitespace-nowrap rounded-full px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
                 >
                   {item.label}
                 </Link>
@@ -330,37 +323,38 @@ export const SiteHeader = () => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="rounded-full px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              {utilityNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-full px-3 py-1.5 text-txt-subtle transition-colors hover:bg-white/5 hover:text-white"
-                  target={item.href.startsWith("http") ? "_blank" : undefined}
+                  className="whitespace-nowrap rounded-full px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-white"
                 >
                   {item.label}
                 </Link>
               ))}
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               {/* Desktop Auth */}
-              <div className="hidden items-center gap-2 xl:flex">
+              <div className="hidden shrink-0 items-center gap-2 xl:flex">
                 {!user ? (
                   <LoginButton />
                 ) : (
                   <>
+                    {accountNavItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-bold text-txt-subtle transition-colors hover:bg-white/5 hover:text-white"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                     {isAdmin && (
                       <Button
                         variant="outline"
                         asChild
                         className="h-9 rounded-full border-line bg-transparent text-xs font-bold text-txt-muted hover:bg-white/5 hover:text-white"
                       >
-                        <Link href="/admin">管理者パネル</Link>
+                        <Link href="/admin" className="whitespace-nowrap">
+                          管理者パネル
+                        </Link>
                       </Button>
                     )}
                     <Button
@@ -376,10 +370,13 @@ export const SiteHeader = () => {
                 )}
               </div>
 
-              {/* 常設CTA */}
+              {/*
+                常設CTA。**縮ませない・折り返さない。** ナビが何個になっても主ボタンが潰れないように
+                （1280pxで「診/断/す」と縦に潰れていた）。
+              */}
               <Link
                 href="/diagnosis/select"
-                className="flex h-9 items-center rounded-full bg-hazard px-4 text-[13px] font-black text-ink shadow-cta transition-transform hover:scale-[1.03] active:scale-[0.97]"
+                className="flex h-9 shrink-0 items-center whitespace-nowrap rounded-full bg-hazard px-4 text-[13px] font-black text-ink shadow-cta transition-transform hover:scale-[1.03] active:scale-[0.97]"
               >
                 診断する
               </Link>

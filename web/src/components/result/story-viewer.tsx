@@ -138,8 +138,10 @@ const Big = ({
   tone?: Tone;
   size?: string;
 }) => (
+  // 文節で改行する（「出来事で／はなく」のような語の途中の改行を避ける）。Chrome・Edge のみで、
+  // 非対応の Safari は今までの改行に戻るだけ。lang="ja"（layout の <html>）が前提
   <h2
-    className={`m-0 whitespace-pre-line font-heading font-black leading-[1.5] ${size} ${FACE[face].big}`}
+    className={`m-0 whitespace-pre-line font-heading font-black leading-[1.5] [word-break:auto-phrase] ${size} ${FACE[face].big}`}
   >
     <Emph text={text} face={face} tone={tone} />
   </h2>
