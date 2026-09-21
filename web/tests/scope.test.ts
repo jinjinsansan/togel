@@ -181,6 +181,36 @@ test("開発用プレビューは、環境変数を立てないと404になる",
   }
 });
 
+/**
+ * ページ側の `notFound()` だけでは**404にならない**。
+ *
+ * `force-dynamic` のページでストリーミングが始まったあとに呼ばれるため、
+ * 本文は404ページでも**ステータスは200**で返る。本番で実際にそうなっていた。
+ * 中身は出ていなかったので「漏れてはいない」が、200は有効なページとして
+ * 登録され得る。**本文だけ見る確認では気づけない。**
+ *
+ * レンダリング前に判定できる proxy で本物の404を返す。ページ側の
+ * `notFound()` は二重の保険として残してある。
+ */
+test("開発用プレビューは、proxy の段階で404になる", () => {
+  const proxy = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8");
+
+  assert.ok(
+    /pathname\.startsWith\("\/dev"\)[\s\S]{0,120}status: 404/.test(proxy),
+    "proxy.ts に /dev を404にする分岐が無い",
+  );
+
+  // Supabase を呼ぶ前に返していること（呼んだあとだと無駄な認証確認が走る）
+  const devIndex = proxy.indexOf('startsWith("/dev")');
+  const supabaseIndex = proxy.indexOf("createSupabaseMiddlewareClient(req");
+  assert.ok(devIndex > 0 && devIndex < supabaseIndex, "/dev の判定が認証処理より後にある");
+});
+
+test("robots.txt が開発用プレビューを除外している", () => {
+  const robots = readFileSync(join(process.cwd(), "public/robots.txt"), "utf8");
+  assert.ok(/^Disallow: \/dev$/m.test(robots), "robots.txt に /dev の除外が無い");
+});
+
 test("開発用プレビューは、どこからもリンクされずサイトマップにも載らない", async () => {
   const sitemap = (await import("../src/app/sitemap")).default;
   const leaked = sitemap()

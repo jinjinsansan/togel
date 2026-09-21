@@ -97,10 +97,55 @@ test("色の階層が保たれている（muted のほうが subtle より明る
   assert.ok(onPaper("lighttext.muted") > onPaper("lighttext.subtle"), "ライト面の階層が反転している");
 });
 
-test("ブランド色をボタン背景にしたとき、白文字が3:1以上（UI部品の基準）", () => {
+/**
+ * ボタンに**載る文字**の基準は 4.5:1 であって、3:1 ではない。
+ *
+ * 3:1 は枠線やアイコンのような**文字でないUI部品**の基準で、
+ * ここを 3 にしていたせいで `bg-primary` + 白文字（**3.56:1**）が通っていた。
+ * 黄黒を廃止して hazard が primary と同じ色になったとき、同じピンクの上に
+ * 黒文字（5.59:1）と白文字（3.56:1）が混在し、初めて見比べられるようになった。
+ *
+ * 大きな文字は 3:1 に緩められるが、条件は
+ * **18.66px以上かつbold、または24px以上**。サイズを見ずに一律で緩めない。
+ */
+const LARGE_TEXT_PX_BOLD = 18.66;
+const LARGE_TEXT_PX = 24;
+
+/** コード中で実際に使われている、その組合せの最大文字サイズ（px） */
+const usedFontSizes = (bgClass: string): { px: number; bold: boolean }[] => {
+  const found: { px: number; bold: boolean }[] = [];
+  for (const file of walkSource(join(process.cwd(), "src"))) {
+    for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
+      if (!line.includes(bgClass) || !/text-(white|txt)\b|text-\[/.test(line)) continue;
+      if (!line.includes("text-white")) continue;
+      const bold = /font-(bold|black|extrabold|semibold)/.test(line);
+      const px = line.match(/text-\[([0-9.]+)px\]/);
+      const named: Record<string, number> = { "text-xs": 12, "text-sm": 14, "text-base": 16, "text-lg": 18, "text-xl": 20, "text-2xl": 24 };
+      if (px) found.push({ px: Number(px[1]), bold });
+      else for (const [cls, size] of Object.entries(named)) if (line.includes(cls)) found.push({ px: size, bold });
+    }
+  }
+  return found;
+};
+
+test("ボタンに載る文字が4.5:1以上（大きな文字の免除は実サイズで判定する）", () => {
   for (const bg of ["primary.DEFAULT", "primary.light", "primary.ink", "relief.ink", "navy"]) {
     const ratio = contrast(pick("txt.DEFAULT"), pick(bg));
-    assert.ok(ratio >= 3, `白文字 on ${bg} = ${ratio.toFixed(2)}:1`);
+    if (ratio >= 4.5) continue;
+
+    // 4.5 に届かないなら、その色の上の白文字が**すべて**大きな文字でなければ落とす
+    const bgClass = `bg-${bg.replace(".DEFAULT", "").replace(".", "-")}`;
+    const sizes = usedFontSizes(bgClass);
+    const small = sizes.filter(
+      (s) => !(s.px >= LARGE_TEXT_PX || (s.px >= LARGE_TEXT_PX_BOLD && s.bold)),
+    );
+    assert.deepEqual(
+      small,
+      [],
+      `白文字 on ${bg} = ${ratio.toFixed(2)}:1。小さい文字で使われている（${small
+        .map((s) => `${s.px}px${s.bold ? "/bold" : ""}`)
+        .join(", ")}）`,
+    );
   }
 });
 

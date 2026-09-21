@@ -404,7 +404,7 @@ const MismatchResultPage = () => {
                     </p>
                     <Link
                       href="/diagnosis/select"
-                      className="mt-3 inline-flex min-h-[44px] items-center rounded-full bg-primary px-5 text-xs font-black text-white transition-colors hover:bg-primary-hover"
+                      className="mt-3 inline-flex min-h-[44px] items-center rounded-full bg-primary px-5 text-xs font-black text-ink transition-colors hover:bg-primary-hover"
                     >
                       40問で全部見る
                     </Link>
@@ -487,7 +487,7 @@ const MismatchResultPage = () => {
           <div className="flex flex-col gap-2.5">
             <Link
               href="/coaching"
-              className="flex min-h-[58px] items-center justify-between rounded-card bg-navy px-5.5 text-sm font-black text-white transition-colors hover:bg-primary"
+              className="flex min-h-[58px] items-center justify-between rounded-card bg-navy px-5.5 text-sm font-black text-ink transition-colors hover:bg-primary"
             >
               地雷回避ガイドへ<span>→</span>
             </Link>

@@ -69,7 +69,7 @@ const SealedCard = () => {
           <button
             type="button"
             onClick={() => setSealed(false)}
-            className="mt-5 min-h-[52px] w-full rounded-[14px] bg-primary text-[15px] font-black tracking-[0.04em] text-white shadow-danger transition-colors hover:bg-primary-hover"
+            className="mt-5 min-h-[52px] w-full rounded-[14px] bg-primary text-[15px] font-black tracking-[0.04em] text-ink shadow-danger transition-colors hover:bg-primary-hover"
           >
             封を切る
           </button>
@@ -399,7 +399,7 @@ export default function Home() {
           </div>
           <Link
             href="/coaching"
-            className="mt-6 inline-flex min-h-[52px] items-center rounded-full bg-navy px-[26px] text-sm font-black text-white transition-colors hover:bg-primary"
+            className="mt-6 inline-flex min-h-[52px] items-center rounded-full bg-navy px-[26px] text-sm font-black text-ink transition-colors hover:bg-primary"
           >
             ガイドを見る
           </Link>

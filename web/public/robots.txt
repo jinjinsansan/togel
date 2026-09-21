@@ -11,6 +11,10 @@ Disallow: /api/
 Disallow: /mypage
 Disallow: /profile/edit
 
+# 開発用プレビュー。環境変数を立てたときだけ出るが、念のため除外する
+# （proxy.ts で404を返すのが本来の防ぎ方。ここは二重の保険）
+Disallow: /dev
+
 # 検索結果ページがあれば除外
 # Disallow: /search?
 

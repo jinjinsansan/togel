@@ -474,7 +474,7 @@ export default function MyPage() {
                 お知らせ
               </span>
               {unreadCount > 0 && (
-                <span className="rounded-full bg-primary px-2 py-[3px] text-[10px] font-black text-white">
+                <span className="rounded-full bg-primary px-2 py-[3px] text-[10px] font-black text-ink">
                   {unreadCount}
                 </span>
               )}

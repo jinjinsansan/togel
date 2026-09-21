@@ -50,7 +50,7 @@ const DiagnosisSelectPage = () => {
           >
             <div className="flex items-center justify-between">
               <span className="text-[19px] font-black">スタンダード診断</span>
-              <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-black text-white">
+              <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-black text-ink">
                 40問 / 約5分
               </span>
             </div>

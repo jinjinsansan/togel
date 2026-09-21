@@ -52,7 +52,7 @@ export const WarningGate = ({
     <button
       type="button"
       onClick={onProceed}
-      className="mt-[30px] min-h-[58px] w-full max-w-sm rounded-card bg-primary text-base font-black text-white shadow-danger transition-colors hover:bg-primary-hover"
+      className="mt-[30px] min-h-[58px] w-full max-w-sm rounded-card bg-primary text-base font-black text-ink shadow-danger transition-colors hover:bg-primary-hover"
     >
       覚悟して開ける
     </button>

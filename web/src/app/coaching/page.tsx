@@ -331,7 +331,7 @@ export default function CoachingPage() {
                   </div>
                   <Link
                     href="/diagnosis/full"
-                    className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-primary text-[14px] font-black text-white transition-colors hover:bg-primary-hover"
+                    className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-primary text-[14px] font-black text-ink transition-colors hover:bg-primary-hover"
                   >
                     40問の診断へ
                   </Link>

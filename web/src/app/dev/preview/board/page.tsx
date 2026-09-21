@@ -113,7 +113,7 @@ export default async function BoardPreviewPage({
                   40問の診断で、その2タイプが読めるようになります。盤の長さは変わりません。
                 </p>
               </div>
-              <span className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-primary text-[14px] font-black text-white">
+              <span className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-primary text-[14px] font-black text-ink">
                 40問の診断へ
               </span>
             </div>

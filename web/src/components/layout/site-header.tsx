@@ -255,7 +255,7 @@ export const SiteHeader = () => {
                           </Button>
                         )}
                         <Button
-                          className="h-12 w-full rounded-input bg-primary text-sm font-black text-white shadow-danger hover:bg-primary-hover transition-all"
+                          className="h-12 w-full rounded-input bg-primary text-sm font-black text-ink shadow-danger hover:bg-primary-hover transition-all"
                           asChild
                         >
                           <Link href="/mypage" onClick={closeMenu}>

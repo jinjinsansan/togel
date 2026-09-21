@@ -190,7 +190,7 @@ const TypeListPage = () => {
               type="button"
               onClick={() => setFilterMode("worst")}
               className={`min-h-[44px] flex-1 rounded-full px-4 transition-colors md:flex-none ${
-                filterMode === "worst" ? "bg-primary text-white" : "text-txt-muted"
+                filterMode === "worst" ? "bg-primary text-ink" : "text-txt-muted"
               }`}
             >
               合わない相手から探す
@@ -202,7 +202,7 @@ const TypeListPage = () => {
                 setFilterId(null);
               }}
               className={`min-h-[44px] flex-1 rounded-full px-4 transition-colors md:flex-none ${
-                filterMode === "all" ? "bg-primary text-white" : "text-txt-muted"
+                filterMode === "all" ? "bg-primary text-ink" : "text-txt-muted"
               }`}
             >
               全タイプ

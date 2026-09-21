@@ -184,7 +184,7 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
           </div>
           <Link
             href="/diagnosis/select"
-            className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-primary text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+            className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-primary text-[15px] font-black text-ink transition-colors hover:bg-primary-hover"
           >
             自分の型を診断する
           </Link>

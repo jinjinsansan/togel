@@ -25,6 +25,14 @@ type Check = {
   image?: boolean;
   /** 最低バイト数 */
   minBytes?: number;
+  /**
+   * 期待するステータス。省略時は 2xx。
+   *
+   * 🔴 **本文ではなくステータスを見る。** 開発用プレビューは、本文は404ページ
+   * なのにステータスが200で返っていた。「中身が出ていないこと」だけ見ていると
+   * この状態を通してしまう（実際に通した）。見るものが1つずれると全部緑になる。
+   */
+  expectStatus?: number;
 };
 
 const args = process.argv.slice(2);
@@ -53,7 +61,11 @@ const checks: Check[] = [
     path: "/sitemap.xml",
     contains: personalityTypes.map((type) => `${BASE}/coaching/${type.id}`),
   },
-  { path: "/robots.txt", contains: ["Sitemap: https://www.to-gel.com/sitemap.xml"] },
+  { path: "/robots.txt", contains: ["Sitemap: https://www.to-gel.com/sitemap.xml", "Disallow: /dev"] },
+  // 開発用プレビューは本番に出さない。**ステータスで見る**（本文だけ見ると200を見逃す）
+  { path: "/dev/preview/board", expectStatus: 404 },
+  { path: "/dev/preview/deep", expectStatus: 404 },
+  { path: "/dev/preview/board?walked=7", expectStatus: 404 },
   { path: `/api/og?type=${sample.id}`, image: true, minBytes: 20_000 },
   { path: `/api/og?type=${sample.id}&format=story`, image: true, minBytes: 50_000 },
   { path: "/api/og/groups", image: true, minBytes: 50_000 },
@@ -73,6 +85,11 @@ const runCheck = async (check: Check): Promise<Failure | null> => {
     response = await fetch(`${BASE}${check.path}`, { redirect: "follow" });
   } catch (error) {
     return { path: check.path, reason: `到達できない: ${(error as Error).message}` };
+  }
+  if (check.expectStatus !== undefined) {
+    return response.status === check.expectStatus
+      ? null
+      : { path: check.path, reason: `status ${response.status}（期待 ${check.expectStatus}）` };
   }
   if (!response.ok) {
     return { path: check.path, reason: `status ${response.status}` };

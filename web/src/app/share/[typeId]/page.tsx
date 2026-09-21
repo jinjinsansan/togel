@@ -125,7 +125,7 @@ const SharePage = async ({
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 href="/diagnosis/select"
-                className="flex min-h-[48px] items-center rounded-full bg-primary px-6 text-[13px] font-black text-white transition-colors hover:bg-primary-hover"
+                className="flex min-h-[48px] items-center rounded-full bg-primary px-6 text-[13px] font-black text-ink transition-colors hover:bg-primary-hover"
               >
                 自分の地雷も知る（無料）
               </Link>

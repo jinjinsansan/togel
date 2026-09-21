@@ -72,7 +72,7 @@ export const DistributionChart = ({ items }: { items: DistributionItem[] }) => {
                     {item.typeName}
                   </span>
                   {isSelf && (
-                    <span className="flex-none rounded-full bg-primary px-2 py-[2px] text-[9px] font-black text-white">
+                    <span className="flex-none rounded-full bg-primary px-2 py-[2px] text-[9px] font-black text-ink">
                       あなた
                     </span>
                   )}

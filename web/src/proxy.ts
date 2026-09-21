@@ -31,6 +31,21 @@ const createSupabaseMiddlewareClient = (req: NextRequest, res: NextResponse) =>
   });
 
 export async function proxy(req: NextRequest) {
+  /**
+   * 開発用プレビュー（`/dev/*`）は、環境変数を立てたときだけ出す。
+   *
+   * ページ側でも `notFound()` を呼んでいるが、**あれは404にならない**。
+   * `force-dynamic` のページでストリーミングが始まったあとに呼ばれるので、
+   * 本文は404ページでも**ステータスは200**で返る。本番で実際にそうなっていた。
+   * 中身は出ていなかったが、200は「有効なページ」として登録され得る。
+   *
+   * ここならレンダリング前に判定できるので、本物の404を返せる。
+   * Supabase を呼ぶ前に返すこと（無駄な認証確認をしない）。
+   */
+  if (req.nextUrl.pathname.startsWith("/dev") && process.env.TOGEL_DEV_PREVIEW !== "1") {
+    return new NextResponse(null, { status: 404 });
+  }
+
   const res = NextResponse.next();
   const supabase = createSupabaseMiddlewareClient(req, res);
 

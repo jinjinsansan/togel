@@ -58,7 +58,7 @@ export default function LiffResultPage() {
           <button
             type="button"
             onClick={closeLiff}
-            className="mt-6 min-h-[52px] rounded-[14px] bg-primary px-8 text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+            className="mt-6 min-h-[52px] rounded-[14px] bg-primary px-8 text-[15px] font-black text-ink transition-colors hover:bg-primary-hover"
           >
             LINEに戻る
           </button>
@@ -166,7 +166,7 @@ export default function LiffResultPage() {
                   key={m.ranking}
                   className="flex items-center gap-3.5 rounded-card border border-dangerline bg-dangerbg p-4"
                 >
-                  <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary text-[15px] font-black text-white">
+                  <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary text-[15px] font-black text-ink">
                     {m.ranking}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ export default function LiffResultPage() {
               <button
                 type="button"
                 onClick={() => openExternal(`https://www.to-gel.com/coaching/${worstType.id}`)}
-                className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-primary px-5 text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+                className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-primary px-5 text-[15px] font-black text-ink transition-colors hover:bg-primary-hover"
               >
                 {worstType.emoji} {typeToken(worstType)}の取扱説明を読む
               </button>
@@ -241,7 +241,7 @@ export default function LiffResultPage() {
         <button
           type="button"
           onClick={closeLiff}
-          className="mt-4 flex min-h-[54px] w-full items-center justify-center rounded-[14px] bg-primary text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+          className="mt-4 flex min-h-[54px] w-full items-center justify-center rounded-[14px] bg-primary text-[15px] font-black text-ink transition-colors hover:bg-primary-hover"
         >
           LINEに戻る
         </button>

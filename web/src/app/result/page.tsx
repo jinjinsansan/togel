@@ -200,7 +200,7 @@ const ResultPage = () => {
   const tabClass = (key: TabKey) =>
     `min-h-[42px] flex-none rounded-full border px-4 text-xs font-black transition-colors ${
       tab === key
-        ? "border-primary bg-primary text-white"
+        ? "border-primary bg-primary text-ink"
         : "border-line bg-transparent text-txt-muted hover:text-white"
     }`;
 
@@ -424,7 +424,7 @@ const ResultPage = () => {
               </p>
               <Link
                 href="/result/mismatch"
-                className="mt-4 flex min-h-[56px] items-center justify-center rounded-card bg-primary text-[15px] font-black text-white transition-colors hover:bg-primary-hover"
+                className="mt-4 flex min-h-[56px] items-center justify-center rounded-card bg-primary text-[15px] font-black text-ink transition-colors hover:bg-primary-hover"
               >
                 ミスマッチを見る
               </Link>
