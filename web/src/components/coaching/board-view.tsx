@@ -11,7 +11,6 @@ import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/defini
  * 別々に育つ。意匠は `Togel 攻略盤.dc.html` に合わせてある。
  *
  * 出していいのは**来た距離と全長だけ**。残数・達成率・ストリーク・完走演出・
- * 督促・他人との比較は置かない。「クリア」ではなく「歩き方を1つ覚えた」。
  */
 
 type BoardType = ExtendedPersonalityTypeDefinition;

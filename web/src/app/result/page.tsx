@@ -13,6 +13,11 @@ import { storyLabelHref } from "@/lib/share/story-label";
 import { handbookPostText } from "@/lib/share/text";
 import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
 import { generateDeepNarrative } from "@/lib/personality/narrative";
+import {
+  TYPE_PROFILE_HEADING,
+  typeProfileFor,
+  typeProfileParagraphs,
+} from "@/lib/personality/copy/type-profile";
 import { DeepNarrativeSection } from "@/components/result/deep-narrative-section";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import {
@@ -232,6 +237,8 @@ const ResultPage = () => {
   const scores = diagnosis.bigFiveScores;
   // 本文が5種そろうまでは null。節ごと出さない
   const deepNarrative = generateDeepNarrative(scores);
+  // タイプ固定の本文。24タイプそろうまで null
+  const typeProfile = selfType ? typeProfileFor(selfType.id) : null;
 
   return (
     <div className="min-h-screen bg-ink text-white">
@@ -261,6 +268,29 @@ const ResultPage = () => {
             >
               {selfType?.description ?? diagnosis.narrative}
             </p>
+            {/*
+              タイプそのものの説明。**タイプ名とスペック（TOGEL INDEX）の間**に置く。
+              「あなたはこういう型です」→「あなたのスペック」→「ここから、あなたの話をします」
+              の順になる。ここは人に見せる部分なので、同じ型なら全員同じ文。
+            */}
+            {typeProfile && (
+              <div className="mt-5 rounded-card border border-line bg-surface p-5">
+                <h2 className="text-[11px] font-black tracking-[0.22em] text-relief">
+                  {TYPE_PROFILE_HEADING}
+                </h2>
+                {/* 段落ごとに見出しを付けない。区切らず続けて読ませる */}
+                {typeProfileParagraphs(typeProfile).map((paragraph, index) => (
+                  <p
+                    key={index}
+                    className="mt-3 max-w-[34em] whitespace-pre-line text-[13px] leading-8 text-txt-muted"
+                    style={{ textWrap: "pretty" }}
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            )}
+
             {selfType && (
               <div className="mt-4 flex flex-wrap gap-[7px]">
                 {selfType.tags.map((tag) => (

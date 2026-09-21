@@ -282,10 +282,11 @@ export default function CoachingPage() {
                     </ol>
                   )}
 
-                  <div className="mt-[18px] flex flex-wrap items-center justify-between gap-2.5 border-t border-dashed border-lightline pt-[18px]">
-                    <span className="text-[12px] font-bold text-relief-ink">
-                      歩き方を1つ覚えた
-                    </span>
+                  {/*
+                    読み終わったことを報告する一行は 2026-09-21 に外した。
+                    数えるのをやめたので、報告しても積み上がる先が無い。
+                  */}
+                  <div className="mt-[18px] flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-lightline pt-[18px]">
                     <Link
                       href={`/coaching/${openType.id}`}
                       className="text-[11px] font-bold text-lighttext-subtle underline transition-colors hover:text-navy"
@@ -298,7 +299,7 @@ export default function CoachingPage() {
 
               {/*
                 light だけ次の階段（full には置かない）。
-                以前は「盤を歩き切ったら出す」だったが、数えるのをやめたので
+                以前は図が全部埋まったら出す条件だったが、数えるのをやめたので
                 出す条件が無くなった。10問で来た人には常に出す。
               */}
               {board?.plan === "light" && (

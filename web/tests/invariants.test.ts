@@ -121,6 +121,39 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
   }
 });
 
+/**
+ * 「数える」言い回しが残っていないこと。
+ *
+ * 2026-09-21 に「何マス歩いたか」を数える図を撤去したが、**撤去しきれていなかった。**
+ * `board-view.tsx` だけを直して、`coaching/page.tsx` に残っていた
+ * 「歩き方を1つ覚えた」を見落とした。ローカルの検査は通り、本番にも出た。
+ *
+ * 見つかったのは、**配信のリンク形式（?cell=）で本番を実際に開いた**とき。
+ * 未診断のHTMLしか見ていなかったので、診断済みでしか出ない部分が素通りしていた。
+ */
+test("「数える」言い回しが残っていない", () => {
+  const targets = [
+    "src/app/coaching/page.tsx",
+    "src/components/coaching/board-view.tsx",
+    "src/lib/coaching/board.ts",
+    "src/lib/coaching/progress.ts",
+  ];
+  const phrases = ["マス歩きました", "歩いたところ", "歩き方を1つ覚えた", "歩き切った"];
+  const offenders: string[] = [];
+
+  for (const file of targets) {
+    const text = readFileSync(join(process.cwd(), file), "utf8");
+    for (const line of text.split(/\r?\n/)) {
+      // 撤去の経緯を説明するコメントは許す。見るのは画面に出る文字列だけ
+      if (/^\s*(\/\/|\*|\/\*)/.test(line)) continue;
+      for (const phrase of phrases) {
+        if (line.includes(phrase)) offenders.push(`${file}: ${phrase}`);
+      }
+    }
+  }
+  assert.deepEqual([...new Set(offenders)], []);
+});
+
 test("週次配信の全15通が、3タイプ×5角度と一致する", () => {
   // 🔴 **これは図の検査ではない。配信の検査。**
   // 2026-09-21 に「何マス歩いたか」を数える図は撤去したが、この検査は残す。
