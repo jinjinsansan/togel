@@ -253,7 +253,7 @@ const CardBody = ({
           </p>
           <div className="flex flex-col border-t border-line-soft">
             {CHAPTERS.map((chapter) => (
-              <div key={chapter.no} className="flex items-baseline gap-3.5 border-b border-line-soft py-[13px]">
+              <div key={chapter.no} className="flex items-baseline gap-3.5 border-b border-line-soft py-[13px] short:py-2">
                 <span className={`text-[13px] font-black ${chapter.tone === "hazard" ? "text-primary" : "text-relief"}`}>
                   {chapter.no}
                 </span>
@@ -273,19 +273,19 @@ const CardBody = ({
       return (
         <div className="flex flex-col gap-[18px] short:gap-3.5 px-[26px] pb-6 pt-12">
           <Label text={card.label} face="dark" tone="hazard" />
-          <div className="flex flex-col gap-1.5 rounded-[14px] border border-line px-[18px] py-4">
+          <div className="flex flex-col gap-1.5 rounded-[14px] border border-line px-[18px] py-4 short:py-3">
             <span className="text-[12px] font-bold text-txt-subtle">起きたこと</span>
             <span className="text-[21px] font-black text-white">{card.diagram.event}</span>
           </div>
           <div className="flex items-center gap-3.5 pl-[26px]">
-            <div className="h-[58px] w-0 border-l-2 border-dashed border-primary" />
+            <div className="h-[58px] w-0 border-l-2 border-dashed border-primary short:h-9" />
             <span className="text-[14px] font-black text-primary">ここ、かなり飛んでいます</span>
           </div>
-          <div className="flex flex-col gap-1.5 rounded-[14px] border-2 border-primary bg-dangerbg px-[18px] py-4">
+          <div className="flex flex-col gap-1.5 rounded-[14px] border-2 border-primary bg-dangerbg px-[18px] py-4 short:py-3">
             <span className="text-[12px] font-bold text-primary-hover">あなたがつけた意味</span>
-            <span className="text-[26px] font-black text-primary">{card.diagram.meaning}</span>
+            <span className="text-[26px] font-black text-primary short:text-[23px]">{card.diagram.meaning}</span>
           </div>
-          <div className="mt-2 flex flex-col gap-2.5">
+          <div className="mt-2 flex flex-col gap-2.5 short:mt-0 short:gap-2">
             <span className="text-[12px] font-bold text-txt-subtle">本当は、こっちの可能性もありました</span>
             <div className="flex flex-wrap gap-2">
               {card.diagram.rejected.map((option) => (
@@ -308,8 +308,8 @@ const CardBody = ({
       return (
         <div className="flex flex-col gap-[22px] short:gap-3.5 px-[26px] pb-6 pt-12">
           <Label text={card.label} face="light" />
-          <p className="m-0 text-[17px] font-bold leading-[1.7] text-lighttext">{card.chips.intro}</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="m-0 text-[17px] font-bold leading-[1.7] text-lighttext short:text-[16px]">{card.chips.intro}</p>
+          <div className="flex flex-wrap gap-2 short:gap-1.5">
             {card.chips.chips.map((chip) => (
               <span
                 key={chip}
