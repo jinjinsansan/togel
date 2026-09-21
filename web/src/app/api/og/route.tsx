@@ -88,7 +88,7 @@ const parseScores = (raw: string | null): BigFiveScores | null => {
 const WarningDiamond = ({ size, emojiSrc }: { size: number; emojiSrc: string }) => (
   <div style={{ display: "flex", position: "relative", width: size, height: size }}>
     <svg width={size} height={size} viewBox="0 0 100 100">
-      <polygon points="50,3 97,50 50,97 3,50" fill="#0B0F1A" stroke="#FFE03D" strokeWidth="5" />
+      <polygon points="50,3 97,50 50,97 3,50" fill="#0B0F1A" stroke="#FF2E74" strokeWidth="5" />
     </svg>
     <div
       style={{
@@ -146,7 +146,7 @@ const StoryLabel = ({
         style={{
           display: "flex",
           height: 34,
-          background: "repeating-linear-gradient(45deg,#FFE03D 0 34px,#0B0F1A 34px 68px)",
+          background: "#FF2E74",
         }}
       />
 
@@ -169,7 +169,7 @@ const StoryLabel = ({
                 fontSize: 30,
                 fontWeight: 900,
                 letterSpacing: "0.22em",
-                color: "#FFE03D",
+                color: "#FF2E74",
               }}
             >
               取扱注意
@@ -289,7 +289,7 @@ const StoryLabel = ({
               display: "flex",
               padding: "18px 30px",
               borderRadius: 999,
-              background: "#FFE03D",
+              background: "#FF2E74",
               color: "#07090F",
               fontSize: 30,
               fontWeight: 900,
@@ -304,7 +304,7 @@ const StoryLabel = ({
         style={{
           display: "flex",
           height: 34,
-          background: "repeating-linear-gradient(45deg,#FFE03D 0 34px,#0B0F1A 34px 68px)",
+          background: "#FF2E74",
         }}
       />
     </div>
@@ -374,7 +374,7 @@ export const GET = async (request: Request) => {
           style={{
             display: "flex",
             height: 22,
-            background: "repeating-linear-gradient(45deg,#FFE03D 0 26px,#0B0F1A 26px 52px)",
+            background: "#FF2E74",
           }}
         />
 
@@ -394,7 +394,7 @@ export const GET = async (request: Request) => {
               fontSize: 30,
               fontWeight: 900,
               letterSpacing: "0.22em",
-              color: "#FFE03D",
+              color: "#FF2E74",
             }}
           >
             {mode === "mismatch" ? "MISMATCH / WORST 1" : "MY TYPE / 24"}
@@ -452,7 +452,7 @@ export const GET = async (request: Request) => {
               flexShrink: 0,
               padding: "18px 30px",
               borderRadius: 999,
-              background: "#FFE03D",
+              background: "#FF2E74",
               color: "#07090F",
               fontSize: 28,
               fontWeight: 900,

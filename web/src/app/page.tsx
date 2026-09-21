@@ -45,7 +45,7 @@ const SealedCard = () => {
 
   return (
     <div className="w-full max-w-[360px] overflow-hidden rounded-hero border border-line bg-surface shadow-[0_40px_80px_-30px_rgba(0,0,0,.9)]">
-      <div className="h-1.5 bg-hazard-sm" aria-hidden="true" />
+      <div className="h-1.5 bg-hazard" aria-hidden="true" />
       <div className="flex items-center justify-between border-b border-line-soft px-[18px] py-3.5">
         <span className="text-[10px] font-black tracking-[0.22em] text-hazard">
           MISMATCH / WORST 1

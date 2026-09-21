@@ -356,7 +356,7 @@ export default function LiffDiagnosisPage() {
           {loading ? (
             <div className="mt-[26px] flex flex-col items-center gap-5 py-10">
               <div className="w-[160px] overflow-hidden rounded-full">
-                <div className="animate-marquee h-2 w-[400%] bg-hazard-sm" />
+                <div className="animate-marquee h-2 w-[400%] bg-hazard" />
               </div>
               <p className="text-[12px] font-bold text-txt-subtle">質問を用意しています…</p>
             </div>

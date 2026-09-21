@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 
 const CompatibilityPage = () => (
   <div className="min-h-screen bg-ink text-white">
-    <div className="h-[10px] bg-hazard-sm" />
+    <div className="h-[10px] bg-hazard" />
 
     <section className="px-5.5 pb-10 pt-[42px]">
       <div className="mx-auto max-w-[760px]">

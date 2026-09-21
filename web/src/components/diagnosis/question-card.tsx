@@ -15,7 +15,7 @@ const DOT_COLORS: Record<number, string> = {
   4: "rgba(255,46,116,.6)",
   3: "#39415a",
   2: "rgba(255,224,61,.6)",
-  1: "#FFE03D",
+  1: "#FF2E74",
 };
 
 type Props = {

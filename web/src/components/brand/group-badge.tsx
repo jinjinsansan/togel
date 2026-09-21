@@ -144,7 +144,7 @@ export const GroupBadgeOg = ({ group, size = 34, emojiSrc }: GroupBadgeOgProps) 
           fontSize: size,
           fontWeight: 900,
           letterSpacing: "0.22em",
-          color: "#FFE03D",
+          color: "#FF2E74",
         }}
       >
         {/* 絵文字は文字ではなく画像で渡す。satoriに文字で渡すと外部CDNを叩く */}

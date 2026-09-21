@@ -187,7 +187,7 @@ const MismatchResultPage = () => {
           {visibleEntries.length === 0 && isLoading && (
             <div className="flex flex-col items-center gap-5 rounded-hero border border-line-soft bg-panel px-6 py-14">
               <div className="w-[180px] overflow-hidden rounded-full">
-                <div className="animate-marquee h-2 w-[400%] bg-hazard-sm" />
+                <div className="animate-marquee h-2 w-[400%] bg-hazard" />
               </div>
               <p className="text-xs font-bold text-txt-subtle">言い方を選んでいます…</p>
             </div>

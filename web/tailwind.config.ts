@@ -46,7 +46,10 @@ const config: Config = {
           ink: "#D61556", // ライト面の本文用（paper 4.75 / white 5.12）
           foreground: "#ffffff",
         },
-        hazard: "#FFE03D",
+        // 黄黒（黄 #FFE03D ＋ 黒の縞）はオーナー判断で廃止（2026-09-21）。
+        // 役割としての「注意」は残し、色だけブランドのピンクに寄せた。
+        // text-ink を載せている箇所が29あるが、#FF2E74 の上でも 5.58:1 で本文基準を満たす。
+        hazard: "#FF2E74",
         navy: "#0b1f3a",
         relief: { DEFAULT: "#4ade9b", ink: "#00734d" }, // ink はライト面専用（AA 4.9:1）
         // ダーク面（毒）
@@ -107,13 +110,9 @@ const config: Config = {
         focusring: "0 0 0 3px rgba(255,46,116,.35)",
       },
       backgroundImage: {
-        // colors.hazard と同名にしない。同名だと Tailwind が .bg-hazard を
-        // 2本（background-color と background-image）出力し、image が color を覆う。
-        // その結果、単色のつもりで書いた41箇所のCTAが縞になり、text-ink が
-        // 暗帯（#0B0F1A）の上で 1.04:1 まで落ちていた（2026-08-07 から約6週間）
-        "hazard-lg": "repeating-linear-gradient(45deg,#FFE03D 0 12px,#0B0F1A 12px 24px)",
-        "hazard-sm": "repeating-linear-gradient(45deg,#FFE03D 0 10px,#0B0F1A 10px 20px)",
-        progress: "linear-gradient(90deg,#FF2E74,#FFE03D)",
+        // 黄黒の縞はオーナー判断で廃止（2026-09-21）。帯そのものは意匠として残し、
+        // 単色（bg-hazard）に置き換えた。ここに縞を戻さないこと。
+        progress: "linear-gradient(90deg,#FF2E74,#ff6fa5)",
         logo: "linear-gradient(135deg,#ff6fa5,#FF2E74)",
         metal: "linear-gradient(135deg,#1b2540 0%,#0b1f3a 42%,#2a1420 70%,#0b1f3a 100%)",
       },

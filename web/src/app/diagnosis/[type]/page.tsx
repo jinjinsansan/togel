@@ -300,7 +300,7 @@ const DiagnosisPage = () => {
         {questionsLoading && (
           <div className="flex flex-col items-center gap-5 pt-10">
             <div className="w-[160px] overflow-hidden rounded-full">
-              <div className="animate-marquee h-2 w-[400%] bg-hazard-sm" />
+              <div className="animate-marquee h-2 w-[400%] bg-hazard" />
             </div>
             <p className="text-xs font-bold text-txt-subtle">質問を用意しています…</p>
           </div>

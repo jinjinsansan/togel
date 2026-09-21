@@ -39,7 +39,7 @@ export default function LiffResultPage() {
       <div className="flex min-h-[100dvh] items-center justify-center bg-ink">
         <div className="flex flex-col items-center gap-5">
           <div className="w-[160px] overflow-hidden rounded-full">
-            <div className="animate-marquee h-2 w-[400%] bg-hazard-sm" />
+            <div className="animate-marquee h-2 w-[400%] bg-hazard" />
           </div>
           <p className="text-[12px] font-bold text-txt-subtle">LINE接続中…</p>
         </div>

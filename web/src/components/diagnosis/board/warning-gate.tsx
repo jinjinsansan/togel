@@ -30,7 +30,7 @@ export const WarningGate = ({
   onCancel,
 }: Props) => (
   <div className="animate-flash relative flex min-h-[100dvh] flex-col items-center justify-center bg-dangerbg px-[26px] py-[34px] text-center text-white">
-    <div className="absolute inset-x-0 top-0 h-[10px] bg-hazard-lg" aria-hidden="true" />
+    <div className="absolute inset-x-0 top-0 h-[10px] bg-hazard" aria-hidden="true" />
     <div className="flex h-[82px] w-[82px] items-center justify-center rounded-hero bg-hazard text-[40px] font-black text-ink">
       ▲
     </div>
@@ -63,6 +63,6 @@ export const WarningGate = ({
     >
       やっぱりやめる
     </button>
-    <div className="absolute inset-x-0 bottom-0 h-[10px] bg-hazard-lg" aria-hidden="true" />
+    <div className="absolute inset-x-0 bottom-0 h-[10px] bg-hazard" aria-hidden="true" />
   </div>
 );

@@ -293,7 +293,7 @@ export const SiteHeader = () => {
     <>
       <header className="sticky top-0 z-[15000]">
         {/* サイト全体の識別子: ハザードテープ */}
-        <div className="h-[10px] bg-hazard-sm" aria-hidden="true" />
+        <div className="h-[10px] bg-hazard" aria-hidden="true" />
         <div className="border-b border-line-soft bg-base/95 backdrop-blur">
           <div className="container flex h-[56px] items-center justify-between">
             <Link

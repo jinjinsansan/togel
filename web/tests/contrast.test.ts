@@ -1,7 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative, sep } from "node:path";
+
 import config from "../tailwind.config";
+
+const walkSource = (dir: string): string[] =>
+  readdirSync(dir).flatMap((entry) => {
+    const path = join(dir, entry);
+    return statSync(path).isDirectory() ? walkSource(path) : /\.tsx?$/.test(path) ? [path] : [];
+  });
 
 /**
  * 色トークンのコントラスト比（WCAG 2.1）。
@@ -67,7 +76,7 @@ test("ライト面の本文色が、paper と白カードで4.5:1以上", () => 
   }
 });
 
-test("ハザード黄はダーク面専用（ライト面の本文では使えない）", () => {
+test("注意色はダーク面専用（ライト面の本文では使えない）", () => {
   // ダーク面では十分
   for (const bg of DARK_BACKGROUNDS) {
     assert.ok(contrast(pick("hazard"), pick(bg)) >= 4.5, `hazard on ${bg}`);
@@ -161,5 +170,47 @@ test("ヘッダーの切替点が4箇所でそろっている", async () => {
     [...new Set(toggles)],
     ["xl"],
     "ヘッダーの表示切替が複数の幅に分かれている（ボタンは出るのに開かない状態になる）",
+  );
+});
+
+/* ===== 黄黒を戻さない ===== */
+
+/**
+ * 黄（#FFE03D）と、それを黒と組んだ斜めの縞は、**オーナー判断で廃止**した
+ * （2026-09-21「１も２も　とにかく黄黒を辞める」）。
+ *
+ * 廃止したのは2種類ある。
+ *   (1) ボタンなどの面（`bg-hazard`）— 単色の黄。文字が読みにくいと指摘された
+ *   (2) 各ページの10pxの帯（旧 `bg-hazard-sm` / `bg-hazard-lg`）— 黄黒の斜め縞
+ * 帯そのものは意匠として残し、色だけ単色のブランド色に替えてある。
+ *
+ * トークンを1つ替えれば全部変わる作りなので、**直書きで戻ってくる**のが一番怖い。
+ * 共有画像（OG）は Tailwind を通らず色を直書きするので、特にそこ。
+ */
+test("黄色と黄黒の縞が、どこにも残っていない", () => {
+  const files = walkSource(join(process.cwd(), "src"));
+  const offenders: string[] = [];
+
+  for (const file of files) {
+    const text = readFileSync(file, "utf8");
+    const where = relative(process.cwd(), file).split(sep).join("/");
+    // コメントで色名に言及するのは許す。見るのは値として書かれている場合だけ
+    for (const line of text.split(/\r?\n/)) {
+      if (/^\s*(\/\/|\*|\/\*)/.test(line)) continue;
+      if (/#f{0,1}fe03d/i.test(line)) offenders.push(`${where}: 黄の直書き`);
+      // 45度の反復だけを見る。90度の反復はブラシドメタルの質感で、黄黒とは無関係
+      if (/repeating-linear-gradient\(\s*45deg/.test(line)) offenders.push(`${where}: 斜めの縞`);
+    }
+  }
+
+  assert.deepEqual([...new Set(offenders)], []);
+});
+
+test("縞の背景トークンが復活していない", () => {
+  const images = Object.keys(config.theme?.extend?.backgroundImage ?? {});
+  assert.deepEqual(
+    images.filter((name) => /^hazard/.test(name)),
+    [],
+    "hazard-lg / hazard-sm は廃止した（帯は bg-hazard の単色）",
   );
 });

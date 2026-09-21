@@ -89,7 +89,7 @@ const SharePage = async ({
   return (
     <div className="min-h-screen bg-ink text-white">
       <ShareLandingTracker mode={isMismatch ? "mismatch" : "type"} />
-      <div className="h-[10px] bg-hazard-sm" />
+      <div className="h-[10px] bg-hazard" />
       <section
         className="bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(255,46,116,.26),transparent_60%)] px-5.5 pb-12 pt-[46px]"
         style={{ containerType: "inline-size" }}

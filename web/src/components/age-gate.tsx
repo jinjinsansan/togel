@@ -54,7 +54,7 @@ export function AgeGate() {
       }}
     >
       <div className="w-full max-w-sm overflow-hidden rounded-hero border border-line bg-ink text-center shadow-card">
-        <div className="h-2 bg-hazard-sm" aria-hidden="true" />
+        <div className="h-2 bg-hazard" aria-hidden="true" />
         <div className="p-8">
           {!rejected ? (
             <>

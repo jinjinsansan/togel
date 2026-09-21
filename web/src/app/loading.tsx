@@ -7,7 +7,7 @@ export default function Loading() {
     >
       {/* スピナーの代わりに横スクロールするハザードテープ */}
       <div className="w-[200px] overflow-hidden rounded-full">
-        <div className="animate-marquee h-[10px] w-[400%] bg-hazard-sm" />
+        <div className="animate-marquee h-[10px] w-[400%] bg-hazard" />
       </div>
       <span className="sr-only">読み込み中</span>
     </div>

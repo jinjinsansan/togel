@@ -170,7 +170,7 @@ export const DiagnosisBoard = ({
                       cy={cell.y}
                       r={13}
                       fill="none"
-                      stroke="#FFE03D"
+                      stroke="#FF2E74"
                       strokeWidth={2}
                       strokeOpacity={lit ? 1 : 0.55}
                     />
@@ -179,7 +179,7 @@ export const DiagnosisBoard = ({
                     cx={cell.x}
                     cy={cell.y}
                     r={cell.isMilestone ? 7 : 5}
-                    fill={lit ? "#FFE03D" : answered ? "#FF2E74" : "#39415a"}
+                    fill={lit ? "#FF2E74" : answered ? "#FF2E74" : "#39415a"}
                   />
                 </g>
               );

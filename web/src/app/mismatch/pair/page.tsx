@@ -75,7 +75,7 @@ export default function PairMismatchPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-ink">
         <div className="w-[200px] overflow-hidden rounded-full">
-          <div className="animate-marquee h-[10px] w-[400%] bg-hazard-sm" />
+          <div className="animate-marquee h-[10px] w-[400%] bg-hazard" />
         </div>
         <p className="text-xs font-bold text-txt-subtle">2人の相性を照合しています…</p>
       </div>

@@ -108,7 +108,7 @@ export const SiteFooter = () => {
         </div>
       </div>
       {/* 最下部のハザードテープ */}
-      <div className="h-[10px] bg-hazard-sm opacity-50" aria-hidden="true" />
+      <div className="h-[10px] bg-hazard opacity-50" aria-hidden="true" />
     </footer>
   );
 };

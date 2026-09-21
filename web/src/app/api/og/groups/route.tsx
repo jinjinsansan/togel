@@ -46,7 +46,7 @@ const loadFonts = async () => {
  * 片端だけに色を持たせると、その記号が多い行＝悪い群、という読まれ方が発生する。
  */
 const MatchSymbol = ({ symbol, size }: { symbol: GroupMatchSymbol; size: number }) => {
-  const hazard = "#FFE03D";
+  const hazard = "#FF2E74";
   const relief = "#FF2E74";
   const plain = "#7c869c";
 
@@ -132,7 +132,7 @@ export const GET = async () => {
           style={{
             display: "flex",
             height: 20,
-            background: "repeating-linear-gradient(45deg,#FFE03D 0 24px,#0B0F1A 24px 48px)",
+            background: "#FF2E74",
           }}
         />
 
@@ -213,7 +213,7 @@ export const GET = async () => {
               paddingTop: 22,
             }}
           >
-            <div style={{ display: "flex", fontSize: 26, fontWeight: 900, color: "#FFE03D" }}>
+            <div style={{ display: "flex", fontSize: 26, fontWeight: 900, color: "#FF2E74" }}>
               タイプは傾向、ラベルは個人。
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -223,7 +223,7 @@ export const GET = async () => {
                   display: "flex",
                   padding: "10px 20px",
                   borderRadius: 999,
-                  background: "#FFE03D",
+                  background: "#FF2E74",
                   color: "#07090F",
                   fontSize: 22,
                   fontWeight: 900,
@@ -239,7 +239,7 @@ export const GET = async () => {
           style={{
             display: "flex",
             height: 20,
-            background: "repeating-linear-gradient(45deg,#FFE03D 0 24px,#0B0F1A 24px 48px)",
+            background: "#FF2E74",
           }}
         />
       </div>
