@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildBoard, milestoneNumbers, trailOffsetX } from "../src/lib/diagnosis/board";
+import { buildBoard, columnsFor, milestoneNumbers } from "../src/lib/diagnosis/board";
 
 /**
  * 診断すごろくの盤。監修指示の数値をそのまま実装できているかを固定する。
@@ -52,11 +52,61 @@ test("中間マスの位置が盤の上でも一致する", () => {
   assert.deepEqual(onBoard, milestoneNumbers(40));
 });
 
-test("1マスの縦距離は一定でない（等間隔は等速と同じ）", () => {
-  const board = buildBoard(40);
-  const gaps = board.cells.slice(1).map((cell, index) => cell.y - board.cells[index].y);
-  assert.ok(new Set(gaps.map((gap) => gap.toFixed(2))).size > 1);
+/**
+ * 盤は蛇行するグリッド。**40マス全部が1画面に入ること**が作り直しの目的なので、
+ * そこを固定する。前の盤は画面外へ続いていたので「全体を見る」が必要で、
+ * その全体表示が細い波線1本だった。
+ */
+test("盤が1画面に収まる（390pxの実機幅・盤の領域26dvh）", () => {
+  for (const total of [40, 10]) {
+    const board = buildBoard(total);
+    // 390px から左右の余白（px-4 × 2 = 32px）を引いた実効幅
+    assert.ok(board.width <= 390 - 32, `${total}問: 幅 ${board.width}px が入らない`);
+    // 26dvh は 844px 端末で 219.4px。枠線と余白があるので 205px を上限にする。
+    // マス40pxだと 220px になって**1px 足りない**ので 36px にしてある
+    assert.ok(board.height <= 205, `${total}問: 高さ ${board.height}px が入らない`);
+  }
 });
+
+test("蛇行している（偶数行は左から右、奇数行は右から左）", () => {
+  const board = buildBoard(40);
+  const columns = columnsFor(40);
+  assert.equal(columns, 8);
+
+  // 1行目は 1..8 が左から右
+  assert.deepEqual(
+    board.cells.slice(0, 8).map((cell) => cell.column),
+    [0, 1, 2, 3, 4, 5, 6, 7],
+  );
+  // 2行目は 9..16 が右から左
+  assert.deepEqual(
+    board.cells.slice(8, 16).map((cell) => cell.column),
+    [7, 6, 5, 4, 3, 2, 1, 0],
+  );
+  // 折り返しの前後で列が同じ（＝縦に繋がる）
+  assert.equal(board.cells[7].column, board.cells[8].column);
+  assert.equal(board.cells[15].column, board.cells[16].column);
+});
+
+test("マスは等間隔（グリッドなので歩幅で加速を表現しない）", () => {
+  const board = buildBoard(40);
+  const rows = new Set(board.cells.map((cell) => cell.y));
+  const sorted = [...rows].sort((a, b) => a - b);
+  const gaps = sorted.slice(1).map((y, index) => y - sorted[index]);
+  assert.equal(new Set(gaps).size, 1, "行の間隔が一定でない");
+
+  // 加速は中間マスの間隔が終盤ほど詰まることで見せる（区間の検査は上にある）
+  assert.deepEqual(milestoneNumbers(40), [7, 13, 19, 24, 28, 32, 35, 38]);
+});
+
+test("あがりは最後のマスだけ", () => {
+  for (const total of [40, 10]) {
+    const board = buildBoard(total);
+    const goals = board.cells.filter((cell) => cell.isGoal).map((cell) => cell.index);
+    assert.deepEqual(goals, [total - 1]);
+  }
+});
+
 
 test("座標は設問数だけで決まり、再現する（回答に依存しない）", () => {
   const a = buildBoard(40);
@@ -65,18 +115,4 @@ test("座標は設問数だけで決まり、再現する（回答に依存し�
     assert.equal(cell.x, b.cells[index].x);
     assert.equal(cell.y, b.cells[index].y);
   });
-});
-
-test("軌跡の横ずれは設問インデックスの偶奇で符号が反転する", () => {
-  const values = [1, 2, 3, 4, 5];
-  const even = values.map((value) => trailOffsetX(0, value));
-  const odd = values.map((value) => trailOffsetX(1, value));
-  even.forEach((offset, index) => assert.equal(offset, -odd[index]));
-});
-
-test("同じ回答が常に同じ側に出ない（一貫した「良い側」が存在しない）", () => {
-  assert.ok(trailOffsetX(0, 5) > 0);
-  assert.ok(trailOffsetX(1, 5) < 0);
-  assert.equal(trailOffsetX(0, 3), 0);
-  assert.equal(trailOffsetX(7, 4), trailOffsetX(7, 4));
 });

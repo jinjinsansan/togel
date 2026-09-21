@@ -47,7 +47,6 @@ const DiagnosisPage = () => {
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("quiz");
-  const [overview, setOverview] = useState(false);
   const [resumeNote, setResumeNote] = useState<string | null>(null);
   // 移動の種類は操作を受けたこちらが決める（盤は渡された通りに描くだけ）
   const [move, setMove] = useState<{ kind: "forward" | "instant"; step: number }>({
@@ -254,8 +253,8 @@ const DiagnosisPage = () => {
     return (
       <RevealSequence
         board={board}
-        answerByIndex={answerByIndex}
         records={records}
+        answeredCount={answers.length}
         recordIndexes={recordIndexes}
         worst={worst}
         worstCountLabel={diagnosisType === "light" ? "3" : "5"}
@@ -270,29 +269,13 @@ const DiagnosisPage = () => {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-ink text-white">
       {/* 盤面: これが進捗表示そのもの */}
-      <div className="relative h-[36dvh] min-h-[210px] border-b border-line-soft bg-panel">
+      <div className="relative h-[26dvh] min-h-[212px] border-b border-line-soft bg-panel">
         <DiagnosisBoard
           board={board}
           currentIndex={currentIndex}
-          answerByIndex={answerByIndex}
-          overview={overview}
           reducedMotion={reducedMotion}
           note={resumeNote}
-          moveKind={move.kind}
-          moveStep={move.step}
         />
-        {board.chapterCount > 1 && !overview && (
-          <div className="pointer-events-none absolute left-4 top-3 text-[10px] font-bold tracking-[0.22em] text-txt-disabled">
-            第{(currentCell?.chapter ?? 0) + 1}章
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => setOverview((value) => !value)}
-          className="absolute right-3 top-3 min-h-[44px] rounded-full border border-line bg-surface/80 px-3.5 text-[11px] font-bold text-txt-muted backdrop-blur transition-colors hover:text-white"
-        >
-          {overview ? "現在地に戻る" : "全体を見る"}
-        </button>
       </div>
 
       {/* 設問 or 中間マス */}

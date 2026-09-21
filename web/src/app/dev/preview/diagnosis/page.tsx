@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 export default async function DiagnosisPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; phase?: string; overview?: string; total?: string }>;
+  searchParams: Promise<{ q?: string; phase?: string; total?: string }>;
 }) {
   if (process.env.TOGEL_DEV_PREVIEW !== "1") notFound();
 
@@ -40,7 +40,6 @@ export default async function DiagnosisPreviewPage({
       total={total}
       questionNumber={questionNumber}
       phase={params.phase === "milestone" ? "milestone" : "quiz"}
-      overview={params.overview === "1"}
     />
   );
 }

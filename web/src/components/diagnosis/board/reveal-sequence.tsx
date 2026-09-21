@@ -20,9 +20,10 @@ import type { AnswerRecord, Board } from "@/lib/diagnosis/board";
 
 type Props = {
   board: Board;
-  answerByIndex: Map<number, number>;
   /** 回想で流す行（振り切れた回答だけ。0件でもよい） */
   records: AnswerRecord[];
+  /** 答えた問数。**値は使わない**（何マス光らせるかだけ） */
+  answeredCount: number;
   /** 回想で光らせるマス（records と同じ順） */
   recordIndexes: number[];
   /** 開封で出す相手。愛称（〜型）と群は、判定できたときだけ入る */
@@ -50,8 +51,8 @@ const ENVELOPE_MS = 1100;
 
 export const RevealSequence = ({
   board,
-  answerByIndex,
   records,
+  answeredCount,
   recordIndexes,
   worst,
   worstCountLabel,
@@ -88,12 +89,12 @@ export const RevealSequence = ({
   }, [records.length, reducedMotion]);
 
   // 回想中は、通ってきたマスを頭から順に光らせる（0件の人はマスの光だけで進む）
-  const litCount = records.length > 0 ? shown : Math.min(answerByIndex.size, shown * 6);
+  const litCount = records.length > 0 ? shown : Math.min(answeredCount, shown * 6);
   const highlightIndexes =
     stage === "recall"
       ? records.length > 0
         ? recordIndexes.slice(0, litCount)
-        : [...answerByIndex.keys()].slice(0, litCount)
+        : Array.from({ length: litCount }, (_, index) => index)
       : [];
 
   return (
@@ -104,8 +105,6 @@ export const RevealSequence = ({
             <DiagnosisBoard
               board={board}
               currentIndex={board.cells.length - 1}
-              answerByIndex={answerByIndex}
-              overview
               reducedMotion={reducedMotion}
               highlightIndexes={highlightIndexes}
             />

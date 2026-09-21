@@ -1,28 +1,53 @@
 import type { Answer, DiagnosisQuestion } from "@/types/diagnosis";
 
 /**
- * 診断すごろくの盤面（座標・中間マス・軌跡）。
+ * 診断すごろくの盤面（マスの座標と中間マス）。
  *
- * 設計の前提:
- * - 盤の座標は設問数だけで決まる。回答には一切依存しない
+ * 【2026-09-21 作り直し】
+ * 前の盤は蛇行する1本の線で、**マスも目盛りも終点も描いていなかった**。
+ * 「座標は設問数だけで決まる／回答に依存しない」という性質は満たしていたが、
+ * 満たした上で**見るものが何も無かった**（全体表示は細い波線1本、
+ * 1問目は点ひとつと枠外へ消える線だけ）。
+ * 性質の正しさは、機能することの証明にならない。
+ *
+ * いまの盤は**蛇行するグリッド**。40マス全部が1画面に入る。
+ *
+ *   行1   1  2  3  4  5  6  7  8
+ *   行2  16 15 14 13 12 11 10  9   ← 右から左
+ *   行3  17 18 19 20 21 22 23 24
+ *   行4  32 31 30 29 28 27 26 25   ← 右から左
+ *   行5  33 34 35 36 37 38 39 40
+ *
+ * 設計の前提（前の盤から引き継ぐもの）:
+ * - 盤の形は設問数だけで決まる。回答には一切依存しない
  *   （答えの中身で歩幅が変わると「良い答えだと大きく進む」＝優劣になる）
  * - 現在地の正は回答の永続層。ここは座標を返すだけで、状態は持たない
- * - 1マスの縦距離は一定にしない。同じ1問でも「大きく進んだ」が作れる
+ *
+ * 変えたもの:
+ * - 1マスの縦距離を不等間隔にして加速を表現するのをやめた。マスが等間隔でないと
+ *   グリッドにならない。**加速は中間マスの間隔が終盤ほど詰まることで見せる**
+ *   （7,13,19,24,28,32,35,38 は変えていない）
+ * - 回答ごとの軌跡の横ずれ（trailOffsetX）を廃止した。マスが一様なグリッドでは
+ *   置き場が無く、残すと5状態の区別を濁らせる
  */
 
-/** 盤のローカル座標系の幅（px） */
-export const BOARD_WIDTH = 280;
+/**
+ * 1マスの一辺（px）。
+ *
+ * 指示は40pxだったが、**26dvh に収まらない**ので36pxにした。
+ *   40px → 5行で 5×45−5 = 220px。26dvh は844px端末で 219.4px。**1px 足りない**
+ *   36px → 5行で 5×41−5 = 200px。余白を入れても収まる
+ * 幅はどちらも問題ない（36pxで 323px ≤ 390−32）。
+ */
+export const CELL_SIZE = 36;
+/** マスの間隔（px） */
+export const CELL_GAP = 5;
 
-const CENTER_X = BOARD_WIDTH / 2;
-/** 蛇行の振れ幅 */
-const AMPLITUDE = 92;
-/** 蛇行の周期（マス数） */
-const MEANDER_PERIOD = 8;
-/** マス間の縦距離。等間隔にしないための固定表（回答に依存しない） */
-const GAP_PATTERN = [104, 82, 120, 90, 76, 112, 96, 86];
+/** 列数。40問は8列×5行、10問は5列×2行（どちらも1画面に収める） */
+const COLUMNS: Record<number, number> = { 40: 8, 10: 5 };
 
-/** full(40) のみ章分割する。章は空間の区切りで、止まる点ではない */
-const CHAPTER_SIZE = 10;
+export const columnsFor = (total: number): number =>
+  COLUMNS[total] ?? Math.min(8, Math.max(1, Math.ceil(Math.sqrt(total))));
 
 /**
  * 中間マスの位置（この設問に答えた直後に入る。1始まりの設問番号）。
@@ -39,62 +64,58 @@ const MILESTONE_NUMBERS: Record<number, number[]> = {
 export type BoardCell = {
   /** 0始まり。設問インデックスと1:1 */
   index: number;
+  /** 0始まりの列・行 */
+  column: number;
+  row: number;
+  /** 盤のローカル座標（マスの左上） */
   x: number;
   y: number;
   /** この設問に答えた直後に中間マスが入る */
   isMilestone: boolean;
-  /** 0始まりの章番号。章分割しない盤は全て0 */
-  chapter: number;
+  /** 最後のマス（あがり） */
+  isGoal: boolean;
 };
 
 export type Board = {
   cells: BoardCell[];
+  columns: number;
+  rows: number;
   width: number;
   height: number;
-  chapterCount: number;
 };
 
 export const milestoneNumbers = (total: number): number[] => MILESTONE_NUMBERS[total] ?? [];
 
 export const buildBoard = (total: number): Board => {
   const milestones = new Set(milestoneNumbers(total));
-  const useChapters = total === 40;
+  const columns = columnsFor(total);
+  const rows = Math.ceil(total / columns);
+  const step = CELL_SIZE + CELL_GAP;
   const cells: BoardCell[] = [];
 
-  let y = 0;
   for (let index = 0; index < total; index += 1) {
-    if (index > 0) y += GAP_PATTERN[(index - 1) % GAP_PATTERN.length];
+    const row = Math.floor(index / columns);
+    const withinRow = index % columns;
+    // 奇数行は右から左へ折り返す（蛇行）
+    const column = row % 2 === 0 ? withinRow : columns - 1 - withinRow;
     cells.push({
       index,
-      x: CENTER_X + AMPLITUDE * Math.sin((index / MEANDER_PERIOD) * Math.PI * 2),
-      y,
+      column,
+      row,
+      x: column * step,
+      y: row * step,
       isMilestone: milestones.has(index + 1),
-      chapter: useChapters ? Math.floor(index / CHAPTER_SIZE) : 0,
+      isGoal: index === total - 1,
     });
   }
 
   return {
     cells,
-    width: BOARD_WIDTH,
-    height: y,
-    chapterCount: useChapters ? Math.ceil(total / CHAPTER_SIZE) : 1,
+    columns,
+    rows,
+    width: columns * step - CELL_GAP,
+    height: rows * step - CELL_GAP,
   };
-};
-
-/** 軌跡の振れ幅（px） */
-export const TRAIL_AMPLITUDE = 16;
-
-/**
- * 軌跡が各マスで通る点の横ずれ。
- *
- * 符号を設問インデックスの偶奇で反転させる。同じ回答「5」が設問ごとに左にも右にも出るため、
- * 一貫した「良い側」が構造として存在しない（確認で担保せず、構造で消す）。
- * 太さ・濃さ・長さは回答によらず一定にすること。差は形にだけ出る。
- */
-export const trailOffsetX = (questionIndex: number, answerValue: number): number => {
-  const sign = questionIndex % 2 === 0 ? 1 : -1;
-  const normalized = (answerValue - 3) / 2; // 1..5 → -1..+1（等間隔）
-  return sign * normalized * TRAIL_AMPLITUDE;
 };
 
 /** 振り切れた回答（両端）かどうか */

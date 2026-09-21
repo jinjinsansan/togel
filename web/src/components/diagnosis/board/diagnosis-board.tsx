@@ -1,213 +1,141 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
-
-import { trailOffsetX } from "@/lib/diagnosis/board";
-import type { Board } from "@/lib/diagnosis/board";
+import { CELL_GAP, CELL_SIZE } from "@/lib/diagnosis/board";
+import type { Board, BoardCell } from "@/lib/diagnosis/board";
 
 /**
  * 診断すごろくの盤面。
  *
- * - コマは画面中央に固定し、盤の側を動かす（9:16で酔いにくく、実装も安定する）
- * - 現在地の正は呼び出し側の永続層。このコンポーネントは座標を描くだけで状態を持たない
- * - 前のマスへ戻るときは演出しない（後退を演出すると「間違えた」の意味が発生する）
- * - 軌跡は太さ・濃さ・長さを回答によらず一定にし、差は形にだけ出す
- * - コマの絵柄はデザイナー差し替え前提のスロット（piece プロパティ）
+ * 【2026-09-21 作り直し】
+ * 前の盤は蛇行する1本の線で、マスを描いていなかった。盤が常に画面外へ続くので
+ * 「全体を見る／現在地に戻る」が要り、その全体表示は細い波線1本だった。
+ * **40マス全部を1画面に入れて、2つのボタンごと無くした。**
+ *
+ * ここで一番大事なのは、**5つの状態が見て区別が付くこと**。
+ * 実装が仕様どおりでも、見て分からなければ盤として機能しない（前がそうだった）。
+ *
+ *   未到達   枠だけ・暗い面          これから
+ *   通過済み 面が塗られている        答えた
+ *   現在地   明るい枠＋光            いまここ
+ *   中間マス 小さな印が付く          区切り
+ *   あがり   二重の枠               終点
+ *
+ * - 現在地の正は呼び出し側の永続層。このコンポーネントは状態を持たない
+ * - マスに数字は書かない（390pxで40個の数字は読めない。何問目かは設問カードが持つ）
+ * - 盤の形は回答に依存しない。答えの中身で見え方が変わると優劣になる
  */
 
 type Props = {
   board: Board;
   /** 現在地（0始まりの設問インデックス） */
   currentIndex: number;
-  /** 設問インデックス → 回答値（1〜5） */
-  answerByIndex: Map<number, number>;
-  /** 盤全体の俯瞰表示 */
-  overview?: boolean;
   reducedMotion?: boolean;
   /** 途中再開時に現在地へ添える一行（次の回答で消す） */
   note?: string | null;
-  /** 回想で光らせるマス（0始まり。空なら通常表示） */
-  highlightIndexes?: number[];
   /** コマの差し替えスロット */
   piece?: React.ReactNode;
-  /**
-   * 直前の移動の種類。呼び出し側（＝操作を受けた側）が渡す。
-   * forward: 進んだ。移動を見せ、着地の手応えを出す
-   * instant: 戻った・再開した。演出しない（後退を演出すると「間違えた」の意味が発生する）
-   */
-  moveKind?: "forward" | "instant";
-  /** 前進のたびに増える連番。着地の手応えを打ち直すためのキー */
-  moveStep?: number;
+  /** 回想で光らせるマス（0始まり。空なら通常表示） */
+  highlightIndexes?: number[];
 };
 
-const useSize = <T extends HTMLElement>() => {
-  const ref = useRef<T>(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  useLayoutEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-    const update = () =>
-      setSize({ width: element.clientWidth, height: element.clientHeight });
-    update();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-  return { ref, size };
+type CellState = "pending" | "passed" | "current" | "goal";
+
+const stateOf = (cell: BoardCell, currentIndex: number): CellState => {
+  if (cell.index === currentIndex) return "current";
+  if (cell.isGoal) return "goal";
+  return cell.index < currentIndex ? "passed" : "pending";
+};
+
+/**
+ * 面・枠は状態ごとに**両方**変える。色だけだと縮小時に潰れる。
+ * あがりが現在地でもあるとき（最後の設問）は current が勝ち、
+ * あがりの印（内側の枠）は別に重ねる。
+ */
+const CELL_CLASS: Record<CellState, string> = {
+  pending: "border-line bg-surface/40",
+  passed: "border-primary/70 bg-primary/55",
+  current: "border-white bg-primary",
+  goal: "border-relief bg-surface/40",
 };
 
 export const DiagnosisBoard = ({
   board,
   currentIndex,
-  answerByIndex,
-  overview = false,
   reducedMotion = false,
   note = null,
-  highlightIndexes,
   piece,
-  moveKind = "instant",
-  moveStep = 0,
+  highlightIndexes,
 }: Props) => {
-  const { ref, size } = useSize<HTMLDivElement>();
-
-  // 前進したときだけ移動を見せ、着地の手応えを出す
-  const animating = moveKind === "forward" && !reducedMotion;
-
-  const current = board.cells[Math.min(currentIndex, board.cells.length - 1)] ?? board.cells[0];
-  const highlight = new Set(highlightIndexes ?? []);
-
-  // 俯瞰: 盤全体が収まる倍率で中央に置く。通常: 現在地を中央に合わせる
-  const overviewScale = overview
-    ? Math.min(
-        (size.width - 32) / board.width,
-        (size.height - 32) / Math.max(board.height, 1),
-        1,
-      )
-    : 1;
-
-  const transform = overview
-    ? `translate3d(${-board.width / 2}px, ${-board.height / 2}px, 0) scale(${overviewScale})`
-    : `translate3d(${-current.x}px, ${-current.y}px, 0)`;
-
-  const transition = animating ? "transform .4s cubic-bezier(.2,.8,.2,1)" : "none";
-
-  // 軌跡: 回答済みのマスだけを、回答で横にずらした点で結ぶ
-  const trailPoints = board.cells
-    .filter((cell) => answerByIndex.has(cell.index))
-    .map((cell) => `${cell.x + trailOffsetX(cell.index, answerByIndex.get(cell.index)!)},${cell.y}`)
-    .join(" ");
-
+  const highlighted = new Set(highlightIndexes ?? []);
   return (
-    <div ref={ref} className="relative h-full w-full overflow-hidden">
-      <div
-        className="absolute left-1/2 top-1/2"
-        style={{
-          transform,
-          transformOrigin: overview ? "center center" : "0 0",
-          transition,
-          willChange: animating ? "transform" : undefined,
-        }}
-      >
-        <div
-          key={animating ? moveStep : "static"}
-          className={animating ? "animate-board-settle" : undefined}
-        >
-          <svg
-            width={board.width}
-            height={board.height + 40}
-            viewBox={`0 0 ${board.width} ${board.height + 40}`}
+  <div className="flex h-full w-full flex-col items-center justify-center gap-2.5 px-4">
+    <div
+      className="relative"
+      style={{ width: board.width, height: board.height }}
+      role="img"
+      aria-label={`全${board.cells.length}問中 ${currentIndex + 1}問目`}
+    >
+      {/* 行と行をつなぐ折り返し。蛇行していることが分かる程度の細さに留める */}
+      {Array.from({ length: board.rows - 1 }, (_, row) => {
+        const onRight = row % 2 === 0;
+        const step = CELL_SIZE + CELL_GAP;
+        return (
+          <span
+            key={`turn-${row}`}
             aria-hidden="true"
+            className="absolute rounded-full bg-line"
+            style={{
+              width: 2,
+              height: CELL_GAP + 2,
+              top: row * step + CELL_SIZE - 1,
+              left: onRight
+                ? (board.columns - 1) * step + CELL_SIZE / 2
+                : CELL_SIZE / 2,
+            }}
+          />
+        );
+      })}
+
+      {board.cells.map((cell) => {
+        const state = stateOf(cell, currentIndex);
+        return (
+          <span
+            key={cell.index}
+            aria-hidden="true"
+            className={`absolute flex items-center justify-center rounded-[9px] border-2 transition-colors ${
+              CELL_CLASS[state]
+            } ${state === "current" && !reducedMotion ? "shadow-[0_0_0_4px_rgba(255,46,116,.28)]" : ""} ${
+              highlighted.has(cell.index) ? "!border-hazard !bg-hazard/70" : ""
+            }`}
+            style={{ left: cell.x, top: cell.y, width: CELL_SIZE, height: CELL_SIZE }}
           >
-            {/* 章の区切り: 空間の区切りであって止まる点ではないので、背景側に留める */}
-            {board.chapterCount > 1 &&
-              board.cells
-                .filter((cell) => cell.chapter > 0 && cell.index % 10 === 0)
-                .map((cell) => (
-                  <line
-                    key={`chapter-${cell.chapter}`}
-                    x1={0}
-                    x2={board.width}
-                    y1={cell.y - 44}
-                    y2={cell.y - 44}
-                    stroke="#1c2333"
-                    strokeWidth={1}
-                  />
-                ))}
-
-            {/* 道（全体） */}
-            <polyline
-              points={board.cells.map((cell) => `${cell.x},${cell.y}`).join(" ")}
-              fill="none"
-              stroke="#1c2333"
-              strokeWidth={10}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* 軌跡（通ってきた形）。濃さ・太さは回答によらず一定 */}
-            {trailPoints && (
-              <polyline
-                points={trailPoints}
-                fill="none"
-                stroke="#FF2E74"
-                strokeWidth={4}
-                strokeOpacity={0.9}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {/* 中間マス: 小さな印。数字ではないので潰れない */}
+            {cell.isMilestone && state !== "current" && (
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  cell.index < currentIndex ? "bg-white" : "bg-txt-disabled"
+                }`}
               />
             )}
-
-            {/* マス */}
-            {board.cells.map((cell) => {
-              const answered = answerByIndex.has(cell.index);
-              const lit = highlight.has(cell.index);
-              return (
-                <g key={cell.index}>
-                  {cell.isMilestone && (
-                    <circle
-                      cx={cell.x}
-                      cy={cell.y}
-                      r={13}
-                      fill="none"
-                      stroke="#FF2E74"
-                      strokeWidth={2}
-                      strokeOpacity={lit ? 1 : 0.55}
-                    />
-                  )}
-                  <circle
-                    cx={cell.x}
-                    cy={cell.y}
-                    r={cell.isMilestone ? 7 : 5}
-                    fill={lit ? "#FF2E74" : answered ? "#FF2E74" : "#39415a"}
-                  />
-                </g>
-              );
-            })}
-          </svg>
-        </div>
-      </div>
-
-      {/* コマ: 画面中央に固定。盤の側が動く */}
-      {!overview && (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div
-            key={animating ? moveStep : "static"}
-            className={animating ? "animate-piece-land" : undefined}
-          >
-            {piece ?? (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-primary shadow-danger">
-                <span className="h-2.5 w-2.5 rounded-full bg-white" />
-              </div>
+            {/*
+              あがり: 二重の枠。色ではなく**形**で区別する。
+              現在地と重なるとき（最後の設問）も消さない。消すと、あがりに
+              着いた瞬間だけ「あがり」の印が無くなる。
+            */}
+            {cell.isGoal && (
+              <span
+                className={`absolute inset-[4px] rounded-[5px] border-2 ${
+                  state === "current" ? "border-white" : "border-relief/70"
+                }`}
+              />
             )}
-          </div>
-          {note && (
-            <div className="absolute left-1/2 top-[30px] w-[190px] -translate-x-1/2 text-center text-[11px] font-bold text-txt-muted">
-              {note}
-            </div>
-          )}
-        </div>
-      )}
+            {state === "current" && (piece ?? <span className="h-2.5 w-2.5 rounded-full bg-white" />)}
+          </span>
+        );
+      })}
+    </div>
+
+        {note && <p className="max-w-[20em] text-center text-[11px] text-txt-subtle">{note}</p>}
     </div>
   );
 };
