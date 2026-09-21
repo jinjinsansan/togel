@@ -106,7 +106,7 @@ const config: Config = {
       boxShadow: {
         card: "0 20px 40px -30px rgba(0,0,0,.9)",
         danger: "0 30px 60px -30px rgba(255,46,116,.6)",
-        cta: "0 16px 40px -16px rgba(255,224,61,.8)",
+        cta: "0 16px 40px -16px rgba(255,46,116,.8)",
         focusring: "0 0 0 3px rgba(255,46,116,.35)",
       },
       backgroundImage: {

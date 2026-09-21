@@ -14,7 +14,7 @@ const DOT_COLORS: Record<number, string> = {
   5: "#FF2E74",
   4: "rgba(255,46,116,.6)",
   3: "#39415a",
-  2: "rgba(255,224,61,.6)",
+  2: "rgba(255,46,116,.6)",
   1: "#FF2E74",
 };
 

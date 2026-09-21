@@ -188,7 +188,12 @@ test("ヘッダーの切替点が4箇所でそろっている", async () => {
  * 共有画像（OG）は Tailwind を通らず色を直書きするので、特にそこ。
  */
 test("黄色と黄黒の縞が、どこにも残っていない", () => {
-  const files = walkSource(join(process.cwd(), "src"));
+  // 🔴 `src` だけ見ていたら、**tailwind.config.ts の shadow-cta に黄が残った**。
+  // トークンを定義しているファイルこそ、置き換えの取りこぼしが出る場所。
+  const files = [
+    ...walkSource(join(process.cwd(), "src")),
+    join(process.cwd(), "tailwind.config.ts"),
+  ];
   const offenders: string[] = [];
 
   for (const file of files) {
@@ -197,7 +202,9 @@ test("黄色と黄黒の縞が、どこにも残っていない", () => {
     // コメントで色名に言及するのは許す。見るのは値として書かれている場合だけ
     for (const line of text.split(/\r?\n/)) {
       if (/^\s*(\/\/|\*|\/\*)/.test(line)) continue;
-      if (/#f{0,1}fe03d/i.test(line)) offenders.push(`${where}: 黄の直書き`);
+      // 16進だけ見ると取りこぼす。実際 rgba(255,224,61,.8) で書かれた影が残っていた
+      if (/#f{0,1}fe03d/i.test(line)) offenders.push(`${where}: 黄の直書き（16進）`);
+      if (/255\s*,\s*224\s*,\s*61/.test(line)) offenders.push(`${where}: 黄の直書き（rgb）`);
       // 45度の反復だけを見る。90度の反復はブラシドメタルの質感で、黄黒とは無関係
       if (/repeating-linear-gradient\(\s*45deg/.test(line)) offenders.push(`${where}: 斜めの縞`);
     }
