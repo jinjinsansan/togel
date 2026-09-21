@@ -116,7 +116,9 @@ const usedFontSizes = (bgClass: string): { px: number; bold: boolean }[] => {
   const found: { px: number; bold: boolean }[] = [];
   for (const file of walkSource(join(process.cwd(), "src"))) {
     for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
-      if (!line.includes(bgClass) || !/text-(white|txt)\b|text-\[/.test(line)) continue;
+      // クラス名は丸ごと一致で見る（`bg-primary` が `bg-primary-ink` に当たらないように）
+      const hasBg = line.split(/[\s"'`{}]+/).includes(bgClass);
+      if (!hasBg || !/text-(white|txt)\b|text-\[/.test(line)) continue;
       if (!line.includes("text-white")) continue;
       const bold = /font-(bold|black|extrabold|semibold)/.test(line);
       const px = line.match(/text-\[([0-9.]+)px\]/);

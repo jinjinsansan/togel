@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { StoryPreview } from "./preview";
 
 /**
- * 【開発用】結果ページのストーリーズ（全15枚）。**本番では404を返す**（proxy.ts でも弾く）。
+ * 【開発用】結果ページのストーリーズ（全14枚）。**本番では404を返す**（proxy.ts でも弾く）。
  *
  * /result はログインが要り、回答の保存状態でしか描画されない。そのため
  * 「実機幅でどう見えるか」を外から撮れない。見た目は本番と同じ StoryViewer を使う。

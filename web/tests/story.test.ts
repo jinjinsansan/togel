@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { personalityTypes } from "../src/lib/personality";
+import { personalityTypes, typeToken } from "../src/lib/personality";
+import { TYPE_PROTOTYPES } from "../src/lib/personality/prototypes";
 import { typeCards } from "../src/lib/personality/copy/cards-types";
-import { reactionCards } from "../src/lib/personality/copy/cards-reactions";
-import { deepNarrativeBridge } from "../src/lib/personality/copy/reaction-bridge";
+import { fixedCards, reactionCards } from "../src/lib/personality/copy/cards-reactions";
 import {
   EmphasisSyntaxError,
   parseEmphasis,
@@ -12,35 +12,66 @@ import {
 } from "../src/lib/personality/story/emphasis";
 import {
   buildStoryFromKeys,
+  coreAxis,
   STORY_LENGTH,
+  type Card,
   type StoryCard,
 } from "../src/lib/personality/story/cards";
 import { HEAT_KEYS, INTENSITY_KEYS, REACTION_KEYS } from "../src/lib/personality/reaction";
 
 /**
- * 結果ページのストーリーズ（全15枚）を検査する。
+ * 結果ページのストーリーズ（全14枚・v2「取扱注意の欄」）を検査する。
  *
  * 本文は監修側の納品物。ここで見るのは、**組み合わせたときに空にならないか**、
- * 強調記法が崩れていないか、書いてはいけない語が無いか。
+ * 画面に記法（〔〕・{type}）が残らないか、書いてはいけない語が無いか、ピンクの量。
  */
 
-/* ===== 1枚のカードに含まれる文字列を全部取り出す ===== */
+/* ===== 1枚のカードが画面に出す文字列を全部取り出す ===== */
+
+const cardStrings = (card: Card) =>
+  [card.lead, card.big, card.mid, card.sub].filter((s): s is string => typeof s === "string");
 
 const stringsOf = (card: StoryCard): string[] => {
   switch (card.kind) {
     case "text":
     case "close":
-      return [card.card.lead, card.card.big, card.card.mid, card.card.sub].filter(
-        (s): s is string => typeof s === "string",
-      );
-    case "toc":
-      return [card.big, card.sub, card.closing];
-    case "diagram":
-      return [card.diagram.event, card.diagram.meaning, ...card.diagram.rejected, card.diagram.closing];
+      return cardStrings(card.card);
+    case "index":
+      return [card.label, card.title, card.coreLine];
+    case "sakai":
+      return [
+        fixedCards.sakai.big,
+        fixedCards.sakai.mid,
+        ...fixedCards.sakai.toc.flat(),
+        fixedCards.sakai.closing,
+      ];
+    case "diagram": {
+      const d = fixedCards.diagram;
+      return [
+        card.label,
+        d.inputLabel,
+        card.diagram.input,
+        d.bridge,
+        d.outputLabel,
+        card.diagram.output,
+        d.rejectedLabel,
+        ...card.diagram.rejected,
+        d.closing,
+      ];
+    }
     case "chips":
-      return [card.chips.intro, ...card.chips.chips, card.chips.big, card.chips.sub].filter(
-        (s): s is string => typeof s === "string",
-      );
+      return [card.label, card.intro, ...card.chips, card.big, card.sub];
+    case "label":
+      return [
+        card.label,
+        card.title,
+        fixedCards.label.ngBadge,
+        card.ng,
+        fixedCards.label.okBadge,
+        card.ok,
+        card.note,
+        fixedCards.label.handoff,
+      ];
     default:
       return [];
   }
@@ -56,71 +87,209 @@ const allCopyStrings = (): string[] => {
   };
   walk(typeCards);
   walk(reactionCards);
-  walk(deepNarrativeBridge);
+  walk(fixedCards);
   return out;
 };
 
-/* ===== 全組合せで15枚が埋まる ===== */
+const PROTO = TYPE_PROTOTYPES[personalityTypes[0].id];
+
+/** 720通り（24タイプ × 5反応 × 3強度 × 2放熱）を1つずつ組んで渡す */
+const eachCombo = (fn: (key: string, story: StoryCard[] | null) => void) => {
+  for (const type of personalityTypes)
+    for (const reaction of REACTION_KEYS)
+      for (const intensity of INTENSITY_KEYS)
+        for (const heat of HEAT_KEYS)
+          fn(
+            `${type.id}/${reaction}/${intensity}/${heat}`,
+            buildStoryFromKeys({
+              typeId: type.id,
+              reaction,
+              intensity,
+              heat,
+              scores: TYPE_PROTOTYPES[type.id],
+            }),
+          );
+};
+
+/* ===== 全組合せで14枚が埋まる ===== */
 
 /**
- * 24タイプ × 5反応 × 3強度 × 2放熱 = **720通り**。1枚でも空なら落とす。
- *
- * 監修側の検査は文字列単位なので、**組み合わせたときに空になる経路**
+ * 1枚でも空なら落とす。監修側の検査は文字列単位なので、**組み合わせたときに空になる経路**
  * （あるタイプだけキーが無い、ある放熱だけ枝が無い、など）はここでしか見えない。
+ * 同時に、画面に出る文字列（強調の解析後）に `{` `}` `〔` `〕` が残らないことも見る。
  */
-test("720通りすべてで15枚が埋まる", () => {
+test("720通りすべてで14枚が埋まり、記法が画面に残らない", () => {
   const failures: string[] = [];
+  const leaked: string[] = [];
   let combos = 0;
-  for (const type of personalityTypes) {
-    for (const reaction of REACTION_KEYS) {
-      for (const intensity of INTENSITY_KEYS) {
-        for (const heat of HEAT_KEYS) {
-          combos += 1;
-          const key = `${type.id}/${reaction}/${intensity}/${heat}`;
-          const story = buildStoryFromKeys({ typeId: type.id, reaction, intensity, heat });
-          if (!story) {
-            failures.push(`${key}: 組み立てられない`);
-            continue;
-          }
-          if (story.length !== STORY_LENGTH) failures.push(`${key}: ${story.length}枚`);
-          story.forEach((card, i) => {
-            const strings = stringsOf(card);
-            // 表紙・INDEX・「違います。」は本文を持たない（既存データと固定文で描く）
-            if (["cover", "index", "chigau"].includes(card.kind)) return;
-            if (strings.length === 0 || strings.some((s) => plainText(s).trim() === "")) {
-              failures.push(`${key}: ${i + 1}枚目（${card.kind}）が空`);
-            }
-          });
-        }
-      }
+  eachCombo((key, story) => {
+    combos += 1;
+    if (!story) {
+      failures.push(`${key}: 組み立てられない`);
+      return;
     }
-  }
+    if (story.length !== STORY_LENGTH) failures.push(`${key}: ${story.length}枚`);
+    story.forEach((card, i) => {
+      const strings = stringsOf(card);
+      for (const s of strings) {
+        const shown = parseEmphasis(s)
+          .map((seg) => seg.text)
+          .join("");
+        if (["{", "}", "〔", "〕"].some((c) => shown.includes(c)))
+          leaked.push(`${key}: ${i + 1}枚目 ${shown.slice(0, 30)}`);
+      }
+      // 表紙は本文を持たない（既存データで描く）
+      if (card.kind === "cover") return;
+      if (strings.length === 0 || strings.some((s) => plainText(s).trim() === "")) {
+        failures.push(`${key}: ${i + 1}枚目（${card.kind}）が空`);
+      }
+    });
+  });
   assert.equal(combos, 720, "組合せの数が 24×5×3×2 になっていない");
+  assert.equal(STORY_LENGTH, 14);
   assert.deepEqual(failures.slice(0, 10), [], `${failures.length}件`);
+  assert.deepEqual(leaked.slice(0, 10), [], `${leaked.length}件`);
+});
+
+test("{type} は愛称＋「型」になる（愛称を単独で出さない）", () => {
+  const type = personalityTypes[0];
+  const st = buildStoryFromKeys({
+    typeId: type.id,
+    reaction: "evaluation",
+    intensity: "mid",
+    heat: "high",
+    scores: PROTO,
+  })!;
+  const label = st[12];
+  const close = st[13];
+  assert.ok(typeToken(type).endsWith("型"));
+  assert.ok(label.kind === "label" && label.title === `${typeToken(type)}の取扱注意`);
+  assert.ok(close.kind === "close" && close.card.big.startsWith(typeToken(type)));
 });
 
 test("タイプ本文のキーが、定義にあるタイプIDとちょうど一致する", () => {
   const known = new Set(personalityTypes.map((type) => type.id));
   const keys = Object.keys(typeCards);
-  assert.deepEqual(keys.filter((id) => !known.has(id)), [], "定義に無いタイプID（綴り間違い？）");
-  assert.deepEqual([...known].filter((id) => !keys.includes(id)), [], "本文の無いタイプがある");
+  assert.deepEqual(
+    keys.filter((id) => !known.has(id)),
+    [],
+    "定義に無いタイプID（綴り間違い？）",
+  );
+  assert.deepEqual(
+    [...known].filter((id) => !keys.includes(id)),
+    [],
+    "本文の無いタイプがある",
+  );
 });
 
-test("面の順番: 1〜9 暗、10〜12 明、13 ピンク、14〜15 明", () => {
+test("並びと面: 1〜8 暗、9〜14 明。6枚目が境目、13枚目がラベル", () => {
   const story = buildStoryFromKeys({
     typeId: personalityTypes[0].id,
     reaction: "evaluation",
     intensity: "mid",
     heat: "high",
+    scores: PROTO,
   })!;
-  const faces = story.map((card) => card.face);
-  assert.deepEqual(faces, [
-    "dark", "dark", "dark", "dark", "dark", "dark", "dark", "dark", "dark",
-    "light", "light", "light", "pink", "light", "light",
-  ]);
-  assert.equal(story[0].kind, "cover");
-  assert.equal(story[12].kind, "chigau");
-  assert.equal(story[14].kind, "close");
+  assert.deepEqual(
+    story.map((card) => card.face),
+    [...Array(8).fill("dark"), ...Array(6).fill("light")],
+  );
+  assert.deepEqual(
+    story.map((card) => card.kind),
+    [
+      "cover",
+      "text",
+      "text",
+      "text",
+      "index",
+      "sakai",
+      "text",
+      "diagram",
+      "text",
+      "text",
+      "chips",
+      "text",
+      "label",
+      "close",
+    ],
+  );
+  // 章ラベルは「取扱注意 ①　起爆条件」の形
+  const labels = story.map((c) => ("label" in c ? c.label : undefined));
+  assert.equal(labels[1], "外から見えるあなた　1 / 3");
+  assert.equal(labels[6], "取扱注意 ①　起爆条件");
+  assert.equal(labels[7], "取扱注意 ②　起爆の仕組み");
+  assert.equal(labels[8], "取扱注意 ③　初期設定");
+  assert.equal(labels[10], "取扱注意 ④　安全装置");
+  assert.equal(labels[12], "取扱注意 ⑤　周りの人へ");
+});
+
+/* ===== ピンクの量 ===== */
+
+/**
+ * 1枚に出るピンク（primary）の箇所を数える。**主ボタンは数えない。**
+ * - 暗い面の強調 〔〕 は1か所ごとに1（救いの色 relief の枚は緑なので0）
+ * - 明るい面の強調は緑なので0
+ * - 図の「出力」は1（枠と字で1か所）、ラベルの「厳禁」は1
+ * 画面での実数はブラウザでも数えて報告する。ここでは本文が増えて崩れないことを縛る。
+ */
+const emphasisCount = (strings: string[]) =>
+  strings.reduce((n, s) => n + parseEmphasis(s).filter((seg) => seg.emphasis).length, 0);
+
+const pinkCount = (card: StoryCard): number => {
+  switch (card.kind) {
+    case "text":
+      return card.face === "dark" && card.card.tone !== "relief"
+        ? emphasisCount(cardStrings(card.card))
+        : 0;
+    case "sakai":
+      return emphasisCount([fixedCards.sakai.big, fixedCards.sakai.mid]);
+    case "diagram":
+      return 1 + emphasisCount([fixedCards.diagram.closing]);
+    case "label":
+      return 1;
+    default:
+      return 0;
+  }
+};
+
+test("1枚に出るピンクは、主ボタンを除いて1か所まで（720通り×14枚）", () => {
+  const over: string[] = [];
+  eachCombo((key, st) => {
+    st!.forEach((card, i) => {
+      const n = pinkCount(card);
+      if (n > 1) over.push(`${key}: ${i + 1}枚目 ${n}か所`);
+    });
+  });
+  assert.deepEqual(over.slice(0, 10), [], `${over.length}件`);
+});
+
+/* ===== 5枚目の一文（一番高い軸） ===== */
+
+test("5枚目の軸は最大のもの。同点は引火点→構造強度→放熱量→緩衝性能→耐圧限界の順で先", () => {
+  // 全軸同点（耐圧限界は反転して 6-3=3 で同じ60）→ 先頭の引火点
+  const flat = {
+    openness: 3,
+    conscientiousness: 3,
+    extraversion: 3,
+    agreeableness: 3,
+    neuroticism: 3,
+  };
+  assert.equal(coreAxis(flat).label, "引火点");
+  // 構造強度と放熱量が同点で最大 → 先の構造強度
+  assert.equal(coreAxis({ ...flat, conscientiousness: 5, extraversion: 5 }).label, "構造強度");
+  // 緩衝性能と耐圧限界（反転）が同点で最大 → 先の緩衝性能
+  assert.equal(coreAxis({ ...flat, agreeableness: 5, neuroticism: 1 }).label, "緩衝性能");
+  // 耐圧限界だけが最大 → 耐圧限界（反転を通している）
+  assert.equal(coreAxis({ ...flat, neuroticism: 1 }).label, "耐圧限界");
+  const st = buildStoryFromKeys({
+    typeId: personalityTypes[0].id,
+    reaction: "evaluation",
+    intensity: "mid",
+    heat: "high",
+    scores: flat,
+  })!;
+  const index = st[4];
+  assert.ok(index.kind === "index" && index.coreLine === "一番高いのは引火点。この型の芯です。");
 });
 
 /* ===== 強調記法 〔 〕 ===== */
@@ -159,10 +328,28 @@ test("〔〕 は改行をまたいでよく、崩れた記法は落ちる", () =
 /* ===== 書いてはいけない語（深掘りと同じ基準） ===== */
 
 const FORBIDDEN = [
-  "ガムテープ", "意味付け", "無価値観", "無価値ポジション", "絶対的有価値", "もたれ中",
-  "共依存", "反依存", "境界線", "スパゲティ状態", "思考ちゃん", "マインド様", "ピールダウン",
-  "インナーチャイルド", "即席有価値", "0-100思考", "二重のメッセージ", "テープ式",
-  "毒親", "機能不全家庭", "治療", "治癒",
+  "ガムテープ",
+  "意味付け",
+  "無価値観",
+  "無価値ポジション",
+  "絶対的有価値",
+  "もたれ中",
+  "共依存",
+  "反依存",
+  "境界線",
+  "スパゲティ状態",
+  "思考ちゃん",
+  "マインド様",
+  "ピールダウン",
+  "インナーチャイルド",
+  "即席有価値",
+  "0-100思考",
+  "二重のメッセージ",
+  "テープ式",
+  "毒親",
+  "機能不全家庭",
+  "治療",
+  "治癒",
 ];
 const FORBIDDEN_PATTERNS = [
   /幼少期(に|の|から)/,
@@ -174,7 +361,10 @@ const FORBIDDEN_PATTERNS = [
 
 test("カード本文に理論側の用語が出ない", () => {
   const text = allCopyStrings().map(plainText).join("\n");
-  assert.deepEqual(FORBIDDEN.filter((word) => text.includes(word)), []);
+  assert.deepEqual(
+    FORBIDDEN.filter((word) => text.includes(word)),
+    [],
+  );
 });
 
 test("カード本文が生育歴や親を断定しない", () => {
@@ -190,9 +380,20 @@ test("強度で分岐しないカードに、反応の頻度を断定する語�
   const offenders: string[] = [];
   for (const reaction of REACTION_KEYS) {
     const r = reactionCards[reaction];
-    const shared = [r.s2, r.s3a, r.s3b, r.s4.heatHigh.payoff, r.s4.heatLow.payoff];
-    for (const card of shared) {
-      const text = [card.lead, card.big, card.mid, card.sub].filter(Boolean).map((s) => plainText(s!)).join("");
+    const shared = [
+      [r.s2.input, r.s2.output, ...r.s2.rejected],
+      cardStrings(r.s3a),
+      [r.s3b.lead, fixedCards.s3bBig],
+      [
+        r.s4.heatHigh.chips.sub,
+        r.s4.heatHigh.payoffLead,
+        r.s4.heatLow.chips.sub,
+        r.s4.heatLow.payoffLead,
+      ],
+      [r.s5.ng, r.s5.ok, r.s5.note],
+    ];
+    for (const strings of shared) {
+      const text = strings.map(plainText).join("");
       for (const word of ["何千回", "何度も"]) {
         if (text.includes(word)) offenders.push(`${reaction}: 「${word}」`);
       }
@@ -203,8 +404,12 @@ test("強度で分岐しないカードに、反応の頻度を断定する語�
 
 /* ===== 旧い検査からの移植（深掘り・タイプ本文 → カード） ===== */
 
-const story = (reaction: (typeof REACTION_KEYS)[number], intensity: (typeof INTENSITY_KEYS)[number], heat: (typeof HEAT_KEYS)[number], typeId = personalityTypes[0].id) =>
-  buildStoryFromKeys({ typeId, reaction, intensity, heat })!;
+const story = (
+  reaction: (typeof REACTION_KEYS)[number],
+  intensity: (typeof INTENSITY_KEYS)[number],
+  heat: (typeof HEAT_KEYS)[number],
+  typeId = personalityTypes[0].id,
+) => buildStoryFromKeys({ typeId, reaction, intensity, heat, scores: TYPE_PROTOTYPES[typeId] })!;
 
 const textOf = (card: StoryCard) => stringsOf(card).map(plainText).join("");
 
@@ -222,18 +427,21 @@ test("強度 high によく効く側、low に効きにくい側の7枚目が出
 });
 
 /** （移植元: deep-narrative「放熱量の高低で、守り方の本文が入れ替わる」） */
-test("放熱量の高低で、12枚目（守り方）が入れ替わる", () => {
-  const hot = textOf(story("evaluation", "mid", "high")[11]);
-  const cold = textOf(story("evaluation", "mid", "low")[11]);
-  assert.notEqual(hot, cold, "放熱量で守り方が変わっていない");
+test("放熱量の高低で、11・12枚目（安全装置）が入れ替わる", () => {
+  for (const reaction of REACTION_KEYS)
+    for (const i of [10, 11]) {
+      const hot = textOf(story(reaction, "mid", "high")[i]);
+      const cold = textOf(story(reaction, "mid", "low")[i]);
+      assert.notEqual(hot, cold, `${reaction}: 放熱量で${i + 1}枚目が変わっていない`);
+    }
 });
 
 /**
  * 中身（長さ）はオーナー承認済みで、**削って短くする方向の変更はしない**。
- * 実測 1,134〜1,327字。大きく割り込んだら、カードが抜けたか本文が削られている。
+ * v2（14枚）の実測 1,225〜1,377字（章ラベル・図・チップ・ラベルを含む）。大きく割り込んだら、カードが抜けたか本文が削られている。
  * （移植元: deep-narrative「1人が受け取る地の文が 800字を超える」）
  */
-test("1人が15枚で受け取る地の文が 1,000字を下回らない", () => {
+test("1人が14枚で受け取る地の文が 1,000字を下回らない", () => {
   const short: string[] = [];
   for (const type of personalityTypes)
     for (const r of REACTION_KEYS)
@@ -274,14 +482,15 @@ test("タイプ本文の3枚目は、救いの色の回収になっている", (
   }
 });
 
-/** 刺しっぱなしで終わらせない。守り方（12・14・15枚目）がそろっていること */
-test("守り方の3枚（12・14・15枚目）が欠けない", () => {
+/** 刺しっぱなしで終わらせない。扱い方の4枚（11〜14枚目）がそろっていること */
+test("扱い方の4枚（安全装置2枚・周りの人へ・締め）が欠けない", () => {
   for (const r of REACTION_KEYS)
     for (const h of HEAT_KEYS) {
       const st = story(r, "mid", h);
-      assert.equal(st[11].kind, "chips", `${r}/${h}: 12枚目`);
-      assert.equal(st[13].kind, "text", `${r}/${h}: 14枚目`);
-      assert.equal(st[14].kind, "close", `${r}/${h}: 15枚目`);
+      assert.equal(st[10].kind, "chips", `${r}/${h}: 11枚目`);
+      assert.equal(st[11].kind, "text", `${r}/${h}: 12枚目`);
+      assert.equal(st[12].kind, "label", `${r}/${h}: 13枚目`);
+      assert.equal(st[13].kind, "close", `${r}/${h}: 14枚目`);
     }
 });
 
@@ -304,7 +513,11 @@ test("タイプ本文（3枚）が 200字を下回らない", () => {
     .map(([id, cards]) => ({
       id,
       n: cards.reduce(
-        (sum, c) => sum + [c.lead, c.big, c.mid, c.sub].filter(Boolean).reduce((m, x) => m + [...plainText(x!)].length, 0),
+        (sum, c) =>
+          sum +
+          [c.lead, c.big, c.mid, c.sub]
+            .filter(Boolean)
+            .reduce((m, x) => m + [...plainText(x!)].length, 0),
         0,
       ),
     }))
@@ -328,8 +541,44 @@ test("本文のスクロール領域が、ページ番号の帯の下まで伸�
   const { readFileSync } = await import("node:fs");
   const { join } = await import("node:path");
   const src = readFileSync(join(process.cwd(), "src/components/result/story-viewer.tsx"), "utf8");
-  assert.ok(!src.includes("absolute inset-0 overflow-y-auto"), "本文の領域が画面の下端まで伸びている");
-  assert.ok(/tappable \? "bottom-12" : "bottom-0"/.test(src), "番号が出る面で、本文の領域が帯の上で終わっていない");
+  assert.ok(
+    !src.includes("absolute inset-0 overflow-y-auto"),
+    "本文の領域が画面の下端まで伸びている",
+  );
+  assert.ok(
+    src.includes('showFooter ? "bottom-12" : "bottom-0"'),
+    "番号が出る面で、本文の領域が帯の上で終わっていない",
+  );
   // タップ用ボタンが領域より高いと、それだけで偽のスクロール量が生まれる
-  assert.ok(src.includes("h-[calc(var(--story-h)-84px)]"), "タップ用ボタンの高さが本文の領域と合っていない");
+  assert.ok(
+    src.includes("h-[calc(var(--story-h)-84px)]"),
+    "タップ用ボタンの高さが本文の領域と合っていない",
+  );
+});
+
+/**
+ * タップ領域を置かない枚: 表紙・13枚目（周りの人へ）・14枚目（締め）。
+ * 13枚目は「画像で保存して送る」の誤タップで次へ進まないよう、前へ／次へを明示する。
+ * PC（1024px以上）はタップ領域を使わず、ボタンだけ。
+ * 実際の DOM（スマホ・PC の両方）はブラウザでも数えて報告する。ここでは書き方が戻らないことを縛る。
+ */
+test("13・14枚目とPCに、タップ領域が無い", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const src = readFileSync(join(process.cwd(), "src/components/result/story-viewer.tsx"), "utf8");
+  assert.ok(
+    src.includes(
+      'const tappable = card.kind !== "cover" && card.kind !== "label" && card.kind !== "close";',
+    ),
+    "表紙・周りの人へ・締めを、タップ領域の対象から外していない",
+  );
+  // タップ領域（「前のページ」）はスマホの描画にだけある
+  const desktopStart = src.indexOf("if (isDesktop) {");
+  const mobileStart = src.indexOf("/* ----- スマホ ----- */");
+  assert.ok(desktopStart > 0 && mobileStart > desktopStart);
+  assert.ok(
+    !src.slice(desktopStart, mobileStart).includes("前のページ"),
+    "PC の描画にタップ領域がある",
+  );
+  assert.equal(src.split('aria-label="前のページ"').length - 1, 1);
 });

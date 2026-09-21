@@ -37,9 +37,9 @@ export const StoryPreview = ({
     intensity: pick<IntensityKey>(intensity, INTENSITY_KEYS, "mid"),
     heat: pick<HeatKey>(heat, HEAT_KEYS, "high"),
   };
-  const story = buildStoryFromKeys(keys);
-  // INDEX（5枚目）の数字は、そのタイプの原型スコアで描く
+  // INDEX（5枚目）の数字と一文は、そのタイプの原型スコアで描く
   const scores = TYPE_PROTOTYPES[type.id];
+  const story = buildStoryFromKeys({ ...keys, scores });
   if (!story) return <p className="p-6 text-white">組み立てられない分岐です</p>;
 
   return (
@@ -53,7 +53,8 @@ export const StoryPreview = ({
         initialIndex={Number.isFinite(card) ? card - 1 : 0}
       />
       <div id="preview-below" className="p-6 text-[12px] text-txt-subtle">
-        開発用プレビュー ／ {keys.typeId} ・ {keys.reaction} ・ 強度 {keys.intensity} ・ 放熱 {keys.heat}
+        開発用プレビュー ／ {keys.typeId} ・ {keys.reaction} ・ 強度 {keys.intensity} ・ 放熱{" "}
+        {keys.heat}
       </div>
     </div>
   );

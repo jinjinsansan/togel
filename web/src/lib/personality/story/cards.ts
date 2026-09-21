@@ -1,99 +1,175 @@
 import { typeCards } from "../copy/cards-types";
-import { reactionCards } from "../copy/cards-reactions";
-import { deepNarrativeBridge } from "../copy/reaction-bridge";
+import { fixedCards, reactionCards } from "../copy/cards-reactions";
+import { typeToken } from "../definitions";
+import { personalityTypes } from "../index";
 import { determineReaction, type HeatKey, type IntensityKey, type ReactionKey } from "../reaction";
+import { TOGEL_INDEX, togelIndexPercent } from "../togel-index";
 import type { BigFiveScores } from "@/types/diagnosis";
 
 /**
- * 結果ページのストーリーズ（全15枚）を1人ぶん組み立てる。
+ * 結果ページのストーリーズ（全14枚）を1人ぶん組み立てる。
+ *
+ * 【v2（2026-09-21 オーナー承認）】後半を「取扱説明書の取扱注意の欄」として作り直した。
+ * オーナー判断「後半が無理やり別の話に入っている感じ」（要旨）
+ * 「ピンク色ばかりで見にくい」。「違います。」（全面ピンク）を廃止して 15→14枚。
  *
  * 【分岐の約束】
- * - 2〜4枚目（タイプ本文）だけが **typeId** で決まる。人に見せる部分なので型で固定
- * - 7〜15枚目は **主反応・強度・放熱** だけで決まる。typeId を使わない
- *   （同じ型でも反応は人による。typeId で選ぶと同じ型の全員が同じ文を読む）
+ * - 2〜4枚目（外から見えるあなた）だけが **typeId**。人に見せる部分なので型で固定
+ * - 7〜13枚目は **主反応・強度・放熱** だけ。typeId を使わない
+ *   （`{type}` の置換は型の名前を入れるだけで、分岐ではない）
  *
- * 【面】1〜9 暗（毒）／10〜12・14〜15 明（救い）／13 ピンク「違います。」
- * 刺したあと（S1〜S2）に明るい面へ切り替えて回収する、を画面の明暗で見せる。
+ * 【面】1〜8 暗（毒）／9〜14 明（救い）
  */
 
-type ReactionCardsOf = (typeof reactionCards)[ReactionKey];
-export type Card = ReactionCardsOf["s2"];
-export type DiagramCard = ReactionCardsOf["s2Diagram"];
-export type ChipsCard = ReactionCardsOf["s4"]["heatHigh"]["chips"];
+export type Card = {
+  lead?: string;
+  big: string;
+  mid?: string;
+  sub?: string;
+  tone?: "hazard" | "relief";
+};
+type Diagram = (typeof reactionCards)[ReactionKey]["s2"];
 
-export type Face = "dark" | "light" | "pink";
+export type Face = "dark" | "light";
+
+/** 目次（6枚目）と各章のラベルで同じものを使う: [番号, 名前, 説明] */
+export const CHAPTERS = fixedCards.sakai.toc;
+
+/** 章のラベル（例: 「取扱注意 ①　起爆条件」） */
+export const chapterLabel = (index: 0 | 1 | 2 | 3 | 4) =>
+  `取扱注意 ${CHAPTERS[index][0]}　${CHAPTERS[index][1]}`;
 
 export type StoryCard =
   | { kind: "cover"; face: "dark" }
   | { kind: "text"; face: Face; label?: string; card: Card }
-  | { kind: "index"; face: "dark"; label: string }
-  | { kind: "toc"; face: "dark"; big: string; sub: string; closing: string }
-  | { kind: "diagram"; face: "dark"; label: string; diagram: DiagramCard }
-  | { kind: "chips"; face: "light"; label: string; chips: ChipsCard }
-  | { kind: "chigau"; face: "pink" }
+  | { kind: "index"; face: "dark"; label: string; title: string; coreLine: string }
+  | { kind: "sakai"; face: "dark" }
+  | { kind: "diagram"; face: "dark"; label: string; diagram: Diagram }
+  | {
+      kind: "chips";
+      face: "light";
+      label: string;
+      intro: string;
+      chips: readonly string[];
+      big: string;
+      sub: string;
+    }
+  | {
+      kind: "label";
+      face: "light";
+      label: string;
+      title: string;
+      ng: string;
+      ok: string;
+      note: string;
+    }
   | { kind: "close"; face: "light"; card: Card };
 
-export const STORY_LENGTH = 15;
-
-/** 章の見出し（01〜04）。目次（6枚目）と各章のラベルで同じものを使う */
-export const CHAPTERS = [
-  { no: "01", title: "あなたに一番効く刺激", tone: "hazard" },
-  { no: "02", title: "そのとき、あなたが勝手につけている意味", tone: "hazard" },
-  { no: "03", title: "それ、あなたが決めたことじゃありません", tone: "relief" },
-  { no: "04", title: "あなたが自分を守るためにやっていること", tone: "relief" },
-] as const;
-
-const chapterLabel = (index: 0 | 1 | 2 | 3) => `${CHAPTERS[index].no}　${CHAPTERS[index].title}`;
+export const STORY_LENGTH = 14;
 
 /**
- * 約束の一文（reaction-bridge.ts）を目次の1枚に割る。
- * 1段落目の1行目を大見出し、2行目を地の文、2段落目を救いの色の締めにする。
- * **文言は変えない。** 割り方だけ。
+ * 5枚目の一文に出す「一番高い軸」。**同点は軸の固定順で先のもの**
+ * （引火点→構造強度→放熱量→緩衝性能→耐圧限界 ＝ TOGEL_INDEX の並び）。
+ * 「より大きければ置き換える」だけにしてあるので、同点では先に見たほうが残る。
  */
-const splitBridge = () => {
-  const [first, second] = deepNarrativeBridge.split(/\n\s*\n/);
-  const [big, ...rest] = first.split("\n");
-  return { big, sub: rest.join("\n"), closing: second ?? "" };
+export const coreAxis = (scores: BigFiveScores) => {
+  let best = TOGEL_INDEX[0];
+  let bestValue = togelIndexPercent(best.key, scores);
+  for (const axis of TOGEL_INDEX) {
+    const value = togelIndexPercent(axis.key, scores);
+    if (value > bestValue) {
+      best = axis;
+      bestValue = value;
+    }
+  }
+  return best;
 };
+
+/** `{type}` を型の名前（例: フォルダ型）にする。愛称を単独で出さないため typeToken を通す */
+const withType = (text: string, name: string) => text.split("{type}").join(name);
 
 export type StoryInput = {
   typeId: string;
   reaction: ReactionKey;
   intensity: IntensityKey;
   heat: HeatKey;
+  scores: BigFiveScores;
 };
 
-/** 分岐のキーから15枚を組む。1枚でも欠けたら null（呼び出し側はビューアを出さない） */
-export const buildStoryFromKeys = ({ typeId, reaction, intensity, heat }: StoryInput): StoryCard[] | null => {
-  const type = typeCards[typeId];
+/** 分岐のキーから14枚を組む。1枚でも欠けたら null（呼び出し側はビューアを出さない） */
+export const buildStoryFromKeys = ({
+  typeId,
+  reaction,
+  intensity,
+  heat,
+  scores,
+}: StoryInput): StoryCard[] | null => {
+  const type = personalityTypes.find((t) => t.id === typeId);
+  const outside = typeCards[typeId];
   const r = reactionCards[reaction];
-  if (!type || !r) return null;
+  if (!type || !outside || !r) return null;
 
+  const name = typeToken(type);
   const branch = heat === "high" ? r.s4.heatHigh : r.s4.heatLow;
-  const bridge = splitBridge();
+  const axis = coreAxis(scores);
 
   const cards: StoryCard[] = [
     { kind: "cover", face: "dark" },
-    { kind: "text", face: "dark", label: "あなたはこういう型です　1 / 3", card: type[0] },
-    { kind: "text", face: "dark", label: "あなたはこういう型です　2 / 3", card: type[1] },
-    { kind: "text", face: "dark", label: "あなたはこういう型です　3 / 3", card: type[2] },
-    { kind: "index", face: "dark", label: "あなたのスペック" },
-    { kind: "toc", face: "dark", ...bridge },
+    { kind: "text", face: "dark", label: "外から見えるあなた　1 / 3", card: outside[0] },
+    { kind: "text", face: "dark", label: "外から見えるあなた　2 / 3", card: outside[1] },
+    { kind: "text", face: "dark", label: "外から見えるあなた　3 / 3", card: outside[2] },
+    {
+      kind: "index",
+      face: "dark",
+      label: "仕様　TOGEL INDEX",
+      title: `${name}の仕様`,
+      coreLine: `一番高いのは${axis.label}。この型の芯です。`,
+    },
+    { kind: "sakai", face: "dark" },
     { kind: "text", face: "dark", label: chapterLabel(0), card: r.s1[intensity] },
-    { kind: "diagram", face: "dark", label: chapterLabel(1), diagram: r.s2Diagram },
-    { kind: "text", face: "dark", label: chapterLabel(1), card: r.s2 },
+    { kind: "diagram", face: "dark", label: chapterLabel(1), diagram: r.s2 },
     { kind: "text", face: "light", label: chapterLabel(2), card: r.s3a },
-    { kind: "text", face: "light", label: chapterLabel(2), card: r.s3b },
-    { kind: "chips", face: "light", label: chapterLabel(3), chips: branch.chips },
-    { kind: "chigau", face: "pink" },
-    { kind: "text", face: "light", label: chapterLabel(3), card: branch.payoff },
-    { kind: "close", face: "light", card: branch.close },
+    {
+      kind: "text",
+      face: "light",
+      label: chapterLabel(2),
+      card: { lead: r.s3b.lead, big: fixedCards.s3bBig },
+    },
+    {
+      kind: "chips",
+      face: "light",
+      label: chapterLabel(3),
+      intro: fixedCards.chips.intro,
+      chips: branch.chips.chips,
+      big: fixedCards.chips.big,
+      sub: branch.chips.sub,
+    },
+    {
+      kind: "text",
+      face: "light",
+      label: chapterLabel(3),
+      card: { lead: branch.payoffLead, big: fixedCards.payoff.big, mid: fixedCards.payoff.mid },
+    },
+    {
+      kind: "label",
+      face: "light",
+      label: chapterLabel(4),
+      title: withType(fixedCards.label.title, name),
+      ng: r.s5.ng,
+      ok: r.s5.ok,
+      note: r.s5.note,
+    },
+    {
+      kind: "close",
+      face: "light",
+      card: { big: withType(fixedCards.close.big, name), sub: fixedCards.close.sub },
+    },
   ];
   return cards.length === STORY_LENGTH ? cards : null;
 };
 
-/** スコアから15枚を組む（画面が使う入口） */
+/** スコアから14枚を組む（画面が使う入口） */
 export const buildStory = (typeId: string, scores: BigFiveScores): StoryCard[] | null => {
   const { reaction, intensity, heat } = determineReaction(scores);
-  return buildStoryFromKeys({ typeId, reaction, intensity, heat });
+  return buildStoryFromKeys({ typeId, reaction, intensity, heat, scores });
 };

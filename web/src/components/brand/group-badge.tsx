@@ -48,14 +48,31 @@ type GroupBadgeProps = {
    * compact: 1行に収める（カード内・表の見出しなど）
    * section: 一覧の見出し用（枠なし・2段）
    * light: ライト面（白カードの上）用
+   * pill: 1行の枠付き。群名は白（中立色）。結果のストーリーズ表紙用
+   *   （表紙のピンクを主ボタンだけに絞るため。群名と再定義は他と同じく一体で出す）
    */
-  variant?: "default" | "compact" | "section" | "light";
+  variant?: "default" | "compact" | "section" | "light" | "pill";
   className?: string;
 };
 
 /** 画面（DOM）用の群バッジ。4群とも同じ装飾にする（群に優劣を作らない） */
 export const GroupBadge = ({ group, variant = "default", className = "" }: GroupBadgeProps) => {
   const { emoji, label, redefinition } = GROUP_BADGE[group];
+
+  if (variant === "pill") {
+    return (
+      <span
+        className={`inline-flex items-center gap-2 rounded-full border border-line px-3.5 py-[7px] ${className}`}
+        aria-label={groupBadgeLine(group)}
+      >
+        <span className="text-[13px] font-black text-white">
+          {emoji} {label}
+        </span>
+        <span className="h-3 w-px bg-line" aria-hidden="true" />
+        <span className="text-[13px] font-medium text-txt-muted">{redefinition}</span>
+      </span>
+    );
+  }
 
   if (variant === "light") {
     return (
