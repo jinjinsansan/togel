@@ -34,12 +34,13 @@ import type { Answer, DiagnosisQuestion } from "@/types/diagnosis";
 /**
  * 1マスの一辺（px）。
  *
- * 指示は40pxだったが、**26dvh に収まらない**ので36pxにした。
- *   40px → 5行で 5×45−5 = 220px。26dvh は844px端末で 219.4px。**1px 足りない**
- *   36px → 5行で 5×41−5 = 200px。余白を入れても収まる
- * 幅はどちらも問題ない（36pxで 323px ≤ 390−32）。
+ * 指示は40pxだったが、**26dvh に収まらない**。
+ *   40px → 5行で 220px。26dvh は844px端末で **219.4px**。1px 足りない
+ *   36px → 200px。ただし下に「あがり」の文字（16px＋余白4）を置くと 220px で再び溢れる
+ *   34px → 190px。文字を足して 210px。収まる
+ * 幅はどれも問題ない（34pxで 307px ≤ 390−32）。
  */
-export const CELL_SIZE = 36;
+export const CELL_SIZE = 34;
 /** マスの間隔（px） */
 export const CELL_GAP = 5;
 

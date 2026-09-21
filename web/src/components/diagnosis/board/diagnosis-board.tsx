@@ -38,6 +38,12 @@ type Props = {
   highlightIndexes?: number[];
 };
 
+/** あがりを一回り大きくする量（px）。間隔5pxなので3pxまでなら隣と重ならない */
+const GOAL_OUTSET = 3;
+
+/** 「あがり」の文字に要る高さ（px）。盤の箱に含めないと下の設問へはみ出す */
+const GOAL_LABEL_SPACE = 16;
+
 type CellState = "pending" | "passed" | "current" | "goal";
 
 const stateOf = (cell: BoardCell, currentIndex: number): CellState => {
@@ -71,7 +77,7 @@ export const DiagnosisBoard = ({
   <div className="flex h-full w-full flex-col items-center justify-center gap-2.5 px-4">
     <div
       className="relative"
-      style={{ width: board.width, height: board.height }}
+      style={{ width: board.width, height: board.height + GOAL_LABEL_SPACE }}
       role="img"
       aria-label={`全${board.cells.length}問中 ${currentIndex + 1}問目`}
     >
@@ -96,6 +102,30 @@ export const DiagnosisBoard = ({
         );
       })}
 
+      {/*
+        「あがり」の文字。緑の枠だけだと「特別なマス」には見えても
+        「ここが終点」には読めない。初めて来た人は緑が何かを知らない。
+        あがりのマスの真下に置く（40問は右下、10問は左下に来る）。
+      */}
+      {(() => {
+        const goal = board.cells[board.cells.length - 1];
+        if (!goal) return null;
+        return (
+          <span
+            aria-hidden="true"
+            // whitespace-nowrap が無いと、端のマスの下で1文字ずつ縦に折り返す
+            className="absolute whitespace-nowrap text-[10px] font-black leading-none tracking-[0.22em] text-relief"
+            style={{
+              top: goal.y + CELL_SIZE + GOAL_OUTSET + 3,
+              left: goal.x + CELL_SIZE / 2,
+              transform: "translateX(-50%)",
+            }}
+          >
+            あがり
+          </span>
+        );
+      })()}
+
       {board.cells.map((cell) => {
         const state = stateOf(cell, currentIndex);
         return (
@@ -107,7 +137,18 @@ export const DiagnosisBoard = ({
             } ${state === "current" && !reducedMotion ? "shadow-[0_0_0_4px_rgba(255,46,116,.28)]" : ""} ${
               highlighted.has(cell.index) ? "!border-hazard !bg-hazard/70" : ""
             }`}
-            style={{ left: cell.x, top: cell.y, width: CELL_SIZE, height: CELL_SIZE }}
+            style={
+              cell.isGoal
+                ? {
+                    // あがりだけ一回り大きく。絶対配置なので他のマスはずれない。
+                    // 間隔が5pxなので、各辺+3pxまでなら隣と重ならない
+                    left: cell.x - GOAL_OUTSET,
+                    top: cell.y - GOAL_OUTSET,
+                    width: CELL_SIZE + GOAL_OUTSET * 2,
+                    height: CELL_SIZE + GOAL_OUTSET * 2,
+                  }
+                : { left: cell.x, top: cell.y, width: CELL_SIZE, height: CELL_SIZE }
+            }
           >
             {/* 中間マス: 小さな印。数字ではないので潰れない */}
             {cell.isMilestone && state !== "current" && (

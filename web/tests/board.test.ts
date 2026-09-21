@@ -62,9 +62,9 @@ test("盤が1画面に収まる（390pxの実機幅・盤の領域26dvh）", () 
     const board = buildBoard(total);
     // 390px から左右の余白（px-4 × 2 = 32px）を引いた実効幅
     assert.ok(board.width <= 390 - 32, `${total}問: 幅 ${board.width}px が入らない`);
-    // 26dvh は 844px 端末で 219.4px。枠線と余白があるので 205px を上限にする。
-    // マス40pxだと 220px になって**1px 足りない**ので 36px にしてある
-    assert.ok(board.height <= 205, `${total}問: 高さ ${board.height}px が入らない`);
+    // 26dvh は 844px 端末で 219.4px。下に「あがり」の文字（16px＋余白4）が入るので
+    // 盤そのものは 195px までにする。マス40pxだと 220px、36pxでも文字を足すと 220px
+    assert.ok(board.height <= 195, `${total}問: 高さ ${board.height}px が入らない`);
   }
 });
 
