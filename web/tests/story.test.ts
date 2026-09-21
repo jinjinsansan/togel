@@ -312,3 +312,24 @@ test("タイプ本文（3枚）が 200字を下回らない", () => {
     .map((t) => `${t.id}: ${t.n}字`);
   assert.deepEqual(short, []);
 });
+
+/**
+ * ページ番号が本文に重ならないこと。
+ *
+ * 以前は本文のスクロール領域が画面の下端まで伸びていて、はみ出した本文が
+ * 下端に固定した「7 / 15」の下を流れていた。**はみ出しの量とは別の不具合**で、
+ * 本文を削って収まっても、はみ出す画面がある限り起きる。
+ * 本文の領域は番号の帯（48px）の上で終わる。
+ *
+ * 実寸（375×667・390×844）では、本文の下端は番号の文字より10px上で終わることを
+ * ブラウザで測ってある。ここでは書き方が戻らないことを縛る。
+ */
+test("本文のスクロール領域が、ページ番号の帯の下まで伸びない", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const src = readFileSync(join(process.cwd(), "src/components/result/story-viewer.tsx"), "utf8");
+  assert.ok(!src.includes("absolute inset-0 overflow-y-auto"), "本文の領域が画面の下端まで伸びている");
+  assert.ok(/tappable \? "bottom-12" : "bottom-0"/.test(src), "番号が出る面で、本文の領域が帯の上で終わっていない");
+  // タップ用ボタンが領域より高いと、それだけで偽のスクロール量が生まれる
+  assert.ok(src.includes("h-[calc(var(--story-h)-84px)]"), "タップ用ボタンの高さが本文の領域と合っていない");
+});

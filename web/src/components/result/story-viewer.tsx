@@ -125,20 +125,20 @@ const TextBody = ({ card, face }: { card: Card; face: Face }) => {
   return (
     <>
       {card.lead && (
-        <p className={`m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] ${f.body}`}>
+        <p className={`m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] short:leading-[1.75] ${f.body}`}>
           <Emph text={card.lead} face={face} tone={tone} />
         </p>
       )}
-      <h2 className={`m-0 whitespace-pre-line font-heading text-[29px] font-black leading-[1.5] ${f.big}`}>
+      <h2 className={`m-0 whitespace-pre-line font-heading text-[29px] font-black leading-[1.5] short:text-[26px] ${f.big}`}>
         <Emph text={card.big} face={face} tone={tone} />
       </h2>
       {card.mid && (
-        <p className={`m-0 whitespace-pre-line text-[17px] font-bold leading-[1.8] ${f.big}`}>
+        <p className={`m-0 whitespace-pre-line text-[17px] font-bold leading-[1.8] short:text-[16px] ${f.big}`}>
           <Emph text={card.mid} face={face} tone={tone} />
         </p>
       )}
       {card.sub && (
-        <p className={`m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] ${f.body}`}>
+        <p className={`m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] short:leading-[1.75] ${f.body}`}>
           <Emph text={card.sub} face={face} tone={tone} />
         </p>
       )}
@@ -212,7 +212,7 @@ const CardBody = ({
 
     case "text":
       return (
-        <div className="flex flex-col gap-[26px] px-[26px] pb-10 pt-[76px]">
+        <div className="flex flex-col gap-[26px] short:gap-3.5 px-[26px] pb-6 pt-12">
           {card.label && <Label text={card.label} face={card.face} tone={chapterTone(card.label)} />}
           <TextBody card={card.card} face={card.face} />
         </div>
@@ -220,9 +220,9 @@ const CardBody = ({
 
     case "index":
       return (
-        <div className="flex flex-col gap-[22px] px-[26px] pb-10 pt-[76px]">
+        <div className="flex flex-col gap-[22px] short:gap-3.5 px-[26px] pb-6 pt-12">
           <Label text={card.label} face="dark" />
-          <h2 className="m-0 font-heading text-[29px] font-black leading-[1.3] text-white">TOGEL INDEX</h2>
+          <h2 className="m-0 font-heading text-[29px] font-black leading-[1.3] short:text-[26px] text-white">TOGEL INDEX</h2>
           <div className="mt-1.5 flex flex-col gap-5">
             {TOGEL_INDEX.map(({ key, label }) => {
               const pct = togelIndexPercent(key, scores);
@@ -244,11 +244,11 @@ const CardBody = ({
 
     case "toc":
       return (
-        <div className="flex flex-col gap-[22px] px-[26px] pb-10 pt-[76px]">
-          <h2 className="m-0 whitespace-pre-line font-heading text-[29px] font-black leading-[1.5] text-white">
+        <div className="flex flex-col gap-[22px] short:gap-3.5 px-[26px] pb-6 pt-12">
+          <h2 className="m-0 whitespace-pre-line font-heading text-[29px] font-black leading-[1.5] short:text-[26px] text-white">
             {card.big}
           </h2>
-          <p className="m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] text-txt-muted">
+          <p className="m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] short:leading-[1.75] text-txt-muted">
             {card.sub}
           </p>
           <div className="flex flex-col border-t border-line-soft">
@@ -271,7 +271,7 @@ const CardBody = ({
 
     case "diagram":
       return (
-        <div className="flex flex-col gap-[18px] px-[26px] pb-10 pt-[76px]">
+        <div className="flex flex-col gap-[18px] short:gap-3.5 px-[26px] pb-6 pt-12">
           <Label text={card.label} face="dark" tone="hazard" />
           <div className="flex flex-col gap-1.5 rounded-[14px] border border-line px-[18px] py-4">
             <span className="text-[12px] font-bold text-txt-subtle">起きたこと</span>
@@ -306,25 +306,25 @@ const CardBody = ({
 
     case "chips":
       return (
-        <div className="flex flex-col gap-[22px] px-[26px] pb-10 pt-[76px]">
+        <div className="flex flex-col gap-[22px] short:gap-3.5 px-[26px] pb-6 pt-12">
           <Label text={card.label} face="light" />
           <p className="m-0 text-[17px] font-bold leading-[1.7] text-lighttext">{card.chips.intro}</p>
           <div className="flex flex-wrap gap-2">
             {card.chips.chips.map((chip) => (
               <span
                 key={chip}
-                className="rounded-[12px] border border-lightline bg-white px-3.5 py-2.5 text-[15px] font-bold text-lighttext"
+                className="rounded-[12px] border border-lightline bg-white px-3.5 py-2.5 text-[15px] font-bold text-lighttext short:px-3 short:py-2 short:text-[14px]"
               >
                 {chip}
               </span>
             ))}
           </div>
           {/* チップの強調は常に hazard（本人が欠点だと思っているものを指すため） */}
-          <h2 className="m-0 mt-3 whitespace-pre-line font-heading text-[25px] font-black leading-[1.55] text-lighttext">
+          <h2 className="m-0 mt-3 whitespace-pre-line font-heading text-[25px] font-black leading-[1.55] short:text-[22px] text-lighttext">
             <Emph text={card.chips.big} face="light" tone="hazard" />
           </h2>
           {card.chips.sub && (
-            <p className="m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] text-lighttext-muted">
+            <p className="m-0 whitespace-pre-line text-[15px] font-medium leading-[1.95] short:leading-[1.75] text-lighttext-muted">
               <Emph text={card.chips.sub} face="light" tone="hazard" />
             </p>
           )}
@@ -348,7 +348,7 @@ const CardBody = ({
     case "close": {
       const broadcastOn = isBroadcastEnabled();
       return (
-        <div className="flex h-full flex-col gap-5 px-[26px] pb-[34px] pt-[76px]">
+        <div className="flex h-full flex-col gap-5 short:gap-3.5 px-[26px] pb-6 pt-12">
           <TextBody card={card.card} face="light" />
           <div className="flex-grow" />
           <div className="flex flex-col gap-2.5">
@@ -453,7 +453,12 @@ export const StoryViewer = ({ story, type, scores, labelHref, belowId, initialIn
       {/* 本文。長いカードは中だけ縦にスクロールする（はみ出しを切らない） */}
       <div
         key={index}
-        className={`absolute inset-0 overflow-y-auto ${
+        /*
+          本文のスクロール領域は**番号の帯の上で終わる**。以前は画面の下端まで伸びていて、
+          はみ出した本文が下端に固定した「7 / 15」の下を流れ、番号が本文に重なっていた。
+          はみ出しの量とは別の不具合で、本文を削って収まっても、はみ出す画面がある限り起きる。
+        */
+        className={`absolute inset-x-0 top-0 overflow-y-auto ${tappable ? "bottom-12" : "bottom-0"} ${
           reducedMotion ? "" : "animate-[fade-in_140ms_ease-out]"
         }`}
       >
@@ -470,13 +475,13 @@ export const StoryViewer = ({ story, type, scores, labelHref, belowId, initialIn
               type="button"
               aria-label="前のページ"
               onClick={prev}
-              className="absolute left-0 top-9 h-[calc(var(--story-h)-36px)] w-[34%] bg-transparent"
+              className="absolute left-0 top-9 h-[calc(var(--story-h)-84px)] w-[34%] bg-transparent"
             />
             <button
               type="button"
               aria-label="次のページ"
               onClick={next}
-              className="absolute right-0 top-9 h-[calc(var(--story-h)-36px)] w-[66%] bg-transparent"
+              className="absolute right-0 top-9 h-[calc(var(--story-h)-84px)] w-[66%] bg-transparent"
             />
           </div>
         )}
@@ -501,7 +506,7 @@ export const StoryViewer = ({ story, type, scores, labelHref, belowId, initialIn
       {/* 下端: 3 / 15 と、最初の数枚だけ「タップで次へ」 */}
       {index !== 0 && index !== last && (
         <div
-          className={`pointer-events-none absolute bottom-[26px] left-[26px] right-[26px] z-[4] flex justify-between text-[12px] font-bold ${f.footer}`}
+          className={`pointer-events-none absolute inset-x-0 bottom-0 z-[4] flex h-12 items-end justify-between px-[26px] pb-[26px] text-[12px] font-bold leading-none ${f.bg} ${f.footer}`}
         >
           <span>
             {index + 1} / {story.length}

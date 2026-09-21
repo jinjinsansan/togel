@@ -17,6 +17,12 @@ const config: Config = {
       },
     },
     extend: {
+      screens: {
+        // 背の低い画面（ストーリーズの見える高さが 700px 未満）。
+        // 見える高さ ＝ 画面の高さ − 固定ヘッダー 66px なので、画面の高さ 766px 未満。
+        // iPhone SE（667px）が該当し、390×844 は該当しない（承認を得た見た目は変えない）。
+        short: { raw: "(max-height: 765.98px)" },
+      },
       colors: {
         // shadcn系（既存UIコンポーネント互換）
         background: "hsl(var(--background))",
