@@ -262,12 +262,23 @@ const ResultPage = () => {
               {selfType?.catchphrase ?? diagnosis.detailedNarrative.subtitle}
             </div>
             {selfType && <GroupBadge group={selfType.group} className="mt-4" />}
-            <p
-              className="mt-3.5 max-w-[32em] text-[13px] leading-8 text-txt-muted"
-              style={{ textWrap: "pretty" }}
-            >
-              {selfType?.description ?? diagnosis.narrative}
-            </p>
+            {/*
+              旧53字の説明は、**新しいタイプ本文が出せないときだけ**出す。
+              両方出すと、タイプ名の直後に旧説明、その下に新本文と、同じ話を2回する
+              （オーナーの画面で実際にそうなっていた）。
+
+              フォールバックの diagnosis.narrative も中身は同じ旧説明
+              （engine.ts で `${label}のあなたは${type.description}` と組んでいる）。
+              片方だけ消しても、もう片方から同じ文が出る。
+            */}
+            {!typeProfile && (
+              <p
+                className="mt-3.5 max-w-[32em] text-[13px] leading-8 text-txt-muted"
+                style={{ textWrap: "pretty" }}
+              >
+                {selfType?.description ?? diagnosis.narrative}
+              </p>
+            )}
             {/*
               タイプそのものの説明。**タイプ名とスペック（TOGEL INDEX）の間**に置く。
               「あなたはこういう型です」→「あなたのスペック」→「ここから、あなたの話をします」

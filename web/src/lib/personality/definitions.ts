@@ -409,7 +409,7 @@ export const personalityTypes: ExtendedPersonalityTypeDefinition[] = [
     group: "inert",
     catchphrase: "散らかった部屋も人生も片付ける",
     emoji: "🗂️",
-    tags: ["#幾帳面", "#整理整頓", "#ルール"],
+    tags: ["#几帳面", "#整理整頓", "#ルール"],
     description: "カオスな状況を整理するのが得意。ルールや手順が決まっていると安心する。掃除好き。",
     dominantTraits: ["整理整頓", "信頼性", "秩序"],
     characteristics: {
