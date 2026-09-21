@@ -8,14 +8,7 @@ import { BoardTypeCards } from "@/components/coaching/board-view";
 import { trackLineCta } from "@/lib/analytics/events";
 import { personalityTypes, TYPE_GROUP_ORDER, typesInGroup, typeToken } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
-import {
-  ANGLES_PER_TYPE,
-  BOARD_ANGLES,
-  boardTypeCount,
-  cellContent,
-  cellKey,
-  parseCellKey,
-} from "@/lib/coaching/board";
+import { BOARD_ANGLES, boardTypeCount, cellContent, parseCellKey } from "@/lib/coaching/board";
 import type { BoardAngle } from "@/lib/coaching/board";
 import { getTypeApproachGuide } from "@/lib/coaching/translations";
 import { loadBoardState, saveBoardState } from "@/lib/coaching/progress";
@@ -64,29 +57,30 @@ const buildBoardState = (): CoachingBoardState | null => {
   const plan = loadSession()?.diagnosisType === "full" ? "full" : "light";
   const limit = boardTypeCount();
 
-  // ミスマッチ結果があればそれを、無ければタイプ定義の相性から組む
-  let typeIds: string[] = [];
+  // 入口の3タイプは**型の固定リスト**（badCompatibleTypes）。LINE配信と同じもの。
+  // 以前は照合結果（実際に照合した相手）で上書きしていたため、画面の3タイプと
+  // LINEで届く3タイプが食い違い得た。2つは別の概念で、ここは型の取扱説明書の場所。
+  // 実際に照合した相手の話は /result/mismatch の役割。
+  const primary = (findExtended(selfTypeId)?.badCompatibleTypes ?? []).slice(0, limit);
+
+  // 照合結果は**読める追加**にだけ使う。40問の診断で増える2タイプで、
+  // light 向けの導線（「その2タイプが読めるようになります」）の約束はこれで守る。
+  const extra: string[] = [];
   try {
     const raw = sessionStorage.getItem("latestMismatch");
     if (raw) {
       const results = JSON.parse(raw) as MismatchResult[];
-      const seen = new Set<string>();
       for (const result of results) {
         const id = result.personalityTypes?.profile?.id;
-        if (!id || seen.has(id) || !findExtended(id)) continue;
-        seen.add(id);
-        typeIds.push(id);
+        if (!id || primary.includes(id) || extra.includes(id) || !findExtended(id)) continue;
+        extra.push(id);
       }
     }
   } catch {
     /* ignore */
   }
-  if (typeIds.length === 0) {
-    typeIds = findExtended(selfTypeId)?.badCompatibleTypes ?? [];
-  }
-  // 入口に出すのは常に3タイプ（配信の全15通＝3×5と一致）。4番目以降は一覧側へ
-  const readableTypeIds = typeIds.slice(limit);
-  typeIds = typeIds.slice(0, limit);
+  const typeIds = primary;
+  const readableTypeIds = extra.slice(0, 2);
   if (typeIds.length === 0) return saved;
 
   const next: CoachingBoardState = { selfTypeId, plan, typeIds, readableTypeIds };
@@ -130,8 +124,13 @@ export default function CoachingPage() {
     // LINE配信のリンク（?cell=<typeId>:<angle>）で来たら、その角度の本文を開く。
     // **「歩いた」印は付けない**（数えるものが無くなったので、印だけ残すと
     //   意味の無い状態が残る）。開くところまで。
+    //
+    // 🔴 **利用者のリストに入っているかは見ない。** タイプが24種のどれかで、
+    // 角度が5つのどれかなら、必ず開く。以前は `state.typeIds.includes()` で弾いて
+    // いたため、自分たちのLINEが送ったリンクが開かないことがあった。
+    // LINE のアプリ内ブラウザで開くと保存済みの診断が無く、そもそも state が null。
     const requested = parseCellKey(new URLSearchParams(window.location.search).get("cell"));
-    if (requested && state?.typeIds.includes(requested.typeId)) {
+    if (requested && findExtended(requested.typeId)) {
       setOpen(requested);
     }
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -182,52 +181,10 @@ export default function CoachingPage() {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-paper text-navy">
-      {/* ヒーロー: ネイビー→ペーパーの硬い分割。
-          診断済みなら盤が主役になるので、ヒーローごと差し替える */}
-      <section
-        className={`px-5.5 pb-[26px] ${
-          hasTypes
-            ? "bg-[linear-gradient(180deg,#0b1f3a_0%,#0b1f3a_52%,#F4F7F5_52%,#F4F7F5_100%)] pt-[30px]"
-            : "bg-[linear-gradient(180deg,#0b1f3a_0%,#0b1f3a_46%,#F4F7F5_46%,#F4F7F5_100%)] pt-8"
-        }`}
-        style={{ containerType: "inline-size" }}
-      >
-        <div className="mx-auto max-w-[1120px]">
-          <div className="inline-flex items-center gap-2 rounded-full border border-relief/40 bg-relief/[.14] px-[13px] py-[5px]">
-            <span className="text-[11px] font-black tracking-[0.22em] text-relief">
-              毒のあとに、救いを
-            </span>
-          </div>
+  /** 開いている本文。診断の有無によらず出す（LINE 配信の着地先） */
+  const openPanel =
+    openType && openContent ? (
 
-          {(
-            <>
-              <h1 className="mt-4 text-[clamp(28px,5cqw,48px)] font-black leading-[1.28] tracking-[-0.03em] text-white">
-                合わない相手は、
-                <br />
-                選べない。
-              </h1>
-              <p className="mb-5.5 mt-3.5 max-w-[32em] text-[13px] leading-8 text-[#b7c6dd]">
-                上司も、親も、部活の後輩も。だからTogelは「避ける」ではなく「無事に済ませる」方法を用意しました。ここからは、ちゃんと役に立つ話です。
-              </p>
-
-              {/* 地雷の仕組み（全タイプ共通の前提） */}
-              <div className="mt-2">{mechanism}</div>
-            </>
-          )}
-        </div>
-      </section>
-
-      <section className="px-5.5 pb-[34px] pt-3.5">
-        <div className="mx-auto flex max-w-[1120px] flex-col gap-3.5">
-          {/* 読むものへの入口（診断済みのみ）。タイプごとに1枚、1行が1つの角度 */}
-          {hasTypes && (
-            <>
-              <BoardTypeCards types={boardTypes} open={open} onOpenCell={openCell} />
-
-              {/* 開いているマス */}
-              {openType && openContent && (
                 <div
                   key={`${openType.id}:${open?.angle}`}
                   className="animate-rise rounded-card border border-lightline bg-white p-[22px] shadow-[0_20px_40px_-30px_rgba(11,31,58,.5)]"
@@ -295,7 +252,60 @@ export default function CoachingPage() {
                     </Link>
                   </div>
                 </div>
-              )}
+    ) : null;
+
+  return (
+    <div className="min-h-screen bg-paper text-navy">
+      {/* ヒーロー: ネイビー→ペーパーの硬い分割。
+          診断済みなら盤が主役になるので、ヒーローごと差し替える */}
+      <section
+        className={`px-5.5 pb-[26px] ${
+          hasTypes
+            ? "bg-[linear-gradient(180deg,#0b1f3a_0%,#0b1f3a_52%,#F4F7F5_52%,#F4F7F5_100%)] pt-[30px]"
+            : "bg-[linear-gradient(180deg,#0b1f3a_0%,#0b1f3a_46%,#F4F7F5_46%,#F4F7F5_100%)] pt-8"
+        }`}
+        style={{ containerType: "inline-size" }}
+      >
+        <div className="mx-auto max-w-[1120px]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-relief/40 bg-relief/[.14] px-[13px] py-[5px]">
+            <span className="text-[11px] font-black tracking-[0.22em] text-relief">
+              毒のあとに、救いを
+            </span>
+          </div>
+
+          {(
+            <>
+              <h1 className="mt-4 text-[clamp(28px,5cqw,48px)] font-black leading-[1.28] tracking-[-0.03em] text-white">
+                合わない相手は、
+                <br />
+                選べない。
+              </h1>
+              <p className="mb-5.5 mt-3.5 max-w-[32em] text-[13px] leading-8 text-[#b7c6dd]">
+                上司も、親も、部活の後輩も。だからTogelは「避ける」ではなく「無事に済ませる」方法を用意しました。ここからは、ちゃんと役に立つ話です。
+              </p>
+
+              {/* 地雷の仕組み（全タイプ共通の前提） */}
+              <div className="mt-2">{mechanism}</div>
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className="px-5.5 pb-[34px] pt-3.5">
+        <div className="mx-auto flex max-w-[1120px] flex-col gap-3.5">
+          {/*
+            診断が無いまま着地したとき（LINE のアプリ内ブラウザ等）は、入口の一覧は
+            出せないが、**開いた本文だけは出す**。以前はパネルが下の hasTypes の内側に
+            あったため、診断が無いと本文が一切出なかった。
+          */}
+          {!hasTypes && openPanel}
+
+          {/* 読むものへの入口（診断済みのみ）。タイプごとに1枚、1行が1つの角度 */}
+          {hasTypes && (
+            <>
+              <BoardTypeCards types={boardTypes} open={open} onOpenCell={openCell} />
+
+              {openPanel}
 
               {/*
                 light だけ次の階段（full には置かない）。

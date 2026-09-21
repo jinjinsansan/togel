@@ -142,6 +142,30 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
  * `w-max` なら帯は2枚ぶんちょうどになり、`translateX(-50%)` が
  * きっかり1枚ぶんの移動になる。どの画面幅でも重ならず、空かない。
  */
+/**
+ * LINE配信のリンク（?cell=）が、利用者の状態によらず本文を開くこと。
+ *
+ * 以前は2か所で弾いていた。
+ *   1. `state.typeIds.includes(typeId)` — 利用者のリストに無いタイプは開かない
+ *   2. 本文のパネルが `hasTypes &&` の内側 — 保存済みの診断が無いと出ない
+ * LINE のアプリ内ブラウザで開くと保存済みの診断が無いので、**2だけで全部止まる。**
+ * 本番（修正前）で確かめたところ、状態なし・リスト食い違いの**両方で開かなかった。**
+ * 配信が止まっていたので実害は出ていないが、有効にした瞬間に全リンクが行き止まりになっていた。
+ */
+test("LINE配信のリンクは、利用者のリストと診断の有無によらず本文を開く", () => {
+  const source = readFileSync(join(process.cwd(), "src/app/coaching/page.tsx"), "utf8");
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+  assert.ok(
+    !/typeIds\.includes\(\s*requested/.test(code),
+    "着地で利用者のリストに入っているかを見ている（入っていないとLINEのリンクが開かない）",
+  );
+  assert.ok(
+    /!hasTypes && openPanel/.test(code),
+    "診断が無いときに本文を出す経路が無い（LINEのアプリ内ブラウザで開かない）",
+  );
+});
+
 test("流れる帯の幅を画面幅の割合で決めていない", () => {
   const source = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
   const marquee = source.slice(source.indexOf("const Marquee"), source.indexOf("const Marquee") + 1200);
