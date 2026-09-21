@@ -15,6 +15,7 @@ import { loadBoardState, saveBoardState } from "@/lib/coaching/progress";
 import type { CoachingBoardState } from "@/lib/coaching/progress";
 import { loadSession } from "@/lib/diagnosis/session";
 import type { MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosis";
+import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
 
 /**
  * 地雷回避ガイド。
@@ -180,6 +181,8 @@ export default function CoachingPage() {
       ))}
     </div>
   );
+
+  const broadcastOn = isBroadcastEnabled();
 
   /** 開いている本文。診断の有無によらず出す（LINE 配信の着地先） */
   const openPanel =
@@ -419,16 +422,23 @@ export default function CoachingPage() {
           {/* LINE */}
           <div className="grid items-center gap-[18px] rounded-hero bg-navy p-[22px] sm:grid-cols-2">
             <div>
-              <div className="text-[11px] font-black tracking-[0.22em] text-relief">
-                週に1通、全15回
-              </div>
-              <div className="mt-2 text-[18px] font-black leading-[1.5] text-white">
-                1通目から、踏まない歩き方だけ送ります
-              </div>
-              {/* 不在を責めない。読まなかった週を「遅れ」として書かない */}
-              <p className="mt-2 text-[12px] leading-[1.9] text-[#b7c6dd]">
-                届いたリンクを開くと、その1マスが埋まります。読まなかった週は、ただ進まないだけです。
-              </p>
+              {/*
+                約束は、配信が有効なときだけ出す。止まっているのに「届く」と言うと、
+                登録しても何も来ない。
+
+                以前ここにあった、リンクを開くと盤が進むという一文は外した。
+                数える盤を撤去したので、指す先が無くなっていた。
+              */}
+              {broadcastOn && (
+                <>
+                  <div className="text-[11px] font-black tracking-[0.22em] text-relief">
+                    週に1通、全15回
+                  </div>
+                  <div className="mt-2 text-[18px] font-black leading-[1.5] text-white">
+                    1通目から、踏まない歩き方だけ送ります
+                  </div>
+                </>
+              )}
             </div>
             <a
               href="https://lin.ee/T7OYAGQ"
@@ -437,7 +447,7 @@ export default function CoachingPage() {
               onClick={() => trackLineCta("coaching")}
               className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-[15px] font-black text-white transition-opacity hover:opacity-90"
             >
-              1通目を受け取る
+              {broadcastOn ? "1通目を受け取る" : "公式LINEに登録する"}
             </a>
           </div>
         </div>

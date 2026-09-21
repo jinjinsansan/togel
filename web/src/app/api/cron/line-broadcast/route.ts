@@ -1,3 +1,4 @@
+import { broadcastStatus } from "@/lib/line/broadcast-status";
 import { NextResponse } from "next/server";
 
 import type { NextRequest } from "next/server";
@@ -34,12 +35,9 @@ export async function GET(req: NextRequest) {
   const startedAt = process.env.LINE_BROADCAST_START_AT;
 
   // フェイルクローズ。設定が要る変数が2つあるので、どちらが欠けているかを返す
-  // （片方だけ設定して「済んだ」と思い込む事故を防ぐ）。変数名のみで値は返さない
-  const missing: string[] = [];
-  if (!secret) missing.push("CRON_SECRET");
-  if (!startedAt || Number.isNaN(new Date(startedAt).getTime())) {
-    missing.push("LINE_BROADCAST_START_AT");
-  }
+  // （片方だけ設定して「済んだ」と思い込む事故を防ぐ）。変数名のみで値は返さない。
+  // **判定は broadcast-status.js の1か所**（画面の「週1通」の出し分けと同じ関数）
+  const { missing } = broadcastStatus(process.env);
   if (missing.length > 0) {
     return NextResponse.json({ error: "broadcast disabled", missing }, { status: 503 });
   }

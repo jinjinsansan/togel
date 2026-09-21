@@ -138,3 +138,72 @@ test("通目は1週間ごとに1つ進む", () => {
   // 15通を配り終えた人は範囲外になり、送信対象から外れる
   assert.ok(issueForUser(created, START, new Date(START.getTime() + 15 * WEEK)) > 15);
 });
+
+/* ===== 約束は、守れるときだけ出す ===== */
+
+import { readFileSync as readSource } from "node:fs";
+import { join as joinPath } from "node:path";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { broadcastStatus } = require("../src/lib/line/broadcast-status.js");
+
+/**
+ * 配信が有効かの判定は1か所（broadcast-status.js）。cron ルートも画面も同じ関数。
+ * 2つの変数のどちらが欠けても無効。**値は返さない**（ビルド時に画面へ焼くため）。
+ */
+test("配信の判定は、2つの変数がそろったときだけ有効で、値を返さない", () => {
+  assert.equal(broadcastStatus({}).enabled, false);
+  assert.equal(broadcastStatus({ CRON_SECRET: "x" }).enabled, false);
+  assert.equal(broadcastStatus({ LINE_BROADCAST_START_AT: "2026-09-01" }).enabled, false);
+  assert.equal(
+    broadcastStatus({ CRON_SECRET: "x", LINE_BROADCAST_START_AT: "not-a-date" }).enabled,
+    false,
+    "日付として読めない起点は無効",
+  );
+  const on = broadcastStatus({ CRON_SECRET: "secret-value", LINE_BROADCAST_START_AT: "2026-09-01" });
+  assert.equal(on.enabled, true);
+  assert.ok(!JSON.stringify(on).includes("secret-value"), "判定の結果に秘密の値が入っている");
+});
+
+test("cron ルートも同じ判定を使っている（判定が2か所に分かれていない）", () => {
+  const route = readSource(joinPath(process.cwd(), "src/app/api/cron/line-broadcast/route.ts"), "utf8");
+  assert.ok(route.includes("broadcastStatus(process.env)"), "cron ルートが共通の判定を使っていない");
+  assert.ok(
+    !/missing\.push\(/.test(route),
+    "cron ルートが自前で判定している（画面の出し分けと食い違う）",
+  );
+});
+
+/**
+ * 配信が止まっているあいだ、画面のどこにも「届く」約束を出さない。
+ *
+ * /result と /result/mismatch はログインが要るので、ここでは描画できない。
+ * そのため**書き方で**縛る。約束の文言は、配信の判定の内側にしか書いてはいけない。
+ * 公開ページ（/coaching・/coaching/[typeId]）は無効・有効の両方でビルドして、
+ * 描画結果に約束が出ない／出ることを確かめてある。
+ */
+test("「週1通」「全15回」などの約束は、配信の判定の内側にしか書かれていない", () => {
+  const files = [
+    "src/app/coaching/page.tsx",
+    "src/app/coaching/[typeId]/page.tsx",
+    "src/app/result/page.tsx",
+    "src/app/result/mismatch/page.tsx",
+  ];
+  const PROMISE = /週に?1通|毎週1通|全15通|全15回|踏まない歩き方だけ送ります/;
+  const GATE = /isBroadcastEnabled\(\)\s*&&|broadcastOn\s*&&/;
+  const offenders: string[] = [];
+
+  for (const file of files) {
+    const lines = readSource(joinPath(process.cwd(), file), "utf8").split(/\r?\n/);
+    lines.forEach((line, i) => {
+      if (/^\s*(\/\/|\*|\{\/\*)/.test(line) || !PROMISE.test(line)) return;
+      // 直前10行のどこかに判定の開きがあること
+      const before = lines.slice(Math.max(0, i - 10), i).join("\n");
+      if (!GATE.test(before)) offenders.push(`${file}:${i + 1}`);
+    });
+    // ボタンの「1通目を受け取る」は判定で出し分ける
+    const text = lines.join("\n");
+    const bare = text.match(/>\s*1通目を受け取る\s*</g);
+    if (bare) offenders.push(`${file}: ボタンの「1通目を受け取る」が判定なしで書かれている`);
+  }
+  assert.deepEqual(offenders, []);
+});

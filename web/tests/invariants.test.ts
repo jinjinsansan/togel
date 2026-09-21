@@ -186,7 +186,9 @@ test("「数える」言い回しが残っていない", () => {
     "src/lib/coaching/board.ts",
     "src/lib/coaching/progress.ts",
   ];
-  const phrases = ["マス歩きました", "歩いたところ", "歩き方を1つ覚えた", "歩き切った"];
+  // 「1マスが埋まります」「進まないだけ」も同じ撤去の残り。最初の一覧に無かったため
+  // LINE の案内文に残っていた（配信の約束を配信の状態に連動させたときに見つかった）
+  const phrases = ["マス歩きました", "歩いたところ", "歩き方を1つ覚えた", "歩き切った", "1マスが埋まります", "進まないだけ"];
   const offenders: string[] = [];
 
   for (const file of targets) {

@@ -26,6 +26,7 @@ import {
   MismatchResult,
   PersonalityTypeDefinition,
 } from "@/types/diagnosis";
+import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
 
 type LatestDiagnosis = {
   bigFiveScores: BigFiveScores;
@@ -619,9 +620,12 @@ const ResultPage = () => {
             <div className="mt-2 text-[19px] font-black leading-normal text-white">
               あなたが最も踏みやすい地雷は、3タイプ分あります
             </div>
-            <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
-              週に1通、全15回。1通目から、踏まない歩き方だけ送ります。
-            </p>
+            {/* 約束は、配信が有効なときだけ出す（止まっているのに「届く」と言わない） */}
+            {isBroadcastEnabled() && (
+              <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
+                週に1通、全15回。1通目から、踏まない歩き方だけ送ります。
+              </p>
+            )}
           </div>
           <a
             href="https://lin.ee/T7OYAGQ"
@@ -630,7 +634,7 @@ const ResultPage = () => {
             onClick={() => trackLineCta("result")}
             className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
           >
-            1通目を受け取る
+            {isBroadcastEnabled() ? "1通目を受け取る" : "公式LINEに登録する"}
           </a>
         </div>
       </section>
