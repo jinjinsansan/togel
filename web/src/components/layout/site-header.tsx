@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, ShieldCheck } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -31,8 +31,8 @@ const journeyNavItems = [
 /**
  * アカウント管理の面。**ナビ（読み物）には置かず、ログイン時だけ右の認証エリアに置く。**
  * 基準は「保護されているか」ではなく「自分の記録を操作する面か」
- * （保護されたページはナビに他にもある）。お問い合わせはヘッダーに置かない
- * （同じURLがフッター他にある）。
+ * （保護されたページはナビに他にもある）。お問い合わせはヘッダーに置かず、フッター
+ * （本文の全ページに出る。footer-paths.ts）に置く。
  */
 const accountNavItems = [
   { href: "/profile/edit", label: "プロフィール" },
@@ -346,14 +346,20 @@ export const SiteHeader = () => {
                         {item.label}
                       </Link>
                     ))}
+                    {/*
+                      管理者パネルはアイコンにする（見えるのは管理者の2人だけなので、
+                      利用者に影響しない場所から幅を削る。ミシェル有効×管理者でヘッダーが
+                      1280pxからはみ出していた）。名前はホバーと読み上げで出す
+                    */}
                     {isAdmin && (
                       <Button
-                        variant="outline"
+                        variant="ghost"
+                        size="icon"
                         asChild
-                        className="h-9 rounded-full border-line bg-transparent text-xs font-bold text-txt-muted hover:bg-white/5 hover:text-white"
+                        className="text-txt-subtle hover:bg-white/5 hover:text-white"
                       >
-                        <Link href="/admin" className="whitespace-nowrap">
-                          管理者パネル
+                        <Link href="/admin" aria-label="管理者パネル" title="管理者パネル">
+                          <ShieldCheck size={18} aria-hidden="true" />
                         </Link>
                       </Button>
                     )}

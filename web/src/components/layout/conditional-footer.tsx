@@ -2,27 +2,13 @@
 
 import { usePathname } from "next/navigation";
 
+import { showsFooter } from "@/components/layout/footer-paths";
 import { SiteFooter } from "@/components/layout/site-footer";
-
-const EXCLUDE_FOOTER_PATHS = [
-  "/michelle",
-  "/michelle/attraction",
-  "/diagnosis",
-  "/admin",
-  "/result",
-  "/result/mismatch",
-  "/liff",
-];
-
-const FOOTER_ALLOWED_PATHS = ["/"];
 
 export const ConditionalFooter = () => {
   const pathname = usePathname();
 
-  if (
-    EXCLUDE_FOOTER_PATHS.some((path) => pathname.startsWith(path)) ||
-    !FOOTER_ALLOWED_PATHS.includes(pathname)
-  ) {
+  if (!showsFooter(pathname)) {
     return null;
   }
 
