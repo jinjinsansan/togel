@@ -3,22 +3,15 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { GroupBadge } from "@/components/brand/group-badge";
+import { StoryViewer } from "@/components/result/story-viewer";
+import { buildStory } from "@/lib/personality/story/cards";
 import { HandbookShare } from "@/components/share/handbook-share";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { trackLineCta } from "@/lib/analytics/events";
-import { personalityTypes, typeToken } from "@/lib/personality";
+import { personalityTypes } from "@/lib/personality";
 import { storyLabelHref } from "@/lib/share/story-label";
 import { handbookPostText } from "@/lib/share/text";
-import { TOGEL_INDEX, togelIndexPercent } from "@/lib/personality/togel-index";
-import { generateDeepNarrative } from "@/lib/personality/narrative";
-import {
-  TYPE_PROFILE_HEADING,
-  typeProfileFor,
-  typeProfileParagraphs,
-} from "@/lib/personality/copy/type-profile";
-import { DeepNarrativeSection } from "@/components/result/deep-narrative-section";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import {
   BigFiveScores,
@@ -241,143 +234,43 @@ const ResultPage = () => {
   }
 
   const scores = diagnosis.bigFiveScores;
-  // 本文が5種そろうまでは null。節ごと出さない
-  const deepNarrative = generateDeepNarrative(scores);
-  // タイプ固定の本文。24タイプそろうまで null
-  const typeProfile = selfType ? typeProfileFor(selfType.id) : null;
+  // 自己説明はストーリーズ（全15枚）。組み立てられないときだけ null
+  const story = selfType ? buildStory(selfType.id, scores) : null;
 
   return (
     <div className="min-h-screen bg-ink text-white">
-      {/* ヒーロー: あなたのタイプ */}
-      <section
-        className="bg-[radial-gradient(120%_90%_at_50%_-20%,rgba(11,31,58,.9),transparent_60%)] px-5.5 pb-[26px] pt-8"
-        style={{ containerType: "inline-size" }}
-      >
-        <div className="mx-auto grid max-w-[1120px] items-center gap-6 md:grid-cols-2">
-          <div>
-            <div className="text-[11px] font-black tracking-[0.22em] text-hazard">
-              YOUR TYPE / 24
-            </div>
-            <h1 className="mt-3 text-[clamp(30px,5.4cqw,50px)] font-black leading-[1.25] tracking-[-0.03em]">
-              {selfType ? typeToken(selfType) : diagnosis.detailedNarrative.title}
+      {/*
+        自己説明はストーリーズ（全15枚・1画面1枚）。以前のタイプ名 → 旧説明 → タイプ本文 →
+        TOGEL INDEX → 約束の一文 → S1〜S4 を、この1つに置き換えた。
+        オーナー判断「長文はいいが、こんな見せ方では誰も読まない。10代20代向けに見せ方を」。
+
+        組み立てられないとき（タイプが無い等）だけ、最低限の見出しを出す。
+        720通りすべてで15枚埋まることは tests/story.test.ts が確かめている。
+      */}
+      {story && selfType ? (
+        <StoryViewer
+          story={story}
+          type={selfType}
+          scores={scores}
+          labelHref={storyLabelHref(selfType.id, scores)}
+          belowId="result-below"
+        />
+      ) : (
+        <section className="px-5.5 pb-[26px] pt-8">
+          <div className="mx-auto max-w-[1120px]">
+            <h1 className="text-[clamp(30px,5.4cqw,50px)] font-black leading-[1.25] tracking-[-0.03em]">
+              {diagnosis.detailedNarrative.title}
             </h1>
-            {selfType && (
-              <div className="mt-1.5 text-[15px] font-bold text-txt-muted">{selfType.typeName}</div>
-            )}
-            <div className="mt-2 text-sm font-bold text-primary">
-              {selfType?.catchphrase ?? diagnosis.detailedNarrative.subtitle}
-            </div>
-            {selfType && <GroupBadge group={selfType.group} className="mt-4" />}
-            {/*
-              旧53字の説明は、**新しいタイプ本文が出せないときだけ**出す。
-              両方出すと、タイプ名の直後に旧説明、その下に新本文と、同じ話を2回する
-              （オーナーの画面で実際にそうなっていた）。
-
-              フォールバックの diagnosis.narrative も中身は同じ旧説明
-              （engine.ts で `${label}のあなたは${type.description}` と組んでいる）。
-              片方だけ消しても、もう片方から同じ文が出る。
-            */}
-            {!typeProfile && (
-              <p
-                className="mt-3.5 max-w-[32em] text-[13px] leading-8 text-txt-muted"
-                style={{ textWrap: "pretty" }}
-              >
-                {selfType?.description ?? diagnosis.narrative}
-              </p>
-            )}
-            {/*
-              タイプそのものの説明。**タイプ名とスペック（TOGEL INDEX）の間**に置く。
-              「あなたはこういう型です」→「あなたのスペック」→「ここから、あなたの話をします」
-              の順になる。ここは人に見せる部分なので、同じ型なら全員同じ文。
-            */}
-            {typeProfile && (
-              <div className="mt-5 rounded-card border border-line bg-surface p-5">
-                <h2 className="text-[11px] font-black tracking-[0.22em] text-relief">
-                  {TYPE_PROFILE_HEADING}
-                </h2>
-                {/* 段落ごとに見出しを付けない。区切らず続けて読ませる */}
-                {typeProfileParagraphs(typeProfile).map((paragraph, index) => (
-                  <p
-                    key={index}
-                    className="mt-3 max-w-[34em] whitespace-pre-line text-[13px] leading-8 text-txt-muted"
-                    style={{ textWrap: "pretty" }}
-                  >
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            )}
-
-            {selfType && (
-              <div className="mt-4 flex flex-wrap gap-[7px]">
-                {selfType.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-line bg-surface-alt px-[11px] py-[5px] text-[11px] font-bold text-txt-muted"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
+            <p className="mt-3.5 max-w-[32em] text-[13px] leading-8 text-txt-muted">{diagnosis.narrative}</p>
           </div>
-
-          <div className="flex justify-center">
-            <div className="w-full max-w-[320px] rounded-[18px] border border-line bg-surface p-5">
-              <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
-                TOGEL INDEX
-              </div>
-              <div className="mt-4 flex flex-col gap-3">
-                {TOGEL_INDEX.map(({ key, label }) => {
-                  const pct = togelIndexPercent(key, scores);
-                  const high = pct >= 50;
-                  return (
-                    <div key={key}>
-                      <div className="flex justify-between text-[11px] font-bold">
-                        <span className="text-txt-muted">{label}</span>
-                        <span className={high ? "text-hazard" : "text-primary"}>{pct}</span>
-                      </div>
-                      <div className="mt-[5px] h-1.5 rounded-full bg-surface-alt">
-                        <div
-                          className={`h-full rounded-full ${high ? "bg-hazard" : "bg-primary"}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {selfType && (
-                <a
-                  href={storyLabelHref(selfType.id, scores)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 flex min-h-[44px] items-center justify-center rounded-full bg-white text-xs font-black text-ink transition-colors hover:bg-hazard"
-                >
-                  取扱注意ラベルを保存（縦・ストーリーズ用）
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/*
-          深い自己説明。スペック（TOGEL INDEX）の下に置く。
-          数値の隣に並べると「解説」に見えてしまい、読まれずに飛ばされる。
-
-          本文が5種そろうまで generateDeepNarrative は null を返し、
-          この節ごと出ない。半端に出すと「自分のときは薄かった」が
-          利用者側に見える。
-        */}
-        {deepNarrative && <DeepNarrativeSection narrative={deepNarrative} />}
-
-      </section>
+        </section>
+      )}
 
       {/*
         本編への導線。以前はタブA「あなたの性格」の中にあったが、タブAを外したので
         タブの直上に単独で置く。ミスマッチへの入口なので、どの場合も残す。
       */}
-      <section className="px-5.5 pb-2 pt-4">
+      <section id="result-below" className="scroll-mt-4 px-5.5 pb-2 pt-4">
         <div className="mx-auto max-w-[1120px]">
       <div className="mt-3.5 rounded-[18px] border border-primary bg-[linear-gradient(160deg,#1c0d16,#0d111b)] p-5.5">
         <div className="text-[11px] font-black tracking-[0.22em] text-primary">

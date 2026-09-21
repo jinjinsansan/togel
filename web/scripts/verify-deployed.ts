@@ -65,6 +65,8 @@ const checks: Check[] = [
   // 開発用プレビューは本番に出さない。**ステータスで見る**（本文だけ見ると200を見逃す）
   { path: "/dev/preview/board", expectStatus: 404 },
   { path: "/dev/preview/deep", expectStatus: 404 },
+  { path: "/dev/preview/story", expectStatus: 404 },
+  { path: "/dev/preview/diagnosis", expectStatus: 404 },
   { path: "/dev/preview/board?walked=7", expectStatus: 404 },
   { path: `/api/og?type=${sample.id}`, image: true, minBytes: 20_000 },
   { path: `/api/og?type=${sample.id}&format=story`, image: true, minBytes: 50_000 },

@@ -30,7 +30,11 @@ export const trackShareLanding = (mode: "type" | "mismatch") => {
   track("share_landing", { mode });
 };
 
-/** LINEの登録導線を押した（登録の成否はこちらでは分からない） */
-export const trackLineCta = (place: "result" | "mismatch" | "coaching") => {
+/**
+ * LINEの登録導線を押した（登録の成否はこちらでは分からない）。
+ * `result_story` はストーリーズの締め（15枚目）のボタン。/result の下にある既存の
+ * LINE 導線（`result`）と分けて数える。同じ値にすると、どちらが効いたか分からない。
+ */
+export const trackLineCta = (place: "result" | "result_story" | "mismatch" | "coaching") => {
   track("line_cta_click", { place });
 };
