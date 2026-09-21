@@ -152,6 +152,25 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
  * 本番（修正前）で確かめたところ、状態なし・リスト食い違いの**両方で開かなかった。**
  * 配信が止まっていたので実害は出ていないが、有効にした瞬間に全リンクが行き止まりになっていた。
  */
+/**
+ * /result に旧い自己説明を出さないこと。
+ *
+ * 「あなたの性格」タブの強み・伸びしろ・コミュニケーション・詳しい解説は、
+ * オーナーが「自分の説明がほとんどない」と言った元の文そのもの。ストーリーズで
+ * 置き換えた直後に同じ旧い文が出ると、二重表示と同じ形になる。
+ * （組み立てる関数はプロフィール・LINE が使うので残してある。見るのは /result だけ）
+ *
+ * ミスマッチへの入口（本編への導線）は、どの場合も残す。
+ */
+test("/result に旧い自己説明を出さず、ミスマッチへの入口は残っている", () => {
+  const source = readFileSync(join(process.cwd(), "src/app/result/page.tsx"), "utf8");
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  const OLD = ["strengths", "warnings", "communicationStyle", "thinkingStyle", "loveTendency", "idealPartner"];
+  const found = OLD.filter((field) => new RegExp(`detailedNarrative\.${field}`).test(code));
+  assert.deepEqual(found, [], "旧い自己説明を /result に出している");
+  assert.ok(code.includes('href="/result/mismatch"'), "ミスマッチへの入口が無くなった");
+});
+
 test("LINE配信のリンクは、利用者のリストと診断の有無によらず本文を開く", () => {
   const source = readFileSync(join(process.cwd(), "src/app/coaching/page.tsx"), "utf8");
   const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");

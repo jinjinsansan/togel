@@ -45,7 +45,13 @@ type LatestDiagnosis = {
 };
 
 type MatchMode = "opposite" | "same";
-type TabKey = "personality" | "mismatch" | "best";
+/**
+ * 「あなたの性格」タブは外した（2026-09-21）。中身の強み・伸びしろ・コミュニケーション・
+ * 詳しい解説は、オーナーが「自分の説明がほとんどない」と言った元の文そのもので、
+ * ストーリーズで置き換えた直後に同じ旧い文が出ると二重表示になる。
+ * 組み立てる関数（generatePersonalityNarrative）は、プロフィール・LINE 等が使うので残す。
+ */
+type TabKey = "mismatch" | "best";
 
 const MATCH_STORAGE_KEYS: Record<MatchMode, string> = {
   opposite: "latestMatching:opposite",
@@ -71,7 +77,7 @@ const getStoredResults = (mode: MatchMode): MatchingResult[] => {
 };
 
 const ResultPage = () => {
-  const [tab, setTab] = useState<TabKey>("personality");
+  const [tab, setTab] = useState<TabKey>("mismatch");
   const [mode, setMode] = useState<MatchMode>("opposite");
   const [results, setResults] = useState<MatchingResult[]>(() => getStoredResults("opposite"));
   const [mismatchResults, setMismatchResults] = useState<MismatchResult[]>(() => {
@@ -97,7 +103,6 @@ const ResultPage = () => {
 
   const [isInitialLoading, setIsInitialLoading] = useState(() => !diagnosis);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
 
   const supabase = createSupabaseBrowserClient();
 
@@ -368,11 +373,34 @@ const ResultPage = () => {
 
       </section>
 
+      {/*
+        本編への導線。以前はタブA「あなたの性格」の中にあったが、タブAを外したので
+        タブの直上に単独で置く。ミスマッチへの入口なので、どの場合も残す。
+      */}
+      <section className="px-5.5 pb-2 pt-4">
+        <div className="mx-auto max-w-[1120px]">
+      <div className="mt-3.5 rounded-[18px] border border-primary bg-[linear-gradient(160deg,#1c0d16,#0d111b)] p-5.5">
+        <div className="text-[11px] font-black tracking-[0.22em] text-primary">
+          この結果の本編
+        </div>
+        <div className="mt-2 text-xl font-black leading-normal">
+          あなたと絶対に合わない5タイプ
+        </div>
+        <p className="mt-2 text-[12.5px] leading-[1.95] text-txt-muted">
+          地獄のシナリオとNG行動つき。ここが一番読まれています。
+        </p>
+        <Link
+          href="/result/mismatch"
+          className="mt-4 flex min-h-[56px] items-center justify-center rounded-card bg-primary text-[15px] font-black text-ink transition-colors hover:bg-primary-hover"
+        >
+          ミスマッチを見る
+        </Link>
+      </div>
+        </div>
+      </section>
+
       {/* タブバー */}
       <div className="sticky top-[66px] z-20 flex gap-1 overflow-x-auto border-y border-line-soft bg-ink/95 px-5.5 py-2.5 backdrop-blur">
-        <button type="button" onClick={() => setTab("personality")} className={tabClass("personality")}>
-          あなたの性格
-        </button>
         <button type="button" onClick={() => setTab("mismatch")} className={tabClass("mismatch")}>
           ミスマッチ {worstTypeEntries.length || 5}
         </button>
@@ -385,95 +413,6 @@ const ResultPage = () => {
           </span>
         )}
       </div>
-
-      {/* タブA: あなたの性格 */}
-      {tab === "personality" && (
-        <section className="animate-rise px-5.5 pb-[34px] pt-7">
-          <div className="mx-auto max-w-[1120px]">
-            <div className="grid gap-3.5 md:grid-cols-3">
-              <div className="rounded-card border border-line bg-surface p-5">
-                <div className="text-[10px] font-black tracking-[0.22em] text-relief">強み</div>
-                <ul className="mt-3 list-disc pl-[1.15em] text-[12.5px] leading-8 text-txt-muted">
-                  {diagnosis.detailedNarrative.strengths.slice(0, 3).map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-card border border-line bg-surface p-5">
-                <div className="text-[10px] font-black tracking-[0.22em] text-hazard">伸びしろ</div>
-                <ul className="mt-3 list-disc pl-[1.15em] text-[12.5px] leading-8 text-txt-muted">
-                  {diagnosis.detailedNarrative.warnings.slice(0, 3).map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-card border border-line bg-surface p-5">
-                <div className="text-[10px] font-black tracking-[0.22em] text-txt-muted">
-                  コミュニケーション
-                </div>
-                <ul className="mt-3 flex flex-col gap-1.5 text-[12.5px] leading-8 text-txt-muted">
-                  {diagnosis.detailedNarrative.communicationStyle.slice(0, 2).map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* 段階開示: 詳しい解説 */}
-            <div className="mt-3.5 rounded-card border border-line-soft bg-panel p-5">
-              <button
-                type="button"
-                onClick={() => setMoreOpen((prev) => !prev)}
-                className="flex w-full items-center justify-between text-sm font-black text-white"
-              >
-                <span>もっと詳しい性格解説を読む</span>
-                <span className="text-lg text-hazard">{moreOpen ? "−" : "＋"}</span>
-              </button>
-              {moreOpen && (
-                <div className="animate-rise mt-4 flex flex-col gap-4 border-t border-dashed border-line pt-4">
-                  {[
-                    { title: "考え方のクセ", items: diagnosis.detailedNarrative.thinkingStyle },
-                    { title: "恋愛傾向", items: diagnosis.detailedNarrative.loveTendency },
-                    { title: "求める相手", items: diagnosis.detailedNarrative.idealPartner },
-                  ]
-                    .filter((block) => block.items.length > 0)
-                    .map((block) => (
-                      <div key={block.title}>
-                        <div className="text-[10px] font-black tracking-[0.22em] text-txt-subtle">
-                          {block.title}
-                        </div>
-                        <ul className="mt-2 flex flex-col gap-1.5 text-[12.5px] leading-[2.1] text-txt-muted">
-                          {block.items.map((item, i) => (
-                            <li key={i}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* 本編への導線 */}
-            <div className="mt-3.5 rounded-[18px] border border-primary bg-[linear-gradient(160deg,#1c0d16,#0d111b)] p-5.5">
-              <div className="text-[11px] font-black tracking-[0.22em] text-primary">
-                この結果の本編
-              </div>
-              <div className="mt-2 text-xl font-black leading-normal">
-                あなたと絶対に合わない5タイプ
-              </div>
-              <p className="mt-2 text-[12.5px] leading-[1.95] text-txt-muted">
-                地獄のシナリオとNG行動つき。ここが一番読まれています。
-              </p>
-              <Link
-                href="/result/mismatch"
-                className="mt-4 flex min-h-[56px] items-center justify-center rounded-card bg-primary text-[15px] font-black text-ink transition-colors hover:bg-primary-hover"
-              >
-                ミスマッチを見る
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* タブB: ミスマッチ5（要約） */}
       {tab === "mismatch" && (
