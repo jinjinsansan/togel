@@ -131,6 +131,30 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
  * 見つかったのは、**配信のリンク形式（?cell=）で本番を実際に開いた**とき。
  * 未診断のHTMLしか見ていなかったので、診断済みでしか出ない部分が素通りしていた。
  */
+/**
+ * 流れる帯（マーキー）の幅を、画面幅に対する割合で決めないこと。
+ *
+ * 以前は帯が `w-[200%]`、中の各枚が `w-1/2` だった。つまり「1枚＝画面幅」を
+ * 前提にしていたが、**中身の自然幅は 632px で画面幅によらず一定**。
+ * 実測（本番）: 320pxで312px・390pxで242px・430pxで202px はみ出して文字が重なり、
+ * 768pxでは136px 足りずに継ぎ目が空いていた。**狭くても広くても壊れていた。**
+ *
+ * `w-max` なら帯は2枚ぶんちょうどになり、`translateX(-50%)` が
+ * きっかり1枚ぶんの移動になる。どの画面幅でも重ならず、空かない。
+ */
+test("流れる帯の幅を画面幅の割合で決めていない", () => {
+  const source = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
+  const marquee = source.slice(source.indexOf("const Marquee"), source.indexOf("const Marquee") + 1200);
+
+  for (const forbidden of ['w-[200%]', "w-1/2"]) {
+    assert.ok(
+      !marquee.includes(forbidden),
+      `マーキーが ${forbidden} を使っている（中身の幅は画面幅と無関係なので崩れる）`,
+    );
+  }
+  assert.ok(marquee.includes("w-max"), "マーキーの幅が中身で決まっていない");
+});
+
 test("「数える」言い回しが残っていない", () => {
   const targets = [
     "src/app/coaching/page.tsx",

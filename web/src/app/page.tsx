@@ -18,11 +18,23 @@ const marqueeItems = [
 
 const Marquee = () => (
   <div className="overflow-hidden border-b border-line-soft bg-panel py-[7px]">
-    <div className="animate-marquee flex w-[200%]">
+    {/*
+      幅は**中身で決める**（`w-max`）。固定幅にしない。
+
+      以前は帯を画面幅の200%、各枚をその半分と指定していた。つまり
+      「1枚＝画面幅」を前提にしていたが、中身の自然幅は
+      **632px で画面幅によらず一定**。
+      実測: 320pxで312px・390pxで242px・430pxで202px **はみ出して文字が重なり**、
+      逆に768pxでは136px **足りずに継ぎ目が空いて**いた。
+
+      `w-max` なら帯は 2枚ぶんちょうどになり、`translateX(-50%)` が
+      きっかり1枚ぶんの移動になる。どの画面幅でも重ならず、空かない。
+    */}
+    <div className="animate-marquee flex w-max">
       {[false, true].map((hidden) => (
         <div
           key={String(hidden)}
-          className="flex w-1/2 flex-none gap-[26px] pr-[26px]"
+          className="flex flex-none gap-[26px] pr-[26px]"
           aria-hidden={hidden || undefined}
         >
           {marqueeItems.map((item, i) => (
