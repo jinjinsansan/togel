@@ -6,7 +6,7 @@ import { typeApproachGuides } from "../src/lib/coaching/translations";
 import { isSpokenLandmine, landmineHeading, landmineQuote } from "../src/lib/share/text";
 
 import { groupBadgeLine } from "../src/components/brand/group-badge";
-import { BROADCAST_TOTAL_ISSUES } from "../src/lib/line/broadcast";
+import { BROADCAST_TOTAL_ISSUES } from "../src/lib/newsletter/issues";
 import {
   ANGLES_PER_TYPE,
   ANGLE_BY_BROADCAST_KIND,
@@ -143,12 +143,12 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
  * きっかり1枚ぶんの移動になる。どの画面幅でも重ならず、空かない。
  */
 /**
- * LINE配信のリンク（?cell=）が、利用者の状態によらず本文を開くこと。
+ * メルマガのリンク（?cell=）が、利用者の状態によらず本文を開くこと。
  *
  * 以前は2か所で弾いていた。
  *   1. `state.typeIds.includes(typeId)` — 利用者のリストに無いタイプは開かない
  *   2. 本文のパネルが `hasTypes &&` の内側 — 保存済みの診断が無いと出ない
- * LINE のアプリ内ブラウザで開くと保存済みの診断が無いので、**2だけで全部止まる。**
+ * メールアプリの中のブラウザで開くと保存済みの診断が無いので、**2だけで全部止まる。**
  * 本番（修正前）で確かめたところ、状態なし・リスト食い違いの**両方で開かなかった。**
  * 配信が止まっていたので実害は出ていないが、有効にした瞬間に全リンクが行き止まりになっていた。
  */
@@ -158,7 +158,7 @@ test("群名を出す唯一のテキスト経路は再定義を伴う", () => {
  * 「あなたの性格」タブの強み・伸びしろ・コミュニケーション・詳しい解説は、
  * オーナーが「自分の説明がほとんどない」と言った元の文そのもの。ストーリーズで
  * 置き換えた直後に同じ旧い文が出ると、二重表示と同じ形になる。
- * （組み立てる関数はプロフィール・LINE が使うので残してある。見るのは /result だけ）
+ * （組み立てる関数はプロフィール等が使うので残してある。見るのは /result だけ）
  *
  * ミスマッチへの入口（本編への導線）は、どの場合も残す。
  */
@@ -171,17 +171,17 @@ test("/result に旧い自己説明を出さず、ミスマッチへの入口は
   assert.ok(code.includes('href="/result/mismatch"'), "ミスマッチへの入口が無くなった");
 });
 
-test("LINE配信のリンクは、利用者のリストと診断の有無によらず本文を開く", () => {
+test("メルマガのリンクは、利用者のリストと診断の有無によらず本文を開く", () => {
   const source = readFileSync(join(process.cwd(), "src/app/coaching/page.tsx"), "utf8");
   const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
   assert.ok(
     !/typeIds\.includes\(\s*requested/.test(code),
-    "着地で利用者のリストに入っているかを見ている（入っていないとLINEのリンクが開かない）",
+    "着地で利用者のリストに入っているかを見ている（入っていないとメルマガのリンクが開かない）",
   );
   assert.ok(
     /!hasTypes && openPanel/.test(code),
-    "診断が無いときに本文を出す経路が無い（LINEのアプリ内ブラウザで開かない）",
+    "診断が無いときに本文を出す経路が無い（メールアプリの中のブラウザで開かない）",
   );
 });
 

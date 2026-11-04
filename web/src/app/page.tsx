@@ -228,7 +228,7 @@ export default function Home() {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              {["所要 約5分", "登録なしで開始", "18歳以上向け"].map((chip) => (
+              {["所要 約5分", "メールで無料登録", "18歳以上向け"].map((chip) => (
                 <span
                   key={chip}
                   className="rounded-chip border border-line-soft px-2.5 py-[5px] text-[11px] font-bold text-txt-subtle"
@@ -473,14 +473,12 @@ export default function Home() {
           >
             診断をはじめる
           </Link>
-          <a
-            href="https://lin.ee/T7OYAGQ"
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-h-[58px] items-center justify-center gap-2 rounded-full bg-linegreen px-[26px] text-sm font-black text-white transition-opacity hover:opacity-90"
+          <Link
+            href="/newsletter"
+            className="flex min-h-[58px] items-center justify-center rounded-full border border-[#29303f] px-[26px] text-sm font-bold text-txt-muted transition-colors hover:border-hazard hover:text-white"
           >
-            LINEで結果を受け取る
-          </a>
+            メルマガで受け取る
+          </Link>
         </div>
         <p className="mt-[18px] text-[11px] text-txt-disabled">
           ※ エンタメ目的の診断です。18歳以上の方が対象です。

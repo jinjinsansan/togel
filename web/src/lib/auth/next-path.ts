@@ -3,9 +3,8 @@
  *
  * 保護された画面をタップした人は、その画面に用があって来ている。
  * ログインを挟んだあとに別の場所へ落とすと、何をしに来たのか分からなくなる。
- * LINEから来た場合は外部ブラウザに切り替わる分、戻るのも難しい。
  *
- * 運び方は2段階。proxy → /login はクエリ、/login → OAuth → /auth/callback は
+ * 運び方は2段階。proxy → /login はクエリ、/login → 確認メール → /auth/callback は
  * クッキー（理由は NEXT_COOKIE を参照）。どちらも外から値を渡せる経路なので、
  * 外部サイトへの踏み台にならないよう safeNextPath を必ず通す。
  */
@@ -17,19 +16,20 @@ export const DEFAULT_AFTER_LOGIN = "/diagnosis/select";
 export const NEXT_PARAM = "next";
 
 /**
- * 行き先を OAuth の往復ごしに運ぶクッキー。
+ * 行き先を確認メール（再設定メール）の往復ごしに運ぶクッキー。
  *
  * `redirectTo` に積まないのは、Supabase が redirectTo を許可リストと
  * 突き合わせるため。許可リストにクエリ無しのURLだけが登録されていると
  * `?next=` を足した時点で一致せず、黙って SITE_URL に落ちる。
  * ダッシュボードの設定に依存しない形にしておく。
  *
- * Google への往復から戻るのはトップレベルのGET遷移なので SameSite=Lax で届く。
+ * メールのリンクから戻るのはトップレベルのGET遷移なので SameSite=Lax で届く。
+ * 別のブラウザで開かれた場合は届かず、既定の行き先に落ちる。
  */
 export const NEXT_COOKIE = "togel_login_next";
 
-/** 押してから戻るまでの間だけ持てばいい */
-export const NEXT_COOKIE_MAX_AGE = 60 * 10;
+/** 確認メール・再設定メールのリンクを開くまで持てばいい（1時間） */
+export const NEXT_COOKIE_MAX_AGE = 60 * 60;
 
 /**
  * 受け取った行き先を、サイト内の相対パスに正規化する。

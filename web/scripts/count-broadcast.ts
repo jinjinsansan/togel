@@ -1,12 +1,12 @@
 /**
- * 【計測用】LINE週次配信が「1通あたり」実際に送る文字数を数える。
+ * 【計測用】メルマガが「1通あたり」実際に送る文字数を数える。
  * 直さない。数えるだけ。
  *
  * 盤のマス（/coaching の角度）と、配信1通は**同じではない**。
  * 配信の本文には、ガイドの中身に加えて枠の文（見出し・締めの一行）が入る。
  * 着地先の字数だけ見ると、実際に届く量と食い違う。
  */
-import { buildTypeBroadcast, BROADCAST_TOTAL_ISSUES } from "../src/lib/line/broadcast";
+import { buildNewsletterIssue, BROADCAST_TOTAL_ISSUES } from "../src/lib/newsletter/issues";
 import { ANGLE_BY_BROADCAST_KIND, BOARD_ANGLES } from "../src/lib/coaching/board";
 import { personalityTypes } from "../src/lib/personality";
 
@@ -23,7 +23,7 @@ let missing = 0;
 
 for (const type of personalityTypes) {
   for (let issue = 1; issue <= BROADCAST_TOTAL_ISSUES; issue += 1) {
-    const msg = buildTypeBroadcast(type.id, issue);
+    const msg = buildNewsletterIssue(type.id, issue);
     if (!msg) { missing += 1; continue; }
     // 「N通目です（全15通）」とリンク行を除いた地の文
     const text = msg.text;
@@ -56,7 +56,7 @@ console.log("【2】同じ中身が2通に出ていないか");
 console.log("=".repeat(74));
 const sample = personalityTypes[0];
 const texts = Array.from({ length: BROADCAST_TOTAL_ISSUES }, (_, i) => {
-  const m = buildTypeBroadcast(sample.id, i + 1);
+  const m = buildNewsletterIssue(sample.id, i + 1);
   return m ? m.text : "";
 });
 console.log(`\n例: ${sample.typeName} の15通`);

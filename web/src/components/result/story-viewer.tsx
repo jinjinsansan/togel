@@ -4,8 +4,7 @@ import { Fragment, useCallback, useRef, useState, useSyncExternalStore } from "r
 
 import { GroupBadge } from "@/components/brand/group-badge";
 import { useReducedMotion } from "@/components/diagnosis/board/use-reduced-motion";
-import { trackLineCta } from "@/lib/analytics/events";
-import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
+import { NewsletterButton } from "@/components/newsletter/newsletter-cta";
 import { typeToken } from "@/lib/personality";
 import { fixedCards } from "@/lib/personality/copy/cards-reactions";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
@@ -39,8 +38,6 @@ import type { BigFiveScores } from "@/types/diagnosis";
  * - 切り替えは 150ms 以下のフェードだけで、prefers-reduced-motion のときは付けない
  */
 
-/** LINE の友だち追加。/result に既にある導線と同じリンク先（新しく作らない） */
-const LINE_URL = "https://lin.ee/T7OYAGQ";
 
 type Props = {
   story: StoryCard[];
@@ -358,23 +355,14 @@ const SaveButton = ({ href }: { href: string }) => (
 );
 
 const CloseButtons = ({ belowId, onRestart }: { belowId: string; onRestart: () => void }) => {
-  const broadcastOn = isBroadcastEnabled();
   return (
     <div className="flex flex-col gap-2.5">
-      {/*
-        約束は、配信が有効なときだけ出す。止まっているあいだは「公式LINEに登録する」
-        だけにする（登録しても何も届かないため）。
-      */}
-      <a
-        href={LINE_URL}
-        target="_blank"
-        rel="noreferrer"
-        onClick={() => trackLineCta("result_story")}
-        data-primary-cta
-        className="flex h-[58px] items-center justify-center rounded-[16px] bg-primary text-[16px] font-black text-ink"
-      >
-        {broadcastOn ? "公式LINEで続きを受け取る" : "公式LINEに登録する"}
-      </a>
+      {/* 押すとその場で購読する（宛先は本人の確認済みメールアドレス）。約束の文言は置かない */}
+      <NewsletterButton
+        place="result_story"
+        source="result"
+        className="flex h-[58px] w-full items-center justify-center rounded-[16px] bg-primary text-[16px] font-black text-ink disabled:opacity-60"
+      />
       <button
         type="button"
         onClick={() => document.getElementById(belowId)?.scrollIntoView({ behavior: "smooth" })}

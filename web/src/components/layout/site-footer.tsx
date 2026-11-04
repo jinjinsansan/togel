@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, MessageCircle } from "lucide-react";
+import { Mail } from "lucide-react";
 
 import { TogelMark } from "@/components/brand/togel-mark";
 import { MICHELLE_AI_ENABLED, MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
@@ -12,6 +12,7 @@ const footerLinks = [
       { label: "ミスマッチランキング", href: "/result/mismatch" },
       { label: "診断結果", href: "/result" },
       { label: "地雷回避ガイド", href: "/coaching" },
+      { label: "メルマガ", href: "/newsletter" },
     ],
   },
   {
@@ -58,12 +59,10 @@ export const SiteFooter = () => {
               あなたと「絶対に合わない相手」を告げます。
             </p>
             <a
-              href="https://lin.ee/T7OYAGQ"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-input bg-linegreen px-5 py-2.5 text-xs font-black text-white transition-all hover:opacity-90 active:scale-[0.98]"
+              href="mailto:support@to-gel.com"
+              className="inline-flex items-center justify-center gap-2 rounded-input border border-line px-5 py-2.5 text-xs font-black text-white transition-all hover:bg-white/5 active:scale-[0.98]"
             >
-              <MessageCircle className="h-4 w-4" /> LINEでお問い合わせ
+              <Mail className="h-4 w-4" /> メールでお問い合わせ
             </a>
           </div>
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { withExternalBrowserParam } from "@/lib/line/external-browser";
+import { withExternalBrowserParam } from "@/lib/share/external-browser";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -278,6 +278,35 @@ export default function MyPage() {
       setPrankActive(!checked);
     } else {
       setProfile({ ...profile, social_links: updatedLinks });
+    }
+  };
+
+  // メルマガ（週1通・全15通）の購読。宛先は本人の確認済みメールアドレス
+  const [mailMagazine, setMailMagazine] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/newsletter", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json: { subscribed?: boolean }) => alive && setMailMagazine(Boolean(json.subscribed)))
+      .catch(() => alive && setMailMagazine(false));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const handleMailMagazineToggle = async (checked: boolean) => {
+    const previous = mailMagazine;
+    setMailMagazine(checked);
+    const res = await fetch("/api/newsletter", {
+      method: checked ? "POST" : "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: checked ? JSON.stringify({ source: "mypage" }) : undefined,
+    }).catch(() => null);
+    if (!res?.ok) {
+      setMailMagazine(previous);
+      if (checked && res?.status === 403) {
+        alert("メールアドレスの確認が済んでいません。登録時に届いたメールのリンクを開いてください。");
+      }
     }
   };
 
@@ -573,7 +602,20 @@ export default function MyPage() {
           {/* 設定 */}
           <div className="rounded-[18px] border border-line bg-surface p-5 md:col-span-2">
             <span className="text-[11px] font-black tracking-[0.22em] text-txt-muted">設定</span>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[12.5px] font-bold">メルマガ</div>
+                  <div className="mt-[2px] text-[10px] text-txt-subtle">
+                    タイプ別の地雷の踏み方・避け方（{user?.email ?? "登録したメールアドレス"}に届きます）
+                  </div>
+                </div>
+                <Switch
+                  checked={Boolean(mailMagazine)}
+                  disabled={mailMagazine === null}
+                  onCheckedChange={handleMailMagazineToggle}
+                />
+              </div>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-[12.5px] font-bold">運命モード（いたずら）</div>
@@ -590,7 +632,7 @@ export default function MyPage() {
                 </div>
                 <Switch checked={newsletterEnabled} onCheckedChange={handleNewsletterToggle} />
               </div>
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-start sm:justify-end">
                 <Link
                   href="/profile/edit"
                   className="flex min-h-[44px] items-center rounded-full border border-line px-5 text-xs font-bold text-txt-muted transition-colors hover:border-primary hover:text-white"

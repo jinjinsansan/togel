@@ -2,8 +2,8 @@
   "installCommand": "npm install",
   "crons": [
     {
-      "path": "/api/cron/line-broadcast",
-      "schedule": "0 3 * * 5"
+      "path": "/api/cron/newsletter",
+      "schedule": "0 3 * * *"
     }
   ],
   "functions": {

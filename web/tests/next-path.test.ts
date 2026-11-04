@@ -86,18 +86,26 @@ test("proxy は行き先を積んでから /login に飛ばす", () => {
   );
 });
 
-test("OAuth の往復ごしに行き先を運ぶ", () => {
-  const button = read("src/components/auth/login-button.tsx");
-  assert.ok(button.includes(NEXT_PARAM), "ログイン画面が行き先を読んでいない");
-  assert.ok(button.includes("NEXT_COOKIE"), "出発前に行き先を預けていない");
+test("確認メールの往復ごしに行き先を運ぶ", () => {
+  const remember = read("src/components/auth/remember-next.ts");
+  assert.ok(remember.includes("NEXT_PARAM"), "ログイン画面が行き先を読んでいない");
+  assert.ok(remember.includes("NEXT_COOKIE"), "出発前に行き先を預けていない");
   assert.ok(
-    button.includes("samesite=lax"),
-    "SameSite が緩くないと Google からの戻りでクッキーが届かない",
+    remember.includes("samesite=lax"),
+    "SameSite が緩くないとメールのリンクからの戻りでクッキーが届かない",
   );
+  const form = read("src/components/auth/email-auth-form.tsx");
+  assert.ok(form.includes("rememberNextPath("), "登録・再設定の前に行き先を預けていない");
   const callback = read("src/app/auth/callback/route.ts");
   assert.ok(callback.includes("readNextCookie("), "callback が行き先を読んでいない");
   assert.ok(
     !callback.includes('new URL("/diagnosis/select"'),
     "callback が行き先を無視して固定の場所へ飛ばしている",
   );
+});
+
+test("Googleログインが残っていない", () => {
+  const offenders = ["src/components/auth/email-auth-form.tsx", "src/components/layout/site-header.tsx", "src/app/login/page.tsx"]
+    .filter((file) => /signInWithOAuth|provider:\s*"google"/.test(read(file)));
+  assert.deepEqual(offenders, []);
 });

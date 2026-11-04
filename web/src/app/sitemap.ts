@@ -25,6 +25,7 @@ const staticPaths: { path: string; priority: number; changeFrequency: MetadataRo
   { path: "/compatibility", priority: 0.8, changeFrequency: "monthly" },
   { path: "/types/distribution", priority: 0.5, changeFrequency: "monthly" },
   { path: "/about", priority: 0.5, changeFrequency: "monthly" },
+  { path: "/newsletter", priority: 0.4, changeFrequency: "monthly" },
   { path: "/diagnosis/select", priority: 0.7, changeFrequency: "monthly" },
   { path: "/terms", priority: 0.2, changeFrequency: "yearly" },
   { path: "/privacy", priority: 0.2, changeFrequency: "yearly" },

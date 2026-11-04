@@ -1,36 +1,13 @@
-"use client";
-
 import Link from "next/link";
 
-import { LoginButton } from "@/components/auth/login-button";
-import { OpenInExternalBrowser } from "@/components/auth/open-in-external-browser";
+import { EmailAuthForm } from "@/components/auth/email-auth-form";
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-ink px-6 py-10 text-white">
-      {/* LINEのブラウザではGoogleログインが通らないので、ここで外部ブラウザに渡す */}
-      <OpenInExternalBrowser />
       <div className="w-full max-w-sm">
         <div className="rounded-card border border-line bg-[#07090F] px-[18px] py-[22px] text-center">
-          <div className="text-[15px] font-black leading-relaxed">
-            結果を保存して
-            <br />
-            あとから読み返す
-          </div>
-          <div className="mt-4 [&>button]:min-h-[52px] [&>button]:w-full">
-            <LoginButton />
-          </div>
-          <div className="mt-3.5 text-[10px] leading-relaxed text-txt-subtle">
-            続行すると
-            <Link href="/terms" className="underline">
-              利用規約
-            </Link>
-            ・
-            <Link href="/privacy" className="underline">
-              プライバシーポリシー
-            </Link>
-            に同意したものとみなします
-          </div>
+          <EmailAuthForm />
         </div>
         <div className="mt-4 text-center">
           <Link

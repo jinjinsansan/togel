@@ -10,6 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { MatchingResult } from "@/types/diagnosis";
+import { syncNewsletterAfterDiagnosis } from "@/lib/newsletter/db";
 
 type NotificationPayload = {
   user_id: string;
@@ -30,7 +31,6 @@ const schema = z.object({
       })
     )
     .min(1),
-  lineUserId: z.string().optional(),
 });
 
 const ensureUserRecord = async (
@@ -343,32 +343,20 @@ export const POST = async (request: Request) => {
       })();
     }
 
-    // LINE Bot経由の診断の場合、結果をLINEに通知
-    if (parsed.data.lineUserId) {
-      (async () => {
-        try {
-          const { updateLineUserDiagnosis } = await import("@/lib/line/db");
-          const { pushMessage } = await import("@/lib/line/client");
-          const { diagnosisResultMessages } = await import("@/lib/line/messages");
-
-          await updateLineUserDiagnosis({
-            lineUserId: parsed.data.lineUserId!,
-            gender: parsed.data.userGender,
-            togelType: diagnosisResult.personalityType.id,
-            diagnosisType: parsed.data.diagnosisType,
-            diagnosisResult: diagnosisResult as unknown as Record<string, unknown>,
-            bigFiveScores: diagnosisResult.bigFiveScores as unknown as Record<string, number>,
-          });
-
-          const resultMsgs = diagnosisResultMessages(
-            diagnosisResult.bigFiveScores,
-            diagnosisResult.personalityType,
-          );
-          await pushMessage(parsed.data.lineUserId!, resultMsgs);
-        } catch (lineError) {
-          console.error("[LINE Notify] Failed to send diagnosis result:", lineError);
-        }
-      })();
+    // メルマガ: 購読中なら宛先タイプを更新し、登録時に同意した人はここで購読を作る。
+    // 失敗しても診断結果は返す（メルマガは本筋ではない）
+    if (user?.id) {
+      try {
+        await syncNewsletterAfterDiagnosis({
+          userId: user.id,
+          email: user.email,
+          emailConfirmed: Boolean(user.email_confirmed_at),
+          optedInAtSignup: user.user_metadata?.newsletter_opt_in === true,
+          typeId,
+        });
+      } catch (newsletterError) {
+        console.error("[Newsletter] sync after diagnosis failed", newsletterError);
+      }
     }
 
     return NextResponse.json({

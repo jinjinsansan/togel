@@ -8,7 +8,6 @@ import { buildStory } from "@/lib/personality/story/cards";
 import { HandbookShare } from "@/components/share/handbook-share";
 import { RecommendationsSection } from "@/components/recommendations/recommendations-section";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { trackLineCta } from "@/lib/analytics/events";
 import { personalityTypes } from "@/lib/personality";
 import { storyLabelHref } from "@/lib/share/story-label";
 import { handbookPostText } from "@/lib/share/text";
@@ -19,7 +18,7 @@ import {
   MismatchResult,
   PersonalityTypeDefinition,
 } from "@/types/diagnosis";
-import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
+import { NewsletterCta } from "@/components/newsletter/newsletter-cta";
 
 type LatestDiagnosis = {
   bigFiveScores: BigFiveScores;
@@ -442,33 +441,9 @@ const ResultPage = () => {
         </section>
       )}
 
-      {/* LINE友だち追加CTA（診断完了直後が追加率のピーク） */}
+      {/* メルマガ登録CTA（診断完了直後が登録率のピーク） */}
       <section className="px-5.5 pb-8 pt-4">
-        <div className="mx-auto grid max-w-[1120px] items-center gap-[18px] rounded-[18px] border border-[#1e3557] bg-navy p-5.5 sm:grid-cols-2">
-          <div>
-            <div className="text-[11px] font-black tracking-[0.22em] text-relief">
-              LINE
-            </div>
-            <div className="mt-2 text-[19px] font-black leading-normal text-white">
-              あなたが最も踏みやすい地雷は、3タイプ分あります
-            </div>
-            {/* 約束は、配信が有効なときだけ出す（止まっているのに「届く」と言わない） */}
-            {isBroadcastEnabled() && (
-              <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
-                週に1通、全15回。1通目から、踏まない歩き方だけ送ります。
-              </p>
-            )}
-          </div>
-          <a
-            href="https://lin.ee/T7OYAGQ"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackLineCta("result")}
-            className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
-          >
-            {isBroadcastEnabled() ? "1通目を受け取る" : "公式LINEに登録する"}
-          </a>
-        </div>
+        <NewsletterCta place="result" source="result" className="mx-auto max-w-[1120px]" />
       </section>
 
       {/* PR / レコメンド枠: タブ内容の末尾にのみ配置 */}

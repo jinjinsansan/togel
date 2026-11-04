@@ -48,11 +48,6 @@ const DiagnosisPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("quiz");
   const [resumeNote, setResumeNote] = useState<string | null>(null);
-  // 移動の種類は操作を受けたこちらが決める（盤は渡された通りに描くだけ）
-  const [move, setMove] = useState<{ kind: "forward" | "instant"; step: number }>({
-    kind: "instant",
-    step: 0,
-  });
   const [worst, setWorst] = useState<WorstReveal | null>(null);
   const [submitFailed, setSubmitFailed] = useState(false);
   const submitStateRef = useRef<"idle" | "pending" | "done" | "error">("idle");
@@ -117,14 +112,6 @@ const DiagnosisPage = () => {
     trackDiagnosisStart(diagnosisType, "web");
   }, [totalQuestions, diagnosisType]);
 
-  const answerByIndex = useMemo(() => {
-    const map = new Map<number, number>();
-    questions.forEach((question, index) => {
-      const answer = answers.find((item) => item.questionId === question.id);
-      if (answer) map.set(index, answer.value);
-    });
-    return map;
-  }, [questions, answers]);
 
   if (!diagnosisType) {
     notFound();
@@ -196,7 +183,6 @@ const DiagnosisPage = () => {
     answerQuestion({ questionId: currentQuestion.id, value });
     setError(null);
     setResumeNote(null);
-    setMove((prev) => ({ kind: "forward", step: prev.step + 1 }));
     // 盤の上では中間マスに止まる。止まる点は中間マスだけ（章の区切りでは止まらない）
     if (currentCell?.isMilestone) {
       setPhase("milestone");
@@ -211,7 +197,6 @@ const DiagnosisPage = () => {
 
   const handleMilestoneContinue = () => {
     setPhase("quiz");
-    setMove((prev) => ({ kind: "forward", step: prev.step + 1 }));
     if (!isLastQuestion) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -223,7 +208,6 @@ const DiagnosisPage = () => {
     setError(null);
     setResumeNote(null);
     // 後退は即座・無演出（戻る動きを演出すると「間違えた」の意味が発生する）
-    setMove((prev) => ({ kind: "instant", step: prev.step }));
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1);
     }

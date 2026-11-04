@@ -1,117 +1,82 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import type { EmailOtpType } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { NEXT_COOKIE, readNextCookie } from "@/lib/auth/next-path";
 
+/**
+ * 確認メール・再設定メールのリンクの戻り先。
+ *
+ * 受け付ける形は2つ。
+ * 1. `?token_hash=…&type=signup|recovery|email|email_change`（推奨）
+ *    メールのテンプレートを `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=…`
+ *    にした場合。**別のブラウザ（メールアプリの中など）で開いても通る。**
+ * 2. `?code=…`（Supabase の既定テンプレートのまま）
+ *    PKCE の検証用の値が登録した画面と同じブラウザにしか無いので、
+ *    別のブラウザで開くと失敗する。テンプレートを1に変えるまでの互換として残す。
+ *
+ * 再設定（type=recovery）は、新しいパスワードを決める画面へ送る。
+ * 失敗はすべて /login?error=<キー> に戻す（文言は lib/auth/messages.ts）。
+ */
+
+const OTP_TYPES: EmailOtpType[] = ["signup", "recovery", "invite", "magiclink", "email", "email_change"];
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
-  const error = requestUrl.searchParams.get("error");
-  const errorDescription = requestUrl.searchParams.get("error_description");
-  const origin = requestUrl.origin;
+  const params = requestUrl.searchParams;
+  const tokenHash = params.get("token_hash");
+  const code = params.get("code");
+  const rawType = params.get("type");
+  const type = OTP_TYPES.find((value) => value === rawType) ?? null;
+  const providerError = params.get("error");
+
   const cookieStore = await cookies();
-  // proxy → /login → OAuth と運ばれてきた行き先。信用できない値は既定に落ちる
   const next = readNextCookie(cookieStore.get(NEXT_COOKIE)?.value);
-  const cookieNames = cookieStore.getAll().map(({ name }: { name: string }) => name);
 
-  // 全パラメータをログ出力（デバッグ用）※センシティブな値はマスク
-  const paramSummary: Record<string, string> = {};
-  requestUrl.searchParams.forEach((value, key) => {
-    paramSummary[key] = key === "code" ? `[redacted:${value.length}]` : value;
-  });
+  const fail = (key: string) => {
+    const target = new URL("/login", requestUrl);
+    target.searchParams.set("error", key);
+    if (type !== "recovery") target.searchParams.set("mode", "login");
+    return NextResponse.redirect(target);
+  };
 
-  console.log("[Auth Callback] Start", {
-    hasCode: !!code,
-    hasError: !!error,
-    error,
-    errorDescription,
-    params: paramSummary,
-    origin,
-    referer: request.headers.get("referer"),
-    userAgent: request.headers.get("user-agent"),
-    url: {
-      pathname: requestUrl.pathname,
-      searchLength: requestUrl.search.length,
-    },
-    cookieNames,
-  });
-
-  // Googleからのエラーレスポンス処理
-  if (error) {
-    console.error("[Auth Callback] OAuth error from provider", {
-      error,
-      errorDescription,
-      params: paramSummary,
-      referer: request.headers.get("referer"),
+  if (providerError) {
+    // 期限切れ・使用済みのリンクは Supabase がここへ error 付きで戻してくる
+    console.warn("[Auth Callback] error from auth server", {
+      error: providerError,
+      code: params.get("error_code"),
     });
-    return NextResponse.redirect(
-      new URL(`/?error=oauth_error&details=${encodeURIComponent(error + ": " + (errorDescription || ""))}`, requestUrl)
-    );
-  }
-
-  if (!code) {
-    console.error("[Auth Callback] No code provided and no error param", {
-      params: paramSummary,
-      referer: request.headers.get("referer"),
-      cookieNames,
-    });
-    return NextResponse.redirect(new URL("/?error=no_code", requestUrl));
+    return fail("link_invalid");
   }
 
   try {
     const supabase = createSupabaseRouteClient(cookieStore);
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-    console.log("[Auth Callback] Exchange result", {
-      hasSession: !!data.session,
-      hasUser: !!data.user,
-      userId: data.user?.id,
-      error: error ? {
-        message: error.message,
-        status: error.status,
-        name: error.name,
-      } : null,
-    });
-
-    if (error) {
-      console.error("[Auth Callback] Failed to exchange code", {
-        error,
-        message: error.message,
-        status: error.status,
-        code: error.code,
-      });
-      return NextResponse.redirect(new URL(`/?error=auth_failed&details=${encodeURIComponent(error.message)}`, requestUrl));
+    if (tokenHash && type) {
+      const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (error) {
+        console.warn("[Auth Callback] verifyOtp failed", { type, message: error.message });
+        return fail("link_invalid");
+      }
+    } else if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        console.warn("[Auth Callback] exchangeCodeForSession failed", { message: error.message });
+        return fail("link_invalid");
+      }
+    } else {
+      return fail("no_code");
     }
 
-    if (!data.session) {
-      console.error("[Auth Callback] No session after exchange");
-      return NextResponse.redirect(new URL("/?error=no_session", requestUrl));
-    }
-
-    // セッション確認
-    const {
-      data: { session: verifySession },
-    } = await supabase.auth.getSession();
-
-    console.log("[Auth Callback] Session verification", {
-      hasSession: !!verifySession,
-      sessionId: verifySession?.user.id,
-    });
-
-    if (!verifySession) {
-      console.error("[Auth Callback] Session verification failed");
-      return NextResponse.redirect(new URL("/?error=session_verify_failed", requestUrl));
-    }
-
-    console.log("[Auth Callback] Success, redirecting", { next });
-    const response = NextResponse.redirect(new URL(next, requestUrl));
-    response.cookies.delete(NEXT_COOKIE);
+    const destination = type === "recovery" ? "/login/update-password" : next;
+    const response = NextResponse.redirect(new URL(destination, requestUrl));
+    // 再設定の画面は、保存したあとにこの行き先を使うので残しておく
+    if (type !== "recovery") response.cookies.delete(NEXT_COOKIE);
     return response;
   } catch (error) {
     console.error("[Auth Callback] Unexpected error", error);
-    return NextResponse.redirect(new URL("/?error=unexpected", requestUrl));
+    return fail("unexpected");
   }
 }

@@ -1,5 +1,5 @@
 /** 【計測用】同じ ✕/◯ が同じ相手について複数の通に出ていないかを見る */
-import { buildTypeBroadcast, BROADCAST_TOTAL_ISSUES } from "../src/lib/line/broadcast";
+import { buildNewsletterIssue, BROADCAST_TOTAL_ISSUES } from "../src/lib/newsletter/issues";
 import { ANGLE_BY_BROADCAST_KIND, BOARD_ANGLES } from "../src/lib/coaching/board";
 import { personalityTypes } from "../src/lib/personality";
 
@@ -11,7 +11,7 @@ const sample = personalityTypes[0];
 console.log(`例: ${sample.typeName} の15通\n`);
 
 const rows = Array.from({ length: BROADCAST_TOTAL_ISSUES }, (_, i) => {
-  const m = buildTypeBroadcast(sample.id, i + 1);
+  const m = buildNewsletterIssue(sample.id, i + 1);
   const t = m?.text ?? "";
   const marks = (t.match(/[✕◯][^\n]*/g) ?? []).map((l) => l.replace(/^[✕◯]\s*(言いがち|言い換え)?\s*/, ""));
   const target = (t.match(/対 ([^\n｜】]+)/) ?? t.match(/｜([^\n】]+)】/) ?? [])[1] ?? "";

@@ -2,31 +2,25 @@ import { DiagnosisPayload } from "@/types/diagnosis";
 
 const STORAGE_KEY = "matching_shindan_session";
 
-/**
- * 保存先の区別。Web版とLIFF版は入口が別なので、途中保存を混ぜない。
- * 既定（web）のキーは従来のまま（既存の途中保存を壊さない）。
- */
-export type SessionScope = "web" | "liff";
-
-const keyFor = (scope: SessionScope) => (scope === "liff" ? `${STORAGE_KEY}:liff` : STORAGE_KEY);
+/** 以前は LINE 内（LIFF）版と保存先を分けていたが、LIFF は撤去した。キーは従来のまま */
 
 export type DiagnosisSession = DiagnosisPayload & {
   updatedAt: string;
 };
 
-export const saveSession = (payload: DiagnosisPayload, scope: SessionScope = "web") => {
+export const saveSession = (payload: DiagnosisPayload) => {
   if (typeof window === "undefined") return;
   const session: DiagnosisSession = {
     ...payload,
     updatedAt: new Date().toISOString(),
   };
-  localStorage.setItem(keyFor(scope), JSON.stringify(session));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
 };
 
-export const loadSession = (scope: SessionScope = "web"): DiagnosisSession | null => {
+export const loadSession = (): DiagnosisSession | null => {
   if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(keyFor(scope));
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as DiagnosisSession;
   } catch (error) {
@@ -35,7 +29,7 @@ export const loadSession = (scope: SessionScope = "web"): DiagnosisSession | nul
   }
 };
 
-export const clearSession = (scope: SessionScope = "web") => {
+export const clearSession = () => {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(keyFor(scope));
+  localStorage.removeItem(STORAGE_KEY);
 };

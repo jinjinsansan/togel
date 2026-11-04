@@ -53,11 +53,6 @@ export async function proxy(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  // LIFF pages use LINE auth, not Supabase auth - skip protection
-  if (req.nextUrl.pathname.startsWith("/liff")) {
-    return res;
-  }
-
   // Protected routes
   const protectedRoutes = ["/mypage", "/admin", "/michelle", "/diagnosis", "/profile", "/result"];
   const isProtectedRoute = protectedRoutes.some((route) =>

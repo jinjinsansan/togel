@@ -352,7 +352,7 @@ function PointsEnabledPage() {
               <p className="text-sm text-slate-500 mt-1">決済が反映されない場合はサポートが即時対応します。</p>
             </div>
             <Button variant="secondary" className="gap-2" asChild>
-              <a href="https://lin.ee/T7OYAGQ" target="_blank" rel="noreferrer">
+              <a href="mailto:support@to-gel.com">
                 <ShieldCheck className="h-4 w-4" />
                 <span>お問い合わせ</span>
                 <ArrowUpRight className="h-4 w-4" />
