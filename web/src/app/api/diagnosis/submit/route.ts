@@ -33,6 +33,20 @@ const schema = z.object({
     .min(1),
 });
 
+/**
+ * 診断で選んだ性別を public.users に残す。結果を後から計算し直すとき
+ * （/api/diagnosis/latest）はここを見る。既存の行は作成時の値のままだったので、
+ * 選び直した性別が反映されていなかった。
+ */
+const syncGender = async (
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  gender: "male" | "female",
+) => {
+  const { error } = await supabase.from("users").update({ gender }).eq("id", userId);
+  if (error) console.warn("[Diagnosis submit] failed to sync gender", error.message);
+};
+
 const ensureUserRecord = async (
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   params: {
@@ -51,6 +65,7 @@ const ensureUserRecord = async (
       .maybeSingle();
 
     if (linked?.id) {
+      await syncGender(supabase, linked.id, params.gender);
       return linked.id;
     }
 
@@ -67,6 +82,7 @@ const ensureUserRecord = async (
           .update({ auth_user_id: params.authUserId })
           .eq("id", data.id);
       }
+      await syncGender(supabase, data.id, params.gender);
       return data.id;
     }
 

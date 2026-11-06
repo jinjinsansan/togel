@@ -29,7 +29,7 @@ export const GET = async (request: Request) => {
     // まず public.users から auth_user_id で検索して user.id を取得
     const { data: initialUserData, error: userError } = await supabaseAdmin
       .from("users")
-      .select("id")
+      .select("id, gender")
       .eq("auth_user_id", session.user.id)
       .maybeSingle();
 
@@ -39,7 +39,7 @@ export const GET = async (request: Request) => {
       // auth_user_id で見つからない場合、id で直接検索（後方互換性）
       const { data: fallbackUser } = await supabaseAdmin
         .from("users")
-        .select("id")
+        .select("id, gender")
         .eq("id", session.user.id)
         .maybeSingle();
       
@@ -81,23 +81,27 @@ export const GET = async (request: Request) => {
       return NextResponse.json({ message: "No diagnosis found" }, { status: 404 });
     }
 
+    // 性別は診断のたびに public.users へ保存している（submit の ensureUserRecord）。
+    // 以前は profiles.gender だけを見ていたが、そこはプロフィール編集でしか書かれないため
+    // 新規の利用者は空で、**女性でも "male" として計算し直され、キャッシュが上書きされていた**。
+    // users → profiles の順に見て、どちらにも無いときだけ既定に落とす。
+    let userGender: "male" | "female" | null =
+      userData.gender === "male" || userData.gender === "female" ? userData.gender : null;
+    if (!userGender) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("gender")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if (profile?.gender === "male" || profile?.gender === "female") userGender = profile.gender;
+    }
+
     const inputData = {
       diagnosisType: latestDiagnosis.diagnosis_type as "light" | "full",
-      userGender: "male" as "male" | "female",
+      userGender: userGender ?? ("male" as const),
       answers: latestDiagnosis.answers as Answer[],
       userId: userData.id,
     };
-
-    // プロフィールから性別を取得
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("gender")
-      .eq("id", session.user.id)
-      .single();
-    
-    if (profile?.gender) {
-      inputData.userGender = profile.gender as "male" | "female";
-    }
 
     // 自己診断結果の生成（計算コストは低いので毎回実行でOK）
     const diagnosisResult = generateDiagnosisResult(inputData);

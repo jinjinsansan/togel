@@ -24,6 +24,23 @@ export const useDiagnosisStore = create<DiagnosisState>((set, get) => ({
   setDiagnosisType: (type) => set({ diagnosisType: type }),
   setUserGender: (gender) => {
     const state = get();
+    // 同じ診断・同じ性別の途中保存があれば、それを引き継ぐ（空で上書きしない）。
+    // トップから入り直した人や、再読み込みで性別の画面に戻った人の回答を消さないため
+    const stored = loadSession();
+    if (
+      stored &&
+      stored.diagnosisType === state.diagnosisType &&
+      stored.userGender === gender &&
+      stored.answers.length > 0
+    ) {
+      const questionLength = getQuestionsByType(stored.diagnosisType).length;
+      set({
+        userGender: gender,
+        answers: stored.answers,
+        progress: Math.round((stored.answers.length / questionLength) * 100),
+      });
+      return;
+    }
     if (state.userGender && state.answers.length > 0) {
       set({ userGender: gender, answers: [], progress: 0 });
     } else {

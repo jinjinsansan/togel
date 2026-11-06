@@ -12,7 +12,7 @@ import { QuestionCard } from "@/components/diagnosis/question-card";
 import { DiagnosisQuestion } from "@/types/diagnosis";
 import { trackDiagnosisComplete, trackDiagnosisStart } from "@/lib/analytics/events";
 import { buildBoard, milestoneText, recallRecords } from "@/lib/diagnosis/board";
-import { clearSession, saveSession } from "@/lib/diagnosis/session";
+import { clearSession, loadSession, saveSession } from "@/lib/diagnosis/session";
 import { personalityTypes, typeToken } from "@/lib/personality";
 import type { TypeGroupId } from "@/lib/personality";
 import { useDiagnosisStore } from "@/store/diagnosis-store";
@@ -55,8 +55,30 @@ const DiagnosisPage = () => {
   const { answers, userGender, setDiagnosisType, loadFromStorage, answerQuestion, reset } =
     useDiagnosisStore();
 
+  /**
+   * 途中保存の読み込み。**性別の確認より先に済ませる。**
+   *
+   * 以前は性別の確認が先に走っていた。再読み込み直後のストアは空（性別 null）なので、
+   * 保存を読む前に性別の画面へ飛ばされ、そこで押し直すと保存が空で上書きされていた
+   * （40問中25問目で再読み込みすると1問目からやり直しになっていた）。
+   *
+   * URL の診断タイプと保存のタイプが違うときは、保存を読まない
+   * （ライトの途中保存でフル版の進み具合を計算しないように）。
+   */
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     if (!diagnosisType) return;
+    const stored = loadSession();
+    if (stored && stored.diagnosisType === diagnosisType) {
+      loadFromStorage();
+    } else {
+      setDiagnosisType(diagnosisType);
+    }
+    setHydrated(true);
+  }, [diagnosisType, setDiagnosisType, loadFromStorage]);
+
+  useEffect(() => {
+    if (!diagnosisType || !hydrated) return;
     if (!userGender) {
       router.push("/diagnosis/select/gender");
       return;
@@ -80,13 +102,7 @@ const DiagnosisPage = () => {
       }
     };
     fetchQuestions();
-  }, [diagnosisType, userGender, router]);
-
-  useEffect(() => {
-    if (!diagnosisType) return;
-    setDiagnosisType(diagnosisType);
-    loadFromStorage();
-  }, [diagnosisType, setDiagnosisType, loadFromStorage]);
+  }, [diagnosisType, hydrated, userGender, router]);
 
   // 途中保存から再開した場合、最初の未回答質問へ移動する（毎回Q1に戻さない）
   // 早送りの演出はせず、無音で現在地から始める。不在は責めない・数えない
@@ -165,6 +181,8 @@ const DiagnosisPage = () => {
         sessionStorage.setItem("latestDiagnosis", JSON.stringify(data.diagnosis));
       }
       submitStateRef.current = "done";
+      // 送り終えた回答は途中保存から消す（次に開いたとき最終問から「再開」しないように）
+      clearSession();
     } catch (err) {
       console.error(err);
       submitStateRef.current = "error";
