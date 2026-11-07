@@ -8,11 +8,12 @@ import { Answer } from "@/types/diagnosis";
 import { estimateProfileScores } from "@/lib/personality";
 import { getMatchingCacheExpiry, isMatchingCacheValid } from "@/lib/matching/cache";
 import { verifyInviteCode } from "@/lib/invite/code";
+import { getVerifiedSession } from "@/lib/supabase/auth-helpers";
 
 export const GET = async (request: Request) => {
   const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const { data: { session } } = await supabaseAuth.auth.getSession();
+  const session = await getVerifiedSession(supabaseAuth);
 
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

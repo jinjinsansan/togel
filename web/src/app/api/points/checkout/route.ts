@@ -5,13 +5,12 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createCheckoutPreference, getOneLatConfig } from "@/lib/one-lat";
 import { getAppBaseUrl } from "@/lib/url";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { getVerifiedSession } from "@/lib/supabase/auth-helpers";
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const {
-    data: { session },
-  } = await supabaseAuth.auth.getSession();
+  const session = await getVerifiedSession(supabaseAuth);
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

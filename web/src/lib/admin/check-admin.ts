@@ -17,6 +17,9 @@ export const requireAdminUser = async (): Promise<User | null> => {
   } = await supabase.auth.getUser();
 
   if (!user?.email) return null;
+  // メールアドレス＋パスワード登録では、確認前のアカウントでも getUser は返る。
+  // 確認していないアドレスで管理者を名乗れないよう、確認済みであることを要求する
+  if (!user.email_confirmed_at) return null;
   if (!ALLOWED_ADMIN_EMAILS.includes(user.email)) return null;
   return user;
 };

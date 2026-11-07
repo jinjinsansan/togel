@@ -6,6 +6,7 @@ import { generateDiagnosisResult } from "@/lib/matching/engine";
 import { Answer, BigFiveScores } from "@/types/diagnosis";
 import { getTogelLabel, personalityTypes } from "@/lib/personality";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { getVerifiedSession } from "@/lib/supabase/auth-helpers";
 
 const resolveUserIds = async (
   supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
@@ -43,9 +44,7 @@ const resolveUserIds = async (
 export const GET = async (request: Request) => {
   const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const {
-    data: { session },
-  } = await supabaseAuth.auth.getSession();
+  const session = await getVerifiedSession(supabaseAuth);
 
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

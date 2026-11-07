@@ -78,7 +78,12 @@ export async function proxy(req: NextRequest) {
 
   // Admin route protection (simple email check for now)
   if (req.nextUrl.pathname.startsWith("/admin")) {
-    const userEmail = session?.user.email;
+    // ここだけは getUser で検証する。getSession は cookie の中身をそのまま返すので、
+    // メールアドレスを書き換えた cookie で管理画面を開けてしまう。確認済みのアドレスに限る
+    const {
+      data: { user: verifiedUser },
+    } = await supabase.auth.getUser();
+    const userEmail = verifiedUser?.email_confirmed_at ? verifiedUser.email : undefined;
     // Allow only specific emails
     const allowedAdminEmails = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
     
