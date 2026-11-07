@@ -32,7 +32,7 @@ const adaptRouteCookies = (cookieStore: CookieStore) => {
             sameSite: (options.sameSite as "lax" | "strict" | "none" | undefined) || "lax",
             secure: process.env.NODE_ENV === "production",
             httpOnly: options.httpOnly !== false,
-            maxAge: options.maxAge || 60 * 60 * 24 * 7, // 7 days default
+            maxAge: (options.maxAge as number | undefined) ?? 60 * 60 * 24 * 7, // 7 days default（0 は削除の指示なので残す）
           };
           
           console.log("[Cookie Set]", { 

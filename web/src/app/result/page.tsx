@@ -21,6 +21,8 @@ import {
 import { NewsletterCta } from "@/components/newsletter/newsletter-cta";
 
 type LatestDiagnosis = {
+  /** 古い保存には無い。無ければフル版として扱う */
+  diagnosisType?: "light" | "full";
   bigFiveScores: BigFiveScores;
   personalityType: PersonalityTypeDefinition;
   narrative: string;
@@ -197,8 +199,9 @@ const ResultPage = () => {
         blurb: result.mismatchReasons?.[0]?.disaster ?? extended.description,
       });
     }
-    return entries.slice(0, 5);
-  }, [mismatchResults]);
+    // ライト診断はワースト3まで（ミスマッチページ・選択画面の案内と揃える）
+    return entries.slice(0, diagnosis?.diagnosisType === "light" ? 3 : 5);
+  }, [mismatchResults, diagnosis?.diagnosisType]);
 
   const tabClass = (key: TabKey) =>
     `min-h-[42px] flex-none rounded-full border px-4 text-xs font-black transition-colors ${
@@ -276,7 +279,7 @@ const ResultPage = () => {
           この結果の本編
         </div>
         <div className="mt-2 text-xl font-black leading-normal">
-          あなたと絶対に合わない5タイプ
+          あなたと絶対に合わない{diagnosis?.diagnosisType === "light" ? "3" : "5"}タイプ
         </div>
         <p className="mt-2 text-[12.5px] leading-[1.95] text-txt-muted">
           地獄のシナリオとNG行動つき。ここが一番読まれています。

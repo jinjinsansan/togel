@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { loadSession } from "@/lib/diagnosis/session";
 import { personalityTypes } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import { storyLabelHref } from "@/lib/share/story-label";
@@ -12,6 +11,8 @@ import { BigFiveScores, MismatchResult, PersonalityTypeDefinition } from "@/type
 import { NewsletterCta } from "@/components/newsletter/newsletter-cta";
 
 type LatestDiagnosis = {
+  /** 古い保存には無い。無ければフル版として扱う */
+  diagnosisType?: "light" | "full";
   bigFiveScores: BigFiveScores;
   personalityType: PersonalityTypeDefinition;
   narrative: string;
@@ -76,14 +77,11 @@ const MismatchResultPage = () => {
     }
   });
 
-  const [isLightPlan, setIsLightPlan] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   // sessionStorage が空（直リンク・リロード・別タブ）の場合はAPIから復元する
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    setIsLightPlan(loadSession()?.diagnosisType === "light");
-
     if (results.length > 0) return;
     let cancelled = false;
     const restoreFromApi = async () => {
@@ -137,6 +135,9 @@ const MismatchResultPage = () => {
     return entries;
   }, [results]);
 
+  // ライト診断はワースト3まで（選択画面の案内どおり）。以前は端末の途中保存から判定していたので、
+  // 別の端末や保存が消えたあとは5件に戻っていた。診断結果そのものに持たせた種別で判定する
+  const isLightPlan = diagnosis?.diagnosisType === "light";
   const visibleEntries = isLightPlan ? worstEntries.slice(0, 3) : worstEntries.slice(0, 5);
   const worst1 = visibleEntries[0] ?? null;
   const rest = visibleEntries.slice(1);

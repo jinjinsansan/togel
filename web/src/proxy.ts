@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 
 import type { NextRequest } from "next/server";
 import { env } from "@/lib/env";
-import { loginUrlFor } from "@/lib/auth/next-path";
+import { loginUrlFor, NEXT_PARAM, safeNextPath } from "@/lib/auth/next-path";
 
 const createSupabaseMiddlewareClient = (req: NextRequest, res: NextResponse) =>
   createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
@@ -20,7 +20,7 @@ const createSupabaseMiddlewareClient = (req: NextRequest, res: NextResponse) =>
             sameSite: (options?.sameSite as "lax" | "strict" | "none" | undefined) || "lax",
             secure: process.env.NODE_ENV === "production",
             httpOnly: options?.httpOnly !== false,
-            maxAge: options?.maxAge || 60 * 60 * 24 * 7, // 7 days default
+            maxAge: options?.maxAge ?? 60 * 60 * 24 * 7, // 7 days default（0 は削除の指示なので残す）
           };
 
           req.cookies.set(name, value);
@@ -52,6 +52,13 @@ export async function proxy(req: NextRequest) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
+
+  // ログイン済みで /login を開いたら、行き先へそのまま進める（フォームを出しても意味がない）。
+  // /login/update-password は再設定のセッションで開く画面なので対象外
+  if (req.nextUrl.pathname === "/login" && session) {
+    const next = safeNextPath(req.nextUrl.searchParams.get(NEXT_PARAM));
+    return NextResponse.redirect(new URL(next, req.url));
+  }
 
   // Protected routes
   const protectedRoutes = ["/mypage", "/admin", "/michelle", "/diagnosis", "/profile", "/result"];
