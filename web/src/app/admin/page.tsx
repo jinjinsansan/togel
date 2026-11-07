@@ -350,7 +350,7 @@ export default function AdminPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="名前、エリア、LINE ID など"
+                  placeholder="名前、エリアなど"
                   className="pl-10"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
@@ -746,7 +746,7 @@ export default function AdminPage() {
                   <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
                     <div className="flex items-center gap-1">
                       <ClipboardCopy className="h-3 w-3" />
-                      {selectedUser.lineUserId || "LINE未連携"}
+                      {selectedUser.id}
                     </div>
                     <div className="flex items-center gap-1">
                       <CalendarClock className="h-3 w-3" />

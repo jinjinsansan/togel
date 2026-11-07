@@ -187,15 +187,33 @@ export default function ProfileEditPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    // users.nickname は varchar(20)。超えると users の更新だけが黙って失敗し、
+    // 判定画面などに出るニックネームが古いまま残っていた
+    if (trimmedFullName.length > 20) {
+      setNameError("20文字以内で入力してください");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setNameError(null);
     setSaving(true);
 
     try {
-      const sanitizedLinks = (Object.keys(socialLinks) as (keyof SocialLinks)[]).reduce((acc, key) => {
-        const trimmed = socialLinks[key].trim();
-        if (trimmed) acc[key] = trimmed;
-        return acc;
-      }, {} as Partial<SocialLinks>);
+      // social_links には SNS の URL（文字列）のほかに、マイページの「運命モード」の
+      // prankActive（真偽値）も同居している。以前は全キーに .trim() をかけていたので、
+      // 運命モードを一度でも触った人はプロフィールが保存できなくなり、保存できても
+      // 運命モードの設定が消えていた。文字列だけを整え、それ以外はそのまま残す
+      const sanitizedLinks = Object.entries(socialLinks as Record<string, unknown>).reduce(
+        (acc, [key, value]) => {
+          if (typeof value === "string") {
+            const trimmed = value.trim();
+            if (trimmed) acc[key] = trimmed;
+          } else if (value !== undefined && value !== null) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, unknown>,
+      );
 
       const genderToPersist = initialGender ?? gender;
 
@@ -374,6 +392,7 @@ export default function ProfileEditPage() {
                     if (nameError && e.target.value.trim().length >= 2) setNameError(null);
                   }}
                   placeholder="Togel太郎"
+                  maxLength={20}
                   className={nameError ? inputErrorClass : inputClass}
                 />
                 {nameError && (

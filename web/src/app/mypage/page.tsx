@@ -255,14 +255,19 @@ export default function MyPage() {
     void fetchData();
   }, [supabase, hydrateProfile, fetchNotifications, fetchHistory]);
 
-  const handleNotificationRead = async (id: string, isRead: boolean) => {
-    if (isRead) return;
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-    await fetch("/api/notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notificationId: id }),
-    });
+  const handleNotificationRead = async (id: string, isRead: boolean, url?: unknown) => {
+    if (!isRead) {
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+      await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationId: id }),
+      }).catch(() => null);
+    }
+    // ランクイン通知などはリンク先を持っている。サイト内のパスだけ開く（外部へは飛ばさない）
+    if (typeof url === "string" && url.startsWith("/") && !url.startsWith("//")) {
+      window.location.assign(url);
+    }
   };
 
   const handlePrankToggle = async (checked: boolean) => {
@@ -332,7 +337,10 @@ export default function MyPage() {
     if (!res.ok) return null;
     const { code, enabled } = await res.json();
     if (!enabled || !code) return null;
-    const referralUrl = new URL(window.location.origin);
+    // 招待された人を2人の判定画面へ直接連れていく。以前はトップ（/?c=）に着地し、
+    // 案内している「2人の合わなさ」の画面にどこからもたどり着けなかった。
+    // ?c= は proxy がどのパスでも cookie に残すので、運命モードの紐付けはそのまま効く
+    const referralUrl = new URL("/mismatch/pair", window.location.origin);
     referralUrl.searchParams.set("c", code);
     // LINEのトークに貼られる前提。LINE内で開かれると紹介が紐付かないので外に出す
     return withExternalBrowserParam(referralUrl).toString();
@@ -485,12 +493,26 @@ export default function MyPage() {
                       {entry.mode === "light" ? "ライト10問" : "スタンダード40問"}
                     </div>
                   </div>
-                  <Link
-                    href="/result"
-                    className={`flex-none text-[11px] font-black ${i === 0 ? "text-hazard" : "text-txt-subtle"} hover:text-white`}
-                  >
-                    結果
-                  </Link>
+                  {/*
+                    過去の診断ごとの結果画面は無い（/result は常に最新）。以前は全行が /result に
+                    飛び、過去の行を押しても最新の結果が出ていた。最新の行だけ結果へ、
+                    それ以外はそのときのタイプの攻略ページへ
+                  */}
+                  {i === 0 ? (
+                    <Link
+                      href="/result"
+                      className="flex-none text-[11px] font-black text-hazard hover:text-white"
+                    >
+                      結果
+                    </Link>
+                  ) : entry.togelTypeId ? (
+                    <Link
+                      href={`/coaching/${entry.togelTypeId}`}
+                      className="flex-none text-[11px] font-black text-txt-subtle hover:text-white"
+                    >
+                      タイプ
+                    </Link>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -516,7 +538,7 @@ export default function MyPage() {
                 <button
                   key={notification.id}
                   type="button"
-                  onClick={() => handleNotificationRead(notification.id, notification.read)}
+                  onClick={() => handleNotificationRead(notification.id, notification.read, notification.metadata?.url)}
                   className="flex gap-[11px] text-left"
                 >
                   <span
@@ -589,7 +611,7 @@ export default function MyPage() {
                   </span>
                   <span className="flex-1 text-[12.5px] font-bold">{type.typeName}</span>
                   <Link
-                    href="/coaching"
+                    href={`/coaching/${type.id}`}
                     className="flex-none text-[10px] font-black text-hazard hover:text-white"
                   >
                     攻略
@@ -628,7 +650,7 @@ export default function MyPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-[12.5px] font-bold">お知らせメール</div>
-                  <div className="mt-[2px] text-[10px] text-txt-subtle">新機能・タイプ別の配信</div>
+                  <div className="mt-[2px] text-[10px] text-txt-subtle">運営からのお知らせ（新機能など）</div>
                 </div>
                 <Switch checked={newsletterEnabled} onCheckedChange={handleNewsletterToggle} />
               </div>

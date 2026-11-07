@@ -71,7 +71,10 @@ export default function AdminNotificationsPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to send");
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || "Failed to send");
+      }
 
       alert("配信が完了しました");
       setTitle("");
@@ -80,7 +83,8 @@ export default function AdminNotificationsPage() {
       fetchHistory(); // Refresh history
     } catch (error) {
       console.error(error);
-      alert("配信に失敗しました");
+      const message = error instanceof Error && error.message !== "Failed to send" ? `：${error.message}` : "";
+      alert(`配信に失敗しました${message}`);
     } finally {
       setSending(false);
     }
