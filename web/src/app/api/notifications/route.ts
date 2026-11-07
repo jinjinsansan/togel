@@ -3,11 +3,12 @@ import { cookies } from "next/headers";
 
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getVerifiedSession } from "@/lib/supabase/auth-helpers";
 
 export async function GET() {
   const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const { data: { session } } = await supabaseAuth.auth.getSession();
+  const session = await getVerifiedSession(supabaseAuth);
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
   // Mark as read logic
   const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const { data: { session } } = await supabaseAuth.auth.getSession();
+  const session = await getVerifiedSession(supabaseAuth);
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

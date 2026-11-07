@@ -148,6 +148,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Failed to process One.lat webhook", error);
+    // 処理に失敗したイベントは記録を消して、One.lat の再送でもう一度処理させる。
+    // 残すと再送が「処理済み（duplicate）」として捨てられ、支払い済みなのにポイントが付かない。
+    // 付与そのものは注文ごとの取引の有無と部分ユニークインデックスで冪等なので、二重付与にはならない
+    const { error: cleanupError } = await supabaseAdmin
+      .from("point_webhook_events")
+      .delete()
+      .eq("event_id", body.id);
+    if (cleanupError) console.error("Failed to release webhook event for retry", cleanupError);
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 }

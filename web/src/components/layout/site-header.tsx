@@ -8,7 +8,6 @@ import { Menu, X, LogOut, ShieldCheck } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
-import { LoginButton } from "@/components/auth/login-button";
 import { Button } from "@/components/ui/button";
 import { TogelMark } from "@/components/brand/togel-mark";
 import { MICHELLE_AI_ENABLED, MICHELLE_ATTRACTION_AI_ENABLED } from "@/lib/feature-flags";
@@ -221,9 +220,14 @@ export const SiteHeader = () => {
                   <div className="space-y-4">
                     {!user ? (
                       <>
-                        <LoginButton />
+                        <Link
+                          href="/login?mode=login"
+                          className="flex min-h-[48px] w-full items-center justify-center rounded-full border border-line text-sm font-bold text-white transition-colors hover:bg-white/5"
+                        >
+                          ログイン
+                        </Link>
                         <p className="text-center text-xs text-txt-subtle">
-                          ログインして診断結果を保存
+                          メールアドレスで登録・ログイン
                         </p>
                       </>
                     ) : (
@@ -334,7 +338,12 @@ export const SiteHeader = () => {
               {/* Desktop Auth */}
               <div className="hidden shrink-0 items-center gap-2 xl:flex">
                 {!user ? (
-                  <LoginButton />
+                  <Link
+                    href="/login?mode=login"
+                    className="whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-bold text-txt-subtle transition-colors hover:bg-white/5 hover:text-white"
+                  >
+                    ログイン
+                  </Link>
                 ) : (
                   <>
                     {accountNavItems.map((item) => (

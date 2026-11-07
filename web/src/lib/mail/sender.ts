@@ -49,7 +49,7 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
   }
 };
 
-const fetchAllUserEmails = async (): Promise<string[]> => {
+const fetchAllUserEmails = async (excludeIds: Set<string> = new Set()): Promise<string[]> => {
   const supabase = createSupabaseAdminClient();
   const emails: string[] = [];
   let page = 1;
@@ -65,7 +65,7 @@ const fetchAllUserEmails = async (): Promise<string[]> => {
 
     const pageUsers = data?.users ?? [];
     pageUsers.forEach((user) => {
-      if (user.email) {
+      if (user.email && !excludeIds.has(user.id)) {
         emails.push(user.email);
       }
     });
@@ -78,6 +78,44 @@ const fetchAllUserEmails = async (): Promise<string[]> => {
   }
 
   return emails;
+};
+
+/**
+ * メールアドレスから auth のユーザーIDを引く（管理者の個別送信用）。見つからなければ null。
+ */
+export const findUserIdByEmail = async (email: string): Promise<string | null> => {
+  const supabase = createSupabaseAdminClient();
+  const target = email.trim().toLowerCase();
+  let page = 1;
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: PAGE_SIZE });
+    if (error) {
+      console.error("Failed to list users for email lookup:", error);
+      return null;
+    }
+    const users = data?.users ?? [];
+    const hit = users.find((user) => user.email?.toLowerCase() === target);
+    if (hit) return hit.id;
+    if (users.length < PAGE_SIZE) return null;
+    page += 1;
+  }
+};
+
+/**
+ * マイページの「お知らせメール」をオフにした人（profiles.notification_settings.newsletter === false）。
+ * 全体送信のメールから外す。列が無い環境では誰も外さない（送信自体は止めない）。
+ */
+const fetchOptedOutUserIds = async (): Promise<Set<string>> => {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, notification_settings")
+    .eq("notification_settings->>newsletter", "false");
+  if (error) {
+    console.warn("Could not read notification opt-outs; sending to everyone:", error.message);
+    return new Set();
+  }
+  return new Set((data ?? []).map((row) => row.id as string));
 };
 
 /**
@@ -144,7 +182,7 @@ export const broadcastNotification = async (
       console.warn("Could not find email for user:", params.targetUserId);
     }
   } else {
-    const allEmails = await fetchAllUserEmails();
+    const allEmails = await fetchAllUserEmails(await fetchOptedOutUserIds());
     for (const email of allEmails) {
       // Avoid overwhelming Resend in tiny burst; sequential send is safer for now.
       await sendWithTracking(email);

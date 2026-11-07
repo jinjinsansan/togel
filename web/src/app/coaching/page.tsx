@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { GroupBadge } from "@/components/brand/group-badge";
 import { BoardTypeCards } from "@/components/coaching/board-view";
-import { trackLineCta } from "@/lib/analytics/events";
+import { NewsletterCta } from "@/components/newsletter/newsletter-cta";
 import { personalityTypes, TYPE_GROUP_ORDER, typesInGroup, typeToken } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import { BOARD_ANGLES, boardTypeCount, cellContent, parseCellKey } from "@/lib/coaching/board";
@@ -15,7 +15,6 @@ import { loadBoardState, saveBoardState } from "@/lib/coaching/progress";
 import type { CoachingBoardState } from "@/lib/coaching/progress";
 import { loadSession } from "@/lib/diagnosis/session";
 import type { MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosis";
-import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
 
 /**
  * 地雷回避ガイド。
@@ -30,7 +29,7 @@ import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
  * 別の数に差し替えるのではなく、**無いものを数える図ごと消した**。
  * 残したのは「読むものへの入口」と本文。
  *
- * LINE配信のリンク（`?cell=`）はここに着地して本文を開く。**印は付けない。**
+ * メルマガのリンク（`?cell=`）はここに着地して本文を開く。**印は付けない。**
  *
  * 意匠はデザイン一式の「地雷回避ガイド」に合わせる（ライト面＝救いの画面）。
  */
@@ -58,9 +57,9 @@ const buildBoardState = (): CoachingBoardState | null => {
   const plan = loadSession()?.diagnosisType === "full" ? "full" : "light";
   const limit = boardTypeCount();
 
-  // 入口の3タイプは**型の固定リスト**（badCompatibleTypes）。LINE配信と同じもの。
+  // 入口の3タイプは**型の固定リスト**（badCompatibleTypes）。メルマガと同じもの。
   // 以前は照合結果（実際に照合した相手）で上書きしていたため、画面の3タイプと
-  // LINEで届く3タイプが食い違い得た。2つは別の概念で、ここは型の取扱説明書の場所。
+  // メルマガで届く3タイプが食い違い得た。2つは別の概念で、ここは型の取扱説明書の場所。
   // 実際に照合した相手の話は /result/mismatch の役割。
   const primary = (findExtended(selfTypeId)?.badCompatibleTypes ?? []).slice(0, limit);
 
@@ -122,14 +121,14 @@ export default function CoachingPage() {
     const state = buildBoardState();
     setBoard(state);
 
-    // LINE配信のリンク（?cell=<typeId>:<angle>）で来たら、その角度の本文を開く。
+    // メルマガのリンク（?cell=<typeId>:<angle>）で来たら、その角度の本文を開く。
     // **「歩いた」印は付けない**（数えるものが無くなったので、印だけ残すと
     //   意味の無い状態が残る）。開くところまで。
     //
     // 🔴 **利用者のリストに入っているかは見ない。** タイプが24種のどれかで、
     // 角度が5つのどれかなら、必ず開く。以前は `state.typeIds.includes()` で弾いて
-    // いたため、自分たちのLINEが送ったリンクが開かないことがあった。
-    // LINE のアプリ内ブラウザで開くと保存済みの診断が無く、そもそも state が null。
+    // いたため、自分たちが送ったリンクが開かないことがあった。
+    // メールアプリの中のブラウザで開くと保存済みの診断が無く、そもそも state が null。
     const requested = parseCellKey(new URLSearchParams(window.location.search).get("cell"));
     if (requested && findExtended(requested.typeId)) {
       setOpen(requested);
@@ -182,9 +181,8 @@ export default function CoachingPage() {
     </div>
   );
 
-  const broadcastOn = isBroadcastEnabled();
 
-  /** 開いている本文。診断の有無によらず出す（LINE 配信の着地先） */
+  /** 開いている本文。診断の有無によらず出す（メルマガの着地先） */
   const openPanel =
     openType && openContent ? (
 
@@ -297,7 +295,7 @@ export default function CoachingPage() {
       <section className="px-5.5 pb-[34px] pt-3.5">
         <div className="mx-auto flex max-w-[1120px] flex-col gap-3.5">
           {/*
-            診断が無いまま着地したとき（LINE のアプリ内ブラウザ等）は、入口の一覧は
+            診断が無いまま着地したとき（メールアプリの中のブラウザ等）は、入口の一覧は
             出せないが、**開いた本文だけは出す**。以前はパネルが下の hasTypes の内側に
             あったため、診断が無いと本文が一切出なかった。
           */}
@@ -419,37 +417,12 @@ export default function CoachingPage() {
             </p>
           </div>
 
-          {/* LINE */}
-          <div className="grid items-center gap-[18px] rounded-hero bg-navy p-[22px] sm:grid-cols-2">
-            <div>
-              {/*
-                約束は、配信が有効なときだけ出す。止まっているのに「届く」と言うと、
-                登録しても何も来ない。
-
-                以前ここにあった、リンクを開くと盤が進むという一文は外した。
-                数える盤を撤去したので、指す先が無くなっていた。
-              */}
-              {broadcastOn && (
-                <>
-                  <div className="text-[11px] font-black tracking-[0.22em] text-relief">
-                    週に1通、全15回
-                  </div>
-                  <div className="mt-2 text-[18px] font-black leading-[1.5] text-white">
-                    1通目から、踏まない歩き方だけ送ります
-                  </div>
-                </>
-              )}
-            </div>
-            <a
-              href="https://lin.ee/T7OYAGQ"
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => trackLineCta("coaching")}
-              className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-[15px] font-black text-white transition-opacity hover:opacity-90"
-            >
-              {broadcastOn ? "1通目を受け取る" : "公式LINEに登録する"}
-            </a>
-          </div>
+          {/* メルマガ */}
+          <NewsletterCta
+            place="coaching"
+            source="newsletter_page"
+            heading="地雷の踏み方・避け方を、メールで受け取る"
+          />
         </div>
       </section>
     </div>

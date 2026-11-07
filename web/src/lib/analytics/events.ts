@@ -12,7 +12,7 @@ import { track } from "@vercel/analytics";
  * イベント名にサービス外の語彙を持ち込まない（リポジトリは公開されている）。
  */
 
-type Surface = "web" | "liff";
+type Surface = "web";
 type Plan = "light" | "full";
 
 /** 診断を開始した（最初の設問が出た） */
@@ -31,10 +31,13 @@ export const trackShareLanding = (mode: "type" | "mismatch") => {
 };
 
 /**
- * LINEの登録導線を押した（登録の成否はこちらでは分からない）。
- * `result_story` はストーリーズの締め（15枚目）のボタン。/result の下にある既存の
- * LINE 導線（`result`）と分けて数える。同じ値にすると、どちらが効いたか分からない。
+ * メルマガの登録導線を押した。`subscribed` は実際に購読できたとき、`login` は未ログインで
+ * 登録画面へ進んだとき。
+ * `result_story` はストーリーズの締めのボタン。/result の下にある導線（`result`）と分けて数える。
+ * 同じ値にすると、どちらが効いたか分からない。
  */
-export const trackLineCta = (place: "result" | "result_story" | "mismatch" | "coaching") => {
-  track("line_cta_click", { place });
+export type NewsletterPlace = "result" | "result_story" | "mismatch" | "coaching" | "top" | "newsletter_page" | "mypage";
+
+export const trackNewsletterCta = (place: NewsletterPlace, outcome: "subscribed" | "login") => {
+  track("newsletter_cta_click", { place, outcome });
 };

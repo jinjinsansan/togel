@@ -101,7 +101,7 @@ export default function PairMismatchPage() {
         <div className="flex flex-wrap justify-center gap-3">
           {state.code === 401 ? (
             <Link
-              href="/login"
+              href="/login?next=%2Fmismatch%2Fpair"
               className="flex min-h-[52px] items-center rounded-full bg-hazard px-7 text-sm font-black text-ink shadow-cta"
             >
               ログインする

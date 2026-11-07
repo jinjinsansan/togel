@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { loadSession } from "@/lib/diagnosis/session";
-import { trackLineCta } from "@/lib/analytics/events";
 import { personalityTypes } from "@/lib/personality";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import { storyLabelHref } from "@/lib/share/story-label";
 import { lineShareUrl, mismatchPostText, xIntentUrl } from "@/lib/share/text";
 import { BigFiveScores, MismatchResult, PersonalityTypeDefinition } from "@/types/diagnosis";
-import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
+import { NewsletterCta } from "@/components/newsletter/newsletter-cta";
 
 type LatestDiagnosis = {
+  /** 古い保存には無い。無ければフル版として扱う */
+  diagnosisType?: "light" | "full";
   bigFiveScores: BigFiveScores;
   personalityType: PersonalityTypeDefinition;
   narrative: string;
@@ -77,14 +77,11 @@ const MismatchResultPage = () => {
     }
   });
 
-  const [isLightPlan, setIsLightPlan] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   // sessionStorage が空（直リンク・リロード・別タブ）の場合はAPIから復元する
   const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
-    setIsLightPlan(loadSession()?.diagnosisType === "light");
-
     if (results.length > 0) return;
     let cancelled = false;
     const restoreFromApi = async () => {
@@ -138,6 +135,9 @@ const MismatchResultPage = () => {
     return entries;
   }, [results]);
 
+  // ライト診断はワースト3まで（選択画面の案内どおり）。以前は端末の途中保存から判定していたので、
+  // 別の端末や保存が消えたあとは5件に戻っていた。診断結果そのものに持たせた種別で判定する
+  const isLightPlan = diagnosis?.diagnosisType === "light";
   const visibleEntries = isLightPlan ? worstEntries.slice(0, 3) : worstEntries.slice(0, 5);
   const worst1 = visibleEntries[0] ?? null;
   const rest = visibleEntries.slice(1);
@@ -501,32 +501,8 @@ const MismatchResultPage = () => {
           </div>
         </div>
 
-        {/* LINE友だち追加CTA（診断完了直後が追加率のピーク） */}
-        <div className="mx-auto mt-6 grid max-w-[1120px] items-center gap-[18px] rounded-[18px] bg-navy p-5.5 sm:grid-cols-2">
-          <div>
-            <div className="text-[11px] font-black tracking-[0.22em] text-relief">
-              LINE
-            </div>
-            <div className="mt-2 text-[19px] font-black leading-normal text-white">
-              あなたが最も踏みやすい地雷は、3タイプ分あります
-            </div>
-            {/* 約束は、配信が有効なときだけ出す（止まっているのに「届く」と言わない） */}
-            {isBroadcastEnabled() && (
-              <p className="mt-2 text-xs leading-[1.9] text-[#b7c6dd]">
-                週に1通、全15回。1通目から、踏まない歩き方だけ送ります。
-              </p>
-            )}
-          </div>
-          <a
-            href="https://lin.ee/T7OYAGQ"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackLineCta("mismatch")}
-            className="flex min-h-[54px] items-center justify-center rounded-[14px] bg-linegreen text-sm font-black text-white transition-opacity hover:opacity-90"
-          >
-            {isBroadcastEnabled() ? "1通目を受け取る" : "公式LINEに登録する"}
-          </a>
-        </div>
+        {/* メルマガ登録CTA（診断完了直後が登録率のピーク） */}
+        <NewsletterCta place="mismatch" source="result" className="mx-auto mt-6 max-w-[1120px]" />
       </section>
 
       <div className="bg-base px-5.5 pb-[26px] pt-5 text-center">

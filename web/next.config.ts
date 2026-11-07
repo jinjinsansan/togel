@@ -1,12 +1,13 @@
-const { broadcastStatus } = require("./src/lib/line/broadcast-status.js");
+import type { NextConfig } from "next";
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // LINE週次配信が有効かを、**true/false だけ**画面へ渡す（秘密の値は渡さない）。
-  // 判定は broadcast-status.js の1か所。cron ルートも同じ関数を使う。
+import { newsletterStatus } from "./src/lib/newsletter/status";
+
+const nextConfig: NextConfig = {
+  // メルマガ配信が有効かを、**true/false だけ**画面へ渡す（秘密の値は渡さない）。
+  // 判定は src/lib/newsletter/status.ts の1か所。cron ルートも同じ関数を使う。
   // 無効のあいだは画面が「週1通」「全15通」を約束しないようにするため。
   env: {
-    NEXT_PUBLIC_BROADCAST_ENABLED: String(broadcastStatus(process.env).enabled),
+    NEXT_PUBLIC_NEWSLETTER_ENABLED: String(newsletterStatus(process.env).enabled),
   },
   images: {
     remotePatterns: [
@@ -53,4 +54,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

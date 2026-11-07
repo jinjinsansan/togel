@@ -15,6 +15,7 @@ import {
 import type { Answer, BigFiveScores } from "@/types/diagnosis";
 import type { ExtendedPersonalityTypeDefinition } from "@/lib/personality/definitions";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getVerifiedSession } from "@/lib/supabase/auth-helpers";
 
 /**
  * 友達ミスマッチ診断（2人の「合わなさ」を告げる）
@@ -138,9 +139,7 @@ const buildSurvivalGuide = (me: DiagnosisSnapshot, friend: DiagnosisSnapshot): s
 export const GET = async (request: Request) => {
   const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const {
-    data: { session },
-  } = await supabaseAuth.auth.getSession();
+  const session = await getVerifiedSession(supabaseAuth);
 
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "togel_age_verified_v1";
@@ -10,21 +11,21 @@ const STORAGE_KEY = "togel_age_verified_v1";
  * /privacy・/terms・/tokushoho など法務ページはブロックしない。
  * 「18歳未満です」選択時は同じモーダル内でメッセージを差し替える（別ページに飛ばさない）。
  */
+/** 法務・情報ページは年齢確認なしで閲覧可能にする。/dev は開発専用のプレビュー（本番では404） */
+const EXEMPT_PATHS = ["/terms", "/privacy", "/tokushoho", "/about", "/dev/"];
+
 export function AgeGate() {
+  // 確認済みか（localStorage）。免除ページかどうかとは別に持つ。
+  // 以前は「最初に開いたページが免除ページなら確認済み」にしていたため、/about から入って
+  // リンクで診断へ移ると、一度もゲートが出なかった（レイアウトは画面遷移で作り直されない）
   const [verified, setVerified] = useState<boolean | null>(null);
   const [rejected, setRejected] = useState(false);
+  const pathname = usePathname();
+  const exempt = EXEMPT_PATHS.some((p) => (pathname ?? "").startsWith(p));
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    // 法務・情報ページは年齢確認なしで閲覧可能にする
-    // /dev は開発専用のプレビュー（本番では404）。ゲートが覆うと撮影できない
-    const exemptPaths = ["/terms", "/privacy", "/tokushoho", "/about", "/dev/"];
-    if (exemptPaths.some((p) => window.location.pathname.startsWith(p))) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSRとのhydration差異を避けるためクライアント側でのみ判定する
-      setVerified(true);
-      return;
-    }
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- SSRとのhydration差異を避けるためクライアント側でのみ判定する
       setVerified(window.localStorage.getItem(STORAGE_KEY) === "true");
     } catch {
       setVerified(false);
@@ -40,8 +41,8 @@ export function AgeGate() {
     setVerified(true);
   };
 
-  // 判定中、または確認済みなら何も表示しない
-  if (verified === null || verified) return null;
+  // 免除ページ・判定中・確認済みなら何も表示しない
+  if (exempt || verified === null || verified) return null;
 
   return (
     <div

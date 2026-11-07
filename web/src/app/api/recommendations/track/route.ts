@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getVerifiedSession } from "@/lib/supabase/auth-helpers";
 
 const ALLOWED_SOURCES = new Set(["result_page", "mypage"]);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -26,9 +27,7 @@ export async function POST(request: Request) {
   let userId: string | null = null;
   try {
     const supabase = createSupabaseRouteClient(await cookies());
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const session = await getVerifiedSession(supabase);
     userId = session?.user?.id ?? null;
   } catch (error) {
     console.error("Failed to resolve session", error);

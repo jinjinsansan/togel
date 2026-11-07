@@ -1178,6 +1178,8 @@ export const generateMatchingResults = async (
 export const generateDiagnosisResult = (
   payload: DiagnosisPayload,
 ): {
+  /** ライト（10問）かフル（40問）か。結果画面がワーストを何件出すかに使う */
+  diagnosisType: DiagnosisPayload["diagnosisType"];
   bigFiveScores: BigFiveScores;
   personalityType: PersonalityTypeDefinition;
   narrative: string;
@@ -1189,6 +1191,7 @@ export const generateDiagnosisResult = (
   const label = getTogelLabel(type.id);
   const simplifiedNarrative = `${label}のあなたは${type.description}`;
   return {
+    diagnosisType: payload.diagnosisType,
     bigFiveScores: scores,
     personalityType: snapshotPersonalityType(type),
     narrative: simplifiedNarrative,
@@ -1246,11 +1249,21 @@ export const generateMismatchingResults = async (
     } satisfies MismatchResult;
   });
 
-  return computed
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map((item, index) => ({
-      ...item,
-      ranking: index + 1,
-    }));
+  // 画面は「合わない5タイプ」をタイプ単位で出す。プロフィール単位で上位5件を切ると、
+  // 同じタイプの人が上位に重なったとき、重複を除いた画面では2〜4件しか出なかった。
+  // タイプごとに最も合わない1人だけを残してから5件にする。
+  const seenTypes = new Set<string>();
+  const distinct: typeof computed = [];
+  for (const item of [...computed].sort((a, b) => b.score - a.score)) {
+    const typeKey = item.personalityTypes.profile?.id ?? `profile:${item.profile.id}`;
+    if (seenTypes.has(typeKey)) continue;
+    seenTypes.add(typeKey);
+    distinct.push(item);
+    if (distinct.length === 5) break;
+  }
+
+  return distinct.map((item, index) => ({
+    ...item,
+    ranking: index + 1,
+  }));
 };

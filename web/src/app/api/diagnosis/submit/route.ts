@@ -10,6 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
 import { getRouteUser, SupabaseAuthUnavailableError } from "@/lib/supabase/auth-helpers";
 import { MatchingResult } from "@/types/diagnosis";
+import { syncNewsletterAfterDiagnosis } from "@/lib/newsletter/db";
 
 type NotificationPayload = {
   user_id: string;
@@ -30,8 +31,21 @@ const schema = z.object({
       })
     )
     .min(1),
-  lineUserId: z.string().optional(),
 });
+
+/**
+ * 診断で選んだ性別を public.users に残す。結果を後から計算し直すとき
+ * （/api/diagnosis/latest）はここを見る。既存の行は作成時の値のままだったので、
+ * 選び直した性別が反映されていなかった。
+ */
+const syncGender = async (
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  gender: "male" | "female",
+) => {
+  const { error } = await supabase.from("users").update({ gender }).eq("id", userId);
+  if (error) console.warn("[Diagnosis submit] failed to sync gender", error.message);
+};
 
 const ensureUserRecord = async (
   supabase: ReturnType<typeof createSupabaseAdminClient>,
@@ -51,6 +65,7 @@ const ensureUserRecord = async (
       .maybeSingle();
 
     if (linked?.id) {
+      await syncGender(supabase, linked.id, params.gender);
       return linked.id;
     }
 
@@ -67,6 +82,7 @@ const ensureUserRecord = async (
           .update({ auth_user_id: params.authUserId })
           .eq("id", data.id);
       }
+      await syncGender(supabase, data.id, params.gender);
       return data.id;
     }
 
@@ -343,32 +359,20 @@ export const POST = async (request: Request) => {
       })();
     }
 
-    // LINE Bot経由の診断の場合、結果をLINEに通知
-    if (parsed.data.lineUserId) {
-      (async () => {
-        try {
-          const { updateLineUserDiagnosis } = await import("@/lib/line/db");
-          const { pushMessage } = await import("@/lib/line/client");
-          const { diagnosisResultMessages } = await import("@/lib/line/messages");
-
-          await updateLineUserDiagnosis({
-            lineUserId: parsed.data.lineUserId!,
-            gender: parsed.data.userGender,
-            togelType: diagnosisResult.personalityType.id,
-            diagnosisType: parsed.data.diagnosisType,
-            diagnosisResult: diagnosisResult as unknown as Record<string, unknown>,
-            bigFiveScores: diagnosisResult.bigFiveScores as unknown as Record<string, number>,
-          });
-
-          const resultMsgs = diagnosisResultMessages(
-            diagnosisResult.bigFiveScores,
-            diagnosisResult.personalityType,
-          );
-          await pushMessage(parsed.data.lineUserId!, resultMsgs);
-        } catch (lineError) {
-          console.error("[LINE Notify] Failed to send diagnosis result:", lineError);
-        }
-      })();
+    // メルマガ: 購読中なら宛先タイプを更新し、登録時に同意した人はここで購読を作る。
+    // 失敗しても診断結果は返す（メルマガは本筋ではない）
+    if (user?.id) {
+      try {
+        await syncNewsletterAfterDiagnosis({
+          userId: user.id,
+          email: user.email,
+          emailConfirmed: Boolean(user.email_confirmed_at),
+          optedInAtSignup: user.user_metadata?.newsletter_opt_in === true,
+          typeId,
+        });
+      } catch (newsletterError) {
+        console.error("[Newsletter] sync after diagnosis failed", newsletterError);
+      }
     }
 
     return NextResponse.json({

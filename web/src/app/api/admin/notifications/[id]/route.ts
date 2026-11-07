@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { requireAdminUser } from "@/lib/admin/check-admin";
 
-const checkAdmin = async () => {
-  const cookieStore = await cookies();
-  const supabase = createSupabaseRouteClient(cookieStore);
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  const allowedEmails = ["goldbenchan@gmail.com", "kusanokiyoshi1@gmail.com"];
-  if (!session?.user?.email || !allowedEmails.includes(session.user.email)) {
-    return false;
-  }
-  return true;
-};
+// getSession() は cookie を検証しないので、管理者判定には使わない（偽造 cookie で突破されていた）
+const checkAdmin = async () => Boolean(await requireAdminUser());
 
 export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;

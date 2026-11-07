@@ -3,15 +3,14 @@ import { cookies } from "next/headers";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseRouteClient } from "@/lib/supabase/route-client";
+import { getVerifiedSession } from "@/lib/supabase/auth-helpers";
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export async function GET(request: Request) {
   const cookieStore = await cookies();
   const supabaseAuth = createSupabaseRouteClient(cookieStore);
-  const {
-    data: { session },
-  } = await supabaseAuth.auth.getSession();
+  const session = await getVerifiedSession(supabaseAuth);
 
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

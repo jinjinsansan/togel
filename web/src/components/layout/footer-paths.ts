@@ -7,7 +7,6 @@
  *
  * 出さない理由は、ページの側にある:
  * - /diagnosis … 回答中。下に余計なものを置かない
- * - /liff … LINE の中で開く画面
  * - /admin … 管理画面
  * - /login … ログインの1画面
  * - /michelle/chat・/michelle/attraction/chat … 画面の高さいっぱいのチャット
@@ -18,7 +17,6 @@
  */
 export const FOOTER_EXCLUDED_PATHS = [
   "/diagnosis",
-  "/liff",
   "/admin",
   "/login",
   "/michelle/chat",

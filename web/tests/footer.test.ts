@@ -30,7 +30,7 @@ const pageRoutes = (dir = APP, prefix = ""): string[] =>
   });
 
 test("フッターにお問い合わせと、特商法・プライバシー・利用規約のリンクがある", () => {
-  assert.ok(FOOTER.includes("https://lin.ee/T7OYAGQ") && FOOTER.includes("お問い合わせ"), "お問い合わせ");
+  assert.ok(FOOTER.includes("mailto:support@to-gel.com") && FOOTER.includes("お問い合わせ"), "お問い合わせ");
   for (const href of ["/tokushoho", "/privacy", "/terms"]) assert.ok(FOOTER.includes(`"${href}"`), href);
 });
 
@@ -53,7 +53,7 @@ test("除外リストに無いページには、すべてフッターが出る�
 });
 
 test("除外したページにはフッターが出ない（前方一致は / の区切りでだけ）", () => {
-  for (const route of ["/diagnosis/select", "/diagnosis/sample", "/liff/diagnosis/result", "/admin/points", "/login", "/michelle/chat", "/michelle/attraction/chat", "/dev/preview/story"]) {
+  for (const route of ["/diagnosis/select", "/diagnosis/sample", "/admin/points", "/login", "/michelle/chat", "/michelle/attraction/chat", "/dev/preview/story"]) {
     assert.equal(showsFooter(route), false, route);
   }
   assert.equal(showsFooter("/loginx"), true);

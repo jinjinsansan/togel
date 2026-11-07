@@ -6,7 +6,7 @@ import { GroupBadge } from "@/components/brand/group-badge";
 import { getTypeApproachGuide } from "@/lib/coaching/translations";
 import { personalityTypes, typeToken } from "@/lib/personality";
 import { serializeJsonLd, typeArticleJsonLd } from "@/lib/seo/json-ld";
-import { isBroadcastEnabled } from "@/lib/line/broadcast-enabled";
+import { NewsletterCta } from "@/components/newsletter/newsletter-cta";
 
 /**
  * タイプ別の攻略ページ（公開）。
@@ -191,30 +191,13 @@ const CoachingTypePage = async ({ params }: { params: Promise<Params> }) => {
           </Link>
         </div>
 
-        {/* LINE */}
-        <div className="mx-auto mt-3 grid max-w-[1120px] items-center gap-4 rounded-card border border-lightline bg-white px-5.5 py-5 sm:grid-cols-2">
-          <div>
-            {/* 約束は、配信が有効なときだけ出す（止まっているのに「届く」と言わない） */}
-            {isBroadcastEnabled() && (
-              <>
-                <div className="text-[11px] font-black tracking-[0.22em] text-relief-ink">
-                  毎週1通、全15回
-                </div>
-                <div className="mt-[7px] text-[15px] font-black leading-[1.5] text-navy">
-                  1通目から、踏まない歩き方だけ送ります
-                </div>
-              </>
-            )}
-          </div>
-          <a
-            href="https://lin.ee/T7OYAGQ"
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-h-[52px] items-center justify-center rounded-[14px] bg-linegreen text-[15px] font-black text-white transition-opacity hover:opacity-90"
-          >
-            {isBroadcastEnabled() ? "1通目を受け取る" : "公式LINEに登録する"}
-          </a>
-        </div>
+        {/* メルマガ */}
+        <NewsletterCta
+          place="coaching"
+          source="newsletter_page"
+          heading="地雷の踏み方・避け方を、メールで受け取る"
+          className="mx-auto mt-3 max-w-[1120px]"
+        />
 
         <div className="mx-auto mt-4 max-w-[1120px] text-center">
           <Link

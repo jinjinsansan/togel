@@ -5,8 +5,8 @@ import type { TypeApproachGuide } from "./translations";
  *
  * 【2026-09-21】**ここは図のモジュールではない。** 15マスのグリッドを描いていた
  * 攻略盤（数える図）は撤去したが、このファイルは残す。
- * `lib/line/broadcast.ts` が `ANGLE_BY_BROADCAST_KIND` と `cellKey` を使っていて、
- * 週1通のLINEが `/coaching?cell=<typeId>:<angle>` へリンクするための住所がここにある。
+ * `lib/newsletter/issues.ts` が `ANGLE_BY_BROADCAST_KIND` と `cellKey` を使っていて、
+ * 週1通のメルマガが `/coaching?cell=<typeId>:<angle>` へリンクするための住所がここにある。
  * 消すと**配信のリンクに着地先が無くなる**。
  *
  * `BOARD_TYPE_COUNT` も残す。3タイプ × 5角度 = 15 が、そのまま
@@ -34,7 +34,7 @@ export const ANGLES_PER_TYPE = BOARD_ANGLES.length;
  * 盤に載せる相手の数。**診断の種別によらず常に3**（3×5＝15マス）。
  *
  * 理由は2つ。
- * - LINE週次配信は15通で統一している。盤はその可視化なので、
+ * - メルマガは15通で統一している。盤はその可視化なので、
  *   盤が25マスだと「登録すると週1マス進む」が盤の一部しか埋めない
  * - 人によって盤の全長が違うと、それ自体が達成度の差として読まれる
  *
@@ -48,7 +48,7 @@ export const boardTypeCount = (): number => BOARD_TYPE_COUNT;
 /** マスの識別子。型と角度の組で1マス */
 export const cellKey = (typeId: string, angle: BoardAngle): string => `${typeId}:${angle}`;
 
-/** LINE配信のリンク等から渡されるマス指定（`<typeId>:<angle>`）を読む */
+/** メルマガのリンク等から渡されるマス指定（`<typeId>:<angle>`）を読む */
 export const parseCellKey = (raw: string | null): { typeId: string; angle: BoardAngle } | null => {
   if (!raw) return null;
   const separator = raw.lastIndexOf(":");

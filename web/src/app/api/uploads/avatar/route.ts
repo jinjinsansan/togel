@@ -92,7 +92,13 @@ export async function POST(request: Request) {
     CacheControl: "public, max-age=31536000, immutable",
   });
 
-  const uploadUrl = await getSignedUrl(getR2Client(), command, { expiresIn: 60 });
+  // Content-Type を署名に含める。presigner は既定で content-type を署名から外すので、
+  // そのままだと許可した画像の種類を宣言しておいて text/html や SVG を置けてしまう
+  // （公開ドメイン上のページになり、XSS やフィッシングに使える）
+  const uploadUrl = await getSignedUrl(getR2Client(), command, {
+    expiresIn: 60,
+    signableHeaders: new Set(["content-type"]),
+  });
   const publicBaseUrl = getEnv("R2_PUBLIC_BASE_URL").replace(/\/$/, "");
   const publicUrl = `${publicBaseUrl}/${objectKey}`;
 

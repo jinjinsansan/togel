@@ -7,7 +7,7 @@ import {
   externalBrowserUrl,
   isLineInAppBrowser,
   withExternalBrowserParam,
-} from "../src/lib/line/external-browser";
+} from "../src/lib/share/external-browser";
 
 /**
  * LINEのアプリ内ブラウザから外に出る処理。
@@ -83,7 +83,7 @@ test("LINEのUA判定は1か所にしかない", () => {
   const offenders = sources
     .filter(({ text }) => /Line\\\//i.test(text) || /userAgent[\s\S]{0,80}line/i.test(text))
     .map(({ file }) => file)
-    .filter((file) => file !== "src/lib/line/external-browser.ts");
+    .filter((file) => file !== "src/lib/share/external-browser.ts");
 
   assert.deepEqual(offenders, [], "UA判定が増えている。判定は external-browser.ts に寄せる");
 });
@@ -92,7 +92,7 @@ test("パラメータ名を書いているのは1か所だけ", () => {
   const offenders = sources
     .filter(({ text }) => text.includes("openExternalBrowser"))
     .map(({ file }) => file)
-    .filter((file) => file !== "src/lib/line/external-browser.ts");
+    .filter((file) => file !== "src/lib/share/external-browser.ts");
 
   assert.deepEqual(offenders, [], "外部ブラウザへ渡す処理は external-browser.ts を通す");
 });
@@ -105,14 +105,10 @@ test("全画面で行き止まりになる案内を置かない", () => {
   assert.deepEqual(offenders, [], "案内モーダルが戻っている。LIFFを含む全導線を塞ぐ");
 });
 
-test("外部ブラウザへ渡すのはログイン画面だけ", () => {
+test("ログイン画面を外部ブラウザへ渡す処理は残っていない（メール認証はLINE内でも通る）", () => {
   const users = sources
     .filter(({ text }) => text.includes("OpenInExternalBrowser"))
-    .map(({ file }) => file)
-    .sort();
+    .map(({ file }) => file);
 
-  assert.deepEqual(users, [
-    "src/app/login/page.tsx",
-    "src/components/auth/open-in-external-browser.tsx",
-  ]);
+  assert.deepEqual(users, []);
 });
